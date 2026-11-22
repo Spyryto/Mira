@@ -94,6 +94,19 @@ con ricerca, collegamenti bidirezionali e «Prova nell’editor», disponibile
 offline con la PWA. Le funzioni con più placeholder vengono invocate dal
 worker del browser per rendere osservabili anche gli esempi di funzioni binarie.
 
+## Programmi con dati strutturati
+
+Le nuove forme sperimentali `[...]` e `{campo: valore}` permettono
+programmi che analizzano liste e costruiscono record sia su JS sia su PHP.
+Il [catalogo](docs/reference/examples.md) contiene quattro casi d'uso
+eseguibili: scaletta musicale, allenamento, compensi per serata e lezioni.
+Le funzioni di attraversamento sono normali capability dell'host;
+i reducer e le trasformazioni sono scritti in Mira.
+
+L'AST Inspector di Studio ora produce anche un report strutturato per
+ogni definizione, trasformando l'AST con Mira. Dettagli e limiti:
+[esempi strutturati e dogfooding](docs/structured-data.md).
+
 ## Mira Studio — PWA
 
 The experimental **[Mira Studio](docs/studio.md)** is a mobile-first, installable
