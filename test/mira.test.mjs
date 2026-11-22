@@ -266,10 +266,10 @@ test('pipeline refuses direct multi-hole sections', () => {
   assert.match(outcome.stderr, /unary section/);
 });
 
-test('standalone and nested placeholders fail with a clear diagnostic', () => {
+test('unbound and isolated placeholders fail with a clear diagnostic', () => {
   const snippets = [
     'result = _;',
-    'add: left, and: right = left + right; result = add: (_ + 1), and: 2;'
+    'result = (_);'
   ];
 
   for (const snippet of snippets) {
