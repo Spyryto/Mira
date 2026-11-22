@@ -119,7 +119,7 @@ for (const symbol of exports) {
 }
 const prefix = [
   '// Generated from studio/atlas/atlas.mira by scripts/generate-atlas.mjs.',
-  '// The only host capabilities are get, map and count.',
+  '// The only host capabilities are map, filter and count.',
   "import {collectionHost} from './collection-host.js';",
   'const __miraHost = Object.freeze(Object.assign(Object.create(null), collectionHost(), {',
   '  "count:": values => {',
