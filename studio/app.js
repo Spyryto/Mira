@@ -160,7 +160,9 @@ function updateStructure() {
   if (ui.structureSelect.value === 'inspector') {
     ui.structure.hidden = true;
     $('astInspector').hidden = false;
-    astInspector.refresh(ui.source.value);
+    // Use the same compile-time host signatures as the editor.
+    // The inspector's own Mira program has a separate host manifest.
+    astInspector.refresh(ui.source.value, state.hostJson);
     return;
   }
 
