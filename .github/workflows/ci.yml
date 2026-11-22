@@ -20,7 +20,7 @@ jobs:
       - name: Build Haxe and measure compiler duration
         run: npm run build
       - name: Execute correctness tests
-        run: node --test
+        run: node --test test/mira.test.mjs
       - name: Verify generated JavaScript and PHP
         run: |
           node dist/mira.cjs examples/arithmetic.mira js > /tmp/mira-generated.mjs
