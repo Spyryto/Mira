@@ -56,6 +56,10 @@
       "kind": "tool_generated",
       "generator": "scripts/generate-reference.mjs",
       "note": "Firme estratte automaticamente dai sorgenti Haxe; descrizioni prese da catalog/api-notes.json."
+    },
+    "docs/atlas.md": {
+      "kind": "ai_assisted",
+      "note": "Rapporto editoriale e note di architettura sviluppate con assistenza IA; graph e programmi sono derivati dal tooling."
     }
   },
   "generatedSections": {
