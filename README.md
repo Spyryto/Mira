@@ -41,6 +41,10 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Applicazione funzionale per giustapposizione (`log "ciao"`) | `0.3` | [Dettagli](docs/dogfooding.md#nuove-regole-sintattiche-sperimentali) |
 | ✅ | Istruzioni-espressione terminate da `;` | `0.3` | [Dettagli](docs/dogfooding.md#nuove-regole-sintattiche-sperimentali) |
 | ✅ | Interop: riferimenti a funzioni/valori dell'host | `0.3` | [Dettagli](docs/dogfooding.md#che-cosa-contiene-il-manifest) |
+| ✅ | Accessor funzionali di record | `0.4` | [Dettagli](docs/reference/language.md#feature-accessors) |
+| ✅ | Booleani e confronti | `0.4` | [Dettagli](docs/reference/language.md#feature-comparisons) |
+| ✅ | Espressioni condizionali | `0.4` | [Dettagli](docs/reference/language.md#feature-conditionals) |
+| ✅ | Filtri con predicati Mira | `0.4` | [Dettagli](docs/reference/language.md#feature-filtering) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

@@ -629,14 +629,15 @@ lessons = [
   {student: "Luca", hours: 2, rate: 25},
   {student: "Mia", hours: 1, rate: 35}
 ];
-fee: lesson = (get: "hours", from: (lesson))
-  * (get: "rate", from: (lesson));
+hours = field "hours";
+rate = field "rate";
+student = field "student";
+fee: lesson = (lesson ~ hours) * (lesson ~ rate);
 accumulate fee: total, with: lesson = total + (fee: lesson);
 invoice: lesson = {
-  student: (get: "student", from: (lesson)),
+  student: (lesson ~ student),
   amount: (fee: lesson)
 };
-
 income = fold: lessons, with: (accumulate fee: _, with: _), from: 0;
 invoices = map: lessons, with: (invoice: _);
 result = {income: income, invoices: invoices};
@@ -724,4 +725,142 @@ render {
 **Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/browser-counter)
+
+<a id="example-lesson-accessors"></a>
+## Fattura di una lezione
+
+Gli accessor field sono funzioni di prima classe e la pipeline legge i campi del record senza host esterno.
+
+Feature: [Accessor funzionali di record](language.md#feature-accessors)
+
+```mira
+lesson = {hours: 1.5, rate: 30};
+hours = field "hours";
+rate = field "rate";
+result = (lesson ~ hours) * (lesson ~ rate);
+```
+
+**Risultato:** result = 45
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/lesson-accessors)
+
+<a id="example-student-accessors"></a>
+## Record dello studente
+
+Due accessor costruiscono un riepilogo di un record Mira.
+
+Feature: [Accessor funzionali di record](language.md#feature-accessors)
+
+```mira
+student = {name: "Ada", minutes: 90};
+name = field "name";
+minutes = field "minutes";
+result = {student: (student ~ name), hours: ((student ~ minutes) / 60)};
+```
+
+**Risultato:** result = {"student":"Ada","hours":1.5}
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/student-accessors)
+
+<a id="example-threshold-comparisons"></a>
+## Confronti e booleani
+
+Operatori relazionali, uguaglianza stretta e letterali true/false senza host.
+
+Feature: [Booleani e confronti](language.md#feature-comparisons)
+
+```mira
+result = (8 >= 6) == true;
+```
+
+**Risultato:** result = true
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/threshold-comparisons)
+
+<a id="example-equality-comparisons"></a>
+## Confronti su testo e numeri
+
+Confronti fra scalari verificati sia su JavaScript sia su PHP.
+
+Feature: [Booleani e confronti](language.md#feature-comparisons)
+
+```mira
+result = ("Mira" != "Nail") == (3 < 5);
+```
+
+**Risultato:** result = true
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/equality-comparisons)
+
+<a id="example-conditional-label"></a>
+## Scelta di un'etichetta
+
+if:then:else: valuta soltanto il ramo selezionato.
+
+Feature: [Espressioni condizionali](language.md#feature-conditionals)
+
+```mira
+result = if: (1 < 2), then: ("valid"), else: ("invalid");
+```
+
+**Risultato:** result = "valid"
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/conditional-label)
+
+<a id="example-conditional-fee"></a>
+## Soglia per uno sconto
+
+Un record viene prodotto da una condizione che non richiede callback host.
+
+Feature: [Espressioni condizionali](language.md#feature-conditionals)
+
+```mira
+fee = 4;
+result = {bonus: (if: (fee >= 6), then: (10), else: (0))};
+```
+
+**Risultato:** result = {"bonus":0}
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/conditional-fee)
+
+<a id="example-filter-numbers"></a>
+## Numeri sopra soglia
+
+Un predicato Mira filtra una lista con la primitiva host filter:with:.
+
+Feature: [Filtri con predicati Mira](language.md#feature-filtering)
+
+```mira
+numbers = [2, 5, 9, 1];
+greater than four: value = value > 4;
+result = filter: numbers, with: (greater than four: _);
+```
+
+**Risultato:** result = [5,9]
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/filter-numbers)
+
+<a id="example-filter-lessons"></a>
+## Lezioni da fatturare
+
+Accessor, predicato, filter e map collaborano su una lista di lezioni.
+
+Feature: [Filtri con predicati Mira](language.md#feature-filtering)
+
+```mira
+lessons = [
+  {student: "Ada", hours: 1.5},
+  {student: "Eva", hours: 0.5},
+  {student: "Lia", hours: 2}
+];
+hours = field "hours";
+student name = field "student";
+billable: lesson = (lesson ~ hours) >= 1;
+result = map: (filter: lessons, with: (billable: _)),
+  with: (student name);
+```
+
+**Risultato:** result = ["Ada","Lia"]
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/filter-lessons)
 

@@ -1,4 +1,4 @@
-# Guida a Mira 0.3.0
+# Guida a Mira 0.4.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -257,4 +257,60 @@ API collegata: [`mira.HostEnvironment`](api.md#api-mira-hostenvironment)
 - [Alert dall’host](examples.md#example-browser-alert) — Anteprima interattiva (browser JS; PHP compilato soltanto)
 - [View e pulsante](examples.md#example-browser-view) — Anteprima interattiva (browser JS; PHP compilato soltanto)
 - [Pulsante con contatore](examples.md#example-browser-counter) — Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+<a id="feature-accessors"></a>
+## Accessor funzionali di record
+
+**Disponibile dalla versione 0.4**
+
+`field "name"` produce una funzione accessor: `lesson ~ hours`.
+
+Gli accessor sono un costrutto nativo compilato in funzioni JS/PHP, non una chiamata all'host. Una chiave inesistente solleva un errore runtime. In assenza di type checker non viene verificata la forma del record.
+
+API collegata: [`mira.syntax.Expr.FieldAccessor`](api.md#api-mira-syntax-expr-fieldaccessor)
+
+- [Fattura di una lezione](examples.md#example-lesson-accessors) — result = 45
+- [Record dello studente](examples.md#example-student-accessors) — result = {"student":"Ada","hours":1.5}
+
+<a id="feature-comparisons"></a>
+## Booleani e confronti
+
+**Disponibile dalla versione 0.4**
+
+`true`, `false`, `==`, `!=`, `<`, `>`, `<=` e `>=`.
+
+Gli operatori sono espressioni native. L'uguaglianza usa operatori stretti JS/PHP, testati per scalari; per strutture e numeri con rappresentazioni diverse la semantica dei backend può divergere senza un sistema di tipi. Gli operatori condividono un livello di precedenza e si associano a sinistra.
+
+API collegata: [`mira.syntax.Expr.BooleanLiteral`](api.md#api-mira-syntax-expr-booleanliteral)
+
+- [Confronti e booleani](examples.md#example-threshold-comparisons) — result = true
+- [Confronti su testo e numeri](examples.md#example-equality-comparisons) — result = true
+
+<a id="feature-conditionals"></a>
+## Espressioni condizionali
+
+**Disponibile dalla versione 0.4**
+
+`if: (condizione), then: (vero), else: (falso)` valuta un solo ramo.
+
+I tre argomenti sono obbligatoriamente tra parentesi per evitare ambiguità; il parser crea il nodo Conditional, e l'emettitore traduce nell'espressione condizionale nativa JS/PHP. Non è una normale funzione host, quindi i rami sono lazy.
+
+API collegata: [`mira.syntax.Expr.Conditional`](api.md#api-mira-syntax-expr-conditional)
+
+- [Scelta di un'etichetta](examples.md#example-conditional-label) — result = "valid"
+- [Soglia per uno sconto](examples.md#example-conditional-fee) — result = {"bonus":0}
+
+<a id="feature-filtering"></a>
+## Filtri con predicati Mira
+
+**Disponibile dalla versione 0.4**
+
+`filter: list, with: (predicate: _)` filtrando con funzioni Mira.
+
+Il predicato e la selezione delle condizioni sono scritti in Mira; il runtime host mette a disposizione solo l'iterazione limitata delle liste. La lista restituita è indicizzata da zero ed è portabile fra JS e PHP.
+
+API collegata: [`mira.HostEnvironment`](api.md#api-mira-hostenvironment)
+
+- [Numeri sopra soglia](examples.md#example-filter-numbers) — result = [5,9]
+- [Lezioni da fatturare](examples.md#example-filter-lessons) — result = ["Ada","Lia"]
 
