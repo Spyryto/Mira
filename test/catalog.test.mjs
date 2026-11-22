@@ -105,6 +105,46 @@ test('all language features are represented by at least two uniquely linked prog
   assert.equal(ids.size, reference.examples.length);
 });
 
+test('README feature matrix is generated from the catalog with historical versions and links', () => {
+  const readme = readFileSync(resolve(root, 'README.md'), 'utf8');
+  const start = '<!-- START GENERATED FEATURE MATRIX -->';
+  const end = '<!-- END GENERATED FEATURE MATRIX -->';
+  assert.equal(readme.split(start).length, 2);
+  assert.equal(readme.split(end).length, 2);
+  const matrix = readme.split(start)[1].split(end)[0];
+  const checkedRows = matrix.split('\n').filter(row => row.startsWith('| ✅ |'));
+  const features = manifest.features;
+  const extras = manifest.additionalCapabilities ?? [];
+  assert.equal(checkedRows.length, features.length + extras.length);
+
+  const versionedFeatures = [
+    ...features.map(feature => ({
+      name: feature.title,
+      since: feature.since,
+      path: 'docs/reference/language.md#feature-' + feature.id
+    })),
+    ...extras.map(feature => ({
+      name: feature.title, since: feature.since, path: feature.doc
+    }))
+  ];
+  for (const feature of versionedFeatures) {
+    assert.match(feature.since, /^0\.\d+$/);
+    const exact = checkedRows.filter(row =>
+      row.includes('| ' + feature.name + ' |') &&
+      row.includes('| \`' + feature.since + '\` |') &&
+      row.includes('](' + feature.path + ')'));
+    assert.equal(exact.length, 1, 'Missing or duplicated README feature: ' + feature.name);
+  }
+
+  const language = readFileSync(resolve(root, 'docs/reference/language.md'), 'utf8');
+  for (const feature of features) {
+    assert.ok(language.includes('Disponibile dalla versione ' + feature.since),
+      'Version missing from generated language tour: ' + feature.id);
+  }
+  assert.match(readme, /Funzionalità non ancora implementate/);
+  assert.match(readme, /\| ⬜ \| .* \| — \|/);
+});
+
 test('generated reference has Haxe API source links and reverse feature references', () => {
   const ids = new Set(reference.api.map(entry => entry.id));
   assert.ok(ids.size >= 45, 'public API extraction incomplete');
