@@ -28,6 +28,13 @@ self.onmessage = event => {
         }
         return record[key];
       },
+      "filter:with:": (items, predicate) => {
+        if (!Array.isArray(items) || typeof predicate !== "function" ||
+            items.length > 10000) {
+          throw new Error("filter:with: expects a bounded list and predicate");
+        }
+        return items.filter(item => predicate(item));
+      },
       "map:with:": (items, callback) => {
         if (!Array.isArray(items) || typeof callback !== "function" ||
             items.length > 10000) {
