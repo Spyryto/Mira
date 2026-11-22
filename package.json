@@ -7,8 +7,12 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "test": "npm run build && node --test",
-    "benchmark": "npm run build && node scripts/benchmark.mjs"
+    "benchmark": "npm run build && node scripts/benchmark.mjs",
+    "build:studio": "node scripts/build-studio.mjs",
+    "test:studio": "npm run build:studio && node --test test/studio.test.mjs"
   },
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "license": "MIT"
 }
