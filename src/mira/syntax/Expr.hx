@@ -6,6 +6,6 @@ enum Expr {
     Name(value:String);
     Numeric(value:String);
     Text(value:String);
-    Binary(operator:String, left:Expr, right:Expr);
+    Binary(symbol:String, left:Expr, right:Expr);
     Call(selector:String, arguments:Array<Expr>);
 }
