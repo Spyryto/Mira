@@ -28,6 +28,9 @@ const ui = {
   runOutput: $('runOutput'),
   connection: $('connection'),
   runButton: $('run'),
+  previewButton: $('previewUI'),
+  uiPreviewPanel: $('uiPreviewPanel'),
+  uiPreviewMount: $('uiPreviewMount'),
   fileInput: $('fileInput')
 };
 
@@ -39,6 +42,8 @@ const state = {
   output: '',
   valid: false,
   exampleInvocation: null,
+  uiExample: false,
+  uiFrame: null,
   hostJson: undefined,
   debounce: 0,
   worker: null,
@@ -119,6 +124,8 @@ function setTarget(target) {
     ? 'Esegui il JS generato in un Web Worker'
     : 'L’esecuzione di PHP non è disponibile nel browser';
   stopWorker();
+  stopUiPreview();
+  ui.previewButton.disabled = target !== 'js';
   ui.runOutput.textContent = target === 'js'
     ? 'Non eseguito.' : 'Per eseguire nel browser, seleziona JS.';
   saveLocally();
@@ -188,6 +195,7 @@ function scheduleCompile() {
 function sourceChanged() {
   state.exampleInvocation = null;
   stopWorker();
+  stopUiPreview();
   ui.runOutput.textContent = 'Non eseguito.';
   updateEditorIndicators();
   saveLocally();
@@ -238,6 +246,7 @@ function loadExample(exampleId) {
   ui.source.value = example.source;
   updateEditorIndicators();
   sourceChanged();
+  state.uiExample = example.expect?.kind === 'ui';
   state.exampleInvocation = example.expect?.kind === 'invoke'
     ? {name: example.expect.name, args: example.expect.args}
     : null;
@@ -253,6 +262,7 @@ function stopWorker() {
 }
 
 function runJavaScript() {
+  if (state.uiExample) return runUiPreview();
   if (state.target !== 'js') return;
   if (!compile(false)) {
     setView('code');
@@ -287,6 +297,43 @@ function runJavaScript() {
     stopWorker();
   };
   worker.postMessage({ code: state.output, invoke: state.exampleInvocation });
+}
+
+
+function stopUiPreview() {
+  state.uiFrame = null;
+  ui.uiPreviewMount.replaceChildren();
+  ui.uiPreviewPanel.hidden = true;
+}
+
+function runUiPreview() {
+  if (state.target !== 'js') return;
+  if (!compile(false)) {
+    setView('code');
+    return;
+  }
+  stopWorker();
+  stopUiPreview();
+  setView('output');
+  ui.runOutput.textContent = 'Preparazione della view…';
+
+  const frame = document.createElement('iframe');
+  frame.className = 'mira-ui-frame';
+  frame.title = 'Anteprima interattiva del programma Mira';
+  // No allow-same-origin: the preview has no same-origin access to Studio.
+  frame.setAttribute('sandbox', 'allow-scripts');
+  frame.setAttribute('referrerpolicy', 'no-referrer');
+  frame.src = './ui-preview.html';
+  state.uiFrame = frame;
+  ui.uiPreviewPanel.hidden = false;
+  ui.uiPreviewMount.append(frame);
+  frame.addEventListener('load', () => {
+    if (state.uiFrame !== frame) return;
+    frame.contentWindow.postMessage({
+      type: 'mira-ui:run',
+      code: state.output
+    }, '*');
+  });
 }
 
 function loadFile(file) {
@@ -394,6 +441,7 @@ function wireEvents() {
   });
 
   $('compile').addEventListener('click', () => compile(true));
+  ui.previewButton.addEventListener('click', runUiPreview);
   ui.runButton.addEventListener('click', runJavaScript);
   $('saveSource').addEventListener('click', saveSource);
   $('saveOutput').addEventListener('click', saveOutput);
@@ -418,6 +466,19 @@ function wireEvents() {
       state.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
     } else {
       window.location.reload();
+    }
+  });
+  window.addEventListener('message', event => {
+    if (!state.uiFrame || event.source !== state.uiFrame.contentWindow ||
+        typeof event.data?.type !== 'string' ||
+        !event.data.type.startsWith('mira-ui:')) return;
+
+    if (event.data.type === 'mira-ui:error') {
+      ui.runOutput.textContent = 'Errore UI: ' + String(event.data.message);
+    } else if (event.data.type === 'mira-ui:ready') {
+      ui.runOutput.textContent = 'View pronta. Puoi interagire con i pulsanti.';
+    } else if (event.data.type === 'mira-ui:log') {
+      ui.runOutput.textContent = String(event.data.message);
     }
   });
   window.addEventListener('online', updateConnection);
