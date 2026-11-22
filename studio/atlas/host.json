@@ -1,0 +1,9 @@
+{
+  "values": [],
+  "callables": [],
+  "selectors": [
+    "get:from:",
+    "map:with:",
+    "count:"
+  ]
+}
