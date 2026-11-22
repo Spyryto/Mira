@@ -5,8 +5,9 @@
   "type": "module",
   "description": "Mira discursive syntax frontend: Haxe source, JS/PHP emitters",
   "scripts": {
-    "build": "node -e \"require('node:fs').mkdirSync('dist',{recursive:true})\" && haxe build.hxml",
-    "test": "npm run build && node --test"
+    "build": "node scripts/build.mjs",
+    "test": "npm run build && node --test",
+    "benchmark": "npm run build && node scripts/benchmark.mjs"
   },
   "engines": { "node": ">=22" },
   "license": "MIT"
