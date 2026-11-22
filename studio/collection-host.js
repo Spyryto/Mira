@@ -13,6 +13,14 @@ export function collectionHost() {
     return record[key];
   };
 
+  api['filter:with:'] = (items, predicate) => {
+    if (!Array.isArray(items) || typeof predicate !== 'function' ||
+        items.length > MAX_ITEMS) {
+      throw new Error('filter:with: expects a bounded list and predicate');
+    }
+    return items.filter(item => predicate(item));
+  };
+
   api['map:with:'] = (items, callback) => {
     if (!Array.isArray(items) || typeof callback !== 'function' ||
         items.length > MAX_ITEMS) {

@@ -6,6 +6,9 @@ enum Expr {
     HostRef(name:String);
     Numeric(value:String);
     Text(value:String);
+    BooleanLiteral(value:Bool);
+    FieldAccessor(key:String);
+    Conditional(condition:Expr, whenTrue:Expr, whenFalse:Expr);
     Sequence(items:Array<Expr>);
     Record(keys:Array<String>, values:Array<Expr>);
     Binary(symbol:String, left:Expr, right:Expr);

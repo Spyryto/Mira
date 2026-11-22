@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.3.0');
+  assert.equal(bridge.version, '0.4.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -261,4 +261,27 @@ test('the Studio execution worker runs the four complete structured-data case st
     assert.equal(response?.ok, true, example.id + ': ' + response?.message);
     assert.deepEqual(JSON.parse(response.output), example.expect.value);
   }
+});
+
+test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condition AST',()=>{
+  const source = [
+    'score = field "score";',
+    'student = {score: 8};',
+    'result = if: ((student ~ score) >= 6), then: (true), else: (false);'
+  ].join('\n');
+  assert.equal(bridge.version,'0.4.0');
+  const parsed=bridge.ast(source);
+  assert.equal(parsed.ok,true,parsed.message);
+  const definitions=JSON.parse(parsed.output).definitions;
+  assert.equal(definitions[0].body.kind,'FieldAccessor');
+  assert.equal(definitions[0].body.key,'score');
+  const conditional=definitions[2].body;
+  assert.equal(conditional.kind,'Conditional');
+  assert.equal(conditional.condition.kind,'Binary');
+  assert.equal(conditional.condition.symbol,'>=');
+  assert.equal(conditional.condition.left.kind,'Apply');
+  assert.equal(conditional.whenTrue.kind,'Boolean');
+  assert.equal(conditional.whenTrue.value,true);
+  assert.equal(conditional.whenFalse.kind,'Boolean');
+  assert.equal(conditional.whenFalse.value,false);
 });

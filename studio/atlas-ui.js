@@ -1,7 +1,8 @@
 // Mira Atlas: browser rendering, navigation and interactive diagrams.
 // Data projections come from precompiled studio/atlas/atlas.mira, not JS clones.
 import {
-  atlas_stages, atlas_modules, atlas_declarations, atlas_ast, atlas_overview
+  atlas_stages, atlas_modules, atlas_declarations, atlas_ast, atlas_overview,
+  atlas_select_modules
 } from './atlas-program.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -388,8 +389,8 @@ export function mountAtlas(root, compiler, getSource, getHostJson) {
       render();
     });
     content.append(select);
-    const eligible = graph.filter==='Tutti'?modules:
-      modules.filter(m=>m.group===graph.filter);
+    // Filtering and the conditional are executed in compiled Mira.
+    const eligible = atlas_select_modules(modules, graph.filter);
     const graphScroller = node('div', 'atlas-graph-scroll');
     graphScroller.append(drawGraph(eligible));
     content.append(graphScroller);

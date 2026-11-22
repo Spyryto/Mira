@@ -177,6 +177,17 @@ L'AST Inspector di Studio ora produce anche un report strutturato per
 ogni definizione, trasformando l'AST con Mira. Dettagli e limiti:
 [esempi strutturati e dogfooding](docs/structured-data.md).
 
+## Mira 0.4: accessor, condizioni e filtri
+
+Le nuove feature eliminano gran parte del codice host nei modelli di
+Atlas: `field "hours"` crea un accessor nativo, `lesson ~ hours`
+legge il campo, i confronti producono booleani e
+`if: (cond), then: (sì), else: (no)` valuta solo il ramo scelto.
+`filter:with:` rimane una piccola primitiva host portabile JS/PHP.
+Il filtro dei moduli di Atlas è ora calcolato da Mira.
+
+[Documentazione ed esempi di Mira 0.4](docs/mira04.md).
+
 ## Mira Atlas — documentazione viva
 
 La [vista **Atlas** di Mira Studio](https://spyryto.github.io/Mira/#/atlas)

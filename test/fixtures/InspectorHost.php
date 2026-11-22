@@ -26,6 +26,7 @@ function makeInspectorHost(array $ast): array {
                     'Program' => $node['definitions'] ?? [],
                     'Function', 'Value', 'ExpressionStatement' => isset($node['body']) ? [$node['body']] : [],
                     'Binary' => [$node['left'], $node['right']],
+                    'Conditional' => [$node['condition'], $node['whenTrue'], $node['whenFalse']],
                     'Call', 'Section', 'HostCall', 'HostSection' => $node['arguments'] ?? [],
                     'Apply' => [$node['callee'], $node['argument']],
                     'Sequence' => $node['items'] ?? [],

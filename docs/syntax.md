@@ -1,6 +1,6 @@
 # Mira: syntax experiments
 
-**Mira 0.3 implements selectors, selector sections, pipelines, sequence literals and anonymous records.** Typed records and other advanced forms remain under evaluation.
+**Mira 0.4 implements selectors, selector sections, pipelines, sequence literals and anonymous records.** Typed records and other advanced forms remain under evaluation.
 
 ## Implemented: complete selectors
 
@@ -43,6 +43,25 @@ the right; it lowers to `Apply(f, x)`. Operators associate left to right
 without mathematical precedence. Both `5 ~ increment` and
 `5 ~ (add: _, and: 1)` are supported. Sections with two or more holes
 cannot be used directly as unary pipeline targets.
+
+## Implementato in Mira 0.4: accessor, confronti e condizioni
+
+```mira
+hours = field "hours";
+lesson = {hours: 1.5};
+result = if: ((lesson ~ hours) >= 1),
+  then: ("fatturabile"),
+  else: ("non fatturabile");
+```
+
+`field "hours"` è un accessor di prima classe, nativo su JS/PHP.
+`true` e `false`, gli operatori `==`, `!=`, `<`, `>`, `<=`,
+`>=` e la forma `if: (...), then: (...), else: (...)` sono
+espressioni native. I rami della condizione sono lazy e le tre
+espressioni devono essere parenthesized per delimitare i confini.
+I predicati permettono `filter:with:` tramite una capability host.
+
+[Dettagli e limiti della versione 0.4](mira04.md).
 
 ## Proposed: general closures and partial selector notation
 

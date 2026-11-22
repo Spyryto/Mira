@@ -310,3 +310,77 @@ test('structured-data literals reject duplicate keys and malformed delimiters', 
     assert.match(outcome.stderr, new RegExp(diagnostic), source);
   }
 });
+
+test('native field accessors are first-class callable values on both targets', () => {
+  const source = [
+    'hours = field "hours";',
+    'lesson = {hours: 1.5};',
+    'result = lesson ~ hours;'
+  ].join('\n');
+  for (const target of ['js', 'php']) {
+    assert.equal(run(source, target), '1.5');
+    const generated = compile(source, target);
+    assert.doesNotMatch(generated, /__miraHost/);
+  }
+});
+
+test('Mira conditions are lazy on JS and PHP', () => {
+  const source = [
+    'result = if: (false),',
+    '  then: (({value: 1} ~ field "missing")),',
+    '  else: (if: (2 > 1), then: (42), else: (0));'
+  ].join('\n');
+  for (const target of ['js', 'php']) {
+    assert.equal(run(source, target), '42');
+  }
+});
+
+test('Mira compares scalar values and has native booleans', () => {
+  const source = 'result = (true == (3 >= 2)) == ("a" != "b");';
+  for (const target of ['js', 'php']) {
+    assert.equal(run(source, target), 'true');
+    assert.match(compile(source, target), /===/);
+  }
+});
+
+test('functions capture global values with parameter names shadowing them', () => {
+  const source = [
+    'bonus = 10;',
+    'pay: hours = hours * 20 + bonus;',
+    'result = pay: 2;'
+  ].join('\n');
+  for (const target of ['js','php']) assert.equal(run(source,target),'50');
+
+  const shadow = [
+    'value = 100;',
+    'increment: value = value + 1;',
+    'result = increment: 2;'
+  ].join('\n');
+  for (const target of ['js','php']) assert.equal(run(shadow,target),'3');
+});
+
+test('malformed native conditional has a diagnostic instead of an implicit selector match', () => {
+  const snippets = [
+    'result = if: true, then: (1), else: (2);',
+    'result = if: (true), then: (1);'
+  ];
+  for (const source of snippets) {
+    const outcome = compileError(source);
+    assert.notEqual(outcome.status,0,source);
+    assert.match(outcome.stderr,/parenthesized|Expected else/);
+  }
+});
+
+test('missing field access is rejected consistently at runtime', () => {
+  const source = 'result = {score: 1} ~ field "age";';
+  withSource(source,(file,dir)=>{
+    for(const target of ['js','php']){
+      const generated=execFileSync('node',[compiler,file,target],{encoding:'utf8'});
+      const output=join(dir,'missing.'+(target==='js'?'mjs':'php'));
+      writeFileSync(output,generated+'\n'+(target==='js'?'console.log(result);':'echo $result;'));
+      const response=spawnSync(target==='js'?'node':'php',[output],{encoding:'utf8'});
+      assert.notEqual(response.status,0,target);
+      assert.match(response.stderr,/Missing record field: age/);
+    }
+  });
+});

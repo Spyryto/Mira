@@ -24,6 +24,9 @@ function labelOf(node) {
     case 'Text':
     case 'Number': return node.kind + ' · ' + JSON.stringify(node.value);
     case 'Binary': return 'Binary · ' + node.symbol;
+    case 'Boolean': return 'Boolean · ' + String(node.value);
+    case 'FieldAccessor': return 'Accessor · ' + node.key;
+    case 'Conditional': return 'Conditional · if/then/else';
     case 'Call':
     case 'Section':
     case 'HostCall':

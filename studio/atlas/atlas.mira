@@ -1,35 +1,54 @@
-# Atlas is precompiled during CI. Host only supplies record access, map and count.
-# All record projections and the overview structure are authored in Mira.
+# Mira 0.4: built-in record accessors + native comparisons/conditional.
+# Only map, filter and count remain host-provided.
+id = field "id";
+title = field "title";
+purpose = field "purpose";
+produces = field "produces";
+source files = field "sourceFiles";
+path = field "path";
+group field = field "group";
+language = field "language";
+lines = field "lines";
+imports = field "imports";
+name = field "name";
+kind = field "kind";
+parameters = field "parameters";
+body tokens = field "bodyTokens";
+line = field "line";
+phases = field "phases";
+module list = field "modules";
+edges = field "edges";
+
 stage card: stage = {
-  id: (get: "id", from: (stage)),
-  title: (get: "title", from: (stage)),
-  purpose: (get: "purpose", from: (stage)),
-  produces: (get: "produces", from: (stage)),
-  sourceFiles: (get: "sourceFiles", from: (stage))
+  id: (stage ~ id),
+  title: (stage ~ title),
+  purpose: (stage ~ purpose),
+  produces: (stage ~ produces),
+  sourceFiles: (stage ~ source files)
 };
 
 module card: module = {
-  id: (get: "id", from: (module)),
-  title: (get: "title", from: (module)),
-  path: (get: "path", from: (module)),
-  group: (get: "group", from: (module)),
-  language: (get: "language", from: (module)),
-  lines: (get: "lines", from: (module)),
-  dependencies: (count: (get: "imports", from: (module)))
+  id: (module ~ id),
+  title: (module ~ title),
+  path: (module ~ path),
+  group: (module ~ group field),
+  language: (module ~ language),
+  lines: (module ~ lines),
+  dependencies: (count: (module ~ imports))
 };
 
 declaration card: declaration = {
-  name: (get: "name", from: (declaration)),
-  kind: (get: "kind", from: (declaration)),
-  line: (get: "line", from: (declaration)),
-  parameters: (get: "parameters", from: (declaration)),
-  tokens: (count: (get: "bodyTokens", from: (declaration)))
+  name: (declaration ~ name),
+  kind: (declaration ~ kind),
+  line: (declaration ~ line),
+  parameters: (declaration ~ parameters),
+  tokens: (count: (declaration ~ body tokens))
 };
 
 ast card: node = {
-  name: (get: "name", from: (node)),
-  kind: (get: "kind", from: (node)),
-  line: (get: "line", from: (node))
+  name: (node ~ name),
+  kind: (node ~ kind),
+  line: (node ~ line)
 };
 
 atlas stages: stages = map: stages, with: (stage card: _);
@@ -37,8 +56,15 @@ atlas modules: modules = map: modules, with: (module card: _);
 atlas declarations: definitions = map: definitions, with: (declaration card: _);
 atlas ast: definitions = map: definitions, with: (ast card: _);
 
+module matches: module, group: expected = (module ~ group field) == expected;
+
+atlas select modules: modules, group: requested =
+  if: (requested == "Tutti"),
+  then: (modules),
+  else: (filter: modules, with: (module matches: _, group: (requested)));
+
 atlas overview: dataset = {
-  stages: (count: (get: "phases", from: (dataset))),
-  modules: (count: (get: "modules", from: (dataset))),
-  dependencies: (count: (get: "edges", from: (dataset)))
+  stages: (count: (dataset ~ phases)),
+  modules: (count: (dataset ~ module list)),
+  dependencies: (count: (dataset ~ edges))
 };

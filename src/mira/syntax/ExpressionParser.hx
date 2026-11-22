@@ -47,7 +47,7 @@ class ExpressionParser {
                             throw new MiraError("Pipeline needs a unary section; this section has "
                                 + holes + " holes", token);
                         }
-                    case Numeric(_) | Text(_) | Binary(_, _, _) | Placeholder:
+                    case Numeric(_) | Text(_) | BooleanLiteral(_) | Binary(_, _, _) | Placeholder:
                         throw new MiraError("Pipeline target must be a function", token);
                     default:
                 }
@@ -103,6 +103,19 @@ class ExpressionParser {
             return Text(token.value);
         }
         if (token.kind != Word) throw new MiraError("Expected expression", token);
+        // Native, typed-independent Boolean/record features; no host dispatch.
+        if (token.value == "true" || token.value == "false") {
+            consume();
+            return BooleanLiteral(token.value == "true");
+        }
+        if (token.value == "field" && tokens[position + 1].kind == Text) {
+            consume(); // field
+            final key = consume().value;
+            return FieldAccessor(key);
+        }
+        if (token.value == "if" && tokens[position + 1].isSymbol(":")) {
+            return conditional();
+        }
         if (token.value == "_") {
             throw new MiraError("Placeholder '_' must be a complete keyword-selector argument", token);
         }
@@ -141,6 +154,47 @@ class ExpressionParser {
             "Unknown identifier or incomplete selector; register host names explicitly",
             token
         );
+    }
+
+    // Fully parenthesized branches make boundaries unambiguous with
+    // multiword names and selectors. Both emitters evaluate only one branch.
+    function conditional():Expr {
+        consume(); // if
+        requireSymbol(":");
+        final predicate = parenthesizedBranch("if");
+        if (current().isSymbol(",")) consume();
+        requireWord("then");
+        requireSymbol(":");
+        final whenTrue = parenthesizedBranch("then");
+        if (current().isSymbol(",")) consume();
+        requireWord("else");
+        requireSymbol(":");
+        final whenFalse = parenthesizedBranch("else");
+        return Conditional(predicate, whenTrue, whenFalse);
+    }
+
+    function parenthesizedBranch(label:String):Expr {
+        if (!current().isSymbol("(")) {
+            throw new MiraError(label + " requires a parenthesized expression", current());
+        }
+        consume();
+        final branch = expression();
+        requireSymbol(")");
+        return branch;
+    }
+
+    function requireWord(expected:String):Void {
+        if (current().kind != Word || current().value != expected) {
+            throw new MiraError("Expected " + expected + " branch", current());
+        }
+        consume();
+    }
+
+    function requireSymbol(expected:String):Void {
+        if (!current().isSymbol(expected)) {
+            throw new MiraError("Expected " + expected, current());
+        }
+        consume();
     }
 
     // Data literals are deliberately expression-level constructs, not host APIs.
@@ -200,6 +254,6 @@ class ExpressionParser {
     }
 
     static function isOperator(value:String):Bool {
-        return ["+", "-", "*", "/", "%", "~"].indexOf(value) >= 0;
+        return ["+", "-", "*", "/", "%", "~", "==", "!=", "<", ">", "<=", ">="].indexOf(value) >= 0;
     }
 }
