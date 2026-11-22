@@ -46,6 +46,7 @@
           <button type="button" class="tab" id="tab-structure" role="tab" data-view="structure" aria-selected="false" aria-controls="view-structure">03 <strong>Esplora</strong></button>
           <button type="button" class="tab" id="tab-reference" role="tab" data-view="reference" aria-selected="false" aria-controls="view-reference">04 <strong>Guida</strong></button>
           <button type="button" class="tab" id="tab-atlas" role="tab" data-view="atlas" aria-selected="false" aria-controls="view-atlas">05 <strong>Atlas</strong></button>
+          <button type="button" class="tab" id="tab-benchmark" role="tab" data-view="benchmark" aria-selected="false" aria-controls="view-benchmark">06 <strong>Bench</strong></button>
         </nav>
 
         <div class="panel" id="view-code" role="tabpanel" aria-labelledby="tab-code">
@@ -128,6 +129,10 @@
 
         <div class="panel" id="view-atlas" role="tabpanel" aria-labelledby="tab-atlas" hidden>
           <div id="atlas" class="atlas-area" aria-live="polite"><p>Caricamento di Mira Atlas…</p></div>
+        </div>
+
+        <div class="panel" id="view-benchmark" role="tabpanel" aria-labelledby="tab-benchmark" hidden>
+          <div id="benchmark" class="benchmark-area" aria-label="Benchmark di Mira" aria-live="off"></div>
         </div>
 
         <div class="action-bar">
