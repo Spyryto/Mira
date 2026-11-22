@@ -82,6 +82,14 @@ test('PWA assets are self-hosted and have a relative GitHub Pages scope', () => 
   assert.equal(manifest.scope, './');
   assert.equal(manifest.display, 'standalone');
   assert.equal(manifest.orientation, 'portrait');
+  assert.ok(manifest.icons.some(icon => icon.sizes === '192x192'));
+  assert.ok(manifest.icons.some(icon => icon.sizes === '512x512'));
+  for (const [iconName, dimensions] of [['icon-192.png', 192], ['icon-512.png', 512]]) {
+    const binary = readFileSync(resolve(site, iconName));
+    assert.equal(binary.subarray(1, 4).toString(), 'PNG');
+    assert.equal(binary.readUInt32BE(16), dimensions);
+    assert.equal(binary.readUInt32BE(20), dimensions);
+  }
 
   const html = read('index.html');
   for (const file of ['app.js', 'compiler.js', 'styles.css', 'manifest.webmanifest']) {
@@ -91,7 +99,7 @@ test('PWA assets are self-hosted and have a relative GitHub Pages scope', () => 
   assert.match(read('sw.js'), /mira-studio-/);
   assert.doesNotMatch(read('sw.js'), /__CACHE_VERSION__/);
 
-  for (const file of ['icon.svg', 'worker.js', 'examples.js']) {
+  for (const file of ['icon.svg', 'icon-192.png', 'icon-512.png', 'worker.js', 'examples.js']) {
     assert.ok(existsSync(resolve(site, file)), file + ' must be offline-cacheable');
   }
 });
