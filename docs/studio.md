@@ -33,8 +33,8 @@ coupling parsing to the PWA.
   worker, offline asset cache and an update notification. Source drafts are
   retained locally before app refresh.
 
-This is a frontend for **Mira 0.1**. It does not silently implement
-closures, records, types, partial application, HTML/MVU, or pipelines.
+This is a frontend for **Mira 0.2**. It supports keyword-selector sections and left-to-right pipelines. It does not silently implement
+arbitrary closure expressions, records, types, general currying, or HTML/MVU.
 
 ### Useful shortcuts
 
