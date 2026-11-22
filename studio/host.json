@@ -1,7 +1,9 @@
 {
   "values": [],
   "callables": [
-    "log"
+    "log",
+    "alert",
+    "render"
   ],
   "selectors": [
     "fold:with:from:",

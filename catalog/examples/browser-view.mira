@@ -1,0 +1,11 @@
+# La UI è un record Mira, interpretato dal renderer dell'host.
+say hello: ignored = alert "Ciao dal pulsante Mira!";
+
+render {
+  type: "column",
+  children: [
+    {type: "title", text: "Una view scritta in Mira"},
+    {type: "text", text: "Nessun accesso diretto al DOM."},
+    {type: "button", label: "Salutami", onClick: (say hello: _)}
+  ]
+};

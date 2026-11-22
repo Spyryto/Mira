@@ -1,0 +1,20 @@
+# Lo stato corrente viene mantenuto dall'host.
+# Le trasformazioni di stato e la view sono funzioni Mira.
+increment: value = value + 1;
+decrement: value = value - 1;
+
+counter view: value = {
+  type: "column",
+  children: [
+    {type: "title", text: "Contatore funzionale"},
+    {type: "text", text: value},
+    {type: "button", label: "+1", update: (increment: _)},
+    {type: "button", label: "-1", update: (decrement: _)}
+  ]
+};
+
+render {
+  type: "state",
+  initial: 0,
+  view: (counter view: _)
+};
