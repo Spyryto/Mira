@@ -107,6 +107,18 @@ L'AST Inspector di Studio ora produce anche un report strutturato per
 ogni definizione, trasformando l'AST con Mira. Dettagli e limiti:
 [esempi strutturati e dogfooding](docs/structured-data.md).
 
+## Interoperabilità browser: alert, view e pulsante
+
+Tre nuovi esempi interattivi mostrano che le funzioni host possono collegare
+Mira al DOM senza introdurre keyword speciali. `alert` mostra un dialogo,
+`render` costruisce una view dichiarativa da record e il **contatore** usa
+funzioni Mira per costruire la UI e calcolare lo stato successivo.
+L'anteprima usa un iframe senza accesso same-origin a Studio.
+
+Sorgenti: `catalog/examples/browser-*.mira`, accessibili nella
+**Guida → UI web e interoperabilità** di Mira Studio.
+[Documentazione tecnica e limiti](docs/browser-interop.md).
+
 ## Mira Studio — PWA
 
 The experimental **[Mira Studio](docs/studio.md)** is a mobile-first, installable
