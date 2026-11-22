@@ -9,18 +9,22 @@ class DefinitionParser {
         final definitions:Array<Definition> = [];
         var start = 0;
         var index = 0;
-        var depth = 0;
+        final brackets:Array<String> = [];
 
         while (index < tokens.length && tokens[index].kind != End) {
             final token = tokens[index];
-            if (token.isSymbol("(")) {
-                depth++;
-            } else if (token.isSymbol(")")) {
-                depth--;
-                if (depth < 0) throw new MiraError("Unmatched closing parenthesis", token);
+            if (token.isSymbol("(") || token.isSymbol("[") || token.isSymbol("{")) {
+                brackets.push(token.value);
+            } else if (token.isSymbol(")") || token.isSymbol("]") || token.isSymbol("}")) {
+                final opening = brackets.pop();
+                if ((token.value == ")" && opening != "(")
+                    || (token.value == "]" && opening != "[")
+                    || (token.value == "}" && opening != "{")) {
+                    throw new MiraError("Unmatched closing delimiter " + token.value, token);
+                }
             }
 
-            if (token.isSymbol(";") && depth == 0) {
+            if (token.isSymbol(";") && brackets.length == 0) {
                 if (start < index) {
                     definitions.push(parseOne(tokens.slice(start, index)));
                 }
@@ -29,7 +33,7 @@ class DefinitionParser {
             index++;
         }
 
-        if (depth != 0) throw new MiraError("Unclosed parenthesis", tokens[index]);
+        if (brackets.length != 0) throw new MiraError("Unclosed delimiter", tokens[index]);
         if (start != index) {
             throw new MiraError("Expected ; after definition", tokens[index - 1]);
         }
