@@ -3,14 +3,15 @@ lessons = [
   {student: "Luca", hours: 2, rate: 25},
   {student: "Mia", hours: 1, rate: 35}
 ];
-fee: lesson = (get: "hours", from: (lesson))
-  * (get: "rate", from: (lesson));
+hours = field "hours";
+rate = field "rate";
+student = field "student";
+fee: lesson = (lesson ~ hours) * (lesson ~ rate);
 accumulate fee: total, with: lesson = total + (fee: lesson);
 invoice: lesson = {
-  student: (get: "student", from: (lesson)),
+  student: (lesson ~ student),
   amount: (fee: lesson)
 };
-
 income = fold: lessons, with: (accumulate fee: _, with: _), from: 0;
 invoices = map: lessons, with: (invoice: _);
 result = {income: income, invoices: invoices};
