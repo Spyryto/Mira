@@ -295,3 +295,18 @@ test('underscore cannot be declared as a value or parameter', () => {
     assert.match(outcome.stderr, /reserved/);
   }
 });
+
+
+test('structured-data literals reject duplicate keys and malformed delimiters', () => {
+  for (const [source, diagnostic] of [
+    ['result = {name: "A", name: "B"};', 'Duplicate record key'],
+    ['result = [1, 2,];', 'Trailing comma in list'],
+    ['result = {name: 1,};', 'Trailing comma in record'],
+    ['result = [1, 2;', 'Unclosed delimiter'],
+    ['result = {name: 1];', 'Unmatched closing delimiter']
+  ]) {
+    const outcome = compileError(source);
+    assert.notEqual(outcome.status, 0, source);
+    assert.match(outcome.stderr, new RegExp(diagnostic), source);
+  }
+});
