@@ -79,6 +79,13 @@
             <div class="run-result-title"><span class="run-dot"></span> Esecuzione JavaScript</div>
             <output id="runOutput">Non eseguito.</output>
           </div>
+          <div id="uiPreviewPanel" class="ui-preview-panel" hidden>
+            <div class="ui-preview-heading">
+              <strong>Anteprima UI</strong>
+              <span>Host browser isolato · record Mira</span>
+            </div>
+            <div id="uiPreviewMount" class="ui-preview-mount" aria-label="Anteprima UI di Mira"></div>
+          </div>
         </div>
 
         <div class="panel" id="view-structure" role="tabpanel" aria-labelledby="tab-structure" hidden>
@@ -125,6 +132,7 @@
           </div>
           <button type="button" class="button-compile" id="compile">Compila <span aria-hidden="true">↗</span></button>
           <button type="button" class="button-run" id="run" title="Esegue il JavaScript generato in un Web Worker">▶ Esegui</button>
+          <button type="button" class="button-ui" id="previewUI" title="Esegue la UI in un iframe isolato">Anteprima UI</button>
         </div>
 
         <div id="status" class="status ready" role="status" aria-live="polite">

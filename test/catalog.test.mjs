@@ -38,6 +38,10 @@ function invoke(example, target) {
 
     assert.equal(result.status, 0, example.id + ': ' + result.stderr);
 
+    // The PHP backend can compile UI host calls, but PHP has no browser DOM.
+    // Interactive outcomes are tested separately against the JS DOM host.
+    if (example.expect.kind === 'ui') return;
+
     const output = join(dir, target === 'js' ? 'example.mjs' : 'example.php');
     const functionCall = example.expect.kind === 'invoke'
       ? (target === 'php' ? '$' : '') + example.expect.name +
@@ -94,7 +98,7 @@ test('all language features are represented by at least two uniquely linked prog
       const sample = reference.examples.find(item => item.id === id);
       assert.ok(sample, id);
       assert.equal(sample.feature, feature.id);
-      assert.ok(sample.source.includes('result = ') || sample.expect.kind === 'error',
+      assert.ok(sample.source.includes('result = ') || ['error','ui'].includes(sample.expect.kind),
         id + ' needs an observable result');
     }
   }

@@ -187,6 +187,18 @@
         "gig-ledger",
         "teaching-ledger"
       ]
+    },
+    {
+      "id": "browser-ui",
+      "title": "UI web e interoperabilità",
+      "summary": "Visualizzazione dichiarativa, alert e gestione degli eventi con funzioni Mira collegate a un host browser.",
+      "details": "`alert` e `render` sono callable registrati nell'ambiente JS. `render` accetta record con tipi di view consentiti: title, text, column, button e state. Nel componente state il browser conserva il valore, mentre la funzione Mira `view` produce la UI e le funzioni Mira `update` calcolano lo stato successivo. L'anteprima è confinata in un iframe sandbox senza accesso all'origine dello Studio. Il PHP generato è compilabile, ma l'esecuzione di queste capability richiede un ambiente DOM e viene verificata soltanto nel browser.",
+      "api": "mira.HostEnvironment",
+      "examples": [
+        "browser-alert",
+        "browser-view",
+        "browser-counter"
+      ]
     }
   ],
   "examples": [
@@ -632,6 +644,42 @@
             }
           ]
         }
+      }
+    },
+    {
+      "id": "browser-alert",
+      "feature": "browser-ui",
+      "title": "Alert dall’host",
+      "description": "Mira chiama una funzione dell'host che apre una finestra di dialogo nell'anteprima.",
+      "path": "catalog/examples/browser-alert.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "ui",
+        "description": "Anteprima interattiva nel browser"
+      }
+    },
+    {
+      "id": "browser-view",
+      "feature": "browser-ui",
+      "title": "View e pulsante",
+      "description": "Una view dichiarativa costruita con record Mira; il pulsante richiama una funzione Mira.",
+      "path": "catalog/examples/browser-view.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "ui",
+        "description": "Anteprima interattiva nel browser"
+      }
+    },
+    {
+      "id": "browser-counter",
+      "feature": "browser-ui",
+      "title": "Pulsante con contatore",
+      "description": "Mira definisce sia la view dipendente dallo stato sia le transizioni +1 e -1; l'host conserva il valore e gestisce i clic.",
+      "path": "catalog/examples/browser-counter.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "ui",
+        "description": "Anteprima interattiva nel browser"
       }
     }
   ]

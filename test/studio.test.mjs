@@ -105,7 +105,7 @@ test('PWA assets are self-hosted and have a relative GitHub Pages scope', () => 
 });
 
 test('mobile UI JavaScript, SW and execution worker have valid syntax', () => {
-  for (const file of ['app.js', 'reference-ui.js', 'ast-inspector.js', 'inspector-host.js', 'collection-host.js', 'inspector-worker.js', 'examples.js', 'worker.js', 'sw.js']) {
+  for (const file of ['app.js', 'reference-ui.js', 'ast-inspector.js', 'inspector-host.js', 'collection-host.js', 'inspector-worker.js', 'examples.js', 'worker.js', 'ui-host.js', 'ui-preview.js', 'sw.js']) {
     execFileSync('node', ['--check', resolve(site, file)]);
   }
 });
@@ -167,6 +167,13 @@ test('Studio offers all generated feature examples and real Haxe API links offli
   assert.match(read('sw.js'), /\.\/reference\.json/);
   assert.match(read('sw.js'), /\.\/reference-ui\.js/);
   assert.match(read('index.html'), /data-view="reference"/);
+  assert.match(read('index.html'), /id="previewUI"/);
+  assert.match(read('app.js'), /sandbox', 'allow-scripts'/);
+  assert.doesNotMatch(read('app.js'), /sandbox', 'allow-scripts allow-same-origin'/);
+  for (const file of ['ui-host.js', 'ui-preview.js', 'ui-preview.html']) {
+    assert.ok(existsSync(resolve(site, file)), file);
+    assert.ok(read('sw.js').includes('./' + file));
+  }
   assert.match(read('app.js'), /initializeReference/);
 
   for (const example of reference.examples) {
@@ -242,7 +249,8 @@ test('structured data literals are represented in the canonical AST', () => {
 
 test('the Studio execution worker runs the four complete structured-data case studies', () => {
   const reference = JSON.parse(read('reference.json'));
-  for (const example of reference.examples.filter(item => item.host)) {
+  for (const example of reference.examples.filter(item =>
+    item.host && item.expect.kind === 'result')) {
     const output = bridge.compile(example.source, 'js', read('host.json'));
     assert.equal(output.ok, true, example.id + ': ' + output.message);
 

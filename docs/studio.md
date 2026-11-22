@@ -138,3 +138,19 @@ runs inside the PWA.
 The UI can evolve independently of Mira's semantics. Future work might add
 structured diagnostics with source spans, native editor syntax highlighting,
 or source/AST cross-references, but these are not part of this first release.
+
+## Interoperabilità UI
+
+Dalla Guida scegli **Alert dall'host**, **View e pulsante** o
+**Pulsante con contatore**. Premi **Esegui** o **Anteprima UI** con
+JavaScript selezionato. L'anteprima compare nella scheda Output;
+il pulsante aggiorna lo stato facendo eseguire funzioni Mira, non
+implementazioni nascoste in JavaScript.
+
+Le API `alert` e `render` sono funzioni dell'Host Environment.
+Le view sono record di tipo `column`, `title`, `text`, `button`
+e `state`. L'iframe è isolato tramite `sandbox="allow-scripts"`
+senza `allow-same-origin`. Le view non possono essere eseguite
+direttamente su PHP, anche se il sorgente Mira traspila in PHP.
+
+[Descrizione dell'esperimento e sorgenti](browser-interop.md).

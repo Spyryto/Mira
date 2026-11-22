@@ -31,6 +31,7 @@ export function mountReference(root, dataset, onOpenExample) {
   function expected(example) {
     const result = example.expect;
     if (result.kind === 'error') return 'Errore atteso: ' + result.contains;
+    if (result.kind === 'ui') return 'UI interattiva · Esegui con Anteprima UI';
     if (result.kind === 'invoke') {
       return result.name + '(' + result.args.join(', ') + ') → ' +
         JSON.stringify(result.value) + ' (invocazione dal backend)';
@@ -156,6 +157,12 @@ export function mountReference(root, dataset, onOpenExample) {
     if (example.expect.kind === 'error') {
       root.append(element('p', 'reference-note',
         'Questo esempio è volutamente errato: caricalo per osservare la diagnostica.'));
+    }
+    if (example.expect.kind === 'ui') {
+      root.append(element('p', 'reference-note',
+        'Apri nell’editor, scegli JS e premi Esegui oppure Anteprima UI. ' +
+        'La UI gira in un iframe isolato e usa soltanto le capability host ' +
+        'alert e render. Il backend PHP è verificato solo in compilazione.'));
     }
     const open = element('button', 'reference-try', 'Apri nell’editor');
     open.type = 'button';
