@@ -1,0 +1,415 @@
+import { examples, defaultSource } from './examples.js';
+
+// Mira Studio's controller concerns browser UX only.
+// All language semantics are delegated to the Haxe compiler bridge.
+const compiler = globalThis.MiraStudioCompiler;
+const $ = id => document.getElementById(id);
+
+const ui = {
+  source: $('source'),
+  lineNumbers: $('lineNumbers'),
+  position: $('position'),
+  targetButtons: [...document.querySelectorAll('[data-target]')],
+  viewButtons: [...document.querySelectorAll('[data-view]')],
+  exampleSelect: $('exampleSelect'),
+  structureSelect: $('structureSelect'),
+  output: $('output'),
+  outputTitle: $('outputTitle'),
+  structure: $('structure'),
+  status: $('status'),
+  statusText: $('statusText'),
+  statusDetail: $('statusDetail'),
+  saveStatus: $('saveStatus'),
+  runOutput: $('runOutput'),
+  connection: $('connection'),
+  runButton: $('run'),
+  fileInput: $('fileInput')
+};
+
+const STORAGE_KEY = 'mira-studio:source:v1';
+const TARGET_KEY = 'mira-studio:target:v1';
+const state = {
+  target: 'js',
+  view: 'code',
+  output: '',
+  valid: false,
+  debounce: 0,
+  worker: null,
+  workerTimeout: 0,
+  registration: null,
+  updateRequested: false
+};
+
+function getSaved(key, fallback) {
+  try {
+    return localStorage.getItem(key) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveLocally() {
+  try {
+    localStorage.setItem(STORAGE_KEY, ui.source.value);
+    localStorage.setItem(TARGET_KEY, state.target);
+    ui.saveStatus.textContent = 'Salvato sul dispositivo';
+  } catch {
+    ui.saveStatus.textContent = 'Salvataggio non disponibile';
+  }
+}
+
+function setStatus(type, message, detail = '') {
+  ui.status.className = 'status ' + type;
+  ui.statusText.textContent = message;
+  ui.statusDetail.textContent = detail;
+}
+
+function updateEditorIndicators() {
+  const source = ui.source.value;
+  const lines = source.split('\n');
+  ui.lineNumbers.textContent = lines.map((_, index) => index + 1).join('\n');
+
+  const beforeCursor = source.slice(0, ui.source.selectionStart);
+  const positionLines = beforeCursor.split('\n');
+  ui.position.textContent = `Riga ${positionLines.length} · Col ${positionLines.at(-1).length + 1}`;
+  ui.lineNumbers.scrollTop = ui.source.scrollTop;
+}
+
+function setView(view) {
+  if (!['code', 'output', 'structure'].includes(view)) return;
+
+  state.view = view;
+  for (const button of ui.viewButtons) {
+    const selected = button.dataset.view === view;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-selected', String(selected));
+  }
+
+  for (const name of ['code', 'output', 'structure']) {
+    $('view-' + name).hidden = name !== view;
+  }
+
+  if (view === 'structure') updateStructure();
+}
+
+function setTarget(target) {
+  if (!['js', 'php'].includes(target)) return;
+
+  state.target = target;
+  for (const button of ui.targetButtons) {
+    const selected = button.dataset.target === target;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  }
+
+  ui.outputTitle.textContent = target === 'js' ? 'JavaScript generato' : 'PHP generato';
+  ui.runButton.disabled = target !== 'js';
+  ui.runButton.title = target === 'js'
+    ? 'Esegui il JS generato in un Web Worker'
+    : 'L’esecuzione di PHP non è disponibile nel browser';
+  stopWorker();
+  ui.runOutput.textContent = target === 'js'
+    ? 'Non eseguito.' : 'Per eseguire nel browser, seleziona JS.';
+  saveLocally();
+  compile(false);
+}
+
+function compile(revealOutput = false) {
+  if (!compiler?.compile) {
+    state.valid = false;
+    setStatus('error', 'Il compilatore Haxe non è stato caricato.');
+    return false;
+  }
+
+  const begin = performance.now();
+  const result = compiler.compile(ui.source.value, state.target);
+  const elapsed = performance.now() - begin;
+
+  if (!result?.ok) {
+    state.valid = false;
+    state.output = '';
+    ui.output.textContent = result?.message || 'Errore sconosciuto.';
+    setStatus('error', result?.message || 'Compilazione non riuscita.', '');
+    if (revealOutput) setView('code');
+    return false;
+  }
+
+  state.valid = true;
+  state.output = result.output;
+  ui.output.textContent = state.output;
+  setStatus('ready', 'Compilazione riuscita', `${elapsed.toFixed(2)} ms`);
+  if (state.view === 'structure') updateStructure();
+  if (revealOutput) setView('output');
+  return true;
+}
+
+function updateStructure() {
+  if (!compiler) return;
+
+  const inspector = ui.structureSelect.value === 'tokens'
+    ? compiler.tokens : compiler.ast;
+  const result = inspector(ui.source.value);
+  ui.structure.textContent = result?.ok
+    ? result.output
+    : result?.message || 'Impossibile analizzare il sorgente.';
+}
+
+function scheduleCompile() {
+  clearTimeout(state.debounce);
+  state.debounce = setTimeout(() => {
+    compile(false);
+  }, 350);
+}
+
+function sourceChanged() {
+  stopWorker();
+  ui.runOutput.textContent = 'Non eseguito.';
+  updateEditorIndicators();
+  saveLocally();
+  scheduleCompile();
+}
+
+function download(name, body, type = 'text/plain;charset=utf-8') {
+  const url = URL.createObjectURL(new Blob([body], { type }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function saveSource() {
+  download('programma.mira', ui.source.value);
+}
+
+function saveOutput() {
+  if (!state.valid && !compile(false)) return;
+  const extension = state.target === 'js' ? 'js' : 'php';
+  download('programma.' + extension, state.output);
+}
+
+async function copyOutput() {
+  if (!state.valid && !compile(false)) return;
+
+  try {
+    await navigator.clipboard.writeText(state.output);
+    setStatus('ready', 'Output copiato negli appunti.');
+  } catch {
+    setStatus('error', 'Impossibile copiare: seleziona il testo manualmente.');
+  }
+}
+
+function loadExample(exampleId) {
+  const example = examples.find(item => item.id === exampleId);
+  if (!example) return;
+  if (ui.source.value !== example.source && ui.source.value.trim()) {
+    if (!window.confirm('Sostituire il codice corrente con questo esempio?')) {
+      ui.exampleSelect.value = '';
+      return;
+    }
+  }
+  ui.source.value = example.source;
+  updateEditorIndicators();
+  sourceChanged();
+  setView('code');
+}
+
+function stopWorker() {
+  if (state.worker) state.worker.terminate();
+  clearTimeout(state.workerTimeout);
+  state.worker = null;
+  state.workerTimeout = 0;
+}
+
+function runJavaScript() {
+  if (state.target !== 'js') return;
+  if (!compile(false)) {
+    setView('code');
+    return;
+  }
+
+  stopWorker();
+  ui.runOutput.textContent = 'Esecuzione in corso…';
+  setView('output');
+
+  // Isolates accidental infinite loops from the main UI thread.
+  // This is not a security boundary for untrusted third-party programs.
+  const worker = new Worker('./worker.js');
+  state.worker = worker;
+  state.workerTimeout = setTimeout(() => {
+    if (state.worker !== worker) return;
+    stopWorker();
+    ui.runOutput.textContent = 'Interrotto: tempo massimo di 2 secondi.';
+  }, 2000);
+
+  worker.onmessage = event => {
+    if (state.worker !== worker) return;
+    clearTimeout(state.workerTimeout);
+    ui.runOutput.textContent = event.data?.ok
+      ? event.data.output
+      : 'Errore: ' + (event.data?.message ?? 'esecuzione fallita');
+    stopWorker();
+  };
+  worker.onerror = event => {
+    if (state.worker !== worker) return;
+    ui.runOutput.textContent = 'Errore durante l’esecuzione JavaScript.';
+    stopWorker();
+  };
+  worker.postMessage({ code: state.output });
+}
+
+function loadFile(file) {
+  if (!file) return;
+  if (file.size > 200_000) {
+    setStatus('error', 'File troppo grande: massimo 200 KB.');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    ui.source.value = String(reader.result ?? '');
+    sourceChanged();
+    setView('code');
+  };
+  reader.onerror = () => setStatus('error', 'Impossibile leggere il file.');
+  reader.readAsText(file, 'UTF-8');
+}
+
+function updateConnection() {
+  if (!navigator.onLine) {
+    ui.connection.textContent = '● Offline';
+    ui.connection.classList.add('offline');
+  } else {
+    ui.connection.textContent = navigator.serviceWorker?.controller
+      ? '● Pronta offline' : '● Online';
+    ui.connection.classList.remove('offline');
+  }
+}
+
+function showUpdate() {
+  $('updateNotice').hidden = false;
+}
+
+async function installServiceWorker() {
+  if (!('serviceWorker' in navigator)) {
+    updateConnection();
+    return;
+  }
+
+  const hadController = Boolean(navigator.serviceWorker.controller);
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    updateConnection();
+    if (state.updateRequested) {
+      saveLocally();
+      window.location.reload();
+    } else if (hadController) {
+      showUpdate();
+    }
+  });
+
+  try {
+    const registration = await navigator.serviceWorker.register('./sw.js', {
+      scope: './'
+    });
+    state.registration = registration;
+
+    if (registration.waiting && navigator.serviceWorker.controller) showUpdate();
+
+    registration.addEventListener('updatefound', () => {
+      const installing = registration.installing;
+      if (!installing) return;
+      installing.addEventListener('statechange', () => {
+        if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+          showUpdate();
+        }
+      });
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) registration.update().catch(() => {});
+    });
+  } catch {
+    // The editor remains usable online or from a local HTTP server.
+  }
+  updateConnection();
+}
+
+function wireEvents() {
+  for (const button of ui.viewButtons) {
+    button.addEventListener('click', () => setView(button.dataset.view));
+  }
+  for (const button of ui.targetButtons) {
+    button.addEventListener('click', () => setTarget(button.dataset.target));
+  }
+
+  ui.source.addEventListener('input', sourceChanged);
+  ui.source.addEventListener('click', updateEditorIndicators);
+  ui.source.addEventListener('keyup', updateEditorIndicators);
+  ui.source.addEventListener('scroll', updateEditorIndicators);
+
+  ui.source.addEventListener('keydown', event => {
+    if (event.key === 'Tab') {
+      event.preventDefault();
+      const start = ui.source.selectionStart;
+      const end = ui.source.selectionEnd;
+      ui.source.setRangeText('  ', start, end, 'end');
+      sourceChanged();
+    }
+    if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+      event.preventDefault();
+      if (event.shiftKey) runJavaScript();
+      else compile(true);
+    }
+  });
+
+  $('compile').addEventListener('click', () => compile(true));
+  ui.runButton.addEventListener('click', runJavaScript);
+  $('saveSource').addEventListener('click', saveSource);
+  $('saveOutput').addEventListener('click', saveOutput);
+  $('copyOutput').addEventListener('click', copyOutput);
+  $('openFile').addEventListener('click', () => ui.fileInput.click());
+  ui.fileInput.addEventListener('change', () => {
+    loadFile(ui.fileInput.files?.[0]);
+    ui.fileInput.value = '';
+  });
+  ui.structureSelect.addEventListener('change', updateStructure);
+  ui.exampleSelect.addEventListener('change', () => loadExample(ui.exampleSelect.value));
+  $('updateNow').addEventListener('click', () => {
+    state.updateRequested = true;
+    saveLocally();
+    if (state.registration?.waiting) {
+      state.registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+    } else {
+      window.location.reload();
+    }
+  });
+  window.addEventListener('online', updateConnection);
+  window.addEventListener('offline', updateConnection);
+}
+
+function start() {
+  ui.exampleSelect.replaceChildren();
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = 'Scegli un esempio';
+  ui.exampleSelect.appendChild(placeholder);
+  for (const example of examples) {
+    const option = document.createElement('option');
+    option.value = example.id;
+    option.textContent = example.name;
+    ui.exampleSelect.appendChild(option);
+  }
+  ui.exampleSelect.value = '';
+
+  ui.source.value = getSaved(STORAGE_KEY, defaultSource);
+  state.target = getSaved(TARGET_KEY, 'js') === 'php' ? 'php' : 'js';
+
+  wireEvents();
+  updateEditorIndicators();
+  setTarget(state.target);
+  installServiceWorker();
+}
+
+start();
