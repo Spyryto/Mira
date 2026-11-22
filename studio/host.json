@@ -3,5 +3,9 @@
   "callables": [
     "log"
   ],
-  "selectors": []
+  "selectors": [
+    "fold:with:from:",
+    "map:with:",
+    "get:from:"
+  ]
 }

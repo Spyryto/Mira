@@ -72,7 +72,7 @@ class ExpressionParser {
 
     static function startsPrimary(token:Token):Bool {
         return token.kind == Word || token.kind == Number || token.kind == Text
-            || token.isSymbol("(");
+            || token.isSymbol("(") || token.isSymbol("[") || token.isSymbol("{");
     }
 
     static function isPotentialCallable(expr:Expr):Bool {
@@ -85,6 +85,8 @@ class ExpressionParser {
 
     function primary():Expr {
         final token = current();
+        if (token.isSymbol("[")) return sequence();
+        if (token.isSymbol("{")) return record();
         if (token.isSymbol("(")) {
             consume();
             final inner = expression();
@@ -139,6 +141,47 @@ class ExpressionParser {
             "Unknown identifier or incomplete selector; register host names explicitly",
             token
         );
+    }
+
+    // Data literals are deliberately expression-level constructs, not host APIs.
+    // They keep exactly the same meaning on JS and PHP.
+    function sequence():Expr {
+        consume(); // [
+        final items:Array<Expr> = [];
+        while (!current().isSymbol("]")) {
+            if (current().kind == End) throw new MiraError("Unclosed list literal", current());
+            items.push(expression());
+            if (current().isSymbol("]")) break;
+            if (!current().isSymbol(",")) throw new MiraError("Expected , or ]", current());
+            consume();
+            if (current().isSymbol("]")) throw new MiraError("Trailing comma in list", current());
+        }
+        consume(); // ]
+        return Sequence(items);
+    }
+
+    function record():Expr {
+        consume(); // {
+        final keys:Array<String> = [];
+        final values:Array<Expr> = [];
+        while (!current().isSymbol("}")) {
+            final keyToken = current();
+            if (keyToken.kind != Word && keyToken.kind != Text) {
+                throw new MiraError("Expected record key", keyToken);
+            }
+            final key = consume().value;
+            if (keys.indexOf(key) >= 0) throw new MiraError("Duplicate record key " + key, keyToken);
+            if (!current().isSymbol(":")) throw new MiraError("Expected : after record key", current());
+            consume();
+            keys.push(key);
+            values.push(expression());
+            if (current().isSymbol("}")) break;
+            if (!current().isSymbol(",")) throw new MiraError("Expected , or }", current());
+            consume();
+            if (current().isSymbol("}")) throw new MiraError("Trailing comma in record", current());
+        }
+        consume(); // }
+        return Record(keys, values);
     }
 
     function current():Token {

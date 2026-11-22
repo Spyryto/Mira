@@ -8,6 +8,7 @@ const ASSETS = [
   './reference-ui.js',
   './ast-inspector.js',
   './inspector-host.js',
+  './collection-host.js',
   './inspector-worker.js',
   './inspector.mira',
   './inspector-host.json',

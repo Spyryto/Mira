@@ -110,3 +110,23 @@ and rejects equal-length competing matches instead of guessing.
 The syntax of `type`, records `{}`, general closures, lists `[]`,
 implicit partial selector calls and operator declarations remains under
 consideration; these are **not** implemented.
+
+## Sequenze e record (esperimento dopo 0.2)
+
+```mira
+numbers = [1, 2, 3];
+empty list = [];
+person = {name: "Mira", score: 10};
+empty record = {};
+summary = {values: numbers, metadata: person};
+```
+
+`[a, b]` è una sequenza in ordine; `{key: expression}` è un record
+anonimo con chiavi uniche. Le chiavi sono una sola parola o una stringa.
+Le espressioni annidate sono ammesse, ma le virgole finali sono rifiutate.
+Il frontend produce nodi `Sequence` e `Record` dell'AST, con risultati
+JS/PHP equivalenti per i dati JSON.
+
+Le operazioni `get:from:`, `map:with:` e `fold:with:from:` negli
+esempi sono selettori **dell'host**, non parole riservate del parser.
+Vedi [i casi d'uso verificati](structured-data.md).

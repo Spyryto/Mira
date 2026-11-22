@@ -1,0 +1,16 @@
+# Scaletta: i dati sono una sequenza di record Mira.
+songs = [
+  {title: "Opening", minutes: 4.5},
+  {title: "Midnight", minutes: 3.75},
+  {title: "Encore", minutes: 5.25}
+];
+duration: song = get: "minutes", from: (song);
+add duration: total, of: song = total + (duration: song);
+to plan: song = {
+  title: (get: "title", from: (song)),
+  seconds: ((duration: song) * 60)
+};
+
+total minutes = fold: songs, with: (add duration: _, of: _), from: 0;
+plan = map: songs, with: (to plan: _);
+result = {minutes: total minutes, items: plan};

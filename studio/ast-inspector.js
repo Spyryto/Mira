@@ -29,6 +29,8 @@ function labelOf(node) {
     case 'HostSection': return node.kind + ' · ' + node.selector;
     case 'Apply': return 'Apply';
     case 'Placeholder': return 'Placeholder · _';
+    case 'Sequence': return 'Sequence · ' + (node.items?.length ?? 0) + ' elementi';
+    case 'Record': return 'Record · ' + (node.fields?.length ?? 0) + ' campi';
     default: return String(node.kind ?? '?');
   }
 }
@@ -67,6 +69,20 @@ function renderTree(parent, ast) {
   visit(ast, parent);
 }
 
+function renderDefinitions(parent, items) {
+  parent.replaceChildren();
+  for (const item of items ?? []) {
+    const row = document.createElement('div');
+    row.className = 'inspector-definition';
+    const label = document.createElement('strong');
+    label.textContent = item.name;
+    const info = document.createElement('span');
+    info.textContent = item.kind + ' · ' + item.nodes + ' nodi · ' + item.calls + ' chiamate';
+    row.append(label, info);
+    parent.append(row);
+  }
+}
+
 function renderMetrics(parent, metrics) {
   parent.replaceChildren();
   for (const [key, label] of Object.entries(metricLabels)) {
@@ -84,6 +100,7 @@ function renderMetrics(parent, metrics) {
 export function createAstInspector(compiler) {
   const status = document.getElementById('inspectorStatus');
   const stats = document.getElementById('inspectorStats');
+  const definitions = document.getElementById('inspectorDefinitions');
   const tree = document.getElementById('inspectorTree');
   const editor = document.getElementById('inspectorProgram');
   const recalculate = document.getElementById('inspectorRecalculate');
@@ -138,6 +155,7 @@ export function createAstInspector(compiler) {
     const id = requestId;
     status.textContent = 'Analisi e trasformazione in Mira…';
     stats.replaceChildren();
+    definitions.replaceChildren();
     tree.replaceChildren();
 
     try {
@@ -169,6 +187,7 @@ export function createAstInspector(compiler) {
           return;
         }
         renderMetrics(stats, event.data.stats);
+        renderDefinitions(definitions, event.data.stats.definitions);
         status.textContent = 'Statistiche calcolate da Mira · ' +
           event.data.stats.total + ' nodi attraversati';
         if (worker) worker.terminate();

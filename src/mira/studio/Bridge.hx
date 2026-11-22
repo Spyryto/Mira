@@ -14,7 +14,7 @@ class Bridge {
             compile: compile,
             tokens: tokens,
             ast: ast,
-            version: "0.2.0"
+            version: "0.3.0"
         });
     }
 
@@ -51,10 +51,12 @@ class Bridge {
                 };
                 if (definition.isFunction()) {
                     Reflect.setField(node, "selector", definition.selector());
+                    Reflect.setField(node, "name", definition.selector());
                     Reflect.setField(node, "labels", definition.labels);
                     Reflect.setField(node, "parameters", definition.parameters);
-                } else if (!definition.isStatement) {
-                    Reflect.setField(node, "name", definition.name);
+                } else {
+                    Reflect.setField(node, "name",
+                        definition.isStatement ? "<expression>" : definition.name);
                 }
                 tree.push(node);
             }
@@ -69,6 +71,11 @@ class Bridge {
             case HostRef(name): {kind: "HostRef", name: name};
             case Numeric(number): {kind: "Number", value: number};
             case Text(text): {kind: "Text", value: text};
+            case Sequence(items):
+                {kind: "Sequence", items: [for (item in items) expression(item)]};
+            case Record(keys, values):
+                {kind: "Record", fields: [for (index in 0...keys.length)
+                    {key: keys[index], value: expression(values[index])}]};
             case Binary(symbol, left, right):
                 {kind: "Binary", symbol: symbol, left: expression(left), right: expression(right)};
             case Call(selector, args):

@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0",
+  "version": "0.3.0",
   "features": [
     {
       "id": "values",
@@ -164,6 +164,28 @@
       "examples": [
         "ambiguous-words",
         "duplicate-parameter"
+      ]
+    },
+    {
+      "id": "sequences",
+      "title": "Sequenze e trasformazioni",
+      "summary": "Liste letterali e trasformazioni funzionali con un host minimo.",
+      "details": "Le sequenze `[a, b]` sono valori di Mira. `map:with:` e `fold:with:from:` sono funzioni esplicite dell'host, non keyword del linguaggio; i reducer rimangono funzioni Mira.",
+      "api": "mira.syntax.Expr.Sequence",
+      "examples": [
+        "practice-log",
+        "setlist-plan"
+      ]
+    },
+    {
+      "id": "records",
+      "title": "Record e dati strutturati",
+      "summary": "Costruzione di record anonimi portabili tra JavaScript e PHP.",
+      "details": "I record `{campo: espressione}` diventano oggetti JavaScript e array associativi PHP. Il selettore host `get:from:` legge una chiave; chiavi duplicate e delimitatori errati vengono rifiutati.",
+      "api": "mira.syntax.Expr.Record",
+      "examples": [
+        "gig-ledger",
+        "teaching-ledger"
       ]
     }
   ],
@@ -507,6 +529,110 @@
         "contains": "Duplicate parameter"
       },
       "path": "catalog/examples/duplicate-parameter.mira"
+    },
+    {
+      "id": "practice-log",
+      "feature": "sequences",
+      "title": "Registro delle sessioni di studio",
+      "description": "Una lista di durate viene aggregata e trasformata in secondi attraverso funzioni Mira passate all'host.",
+      "path": "catalog/examples/practice-log.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "result",
+        "value": {
+          "minutes": 70,
+          "seconds": [
+            900,
+            1200,
+            600,
+            1500
+          ]
+        }
+      }
+    },
+    {
+      "id": "setlist-plan",
+      "feature": "sequences",
+      "title": "Scaletta musicale e minutaggio",
+      "description": "Elabora una lista di brani, calcola la durata e produce una nuova scaletta con le durate in secondi.",
+      "path": "catalog/examples/setlist-plan.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "result",
+        "value": {
+          "minutes": 13.5,
+          "items": [
+            {
+              "title": "Opening",
+              "seconds": 270
+            },
+            {
+              "title": "Midnight",
+              "seconds": 225
+            },
+            {
+              "title": "Encore",
+              "seconds": 315
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "gig-ledger",
+      "feature": "records",
+      "title": "Bilancio di tre concerti",
+      "description": "Per ogni serata calcola un compenso netto stimato, poi riepiloga tutti i concerti.",
+      "path": "catalog/examples/gig-ledger.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "result",
+        "value": {
+          "netTotal": 679,
+          "shows": [
+            {
+              "venue": "Padova",
+              "net": 223
+            },
+            {
+              "venue": "Treviso",
+              "net": 282
+            },
+            {
+              "venue": "Venezia",
+              "net": 174
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "teaching-ledger",
+      "feature": "records",
+      "title": "Registro delle lezioni di chitarra",
+      "description": "Ricalcola ricavi e voci di un registro lezioni a partire da record strutturati.",
+      "path": "catalog/examples/teaching-ledger.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "result",
+        "value": {
+          "income": 130,
+          "invoices": [
+            {
+              "student": "Anna",
+              "amount": 45
+            },
+            {
+              "student": "Luca",
+              "amount": 50
+            },
+            {
+              "student": "Mia",
+              "amount": 35
+            }
+          ]
+        }
+      }
     }
   ]
 }

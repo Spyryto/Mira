@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const manifest = JSON.parse(readFileSync(resolve(root, 'catalog/manifest.json'), 'utf8'));
@@ -25,7 +25,9 @@ function prepareExample(example, callback) {
 
 function invoke(example, target) {
   return prepareExample(example, (input, dir) => {
-    const result = spawnSync('node', [compiler, input, target], {encoding: 'utf8'});
+    const args = [compiler, input, target];
+    if (example.host) args.push('--host', resolve(root, example.host));
+    const result = spawnSync('node', args, {encoding: 'utf8'});
 
     if (example.expect.kind === 'error') {
       assert.notEqual(result.status, 0, example.id + ' should fail on ' + target);
@@ -46,7 +48,21 @@ function invoke(example, target) {
       ? '\necho json_encode(' + functionCall + '), "\\n";\n'
       : '\nconsole.log(JSON.stringify(' + functionCall + '));\n';
 
-    writeFileSync(output, result.stdout + footer);
+    let prelude = '';
+    let compiled = result.stdout;
+    if (example.host) {
+      if (target === 'js') {
+        const uri = pathToFileURL(resolve(root, 'studio/collection-host.js')).href;
+        prelude = 'import {collectionHost} from ' + JSON.stringify(uri) + ';\n' +
+          'const __miraHost = collectionHost();\n';
+      } else {
+        prelude = '<?php\ndeclare(strict_types=1);\nrequire_once ' +
+          JSON.stringify(resolve(root, 'test/fixtures/CollectionHost.php')) + ';\n' +
+          '$GLOBALS["__miraHost"] = makeCollectionHost();\n';
+        compiled = compiled.replace(/^<\?php\s*declare\(strict_types=1\);\s*/, '');
+      }
+    }
+    writeFileSync(output, prelude + compiled + footer);
     const process = spawnSync(target === 'js' ? 'node' : 'php', [output], {
       encoding: 'utf8'
     });

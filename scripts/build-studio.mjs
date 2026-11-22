@@ -14,6 +14,7 @@ const assets = [
   'reference-ui.js',
   'ast-inspector.js',
   'inspector-host.js',
+  'collection-host.js',
   'inspector-worker.js',
   'examples.js',
   'host.json',

@@ -1,6 +1,6 @@
 # Mira: syntax experiments
 
-**Mira 0.2 implements full selectors, selector sections and pipelines.** Other forms below remain under evaluation.
+**Mira 0.3 implements selectors, selector sections, pipelines, sequence literals and anonymous records.** Typed records and other advanced forms remain under evaluation.
 
 ## Implemented: complete selectors
 
@@ -86,4 +86,4 @@ The UI functions can build a data tree without DOM side effects. This does **not
 
 Tokenize (preserve locations) → collect selector signatures → parse with boundaries → canonical AST → emit JS/PHP.
 
-The 0.2 grammar deliberately has no type inference. Selector sections and pipelines are tested through executed JavaScript and PHP, with explicit limits on supported forms.
+The 0.3 grammar deliberately has no type inference. Selector sections and pipelines are tested through executed JavaScript and PHP, with explicit limits on supported forms.

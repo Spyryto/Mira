@@ -55,7 +55,7 @@ The labeled form `add: x, and: y` and the parenthesized abbreviation `add (x) an
 
 Explicit `:` remains essential when a bare multiword argument has no unambiguous boundary. Mira rejects ambiguous input rather than guessing from inferred types.
 
-## Mira 0.2: sections and pipelines
+## Mira 0.3: functional sections, sequences and records
 
 Mira now supports **first-class selector sections**: a complete keyword call with one or more `_` arguments creates a function value. `x ~ f` applies the value `x` to the unary function `f` and pipelines group left to right.
 
@@ -70,14 +70,14 @@ The resulting value is `10`, for both JS and PHP. See [executable example](examp
 
 **Implemented subset:** value/function definitions, multiword names, literal and parenthesized selector arguments, numeric/string literals, binary arithmetic, keyword sections and pipelines. Operators still group **left-to-right at one precedence level**; parentheses control grouping.
 
-**Not yet implemented:** a general lambda syntax, non-selector sections such as `(_ + 1)`, implicit missing-argument sections, user-defined operators, lists, records, types, imports, macros, MVU, type-checking or full currying. A multi-hole section produces a function of that arity; passing it directly to a unary pipeline is rejected.
+**Not yet implemented:** a general lambda syntax, non-selector sections such as `(_ + 1)`, implicit missing-argument sections, user-defined operators, typed records, types, imports, macros, MVU, type-checking or full currying. A multi-hole section produces a function of that arity; passing it directly to a unary pipeline is rejected.
 
 See [syntax and examples](docs/syntax.md), [grammar notes](docs/grammar.md) and [design decisions](docs/decisions.md).
 
 ## Guida ed esempi verificati
 
 Il [catalogo delle feature](catalog/manifest.json) descrive tutte le 15 aree
-del linguaggio Mira 0.2, con **30 esempi** sotto `catalog/examples/`, almeno
+del linguaggio Mira 0.3, con **almeno 34 esempi** sotto `catalog/examples/`, almeno
 due per ogni feature. Ogni esempio ha un risultato previsto oppure una
 diagnostica attesa; la CI esegue tutti i programmi su entrambi i backend.
 
@@ -93,6 +93,19 @@ automaticamente dalla workflow `reference.yml` quando cambia il linguaggio.
 con ricerca, collegamenti bidirezionali e «Prova nell’editor», disponibile
 offline con la PWA. Le funzioni con più placeholder vengono invocate dal
 worker del browser per rendere osservabili anche gli esempi di funzioni binarie.
+
+## Programmi con dati strutturati
+
+Le nuove forme sperimentali `[...]` e `{campo: valore}` permettono
+programmi che analizzano liste e costruiscono record sia su JS sia su PHP.
+Il [catalogo](docs/reference/examples.md) contiene quattro casi d'uso
+eseguibili: scaletta musicale, allenamento, compensi per serata e lezioni.
+Le funzioni di attraversamento sono normali capability dell'host;
+i reducer e le trasformazioni sono scritti in Mira.
+
+L'AST Inspector di Studio ora produce anche un report strutturato per
+ogni definizione, trasformando l'AST con Mira. Dettagli e limiti:
+[esempi strutturati e dogfooding](docs/structured-data.md).
 
 ## Mira Studio — PWA
 

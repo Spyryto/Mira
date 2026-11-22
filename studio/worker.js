@@ -20,14 +20,37 @@ self.onmessage = event => {
 
     const messages = [];
     const host = Object.freeze({
-      log: message => messages.push(String(message))
+      log: message => messages.push(String(message)),
+      "get:from:": (key, record) => {
+        if (typeof key !== "string" || !record || typeof record !== "object" ||
+            !Object.hasOwn(record, key)) {
+          throw new Error("Missing record field: " + String(key));
+        }
+        return record[key];
+      },
+      "map:with:": (items, callback) => {
+        if (!Array.isArray(items) || typeof callback !== "function" ||
+            items.length > 10000) {
+          throw new Error("map:with: expects a bounded list and function");
+        }
+        return items.map(callback);
+      },
+      "fold:with:from:": (items, callback, seed) => {
+        if (!Array.isArray(items) || typeof callback !== "function" ||
+            items.length > 10000) {
+          throw new Error("fold:with:from: expects a bounded list and function");
+        }
+        return items.reduce(callback, seed);
+      }
     });
     const value = new Function('__miraHost',
       '"use strict";\n' + code + '\nreturn (' + expression + ');'
     )(host);
+    const format = item => item && typeof item === "object"
+      ? JSON.stringify(item, null, 2) : String(item);
     const output = [
       ...messages,
-      ...(value === undefined ? (messages.length ? [] : ['(nessun valore result)']) : [String(value)])
+      ...(value === undefined ? (messages.length ? [] : ['(nessun valore result)']) : [format(value)])
     ].join('\n');
     self.postMessage({ok: true, output});
   } catch (error) {

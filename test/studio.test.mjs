@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.2.0');
+  assert.equal(bridge.version, '0.3.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -105,7 +105,7 @@ test('PWA assets are self-hosted and have a relative GitHub Pages scope', () => 
 });
 
 test('mobile UI JavaScript, SW and execution worker have valid syntax', () => {
-  for (const file of ['app.js', 'reference-ui.js', 'ast-inspector.js', 'inspector-host.js', 'inspector-worker.js', 'examples.js', 'worker.js', 'sw.js']) {
+  for (const file of ['app.js', 'reference-ui.js', 'ast-inspector.js', 'inspector-host.js', 'collection-host.js', 'inspector-worker.js', 'examples.js', 'worker.js', 'sw.js']) {
     execFileSync('node', ['--check', resolve(site, file)]);
   }
 });
@@ -172,7 +172,8 @@ test('Studio offers all generated feature examples and real Haxe API links offli
   for (const example of reference.examples) {
     const shouldWork = example.expect.kind !== 'error';
     for (const target of ['js', 'php']) {
-      const compilation = bridge.compile(example.source, target);
+      const compilation = bridge.compile(example.source, target,
+        example.host ? read('host.json') : undefined);
       assert.equal(compilation.ok, shouldWork,
         example.id + ' ' + target + ': ' + compilation.message);
     }
@@ -226,4 +227,30 @@ test('Studio runs the host log example and collects its output', () => {
   context.self.onmessage({data: {code: compiled.output}});
   assert.equal(response.ok, true, response.message);
   assert.equal(response.output, 'hey there\n9\n9');
+});
+
+test('structured data literals are represented in the canonical AST', () => {
+  const source = 'entries = [{name: "A", minutes: 2}, {name: "B", minutes: 3}]; result = {items: entries};';
+  const parsed = bridge.ast(source);
+  assert.equal(parsed.ok, true, parsed.message);
+  const ast = JSON.parse(parsed.output);
+  const entries = ast.definitions.find(item => item.name === 'entries');
+  assert.equal(entries.body.kind, 'Sequence');
+  assert.equal(entries.body.items[0].kind, 'Record');
+  assert.equal(entries.body.items[0].fields[0].key, 'name');
+});
+
+test('the Studio execution worker runs the four complete structured-data case studies', () => {
+  const reference = JSON.parse(read('reference.json'));
+  for (const example of reference.examples.filter(item => item.host)) {
+    const output = bridge.compile(example.source, 'js', read('host.json'));
+    assert.equal(output.ok, true, example.id + ': ' + output.message);
+
+    let response;
+    const context = {self: {postMessage(message) {response = message; }}};
+    runInNewContext(read('worker.js'), context);
+    context.self.onmessage({data: {code: output.output}});
+    assert.equal(response?.ok, true, example.id + ': ' + response?.message);
+    assert.deepEqual(JSON.parse(response.output), example.expect.value);
+  }
 });
