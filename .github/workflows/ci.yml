@@ -1,4 +1,4 @@
-name: Mira Haxe compiler and JS/PHP tests
+name: Mira Haxe compiler, tests and timings
 on:
   push:
   pull_request:
@@ -17,8 +17,24 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-      - run: npm test
-      - run: node dist/mira.cjs examples/arithmetic.mira js > /tmp/mira-generated.mjs
-      - run: node dist/mira.cjs examples/arithmetic.mira php > /tmp/mira-generated.php
-      - run: node --check /tmp/mira-generated.mjs
-      - run: php -l /tmp/mira-generated.php
+      - name: Build Haxe and measure compiler duration
+        run: npm run build
+      - name: Execute correctness tests
+        run: node --test
+      - name: Verify generated JavaScript and PHP
+        run: |
+          node dist/mira.cjs examples/arithmetic.mira js > /tmp/mira-generated.mjs
+          node dist/mira.cjs examples/arithmetic.mira php > /tmp/mira-generated.php
+          node --check /tmp/mira-generated.mjs
+          php -l /tmp/mira-generated.php
+      - name: Measure Mira-to-JS and Mira-to-PHP transpilation
+        run: node scripts/benchmark.mjs
+      - name: Keep per-run timing results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mira-timings
+          path: |
+            dist/build-metrics.json
+            dist/benchmark-results.json
+          if-no-files-found: warn
