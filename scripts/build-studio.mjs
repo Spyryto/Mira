@@ -12,6 +12,7 @@ const assets = [
   'styles.css',
   'app.js',
   'reference-ui.js',
+  'atlas-ui.js',
   'ast-inspector.js',
   'inspector-host.js',
   'collection-host.js',
@@ -61,6 +62,14 @@ if (result.status !== 0) {
   process.exit(result.status ?? 1);
 }
 console.log(`Mira Studio Haxe browser bundle built in ${(performance.now() - started).toFixed(1)} ms`);
+// Compile Mira Atlas to JS and extract real source import dependencies.
+const atlas = spawnSync('node', ['scripts/generate-atlas.mjs'], {
+  cwd: root, stdio: 'inherit'
+});
+if (atlas.error || atlas.status !== 0) {
+  console.error(atlas.error?.message ?? 'Mira Atlas generation failed');
+  process.exit(atlas.status ?? 1);
+}
 // Generate the offline reference from feature fixtures and Haxe signatures.
 const documentation = spawnSync('npm', ['run', 'docs'], {
   cwd: root, stdio: 'inherit'

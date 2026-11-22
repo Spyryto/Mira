@@ -6,6 +6,9 @@ import mira.Target;
 import mira.MiraError;
 import mira.syntax.Expr;
 import mira.syntax.Definition;
+import mira.syntax.DefinitionParser;
+import mira.lex.Lexer;
+import mira.resolve.Symbols;
 
 class Bridge {
     public static function main():Void {
@@ -14,6 +17,7 @@ class Bridge {
             compile: compile,
             tokens: tokens,
             ast: ast,
+            trace: trace,
             version: "0.3.0"
         });
     }
@@ -61,6 +65,56 @@ class Bridge {
                 tree.push(node);
             }
             return haxe.Json.stringify({kind: "Program", definitions: tree}, null, "  ");
+        });
+    }
+
+    // Exposes actual compiler intermediate data, not a reconstructed diagram.
+    // The raw declarations are collected before expression resolution.
+    public static function trace(source:String, ?hostJson:String):Dynamic {
+        return safely(function() {
+            final host = hostJson == null ? HostEnvironment.empty()
+                : HostEnvironment.fromJson(hostJson);
+            final raw = DefinitionParser.parse(new Lexer(source).tokenize());
+            final symbols = new Symbols(raw, host);
+            final declarations:Array<Dynamic> = [];
+            for (definition in raw) {
+                declarations.push({
+                    name: definition.isStatement ? "<expression>"
+                        : definition.isFunction() ? definition.selector() : definition.name,
+                    kind: definition.isStatement ? "ExpressionStatement"
+                        : definition.isFunction() ? "Function" : "Value",
+                    parameters: definition.parameters,
+                    line: definition.origin.line,
+                    column: definition.origin.column,
+                    bodyTokens: [for (token in definition.bodyTokens) {
+                        kind: Std.string(token.kind),
+                        value: token.value,
+                        line: token.line,
+                        column: token.column
+                    }]
+                });
+            }
+            final signatures:Array<Dynamic> = [];
+            for (definition in raw) {
+                if (!definition.isStatement) {
+                    signatures.push({
+                        name: definition.isFunction() ? definition.selector() : definition.name,
+                        kind: definition.isFunction() ? "selector" : "value",
+                        parameters: definition.parameters,
+                        line: definition.origin.line,
+                        column: definition.origin.column
+                    });
+                }
+            }
+            for (name in host.values) signatures.push({name: name, kind: "host value"});
+            for (name in host.callables) signatures.push({name: name, kind: "host callable"});
+            for (name in host.selectors) signatures.push({name: name, kind: "host selector"});
+            return haxe.Json.stringify({
+                declarations: declarations,
+                symbols: signatures,
+                declaredFunctions: raw.length,
+                compiledNames: symbols.hostNames
+            }, null, "  ");
         });
     }
 

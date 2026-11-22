@@ -1,0 +1,72 @@
+[
+  {
+    "id": "source",
+    "title": "Sorgente",
+    "purpose": "Il programma Mira modificato nell'editor. Non è ancora un AST.",
+    "produces": "Testo originale, con righe e caratteri.",
+    "sourceFiles": [
+      "studio/app.js"
+    ]
+  },
+  {
+    "id": "tokens",
+    "title": "Lexer / tokenizzazione",
+    "purpose": "Lexer.tokenize percorre i caratteri e produce TokenKind, valore e posizione. Non esiste un tokenizer separato dal lexer in questa versione.",
+    "produces": "Sequenza di token con kind, value, line, column.",
+    "sourceFiles": [
+      "src/mira/lex/Lexer.hx",
+      "src/mira/lex/Token.hx"
+    ]
+  },
+  {
+    "id": "declarations",
+    "title": "Parser delle definizioni",
+    "purpose": "DefinitionParser raggruppa i token fino ai terminatori e interpreta intestazioni, parametri e corpi non ancora risolti.",
+    "produces": "Definizioni con bodyTokens originali; nessuna risoluzione delle espressioni.",
+    "sourceFiles": [
+      "src/mira/syntax/DefinitionParser.hx",
+      "src/mira/syntax/Definition.hx"
+    ]
+  },
+  {
+    "id": "symbols",
+    "title": "Tabella dei simboli",
+    "purpose": "Symbols raccoglie i nomi, le firme dei selettori e le capability dell'host. Il resolver userà queste firme per interpretare le chiamate.",
+    "produces": "Elenco di nomi, selettori, parametri e riferimenti host.",
+    "sourceFiles": [
+      "src/mira/resolve/Symbols.hx",
+      "src/mira/resolve/SelectorResolver.hx"
+    ]
+  },
+  {
+    "id": "ast",
+    "title": "AST risolto",
+    "purpose": "ExpressionParser costruisce le espressioni canoniche dopo aver consultato Symbols e SelectorResolver. Il bridge serializza l'AST in JSON.",
+    "produces": "Program con definizioni e alberi di espressioni.",
+    "sourceFiles": [
+      "src/mira/syntax/ExpressionParser.hx",
+      "src/mira/syntax/Expr.hx",
+      "src/mira/studio/Bridge.hx"
+    ]
+  },
+  {
+    "id": "js",
+    "title": "Emissione JavaScript",
+    "purpose": "JsEmitter e SourceEmitter generano funzioni e valori JavaScript dall'AST canonico.",
+    "produces": "Codice JavaScript eseguibile dall'host appropriato.",
+    "sourceFiles": [
+      "src/mira/emit/JsEmitter.hx",
+      "src/mira/emit/SourceEmitter.hx"
+    ]
+  },
+  {
+    "id": "php",
+    "title": "Emissione PHP",
+    "purpose": "PhpEmitter e SourceEmitter emettono il corrispondente sorgente PHP. La sua esecuzione richiede un host PHP.",
+    "produces": "Codice sorgente PHP; non eseguito nella PWA.",
+    "sourceFiles": [
+      "src/mira/emit/PhpEmitter.hx",
+      "src/mira/emit/SourceEmitter.hx"
+    ]
+  }
+]
