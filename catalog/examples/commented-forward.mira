@@ -1,0 +1,4 @@
+# Durata stimata, prima della dichiarazione.
+result = double: 19;
+# Il selettore viene definito dopo il suo utilizzo.
+double: value = value * 2;

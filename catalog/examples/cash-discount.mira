@@ -1,0 +1,4 @@
+discount: total, by: amount = total - amount;
+invoice total = 200;
+coupon value = 35;
+result = discount: invoice total, by: coupon value;

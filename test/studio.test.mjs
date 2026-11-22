@@ -105,7 +105,7 @@ test('PWA assets are self-hosted and have a relative GitHub Pages scope', () => 
 });
 
 test('mobile UI JavaScript, SW and execution worker have valid syntax', () => {
-  for (const file of ['app.js', 'examples.js', 'worker.js', 'sw.js']) {
+  for (const file of ['app.js', 'reference-ui.js', 'examples.js', 'worker.js', 'sw.js']) {
     execFileSync('node', ['--check', resolve(site, file)]);
   }
 });
@@ -156,4 +156,60 @@ test('all Studio examples match the syntax currently implemented', async () => {
         example.id + ' (' + target + '): ' + (result.message ?? 'unexpected success'));
     }
   }
+});
+
+test('Studio offers all generated feature examples and real Haxe API links offline', () => {
+  const reference = JSON.parse(read('reference.json'));
+  assert.ok(reference.features.length >= 15);
+  assert.ok(reference.examples.length >= reference.features.length * 2);
+  assert.ok(reference.api.length >= 45);
+  assert.match(read('sw.js'), /\.\/reference\.json/);
+  assert.match(read('sw.js'), /\.\/reference-ui\.js/);
+  assert.match(read('index.html'), /data-view="reference"/);
+  assert.match(read('app.js'), /initializeReference/);
+
+  for (const example of reference.examples) {
+    const shouldWork = example.expect.kind !== 'error';
+    for (const target of ['js', 'php']) {
+      const compilation = bridge.compile(example.source, target);
+      assert.equal(compilation.ok, shouldWork,
+        example.id + ' ' + target + ': ' + compilation.message);
+    }
+  }
+});
+
+
+test('Studio execution worker evaluates documented multi-hole sections', () => {
+  const reference = JSON.parse(read('reference.json'));
+  for (const example of reference.examples.filter(item => item.expect.kind === 'invoke')) {
+    const compiled = bridge.compile(example.source, 'js');
+    assert.equal(compiled.ok, true, compiled.message);
+
+    let reply;
+    const context = {
+      self: { postMessage(message) { reply = message; } }
+    };
+    runInNewContext(read('worker.js'), context);
+    context.self.onmessage({
+      data: {
+        code: compiled.output,
+        invoke: { name: example.expect.name, args: example.expect.args }
+      }
+    });
+
+    assert.equal(reply?.ok, true, reply?.message);
+    assert.equal(reply.output, String(example.expect.value));
+  }
+});
+
+test('Studio execution worker rejects malformed fixture invocations', () => {
+  let reply;
+  const context = { self: { postMessage(message) { reply = message; } } };
+  runInNewContext(read('worker.js'), context);
+  context.self.onmessage({ data: {
+    code: 'const result = 10;',
+    invoke: {name: 'bad;process.exit(1)', args: []}
+  }});
+  assert.equal(reply?.ok, false);
+  assert.match(reply.message, /Invalid example invocation/);
 });

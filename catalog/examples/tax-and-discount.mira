@@ -1,0 +1,2 @@
+price: subtotal, plus tax: tax, less discount: discount = subtotal + tax - discount;
+result = price: 100, plus tax: 22, less discount: 15;

@@ -19,8 +19,10 @@ jobs:
           php-version: '8.3'
       - name: Build Haxe and measure compiler duration
         run: npm run build
-      - name: Execute correctness tests
-        run: node --test test/mira.test.mjs
+      - name: Generate linked language and Haxe API references
+        run: npm run docs
+      - name: Execute correctness and example tests
+        run: node --test test/mira.test.mjs test/catalog.test.mjs
       - name: Verify generated JavaScript and PHP
         run: |
           node dist/mira.cjs examples/arithmetic.mira js > /tmp/mira-generated.mjs
@@ -29,6 +31,12 @@ jobs:
           php -l /tmp/mira-generated.php
       - name: Measure Mira-to-JS and Mira-to-PHP transpilation
         run: node scripts/benchmark.mjs
+      - name: Publish generated reference Markdown
+        uses: actions/upload-artifact@v4
+        with:
+          name: mira-reference-markdown
+          path: docs/reference/
+          if-no-files-found: error
       - name: Keep per-run timing results
         if: always()
         uses: actions/upload-artifact@v4

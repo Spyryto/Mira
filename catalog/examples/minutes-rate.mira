@@ -1,0 +1,4 @@
+seconds = 135;
+minutes = seconds / 60;
+speed factor = 1.5;
+result = minutes * speed factor;

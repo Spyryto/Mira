@@ -50,7 +50,7 @@ h1 em { font-style: normal; box-shadow: inset 0 -12px var(--yellow); }
 .workspace-title { display: flex; align-items: center; gap: 7px; font-weight: 900; font-size: 14px; }
 .workspace-dot { width: 11px; height: 11px; border-radius: 50%; background: #212729; }
 .save-status { font-size: 10px; font-weight: 650; color: #55534b; }
-.tabs { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 2px solid var(--line); }
+.tabs { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 2px solid var(--line); }
 .tab { min-width: 0; border: none; border-right: 2px solid var(--line); padding: 13px 5px;
   background: #eeeae0; color: #545956; font-size: 11px; }
 .tab strong { font-size: 13px; margin-left: 3px; }
@@ -137,3 +137,29 @@ select { min-width: 0; max-width: 230px; flex: 1; border: 1.5px solid var(--line
   button { transition: transform 100ms ease; }
   button:active { transform: translate(1px, 1px); }
 }
+
+/* Compact, one-column language/API reference within the existing workbench. */
+.reference-area { padding: 18px 14px; background: #fffdf7; min-height: 300px; }
+.reference-heading h2 { font-size: clamp(25px, 7vw, 35px); line-height: 1.14; margin: 4px 0 8px; }
+.reference-heading p, .reference-description { font-size: 13px; line-height: 1.55; color: #516058; }
+.reference-controls { display: flex; gap: 9px; margin: 15px 0; }
+.reference-controls a { border: 1.5px solid var(--line); padding: 8px 12px; border-radius: 7px; font-size: 12px; font-weight: 850; text-decoration: none; }
+.reference-controls a.reference-active { background: var(--teal); }
+.reference-back { display: inline-block; margin-bottom: 15px; font-weight: 850; font-size: 12px; }
+.reference-search { display: block; width: 100%; padding: 11px; border: 1.5px solid var(--line); border-radius: 8px; background: #fff; font-size: 13px; }
+.reference-list { display: grid; gap: 10px; padding: 14px 0; }
+.reference-list-item, .reference-example-card { padding: 13px; border: 1.5px solid var(--line); border-radius: 9px; background: #f5f4ed; }
+.reference-item-link { display: block; font-size: 14px; font-weight: 900; line-height: 1.4; }
+.reference-list-item p, .reference-example-card p { font-size: 12px; line-height: 1.5; margin: 6px 0 7px; color: #4c5552; }
+.reference-list-item small { color: #636b65; font-weight: 750; }
+.reference-example-card { margin: 13px 0; }
+.reference-expected { padding: 9px 11px; background: #e2f1e6; color: #23573e; font: 11px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; border-radius: 6px; margin: 9px 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.reference-code { border: 1px solid #c8c8c1; padding: 12px; font: 12px/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; border-radius: 7px; background: #f9f7ef; white-space: pre; overflow: auto; }
+.reference-actions { display: flex; justify-content: flex-end; }
+.reference-try { padding: 10px 13px; border: 2px solid var(--line); border-radius: 7px; background: var(--orange); font-size: 12px; font-weight: 900; box-shadow: 2px 2px 0 var(--line); }
+.reference-note, .reference-related { font-size: 12px; line-height: 1.55; color: #53605b; }
+.reference-source { font-size: 12px; font-weight: 850; }
+.reference-area h3 { font-size: 16px; margin: 20px 0 9px; }
+.tab { font-size: 10px; }
+.tab strong { font-size: 12px; }
+@media (max-width:380px) { .tab strong {font-size: 11px;} .reference-area {padding: 14px 10px;} }

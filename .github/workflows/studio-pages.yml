@@ -31,6 +31,16 @@ jobs:
         run: npm run build:studio
       - name: Verify browser compiler and static assets
         run: node --test test/studio.test.mjs
+      - name: Verify all documented JS/PHP examples
+        run: |
+          npm run build
+          node --test test/catalog.test.mjs
+      - name: Upload generated reference Markdown
+        uses: actions/upload-artifact@v4
+        with:
+          name: mira-reference-markdown
+          path: docs/reference/
+          if-no-files-found: error
       - name: Upload downloadable preview
         uses: actions/upload-artifact@v4
         with:

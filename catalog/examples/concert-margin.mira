@@ -1,0 +1,5 @@
+ticket price = 18;
+seats reserved = 27;
+venue fee = 90;
+gross receipts = ticket price * seats reserved;
+result = gross receipts - venue fee;

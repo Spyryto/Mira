@@ -1,0 +1,4 @@
+reply: name, with: greeting = greeting;
+person name = "Daniele";
+welcome text = "Benvenuto in Mira Studio";
+result = reply: person name, with: welcome text;

@@ -1,0 +1,2 @@
+apply: base, plus: increment, times: factor = (base + increment) * factor;
+result = apply: 10, plus: 4, times: 3;

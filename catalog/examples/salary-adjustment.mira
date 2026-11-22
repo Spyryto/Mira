@@ -1,0 +1,5 @@
+base salary = 1800;
+performance bonus = 225;
+tax adjustment = 75;
+total taxable amount = base salary + performance bonus;
+result = total taxable amount - tax adjustment;

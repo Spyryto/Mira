@@ -44,6 +44,7 @@
           <button type="button" class="tab active" id="tab-code" role="tab" data-view="code" aria-selected="true" aria-controls="view-code">01 <strong>Scrivi</strong></button>
           <button type="button" class="tab" id="tab-output" role="tab" data-view="output" aria-selected="false" aria-controls="view-output">02 <strong>Output</strong></button>
           <button type="button" class="tab" id="tab-structure" role="tab" data-view="structure" aria-selected="false" aria-controls="view-structure">03 <strong>Esplora</strong></button>
+          <button type="button" class="tab" id="tab-reference" role="tab" data-view="reference" aria-selected="false" aria-controls="view-reference">04 <strong>Guida</strong></button>
         </nav>
 
         <div class="panel" id="view-code" role="tabpanel" aria-labelledby="tab-code">
@@ -90,6 +91,12 @@
           </div>
           <pre id="structure" tabindex="0" class="code-output"><code>Compila per esplorare la struttura.</code></pre>
           <p class="structure-note">Dati reali dal compilatore Haxe di Mira. Nessuna AST simulata nell'interfaccia.</p>
+        </div>
+
+        <div class="panel" id="view-reference" role="tabpanel" aria-labelledby="tab-reference" hidden>
+          <div id="reference" class="reference-area" aria-live="polite">
+            <p>Caricamento della documentazione…</p>
+          </div>
         </div>
 
         <div class="action-bar">

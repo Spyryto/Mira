@@ -74,6 +74,26 @@ The resulting value is `10`, for both JS and PHP. See [executable example](examp
 
 See [syntax and examples](docs/syntax.md), [grammar notes](docs/grammar.md) and [design decisions](docs/decisions.md).
 
+## Guida ed esempi verificati
+
+Il [catalogo delle feature](catalog/manifest.json) descrive tutte le 15 aree
+del linguaggio Mira 0.2, con **30 esempi** sotto `catalog/examples/`, almeno
+due per ogni feature. Ogni esempio ha un risultato previsto oppure una
+diagnostica attesa; la CI esegue tutti i programmi su entrambi i backend.
+
+`npm run docs` genera tre riferimenti Markdown interlinkati:
+[linguaggio](docs/reference/language.md),
+[esempi](docs/reference/examples.md),
+[API Haxe](docs/reference/api.md).
+Le firme API (inclusi enum e campi pubblici) sono estratte da `src/**/*.hx`,
+le spiegazioni da `catalog/api-notes.json`. I Markdown sono aggiornati
+automaticamente dalla workflow `reference.yml` quando cambia il linguaggio.
+
+**Mira Studio** integra lo stesso catalogo nella nuova vista **Guida**,
+con ricerca, collegamenti bidirezionali e «Prova nell’editor», disponibile
+offline con la PWA. Le funzioni con più placeholder vengono invocate dal
+worker del browser per rendere osservabili anche gli esempi di funzioni binarie.
+
 ## Mira Studio — PWA
 
 The experimental **[Mira Studio](docs/studio.md)** is a mobile-first, installable

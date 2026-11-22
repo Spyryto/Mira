@@ -1,0 +1,2 @@
+total: base, with shipping: fee = base + fee;
+result = total 48 with shipping 7;

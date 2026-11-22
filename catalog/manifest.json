@@ -1,0 +1,512 @@
+{
+  "version": "0.2.0",
+  "features": [
+    {
+      "id": "values",
+      "title": "Definizioni di valori",
+      "summary": "Valori intermedi nominati, separati da `;`.",
+      "details": "Il corpo della definizione viene valutato sul backend di destinazione.",
+      "api": "mira.syntax.DefinitionParser.parse",
+      "examples": [
+        "invoice-total",
+        "concert-margin"
+      ]
+    },
+    {
+      "id": "names",
+      "title": "Identificatori composti",
+      "summary": "Nomi formati da più parole.",
+      "details": "La risoluzione è basata sui nomi e sui confini sintattici, non sull'inferenza di tipo.",
+      "api": "mira.resolve.Symbols.resolveName",
+      "examples": [
+        "salary-adjustment",
+        "fuel-efficiency"
+      ]
+    },
+    {
+      "id": "functions",
+      "title": "Funzioni con parametri",
+      "summary": "Definizioni di funzioni con argomenti leggibili.",
+      "details": "La sintassi `label: parametro` dichiara una funzione; i suoi parametri possono avere più parole.",
+      "api": "mira.syntax.DefinitionParser.parse",
+      "examples": [
+        "cash-discount",
+        "scale-estimate"
+      ]
+    },
+    {
+      "id": "selectors",
+      "title": "Selettori con più keyword",
+      "summary": "Firme articolate con etichette significative.",
+      "details": "Ogni keyword contribuisce all'identità del selettore, e può contenere più parole.",
+      "api": "mira.resolve.SelectorResolver.match",
+      "examples": [
+        "three-step-score",
+        "tax-and-discount"
+      ]
+    },
+    {
+      "id": "shorthand",
+      "title": "Chiamate discorsive",
+      "summary": "Abbreviazioni senza `:` quando non ambigue.",
+      "details": "Letterali e parentesi rendono deterministici i confini degli argomenti.",
+      "api": "mira.resolve.SelectorResolver.match",
+      "examples": [
+        "calculated-arguments",
+        "shipping-charge"
+      ]
+    },
+    {
+      "id": "numbers",
+      "title": "Letterali numerici",
+      "summary": "Interi e decimali.",
+      "details": "Il lexer legge numeri positivi; `-` è un operatore binario in Mira 0.2.",
+      "api": "mira.lex.Lexer.tokenize",
+      "examples": [
+        "fractional-invoice",
+        "minutes-rate"
+      ]
+    },
+    {
+      "id": "strings",
+      "title": "Letterali testuali",
+      "summary": "Testo delimitato da doppi apici.",
+      "details": "Le stringhe sono dati utilizzabili nei selettori. Non esiste ancora una libreria di manipolazione del testo.",
+      "api": "mira.lex.Lexer.tokenize",
+      "examples": [
+        "band-title",
+        "welcome-label"
+      ]
+    },
+    {
+      "id": "arithmetic",
+      "title": "Operatori aritmetici",
+      "summary": "`+`, `-`, `*`, `/` e `%`.",
+      "details": "Attenzione: stessa precedenza per tutti, associatività a sinistra.",
+      "api": "mira.syntax.ExpressionParser.parse",
+      "examples": [
+        "left-to-right",
+        "modulo-remainder"
+      ]
+    },
+    {
+      "id": "grouping",
+      "title": "Parentesi",
+      "summary": "Esplicitare il raggruppamento.",
+      "details": "Permettono anche di delimitare espressioni negli argomenti discorsivi.",
+      "api": "mira.syntax.ExpressionParser.parse",
+      "examples": [
+        "stage-production",
+        "split-payment"
+      ]
+    },
+    {
+      "id": "sections",
+      "title": "Sezioni unarie",
+      "summary": "Un `_` in un selettore crea una funzione.",
+      "details": "`_` deve essere un argomento intero della chiamata, non una sottoespressione generica.",
+      "api": "mira.syntax.Expr",
+      "examples": [
+        "reduce-price",
+        "triple-quantity"
+      ]
+    },
+    {
+      "id": "multi-sections",
+      "title": "Sezioni con più `_`",
+      "summary": "Più segnaposto producono più parametri.",
+      "details": "Il compilatore emette funzioni di arità corrispondente. In Mira 0.2 le applicazioni binarie generiche non hanno ancora sintassi nel sorgente.",
+      "api": "mira.emit.SourceEmitter.expression",
+      "examples": [
+        "mix-two-inputs",
+        "fee-calculator"
+      ]
+    },
+    {
+      "id": "pipelines",
+      "title": "Pipeline `~`",
+      "summary": "Composizione da sinistra a destra.",
+      "details": "`x ~ f` applica `f` a `x`; non supporta sezioni con più fori direttamente.",
+      "api": "mira.syntax.Expr",
+      "examples": [
+        "recording-level",
+        "revised-budget"
+      ]
+    },
+    {
+      "id": "captures",
+      "title": "Cattura lessicale",
+      "summary": "Funzioni che restituiscono sezioni parametrizzate.",
+      "details": "Le arrow function JS/PHP conservano i parametri della funzione esterna.",
+      "api": "mira.emit.SourceEmitter.expression",
+      "examples": [
+        "extra-budget",
+        "rate-factory"
+      ]
+    },
+    {
+      "id": "forward",
+      "title": "Dichiarazioni successive",
+      "summary": "I selettori possono essere dichiarati dopo l'uso.",
+      "details": "Il compilatore raccoglie tutte le firme prima di analizzare i corpi.",
+      "api": "mira.Compiler.parse",
+      "examples": [
+        "declare-later",
+        "commented-forward"
+      ]
+    },
+    {
+      "id": "diagnostics",
+      "title": "Diagnostica e ambiguità",
+      "summary": "Esempi di errori intenzionali.",
+      "details": "Sono esercizi negativi: fallire con una diagnostica precisa è il comportamento corretto.",
+      "api": "mira.MiraError",
+      "examples": [
+        "ambiguous-words",
+        "duplicate-parameter"
+      ]
+    }
+  ],
+  "examples": [
+    {
+      "feature": "values",
+      "id": "invoice-total",
+      "title": "Fattura e trasferta",
+      "description": "Compenso comprensivo di ore e trasferta.",
+      "expect": {
+        "kind": "result",
+        "value": 98
+      },
+      "path": "catalog/examples/invoice-total.mira"
+    },
+    {
+      "feature": "values",
+      "id": "concert-margin",
+      "title": "Margine di un concerto",
+      "description": "Incasso meno costo fisso.",
+      "expect": {
+        "kind": "result",
+        "value": 396
+      },
+      "path": "catalog/examples/concert-margin.mira"
+    },
+    {
+      "feature": "names",
+      "id": "salary-adjustment",
+      "title": "Voci di stipendio",
+      "description": "Identificatori autoesplicativi.",
+      "expect": {
+        "kind": "result",
+        "value": 1950
+      },
+      "path": "catalog/examples/salary-adjustment.mira"
+    },
+    {
+      "feature": "names",
+      "id": "fuel-efficiency",
+      "title": "Consumi di viaggio",
+      "description": "Usa nomi composti lungo tutto il calcolo.",
+      "expect": {
+        "kind": "result",
+        "value": 15
+      },
+      "path": "catalog/examples/fuel-efficiency.mira"
+    },
+    {
+      "feature": "functions",
+      "id": "cash-discount",
+      "title": "Sconto su fattura",
+      "description": "Funzione con due parametri.",
+      "expect": {
+        "kind": "result",
+        "value": 165
+      },
+      "path": "catalog/examples/cash-discount.mira"
+    },
+    {
+      "feature": "functions",
+      "id": "scale-estimate",
+      "title": "Stima scalata",
+      "description": "Funzione parametrica riutilizzabile.",
+      "expect": {
+        "kind": "result",
+        "value": 72
+      },
+      "path": "catalog/examples/scale-estimate.mira"
+    },
+    {
+      "feature": "selectors",
+      "id": "three-step-score",
+      "title": "Punteggio in tre passaggi",
+      "description": "Tre keyword con ruolo distinto.",
+      "expect": {
+        "kind": "result",
+        "value": 42
+      },
+      "path": "catalog/examples/three-step-score.mira"
+    },
+    {
+      "feature": "selectors",
+      "id": "tax-and-discount",
+      "title": "Imposte e sconto",
+      "description": "Keyword con più parole.",
+      "expect": {
+        "kind": "result",
+        "value": 107
+      },
+      "path": "catalog/examples/tax-and-discount.mira"
+    },
+    {
+      "feature": "shorthand",
+      "id": "calculated-arguments",
+      "title": "Argomenti calcolati",
+      "description": "Le parentesi delimitano l'argomento composto.",
+      "expect": {
+        "kind": "result",
+        "value": 48
+      },
+      "path": "catalog/examples/calculated-arguments.mira"
+    },
+    {
+      "feature": "shorthand",
+      "id": "shipping-charge",
+      "title": "Etichetta discorsiva composta",
+      "description": "Omissione dei due punti con letterali.",
+      "expect": {
+        "kind": "result",
+        "value": 55
+      },
+      "path": "catalog/examples/shipping-charge.mira"
+    },
+    {
+      "feature": "numbers",
+      "id": "fractional-invoice",
+      "title": "Importi decimali",
+      "description": "Unisce interi e decimali in una fattura.",
+      "expect": {
+        "kind": "result",
+        "value": 52.75
+      },
+      "path": "catalog/examples/fractional-invoice.mira"
+    },
+    {
+      "feature": "numbers",
+      "id": "minutes-rate",
+      "title": "Minuti e coefficiente",
+      "description": "Conversione numerica di una durata.",
+      "expect": {
+        "kind": "result",
+        "value": 3.375
+      },
+      "path": "catalog/examples/minutes-rate.mira"
+    },
+    {
+      "feature": "strings",
+      "id": "band-title",
+      "title": "Titolo di una band",
+      "description": "Stringa trasportata da un selettore.",
+      "expect": {
+        "kind": "result",
+        "value": "I Liberamente"
+      },
+      "path": "catalog/examples/band-title.mira"
+    },
+    {
+      "feature": "strings",
+      "id": "welcome-label",
+      "title": "Testo di benvenuto",
+      "description": "Seleziona il testo da due parametri.",
+      "expect": {
+        "kind": "result",
+        "value": "Benvenuto in Mira Studio"
+      },
+      "path": "catalog/examples/welcome-label.mira"
+    },
+    {
+      "feature": "arithmetic",
+      "id": "left-to-right",
+      "title": "Valutazione da sinistra",
+      "description": "Lo stesso livello di precedenza cambia il risultato.",
+      "expect": {
+        "kind": "result",
+        "value": 20
+      },
+      "path": "catalog/examples/left-to-right.mira"
+    },
+    {
+      "feature": "arithmetic",
+      "id": "modulo-remainder",
+      "title": "Resto di una ripartizione",
+      "description": "Combina modulo e calcoli intermedi.",
+      "expect": {
+        "kind": "result",
+        "value": 2
+      },
+      "path": "catalog/examples/modulo-remainder.mira"
+    },
+    {
+      "feature": "grouping",
+      "id": "stage-production",
+      "title": "Costi per gruppo",
+      "description": "Parentesi e prodotti in un budget.",
+      "expect": {
+        "kind": "result",
+        "value": 24
+      },
+      "path": "catalog/examples/stage-production.mira"
+    },
+    {
+      "feature": "grouping",
+      "id": "split-payment",
+      "title": "Ripartizione e supplemento",
+      "description": "Parentesi nel denominatore.",
+      "expect": {
+        "kind": "result",
+        "value": 28
+      },
+      "path": "catalog/examples/split-payment.mira"
+    },
+    {
+      "feature": "sections",
+      "id": "reduce-price",
+      "title": "Sconto riutilizzabile",
+      "description": "Sezione unaria che conserva lo sconto.",
+      "expect": {
+        "kind": "result",
+        "value": 75
+      },
+      "path": "catalog/examples/reduce-price.mira"
+    },
+    {
+      "feature": "sections",
+      "id": "triple-quantity",
+      "title": "Moltiplicatore nominato",
+      "description": "Trasforma una funzione binaria in una unaria.",
+      "expect": {
+        "kind": "result",
+        "value": 42
+      },
+      "path": "catalog/examples/triple-quantity.mira"
+    },
+    {
+      "feature": "multi-sections",
+      "id": "mix-two-inputs",
+      "title": "Funzione binaria",
+      "description": "Invoca mixer(7,9) nel test dei target.",
+      "expect": {
+        "kind": "invoke",
+        "name": "mixer",
+        "args": [
+          7,
+          9
+        ],
+        "value": 23
+      },
+      "path": "catalog/examples/mix-two-inputs.mira"
+    },
+    {
+      "feature": "multi-sections",
+      "id": "fee-calculator",
+      "title": "Due argomenti liberi",
+      "description": "Invoca adjustment(125,20) nei test.",
+      "expect": {
+        "kind": "invoke",
+        "name": "adjustment",
+        "args": [
+          125,
+          20
+        ],
+        "value": 31
+      },
+      "path": "catalog/examples/fee-calculator.mira"
+    },
+    {
+      "feature": "pipelines",
+      "id": "recording-level",
+      "title": "Catena di livelli",
+      "description": "Moltiplica e aggiunge in una pipeline.",
+      "expect": {
+        "kind": "result",
+        "value": 22
+      },
+      "path": "catalog/examples/recording-level.mira"
+    },
+    {
+      "feature": "pipelines",
+      "id": "revised-budget",
+      "title": "Budget progressivo",
+      "description": "Due trasformazioni consecutive.",
+      "expect": {
+        "kind": "result",
+        "value": 90
+      },
+      "path": "catalog/examples/revised-budget.mira"
+    },
+    {
+      "feature": "captures",
+      "id": "extra-budget",
+      "title": "Sezione che cattura un parametro",
+      "description": "Una funzione restituisce un'altra funzione.",
+      "expect": {
+        "kind": "result",
+        "value": 20
+      },
+      "path": "catalog/examples/extra-budget.mira"
+    },
+    {
+      "feature": "captures",
+      "id": "rate-factory",
+      "title": "Fabbrica di moltiplicatori",
+      "description": "Il parametro esterno resta disponibile.",
+      "expect": {
+        "kind": "result",
+        "value": 42
+      },
+      "path": "catalog/examples/rate-factory.mira"
+    },
+    {
+      "feature": "forward",
+      "id": "declare-later",
+      "title": "Dichiarazione successiva",
+      "description": "Firma raccolta prima dell'analisi del corpo.",
+      "expect": {
+        "kind": "result",
+        "value": 25
+      },
+      "path": "catalog/examples/declare-later.mira"
+    },
+    {
+      "feature": "forward",
+      "id": "commented-forward",
+      "title": "Commenti e firma futura",
+      "description": "I commenti non cambiano la raccolta delle firme.",
+      "expect": {
+        "kind": "result",
+        "value": 38
+      },
+      "path": "catalog/examples/commented-forward.mira"
+    },
+    {
+      "feature": "diagnostics",
+      "id": "ambiguous-words",
+      "title": "Argomenti senza confini",
+      "description": "Errore intenzionale: richiede confini espliciti.",
+      "expect": {
+        "kind": "error",
+        "contains": "Unknown identifier"
+      },
+      "path": "catalog/examples/ambiguous-words.mira"
+    },
+    {
+      "feature": "diagnostics",
+      "id": "duplicate-parameter",
+      "title": "Parametro ripetuto",
+      "description": "Errore intenzionale su una firma.",
+      "expect": {
+        "kind": "error",
+        "contains": "Duplicate parameter"
+      },
+      "path": "catalog/examples/duplicate-parameter.mira"
+    }
+  ]
+}
