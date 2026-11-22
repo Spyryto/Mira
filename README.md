@@ -27,6 +27,8 @@ Requires Haxe **4.3.7**, Node.js **22+**, and PHP **8+** to execute the PHP test
 npm run build
 npm test
 npm run benchmark
+npm run build:studio
+npm run test:studio
 
 node dist/mira.cjs examples/arithmetic.mira js > example.mjs
 node dist/mira.cjs examples/arithmetic.mira php > example.php
@@ -60,6 +62,23 @@ This prototype recognizes function/value definitions, multiword names, numeric a
 **Not implemented:** function values, partial application, `_`, `~`, user-defined operators, lists, closures, records, types, imports, macros or MVU. Those remain syntax proposals, not advertised runtime features.
 
 See [syntax and examples](docs/syntax.md), [grammar notes](docs/grammar.md) and [design decisions](docs/decisions.md).
+
+## Mira Studio — PWA
+
+The experimental **[Mira Studio](docs/studio.md)** is a mobile-first, installable
+browser editor built on the same Haxe compiler core as the CLI. It offers:
+
+- Mira source editor, local saving and example programs;
+- actual JS/PHP transpilation and exported source files;
+- real AST and source token inspection;
+- explicit execution of generated **JavaScript only**, in a Web Worker;
+- offline caching, version updates and GitHub Pages deployment via CI.
+
+Build it with `npm run build:studio` and serve `dist/studio/` from a local
+HTTP server. The expected Pages URL **after enabling GitHub Pages in repository
+Settings → Pages → Source → GitHub Actions** is
+https://spyryto.github.io/Mira/. See [Studio instructions](docs/studio.md) for
+installation, limitations and local preview.
 
 ## Related repositories
 

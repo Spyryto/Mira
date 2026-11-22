@@ -1,0 +1,59 @@
+name: Mira Studio PWA
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mira-studio-pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: '4.3.7'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+      - name: Compile Haxe browser frontend and assemble PWA
+        run: npm run build:studio
+      - name: Verify browser compiler and static assets
+        run: node --test test/studio.test.mjs
+      - name: Upload downloadable preview
+        uses: actions/upload-artifact@v4
+        with:
+          name: mira-studio-preview
+          path: dist/studio/
+          if-no-files-found: error
+      - name: Prepare GitHub Pages bundle
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/studio/
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy Mira Studio
+        id: deployment
+        uses: actions/deploy-pages@v4

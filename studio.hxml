@@ -1,0 +1,4 @@
+-cp src
+-main mira.studio.Bridge
+-js dist/studio/compiler.js
+-D js-es=6
