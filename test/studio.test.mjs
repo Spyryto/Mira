@@ -4,7 +4,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { runInNewContext } from 'node:vm';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const site = resolve(root, 'dist/studio');
@@ -141,4 +141,19 @@ test('browser compiler supports section and pipeline with real AST nodes', () =>
   const final = ast.definitions.find(item => item.name === 'result');
   assert.equal(final.body.kind, 'Apply');
   assert.equal(final.body.callee.value, 'increment');
+});
+
+test('all Studio examples match the syntax currently implemented', async () => {
+  const url = pathToFileURL(resolve(site, 'examples.js')).href;
+  const { examples, defaultSource } = await import(url);
+  assert.equal(defaultSource, examples[0].source);
+
+  for (const example of examples) {
+    const expectedSuccess = example.id !== 'errors';
+    for (const target of ['js', 'php']) {
+      const result = bridge.compile(example.source, target);
+      assert.equal(result.ok, expectedSuccess,
+        example.id + ' (' + target + '): ' + (result.message ?? 'unexpected success'));
+    }
+  }
 });
