@@ -192,6 +192,20 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
 
+## Benchmark interattivi
+
+La scheda **[Bench della PWA](https://spyryto.github.io/Mira/#/benchmark)**
+misura sul dispositivo la compilazione Mira→JS/PHP in millisecondi e
+**righe Mira compilate al secondo**, oltre all'esecuzione del JavaScript
+generato (tempo per chiamata e chiamate al secondo).
+Il pulsante **Schermo intero** espande la vista anche sui dispositivi
+che non supportano la Fullscreen API.
+
+La CI misura anche l'esecuzione PHP con `hrtime`, in un processo PHP
+già avviato e con codice caricato. I risultati restano separati da quelli
+locali perché CPU, engine e condizioni differiscono.
+[Metodo di misura e limiti](docs/performance.md).
+
 ## Mira Atlas — documentazione viva
 
 La [vista **Atlas** di Mira Studio](https://spyryto.github.io/Mira/#/atlas)
