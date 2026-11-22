@@ -1,14 +1,40 @@
 # Mira
 
-**A readable, discursive syntax experiment.** *Code you understand at a glance.*
+**Discursive syntax, readable at a glance.**
 
-Mira is an **independent experimental frontend**, exploring multiword identifiers and keyword selectors with punctuation that may be omitted only when argument boundaries are clear. Mira is not currently a replacement for [NailLang](https://github.com/Spyryto/NailLang). The relationship to Nail remains open.
+Mira is currently a standalone **syntax and transpiler experiment**, not a replacement for NailLang. It explores multiword identifiers and Smalltalk-inspired keyword selectors, with a deliberately small executable core.
 
-## Current stage: 0.1
+## What this repository contains
 
-The prototype is a small **Node.js-based lexer, parser, structural selector resolver and JS/PHP emitter**. It uses neither a type checker nor a VM. A Haxe implementation is a possible later direction, not a requirement of this first experiment.
+The compiler is **written entirely in Haxe** and compiled to JavaScript for the CLI. That CLI generates **both JavaScript and PHP** from Mira source. No Haxe-generated PHP is involved, no runtime VM is required, and the parser never asks a type checker to resolve syntax.
 
-Supported example:
+```text
+Mira source
+  └─ Lexer             tokens + source locations
+      └─ DefinitionParser     declarations and raw expression spans
+          └─ Symbols          collected selector signatures and names
+              └─ SelectorResolver / ExpressionParser
+                  └─ canonical expression AST
+                      ├─ JsEmitter
+                      └─ PhpEmitter
+```
+
+## Build and test
+
+Requires Haxe **4.3.7**, Node.js **22+**, and PHP **8+** to execute the PHP test programs. No Haxelib packages or npm dependencies.
+
+```sh
+npm run build
+npm test
+
+node dist/mira.cjs examples/arithmetic.mira js > example.mjs
+node dist/mira.cjs examples/arithmetic.mira php > example.php
+node dist/mira.cjs examples/arithmetic.mira --tokens
+```
+
+`build.hxml` compiles Haxe into `dist/mira.cjs` (CommonJS). The directory `dist/` is not committed. CI compiles the frontend and runs the emitted programs on Node and PHP.
+
+## A small executable example
 
 ```mira
 add: a number, and: another number = a number + another number;
@@ -20,39 +46,23 @@ seven = add (two) and (five);
 result = square: (seven);
 ```
 
-Both `add: 2, and: 3` and `add 2 and 3` resolve to the same canonical selector `add:and:`, and generate `add__and(2, 3)` on both targets.
+The labeled form `add: x, and: y` and the parenthesized abbreviation `add (x) and (y)` normalize to the **same selector** `add:and:`. Both emit `add__and(x, y)`, with multiword names mapped deterministically to host identifiers such as `aNumber`.
 
-## Run
+Explicit `:` remains essential when a bare multiword argument has no unambiguous boundary. Mira rejects ambiguous input rather than guessing from inferred types.
 
-Requires Node.js 22+; PHP 8+ is needed for executing PHP output.
+## Current 0.1 restrictions
 
-```sh
-node --test
-node src/mira.mjs examples/arithmetic.mira js > /tmp/mira-example.mjs
-node src/mira.mjs examples/arithmetic.mira php > /tmp/mira-example.php
-```
+This prototype recognizes function/value definitions, multiword names, numeric and string literals, delimited selector calls, parentheses, and basic binary numeric operators. The supported binary operators group **left-to-right with no arithmetic precedence**; parentheses are explicit.
 
-No dependencies or build step. The optional third CLI argument writes directly to an output file.
+**Not implemented:** function values, partial application, `_`, `~`, user-defined operators, lists, closures, records, types, imports, macros or MVU. Those remain syntax proposals, not advertised runtime features.
 
-## What is implemented
+See [syntax and examples](docs/syntax.md), [grammar notes](docs/grammar.md) and [design decisions](docs/decisions.md).
 
-- Multiword function parameters and variables
-- One- and multi-part keyword selector declarations
-- Fully labeled or clearly delimited abbreviated calls
-- Numeric/string literals, parentheses, left-associated numeric arithmetic with equal operator precedence
-- A simple AST, JS/PHP emitters, source-positioned lexer errors, generated-name collision checks
-- Cross-target execution smoke tests
+## Related repositories
 
-**Not implemented yet:** first-class functions, keyword sections (`_`), pipeline, `defop`, types, records, lists, closure blocks, imports, pattern matching, async, MVU/HTML or a general runtime. These features have not been silently approximated.
-
-See [syntax notes](docs/syntax.md) and [design decisions](docs/decisions.md).
-
-## Repository boundaries
-
-- [NailLang](https://github.com/Spyryto/NailLang) — existing positional functional implementation
+- [NailLang](https://github.com/Spyryto/NailLang) — existing positional-language compiler and toolchain
 - [NailSeed](https://github.com/Spyryto/NailSeed) — historical prototypes
-- **Mira** — discursive syntax experiment; future status undecided
-- [Nail Lab](https://github.com/Spyryto/Nail-Lab) — historical and interactive teaching environment
-- [PHX-VM](https://github.com/Spyryto/PHX-VM) — separately designed PHP-focused VM
+- [Nail Lab](https://github.com/Spyryto/Nail-Lab) — teaching and historical experiments
+- [PHX-VM](https://github.com/Spyryto/PHX-VM) — separate PHP-focused VM
 
-This repository is deliberately kept independent so parsing experiments cannot disrupt NailLang's already working toolchain.
+Mira may eventually become a frontend for Nail, a reboot, or an independent language. That choice is intentionally open.
