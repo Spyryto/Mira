@@ -1,0 +1,8 @@
+# Sessioni di studio: dati e trasformazioni rimangono in Mira.
+session minutes = [15, 20, 10, 25];
+add: first, and: second = first + second;
+to seconds: minutes = minutes * 60;
+
+total minutes = fold: session minutes, with: (add: _, and: _), from: 0;
+session seconds = map: session minutes, with: (to seconds: _);
+result = {minutes: total minutes, seconds: session seconds};

@@ -1,0 +1,18 @@
+# Stima illustrativa, con rimborso chilometrico convenzionale.
+shows = [
+  {venue: "Padova", fee: 240, km: 60, toll: 5},
+  {venue: "Treviso", fee: 310, km: 100, toll: 8},
+  {venue: "Venezia", fee: 180, km: 30, toll: 0}
+];
+net: show = (get: "fee", from: (show))
+  - ((get: "km", from: (show)) * 0.2)
+  - (get: "toll", from: (show));
+add net: subtotal, from: show = subtotal + (net: show);
+summarize: show = {
+  venue: (get: "venue", from: (show)),
+  net: (net: show)
+};
+
+net total = fold: shows, with: (add net: _, from: _), from: 0;
+settlements = map: shows, with: (summarize: _);
+result = {netTotal: net total, shows: settlements};
