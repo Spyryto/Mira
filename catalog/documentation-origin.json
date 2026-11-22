@@ -60,6 +60,10 @@
     "docs/atlas.md": {
       "kind": "ai_assisted",
       "note": "Rapporto editoriale e note di architettura sviluppate con assistenza IA; graph e programmi sono derivati dal tooling."
+    },
+    "docs/mira04.md": {
+      "kind": "ai_assisted",
+      "note": "Spiegazione delle nuove feature 0.4 redatta con assistenza IA; esempi e risultati vengono verificati dal tooling."
     }
   },
   "generatedSections": {
