@@ -14,7 +14,9 @@ const assets = [
   'examples.js',
   'worker.js',
   'manifest.webmanifest',
-  'icon.svg'
+  'icon.svg',
+  'icon-192.png',
+  'icon-512.png'
 ];
 
 for (const filename of assets) {
