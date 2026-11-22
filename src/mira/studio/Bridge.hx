@@ -18,7 +18,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.3.0"
+            version: "0.4.0"
         });
     }
 
@@ -125,6 +125,11 @@ class Bridge {
             case HostRef(name): {kind: "HostRef", name: name};
             case Numeric(number): {kind: "Number", value: number};
             case Text(text): {kind: "Text", value: text};
+            case BooleanLiteral(value): {kind: "Boolean", value: value};
+            case FieldAccessor(key): {kind: "FieldAccessor", key: key};
+            case Conditional(condition, whenTrue, whenFalse):
+                {kind: "Conditional", condition: expression(condition),
+                    whenTrue: expression(whenTrue), whenFalse: expression(whenFalse)};
             case Sequence(items):
                 {kind: "Sequence", items: [for (item in items) expression(item)]};
             case Record(keys, values):
