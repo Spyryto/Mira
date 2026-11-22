@@ -1,110 +1,107 @@
-# Dogfooding 01 — AST Inspector scritto in Mira
+# Dogfooding 01 — oggetto Host e AST Inspector scritto in Mira
 
-Questa PR è un **esperimento**, non l'avvio del bootstrap del compilatore.
+Questa PR è sperimentale: non è bootstrap e non va integrata in main senza revisione.
 
-L'obiettivo concreto è fare in modo che Mira Studio utilizzi davvero Mira
-per trasformare un AST prodotto dal proprio compilatore.
+## Un ambiente di funzioni, senza extern
 
-## Primo contratto host: `extern`
-
-Una dichiarazione `extern` definisce una dipendenza esplicita dall'ambiente,
-senza corpo Mira:
+Un programma Mira può chiamare una funzione resa disponibile dall'ambiente:
 
 ```mira
-extern ast tree;
-extern fold: nodes, with: reducer, from: initial;
-extern node: item, is: kind;
+log "hey there";
+log (4 + 5);
+result = 9;
 ```
 
-Le firme sono raccolte dal normale `Symbols` e le chiamate sono risolte dallo
-stesso `SelectorResolver` usato dal resto del linguaggio. Non è prevista
-alcuna conoscenza speciale di `fold` o `node` nel parser.
+Il compilatore riceve il manifest **separatamente dal sorgente**:
 
-La generazione di codice produce:
+```json
+{ "values": [], "callables": ["log"], "selectors": [] }
+```
 
-- JavaScript: `__miraHost.get(name)` e `__miraHost.call(selector, arguments)`.
-- PHP: `MiraHost::get(name)` e `MiraHost::call(selector, arguments)`.
+L'host JS espone i callable in un semplice oggetto:
 
-**I target richiedono un host esplicito a runtime.** Il compilatore non
-fornisce silenziosamente accesso a filesystem, DOM o networking.
-L'host dell'inspector nega qualsiasi valore o selettore sconosciuto.
+```javascript
+const host = { log: message => console.log(message) };
+```
 
-## Il programma Mira dell'inspector
+Il codice JS generato richiama direttamente `__miraHost["log"]("hey there")`.
+Non passa attraverso un dispatcher `get/call`; il compilatore risolve i nomi
+registrati, e continua a segnalare gli identificatori sconosciuti.
 
-Codice: [studio/dogfood/inspector.mira](../studio/dogfood/inspector.mira).
+L'host PHP espone un array associativo di callable:
+
+```php
+$GLOBALS['__miraHost'] = [
+  'log' => static function($message) { echo $message, "\n"; }
+];
+```
+
+Il codice emesso invoca il callable usando il suo nome registrato, evitando
+la collisione con la funzione matematica nativa `log()` di PHP.
+
+### Che cosa contiene il manifest
+
+- `values`: nomi di valori, per esempio `ast tree`;
+- `callables`: nomi di funzioni utilizzabili come valori e applicate con giustapposizione;
+- `selectors`: firme complete, per esempio `fold:with:from:` o `node:is:`.
+
+I nomi delle funzioni reali non vengono eseguiti durante la compilazione:
+il manifest contiene solo simboli. Il sistema di compilazione, il bridge
+del browser e la CLI usano lo stesso `mira.HostEnvironment` in Haxe.
+Il manifest è una capability list: le API effettive restano nell'oggetto host.
+
+## Nuove regole sintattiche sperimentali
+
+- Una chiamata unaria può essere `log "ciao"`, `increment 5` o `log (double 21)`.
+- Un'espressione autonoma può terminare con `;`, senza assegnazione.
+- L'applicazione per giustapposizione precede gli operatori binari.
+- I selettori keyword e le sezioni continuano a usare il resolver deterministico.
+- I nomi host non registrati sono errori; non esiste fallback implicito a JS/PHP.
+
+## Il primo dogfooding effettivo
+
+Il codice in [studio/dogfood/inspector.mira](../studio/dogfood/inspector.mira)
+calcola statistiche sull'AST prodotto da Haxe:
 
 ```mira
 count: total, node: item = total + 1;
 count matching: kind, total: total, node: item =
   total + (node: item, is: kind);
-
 count kind: wanted = (count matching: wanted, total: _, node: _);
-
 total nodes = fold: ast tree, with: (count: _, node: _), from: 0;
-call nodes = fold: ast tree, with: (count kind: "Call"), from: 0;
-section nodes = fold: ast tree, with: (count kind: "Section"), from: 0;
 ```
 
-La parte host è volutamente stretta: fornisce l'AST, attraversa i figli dei
-nodi secondo la struttura dell'AST canonico e restituisce 1 o 0 quando un
-nodo ha un determinato `kind`.
+Il manifest [studio/dogfood/host.json](../studio/dogfood/host.json)
+registra il valore `ast tree` e le funzioni host `fold:with:from:` e `node:is:`.
+L'host fornisce i nodi e il meccanismo di traversamento; le funzioni di conteggio,
+la selezione e l'accumulo sono scritti in Mira. JS renderizza l'albero
+espandibile, ma non calcola le statistiche mostrate.
 
-**I reducer, la scelta delle categorie e l'accumulazione sono Mira.**
-Il codice JavaScript non calcola le statistiche che compaiono nelle card.
-La visualizzazione ad albero usa una ricorsione JS presentazionale sui
-nodi dell'AST; non è ancora scritta in Mira.
+Modifica il reducer `total + 1` in `total + 2` nell'inspector e premi
+**Ricalcola con Mira**: il totale dei nodi deve raddoppiare.
+Questo comportamento è verificato automaticamente, anche su PHP.
 
-## Come provarlo in Mira Studio
+## Prova locale
 
-1. Compila un qualsiasi programma Mira.
-2. Apri **Esplora → Inspector visuale · scritto in Mira**.
-3. Espandi l'albero AST e leggi le statistiche.
-4. Apri **Il programma Mira che calcola le statistiche**.
-5. Cambia `count: total, node: item = total + 1;` in `... = total + 2;`.
-6. Premi **Ricalcola con Mira**: il totale raddoppia, senza modifiche all'host.
-
-Puoi ripristinare il programma predefinito con **Ripristina**.
-La copia modificata viene salvata localmente al comando Ricalcola. La PWA
-include e conserva offline il sorgente Mira, l'host e il worker.
-
-## Esempio aggiuntivo di contratto host
-
-Il seguente programma si compila per entrambi i target ma, coerentemente,
-richiede l'host in fase di esecuzione:
-
-```mira
-extern price;
-extern add: left, and: right;
-result = add: price, and: 7;
+```sh
+npm test
+npm run test:studio
+node dist/mira.cjs studio/dogfood/inspector.mira js --host studio/dogfood/host.json
+node dist/mira.cjs studio/dogfood/inspector.mira php --host studio/dogfood/host.json
 ```
 
-Con `get("price") → 13` e `call("add:and:", [13, 7]) → 20` il risultato
-è 20. Il test di regressione lo esegue nel backend JavaScript e verifica
-il contratto emesso anche per PHP.
+Mira Studio include un esempio «Interoperabilità: log» e il programma
+dell'inspector modificabile in **Esplora**. Manifest, sorgenti e worker
+sono nella cache della PWA. Il preview della PR è disponibile negli
+artefatti del workflow «Mira Studio PWA».
 
-## Limiti e sicurezza
+## Limiti e questioni aperte
 
-- Non sono state introdotte liste e record generali, cicli, match o funzioni
-  anonime arbitrarie nel linguaggio.
-- `fold` è una **capability host** e non una primitiva standard del linguaggio.
-- La compilazione Haxe rimane la fonte di verità per token, parser e AST.
-- Il programma dell'inspector è eseguito in un Web Worker. Il Worker evita
-  di bloccare l'interfaccia nei casi comuni, ma **non è un sandbox di
-  sicurezza** per programmi di terzi.
-- Nessuna promessa di stabilità della sintassi `extern` prima della 1.0.
-- La PR deve rimanere aperta finché non valutiamo se il confine host è
-  sufficientemente espressivo e verificabile.
+Non sono ancora disponibili un type checker delle API host, le liste e i
+record generali o un sistema di moduli. Le chiamate possono fallire a runtime
+se l'oggetto host non corrisponde al manifest. Il worker evita blocchi comuni
+della UI, ma non isola in sicurezza codice di terze parti. Lo scope e il
+lifetime delle capability richiederanno un disegno successivo.
 
-## Test di correttezza e dogfooding
-
-`npm test` comprende test che verificano:
-
-- la compilazione delle dichiarazioni extern in JS/PHP;
-- la coerenza dei risultati dell'inspector con il numero reale di nodi;
-- la corrispondenza delle trasformazioni nei due runtime;
-- un **test metamorfico**: modificare la funzione Mira di conteggio cambia
-  davvero il numero restituito;
-- il rifiuto di primitive host non autorizzate e la disponibilità offline.
-
-Questo test di laboratorio prepara il terreno per Value, trasformazioni AST
-più ricche e un componente View dichiarativo, senza introdurli prematuramente.
+La PR deve rimanere aperta per confrontare questo sistema con il precedente
+prototipo `extern` e decidere se introdurre più avanti uno scope `use Host`.
