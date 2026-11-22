@@ -8,6 +8,7 @@
   "selectors": [
     "fold:with:from:",
     "map:with:",
-    "get:from:"
+    "get:from:",
+    "filter:with:"
   ]
 }
