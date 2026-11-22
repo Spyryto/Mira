@@ -532,3 +532,117 @@ result = add 2 and 3;
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/duplicate-parameter)
 
+<a id="example-practice-log"></a>
+## Registro delle sessioni di studio
+
+Una lista di durate viene aggregata e trasformata in secondi attraverso funzioni Mira passate all'host.
+
+Feature: [Sequenze e trasformazioni](language.md#feature-sequences)
+
+```mira
+# Sessioni di studio: dati e trasformazioni rimangono in Mira.
+session minutes = [15, 20, 10, 25];
+add: first, and: second = first + second;
+to seconds: minutes = minutes * 60;
+
+total minutes = fold: session minutes, with: (add: _, and: _), from: 0;
+session seconds = map: session minutes, with: (to seconds: _);
+result = {minutes: total minutes, seconds: session seconds};
+```
+
+**Risultato:** result = {"minutes":70,"seconds":[900,1200,600,1500]}
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/practice-log)
+
+<a id="example-setlist-plan"></a>
+## Scaletta musicale e minutaggio
+
+Elabora una lista di brani, calcola la durata e produce una nuova scaletta con le durate in secondi.
+
+Feature: [Sequenze e trasformazioni](language.md#feature-sequences)
+
+```mira
+# Scaletta: i dati sono una sequenza di record Mira.
+songs = [
+  {title: "Opening", minutes: 4.5},
+  {title: "Midnight", minutes: 3.75},
+  {title: "Encore", minutes: 5.25}
+];
+duration: song = get: "minutes", from: (song);
+add duration: total, of: song = total + (duration: song);
+to plan: song = {
+  title: (get: "title", from: (song)),
+  seconds: ((duration: song) * 60)
+};
+
+total minutes = fold: songs, with: (add duration: _, of: _), from: 0;
+plan = map: songs, with: (to plan: _);
+result = {minutes: total minutes, items: plan};
+```
+
+**Risultato:** result = {"minutes":13.5,"items":[{"title":"Opening","seconds":270},{"title":"Midnight","seconds":225},{"title":"Encore","seconds":315}]}
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/setlist-plan)
+
+<a id="example-gig-ledger"></a>
+## Bilancio di tre concerti
+
+Per ogni serata calcola un compenso netto stimato, poi riepiloga tutti i concerti.
+
+Feature: [Record e dati strutturati](language.md#feature-records)
+
+```mira
+# Stima illustrativa, con rimborso chilometrico convenzionale.
+shows = [
+  {venue: "Padova", fee: 240, km: 60, toll: 5},
+  {venue: "Treviso", fee: 310, km: 100, toll: 8},
+  {venue: "Venezia", fee: 180, km: 30, toll: 0}
+];
+net: show = (get: "fee", from: (show))
+  - ((get: "km", from: (show)) * 0.2)
+  - (get: "toll", from: (show));
+add net: subtotal, from: show = subtotal + (net: show);
+summarize: show = {
+  venue: (get: "venue", from: (show)),
+  net: (net: show)
+};
+
+net total = fold: shows, with: (add net: _, from: _), from: 0;
+settlements = map: shows, with: (summarize: _);
+result = {netTotal: net total, shows: settlements};
+```
+
+**Risultato:** result = {"netTotal":679,"shows":[{"venue":"Padova","net":223},{"venue":"Treviso","net":282},{"venue":"Venezia","net":174}]}
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/gig-ledger)
+
+<a id="example-teaching-ledger"></a>
+## Registro delle lezioni di chitarra
+
+Ricalcola ricavi e voci di un registro lezioni a partire da record strutturati.
+
+Feature: [Record e dati strutturati](language.md#feature-records)
+
+```mira
+lessons = [
+  {student: "Anna", hours: 1.5, rate: 30},
+  {student: "Luca", hours: 2, rate: 25},
+  {student: "Mia", hours: 1, rate: 35}
+];
+fee: lesson = (get: "hours", from: (lesson))
+  * (get: "rate", from: (lesson));
+accumulate fee: total, with: lesson = total + (fee: lesson);
+invoice: lesson = {
+  student: (get: "student", from: (lesson)),
+  amount: (fee: lesson)
+};
+
+income = fold: lessons, with: (accumulate fee: _, with: _), from: 0;
+invoices = map: lessons, with: (invoice: _);
+result = {income: income, invoices: invoices};
+```
+
+**Risultato:** result = {"income":130,"invoices":[{"student":"Anna","amount":45},{"student":"Luca","amount":50},{"student":"Mia","amount":35}]}
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/teaching-ledger)
+

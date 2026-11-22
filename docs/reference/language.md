@@ -1,4 +1,4 @@
-# Guida a Mira 0.2.0
+# Guida a Mira 0.3.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -184,4 +184,28 @@ API collegata: [`mira.MiraError`](api.md#api-mira-miraerror)
 
 - [Argomenti senza confini](examples.md#example-ambiguous-words) — Errore atteso: Unknown identifier
 - [Parametro ripetuto](examples.md#example-duplicate-parameter) — Errore atteso: Duplicate parameter
+
+<a id="feature-sequences"></a>
+## Sequenze e trasformazioni
+
+Liste letterali e trasformazioni funzionali con un host minimo.
+
+Le sequenze `[a, b]` sono valori di Mira. `map:with:` e `fold:with:from:` sono funzioni esplicite dell'host, non keyword del linguaggio; i reducer rimangono funzioni Mira.
+
+API collegata: [`mira.syntax.Expr.Sequence`](api.md#api-mira-syntax-expr-sequence)
+
+- [Registro delle sessioni di studio](examples.md#example-practice-log) — result = {"minutes":70,"seconds":[900,1200,600,1500]}
+- [Scaletta musicale e minutaggio](examples.md#example-setlist-plan) — result = {"minutes":13.5,"items":[{"title":"Opening","seconds":270},{"title":"Midnight","seconds":225},{"title":"Encore","seconds":315}]}
+
+<a id="feature-records"></a>
+## Record e dati strutturati
+
+Costruzione di record anonimi portabili tra JavaScript e PHP.
+
+I record `{campo: espressione}` diventano oggetti JavaScript e array associativi PHP. Il selettore host `get:from:` legge una chiave; chiavi duplicate e delimitatori errati vengono rifiutati.
+
+API collegata: [`mira.syntax.Expr.Record`](api.md#api-mira-syntax-expr-record)
+
+- [Bilancio di tre concerti](examples.md#example-gig-ledger) — result = {"netTotal":679,"shows":[{"venue":"Padova","net":223},{"venue":"Treviso","net":282},{"venue":"Venezia","net":174}]}
+- [Registro delle lezioni di chitarra](examples.md#example-teaching-ledger) — result = {"income":130,"invoices":[{"student":"Anna","amount":45},{"student":"Luca","amount":50},{"student":"Mia","amount":35}]}
 
