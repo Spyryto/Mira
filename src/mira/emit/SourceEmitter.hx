@@ -30,6 +30,28 @@ class SourceEmitter {
                     case Php: phpString(value);
                 }
 
+            case Sequence(items):
+                "[" + [for (item in items)
+                    expression(item, target, scope, reservedHostNames)].join(", ") + "]";
+
+            case Record(keys, values):
+                final entries:Array<String> = [];
+                for (index in 0...keys.length) {
+                    final key = switch (target) {
+                        case JavaScript: haxe.Json.stringify(keys[index]);
+                        case Php: phpString(keys[index]);
+                    };
+                    final value = expression(values[index], target, scope, reservedHostNames);
+                    entries.push(switch (target) {
+                        case JavaScript: key + ": " + value;
+                        case Php: key + " => " + value;
+                    });
+                }
+                switch (target) {
+                    case JavaScript: "({" + entries.join(", ") + "})";
+                    case Php: "([" + entries.join(", ") + "])";
+                }
+
             case Binary(symbol, left, right):
                 if (["+", "-", "*", "/", "%"].indexOf(symbol) < 0) {
                     throw new MiraError("Unsupported operator " + symbol);
