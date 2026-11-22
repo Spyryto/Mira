@@ -16,6 +16,7 @@ export function childrenOf(node) {
     case 'Value':
     case 'ExpressionStatement': return node.body ? [node.body] : [];
     case 'Binary': return [node.left, node.right].filter(Boolean);
+    case 'Conditional': return [node.condition, node.whenTrue, node.whenFalse].filter(Boolean);
     case 'Call':
     case 'Section':
     case 'HostCall':
