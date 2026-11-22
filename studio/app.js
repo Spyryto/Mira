@@ -1,8 +1,11 @@
 import { examples, defaultSource } from './examples.js';
+import { mountReference } from './reference-ui.js';
 
 // Mira Studio's controller concerns browser UX only.
 // All language semantics are delegated to the Haxe compiler bridge.
 const compiler = globalThis.MiraStudioCompiler;
+const catalogExamples = [];
+let referenceViewer = null;
 const $ = id => document.getElementById(id);
 
 const ui = {
@@ -76,7 +79,7 @@ function updateEditorIndicators() {
 }
 
 function setView(view) {
-  if (!['code', 'output', 'structure'].includes(view)) return;
+  if (!['code', 'output', 'structure', 'reference'].includes(view)) return;
 
   state.view = view;
   for (const button of ui.viewButtons) {
@@ -85,11 +88,15 @@ function setView(view) {
     button.setAttribute('aria-selected', String(selected));
   }
 
-  for (const name of ['code', 'output', 'structure']) {
+  for (const name of ['code', 'output', 'structure', 'reference']) {
     $('view-' + name).hidden = name !== view;
   }
 
   if (view === 'structure') updateStructure();
+  if (view === 'reference') {
+    if (!isReferenceRoute(location.hash)) location.hash = '#/guide';
+    referenceViewer?.render();
+  }
 }
 
 function setTarget(target) {
@@ -202,18 +209,19 @@ async function copyOutput() {
 }
 
 function loadExample(exampleId) {
-  const example = examples.find(item => item.id === exampleId);
-  if (!example) return;
+  const example = [...examples, ...catalogExamples].find(item => item.id === exampleId);
+  if (!example) return false;
   if (ui.source.value !== example.source && ui.source.value.trim()) {
     if (!window.confirm('Sostituire il codice corrente con questo esempio?')) {
       ui.exampleSelect.value = '';
-      return;
+      return false;
     }
   }
   ui.source.value = example.source;
   updateEditorIndicators();
   sourceChanged();
   setView('code');
+  return true;
 }
 
 function stopWorker() {
@@ -376,6 +384,12 @@ function wireEvents() {
   });
   ui.structureSelect.addEventListener('change', updateStructure);
   ui.exampleSelect.addEventListener('change', () => loadExample(ui.exampleSelect.value));
+  window.addEventListener('hashchange', () => {
+    if (isReferenceRoute(location.hash) && referenceViewer) {
+      setView('reference');
+      referenceViewer.render();
+    }
+  });
   $('updateNow').addEventListener('click', () => {
     state.updateRequested = true;
     saveLocally();
@@ -409,7 +423,51 @@ function start() {
   wireEvents();
   updateEditorIndicators();
   setTarget(state.target);
+  initializeReference();
   installServiceWorker();
+}
+
+
+function isReferenceRoute(hash) {
+  return /^#\/(guide|feature\/|example\/|api(?:\/|$))/.test(hash);
+}
+
+async function initializeReference() {
+  const root = $('reference');
+  try {
+    const response = await fetch('./reference.json');
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const data = await response.json();
+    if (!data.features?.length || !data.api?.length) {
+      throw new Error('Catalogo incompleto');
+    }
+
+    catalogExamples.push(...data.examples.map(item => ({
+      id: item.id, name: item.title, source: item.source
+    })));
+
+    const group = document.createElement('optgroup');
+    group.label = 'Catalogo delle feature — ' + data.examples.length + ' esempi';
+    for (const example of catalogExamples) {
+      const option = document.createElement('option');
+      option.value = example.id;
+      option.textContent = example.name;
+      group.append(option);
+    }
+    ui.exampleSelect.append(group);
+
+    referenceViewer = mountReference(root, data, example => {
+      if (loadExample(example.id)) ui.exampleSelect.value = example.id;
+    });
+    referenceViewer.render();
+
+    if (isReferenceRoute(location.hash)) {
+      setView('reference');
+    }
+  } catch (error) {
+    root.textContent = 'Documentazione non disponibile: ' +
+      String(error?.message ?? error);
+  }
 }
 
 start();
