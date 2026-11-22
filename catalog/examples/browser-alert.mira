@@ -1,7 +1,6 @@
 # alert è una normale funzione dell'host, non una keyword Mira.
-alert "Ciao! Questo messaggio arriva da Mira.";
-
 render {
   type: "text",
-  text: "L'alert è stato richiesto dal codice Mira."
+  text: "Questa view è creata in Mira. Ora compare un alert."
 };
+alert "Ciao! Questo messaggio arriva da Mira!";
