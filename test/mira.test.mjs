@@ -47,3 +47,11 @@ test('arithmetic operators have equal precedence, left-associative',()=>{
   assert.equal(run('result = 1 + 2 * 3;','js'),'9');
   assert.equal(run('result = 1 + (2 * 3);','php'),'7');
 });
+
+test('parenthesized multiword arguments are equivalent to labeled arguments',()=>{
+  const source='add: a number, and: another number = a number + another number; copy add: a number, and: another number = add (a number) and (another number); result = copy add 2 and 3;';
+  for(const target of ['js','php']) assert.equal(run(source,target),'5');
+});
+test('missing top-level statement terminator is rejected',()=>{
+  assert.throws(()=>transpile('result = 1','js'),/Expected ;/);
+});
