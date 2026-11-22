@@ -6,7 +6,7 @@
   "description": "Mira discursive syntax frontend: Haxe source, JS/PHP emitters",
   "scripts": {
     "build": "node scripts/build.mjs",
-    "test": "npm run build && node --test",
+    "test": "npm run build && npm run build:studio && node --test",
     "benchmark": "npm run build && node scripts/benchmark.mjs",
     "build:studio": "node scripts/build-studio.mjs",
     "test:studio": "npm run build:studio && node --test test/studio.test.mjs"
