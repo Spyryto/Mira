@@ -14,7 +14,9 @@ class PhpEmitter {
             if (definition.body == null) throw new MiraError("Missing resolved body", definition.origin);
 
             final scope = definition.isFunction() ? definition.parameters : symbols.globals;
-            final expr = SourceEmitter.expression(cast definition.body, Php, scope);
+            final expr = SourceEmitter.expression(
+                cast definition.body, Php, scope, symbols.hostNames
+            );
 
             if (definition.isFunction()) {
                 final arguments = [for (param in definition.parameters) "$" + Mangle.name(param)];
