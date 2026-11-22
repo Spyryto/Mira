@@ -51,10 +51,12 @@ class Bridge {
                 };
                 if (definition.isFunction()) {
                     Reflect.setField(node, "selector", definition.selector());
+                    Reflect.setField(node, "name", definition.selector());
                     Reflect.setField(node, "labels", definition.labels);
                     Reflect.setField(node, "parameters", definition.parameters);
-                } else if (!definition.isStatement) {
-                    Reflect.setField(node, "name", definition.name);
+                } else {
+                    Reflect.setField(node, "name",
+                        definition.isStatement ? "<expression>" : definition.name);
                 }
                 tree.push(node);
             }
