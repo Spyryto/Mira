@@ -81,6 +81,17 @@ soglie di performance arbitrarie. I risultati reali sono disponibili
 nei sommari della workflow `Mira Studio PWA` e nell'artefatto
 `mira-atlas-benchmark`.
 
+Nella prima [CI di Atlas](https://github.com/Spyryto/Mira/actions/runs/45071690495)
+(22 novembre 2026), il modello Mira compilato verso JS ha impiegato
+**0,136 ms** di mediana per 1.000 record, contro **0,012 ms**
+dell'implementazione manuale equivalente (**circa 11 volte più lento**).
+È comunque sotto il millisecondo per il carico provato.
+La differenza deriva in larga parte dai molti accessi dinamici
+`get:from:` e dalle chiamate host; non è una misura del linguaggio
+in generale né una prova della velocità di rendering.
+Accessi ai record nativi/ottimizzati e una migliore compilazione dei
+riferimenti host sono opportunità concrete per ridurre questo overhead.
+
 ## Quali feature Mira mancano dopo questo esperimento?
 
 | Priorità | Feature desiderata | Ostacolo emerso |
