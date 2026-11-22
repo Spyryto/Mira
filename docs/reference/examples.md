@@ -1,6 +1,6 @@
 # Esempi eseguibili Mira
 
-Catalogo generato, validato dalla CI su JavaScript e PHP. Gli esempi con errore atteso sono contrassegnati.
+Catalogo generato e validato in CI. Gli esempi numerici vengono eseguiti su JS/PHP; gli esempi UI sono compilati su entrambi i target ed eseguiti con il DOM host JS.
 
 <a id="example-invoice-total"></a>
 ## Fattura e trasferta
@@ -645,4 +645,83 @@ result = {income: income, invoices: invoices};
 **Risultato:** result = {"income":130,"invoices":[{"student":"Anna","amount":45},{"student":"Luca","amount":50},{"student":"Mia","amount":35}]}
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/teaching-ledger)
+
+<a id="example-browser-alert"></a>
+## Alert dall’host
+
+Mira chiama una funzione dell'host che apre una finestra di dialogo nell'anteprima.
+
+Feature: [UI web e interoperabilità](language.md#feature-browser-ui)
+
+```mira
+# alert è una normale funzione dell'host, non una keyword Mira.
+render {
+  type: "text",
+  text: "Questa view è creata in Mira. Ora compare un alert."
+};
+alert "Ciao! Questo messaggio arriva da Mira!";
+```
+
+**Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/browser-alert)
+
+<a id="example-browser-view"></a>
+## View e pulsante
+
+Una view dichiarativa costruita con record Mira; il pulsante richiama una funzione Mira.
+
+Feature: [UI web e interoperabilità](language.md#feature-browser-ui)
+
+```mira
+# La UI è un record Mira, interpretato dal renderer dell'host.
+say hello: ignored = alert "Ciao dal pulsante Mira!";
+
+render {
+  type: "column",
+  children: [
+    {type: "title", text: "Una view scritta in Mira"},
+    {type: "text", text: "Nessun accesso diretto al DOM."},
+    {type: "button", label: "Salutami", onClick: (say hello: _)}
+  ]
+};
+```
+
+**Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/browser-view)
+
+<a id="example-browser-counter"></a>
+## Pulsante con contatore
+
+Mira definisce sia la view dipendente dallo stato sia le transizioni +1 e -1; l'host conserva il valore e gestisce i clic.
+
+Feature: [UI web e interoperabilità](language.md#feature-browser-ui)
+
+```mira
+# Lo stato corrente viene mantenuto dall'host.
+# Le trasformazioni di stato e la view sono funzioni Mira.
+increment: value = value + 1;
+decrement: value = value - 1;
+
+counter view: value = {
+  type: "column",
+  children: [
+    {type: "title", text: "Contatore funzionale"},
+    {type: "text", text: value},
+    {type: "button", label: "+1", update: (increment: _)},
+    {type: "button", label: "-1", update: (decrement: _)}
+  ]
+};
+
+render {
+  type: "state",
+  initial: 0,
+  view: (counter view: _)
+};
+```
+
+**Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/browser-counter)
 

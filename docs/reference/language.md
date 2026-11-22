@@ -209,3 +209,16 @@ API collegata: [`mira.syntax.Expr.Record`](api.md#api-mira-syntax-expr-record)
 - [Bilancio di tre concerti](examples.md#example-gig-ledger) — result = {"netTotal":679,"shows":[{"venue":"Padova","net":223},{"venue":"Treviso","net":282},{"venue":"Venezia","net":174}]}
 - [Registro delle lezioni di chitarra](examples.md#example-teaching-ledger) — result = {"income":130,"invoices":[{"student":"Anna","amount":45},{"student":"Luca","amount":50},{"student":"Mia","amount":35}]}
 
+<a id="feature-browser-ui"></a>
+## UI web e interoperabilità
+
+Visualizzazione dichiarativa, alert e gestione degli eventi con funzioni Mira collegate a un host browser.
+
+`alert` e `render` sono callable registrati nell'ambiente JS. `render` accetta record con tipi di view consentiti: title, text, column, button e state. Nel componente state il browser conserva il valore, mentre la funzione Mira `view` produce la UI e le funzioni Mira `update` calcolano lo stato successivo. L'anteprima è confinata in un iframe sandbox senza accesso all'origine dello Studio. Il PHP generato è compilabile, ma l'esecuzione di queste capability richiede un ambiente DOM e viene verificata soltanto nel browser.
+
+API collegata: [`mira.HostEnvironment`](api.md#api-mira-hostenvironment)
+
+- [Alert dall’host](examples.md#example-browser-alert) — Anteprima interattiva (browser JS; PHP compilato soltanto)
+- [View e pulsante](examples.md#example-browser-view) — Anteprima interattiva (browser JS; PHP compilato soltanto)
+- [Pulsante con contatore](examples.md#example-browser-counter) — Anteprima interattiva (browser JS; PHP compilato soltanto)
+
