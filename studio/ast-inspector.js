@@ -17,12 +17,16 @@ function labelOf(node) {
     case 'Program': return 'Program · ' + (node.definitions?.length ?? 0) + ' definizioni';
     case 'Function': return 'Function · ' + node.selector;
     case 'Value': return 'Value · ' + node.name;
+    case 'HostRef': return 'Host · ' + node.name;
+    case 'ExpressionStatement': return 'Expression statement';
     case 'Name':
     case 'Text':
     case 'Number': return node.kind + ' · ' + JSON.stringify(node.value);
     case 'Binary': return 'Binary · ' + node.symbol;
     case 'Call':
-    case 'Section': return node.kind + ' · ' + node.selector;
+    case 'Section':
+    case 'HostCall':
+    case 'HostSection': return node.kind + ' · ' + node.selector;
     case 'Apply': return 'Apply';
     case 'Placeholder': return 'Placeholder · _';
     default: return String(node.kind ?? '?');
@@ -86,6 +90,7 @@ export function createAstInspector(compiler) {
   const reset = document.getElementById('inspectorReset');
   let programPromise = null;
   let defaultProgram = '';
+  let inspectorHostJson = '';
   let latestSource = '';
   let requestId = 0;
   let worker = null;
@@ -93,10 +98,17 @@ export function createAstInspector(compiler) {
 
   async function loadDefaultProgram() {
     if (!programPromise) {
-      programPromise = fetch('./inspector.mira').then(response => {
-        if (!response.ok) throw new Error('Inspector Mira not found: ' + response.status);
-        return response.text();
-      }).then(source => {
+      programPromise = Promise.all([
+        fetch('./inspector.mira').then(response => {
+          if (!response.ok) throw new Error('Inspector Mira not found: ' + response.status);
+          return response.text();
+        }),
+        fetch('./inspector-host.json').then(response => {
+          if (!response.ok) throw new Error('Inspector host manifest not found');
+          return response.text();
+        })
+      ]).then(([source, hostJson]) => {
+        inspectorHostJson = hostJson;
         defaultProgram = source;
         try {
           editor.value = localStorage.getItem(STORAGE_KEY) ?? source;
@@ -137,7 +149,7 @@ export function createAstInspector(compiler) {
         throw new Error(parsed?.message ?? 'Impossibile ottenere l’AST');
       }
       const ast = JSON.parse(parsed.output);
-      const compiled = compiler.compile(editor.value, 'js');
+      const compiled = compiler.compile(editor.value, 'js', inspectorHostJson);
       if (!compiled?.ok) {
         throw new Error('Programma Mira dell’inspector: ' + compiled.message);
       }

@@ -14,7 +14,7 @@ class Bridge {
             compile: compile,
             tokens: tokens,
             ast: ast,
-            version: "0.2.0-experiment"
+            version: "0.2.0"
         });
     }
 

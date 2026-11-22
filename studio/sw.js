@@ -10,6 +10,8 @@ const ASSETS = [
   './inspector-host.js',
   './inspector-worker.js',
   './inspector.mira',
+  './inspector-host.json',
+  './host.json',
   './reference.json',
   './examples.js',
   './compiler.js',
