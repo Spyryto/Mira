@@ -46,20 +46,27 @@ function mediumSource(definitions) {
 
 function timedRunner(run,expected,clock) {
   if(run(7)!==expected)throw new Error('Runtime result is wrong');
-  for(let i=0;i<200;i++)run(7);
+  for(let i=0;i<200;i++)run(i);
+  // Inputs change each call and all results contribute to a checksum.
+  // Otherwise optimizing JITs can eliminate the computation entirely.
+  const batch=count=>{
+    let sum=0;
+    for(let i=0;i<count;i++)sum+=run(i);
+    if(sum!==count*(count-1)/2+count*(expected-7)){
+      throw new Error('Runtime checksum mismatch');
+    }
+  };
   let repetitions=1;
   while(repetitions<100000){
     const start=clock();
-    for(let i=0;i<repetitions;i++)run(7);
+    batch(repetitions);
     if(clock()-start>=8)break;
     repetitions=Math.min(100000,repetitions*2);
   }
   const samples=[];
   for(let sample=0;sample<21;sample++){
     const start=clock();
-    let value;
-    for(let i=0;i<repetitions;i++)value=run(7);
-    if(value!==expected)throw new Error('Runtime result changed');
+    batch(repetitions);
     samples.push((clock()-start)/repetitions);
   }
   return {...percentiles(samples),repetitions,samples:samples.length};
@@ -78,19 +85,24 @@ function runPhp(code,expected,path) {
   const footer=String.raw`
 $expected = EXPECTED;
 if (run(7) !== $expected) { fwrite(STDERR, "Wrong runtime result"); exit(2); }
-for ($i = 0; $i < 200; $i++) run(7);
+for ($i = 0; $i < 200; $i++) run($i);
+$batch = static function(int $count) use ($expected): void {
+    $sum = 0;
+    for ($i = 0; $i < $count; $i++) $sum += run($i);
+    $expectedSum = $count * ($count - 1) / 2 + $count * ($expected - 7);
+    if ($sum != $expectedSum) { fwrite(STDERR, "Runtime checksum mismatch"); exit(3); }
+};
 $repetitions = 1;
 while ($repetitions < 100000) {
     $start = hrtime(true);
-    for ($i = 0; $i < $repetitions; $i++) run(7);
+    $batch($repetitions);
     if ((hrtime(true) - $start) / 1000000 >= 8) break;
     $repetitions = min(100000, $repetitions * 2);
 }
 $samples = [];
 for ($sample = 0; $sample < 21; $sample++) {
     $start = hrtime(true);
-    for ($i = 0; $i < $repetitions; $i++) $value = run(7);
-    if ($value !== $expected) { fwrite(STDERR, "Runtime changed"); exit(3); }
+    $batch($repetitions);
     $samples[] = (hrtime(true) - $start) / 1000000 / $repetitions;
 }
 sort($samples, SORT_NUMERIC);
@@ -164,15 +176,15 @@ try {
     '',
     '### Runtime: compiled Mira functions',
     '',
-    '| Workload | Target | Median per call (ms) | p95 (ms) | Calls/s |',
+    '| Workload | Target | Median per call (µs) | p95 (µs) | Calls/s |',
     '| --- | --- | ---: | ---: | ---: |',
     ...runtime.map(s=>'| '+s.workload+' | '+s.target.toUpperCase()+
-      ' | '+s.medianMs.toFixed(5)+' | '+s.p95Ms.toFixed(5)+
+      ' | '+(s.medianMs*1000).toFixed(3)+' | '+(s.p95Ms*1000).toFixed(3)+
       ' | '+Math.round(s.operationsPerSecond).toLocaleString('en-US')+' |'),
     '',
     'Source lines: nonempty, non-comment physical lines of Mira.',
     'Compilation: 10 warmups, 100 iterations inside one Node/Haxe compiler process.',
-    'Runtime: 200 warmups, 21 batches, calibrated calls; loaded functions called with 7.',
+    'Runtime: 200 warmups, 21 calibrated batches, varying input and checked sums.',
     'Excludes process start, emitted-code parsing, browser DOM, and I/O.',
     'Different backend runtimes and CI machines are not directly equivalent.',
     'No regression thresholds are imposed.',
