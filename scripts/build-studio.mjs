@@ -62,11 +62,11 @@ if (result.status !== 0) {
 }
 console.log(`Mira Studio Haxe browser bundle built in ${(performance.now() - started).toFixed(1)} ms`);
 // Generate the offline reference from feature fixtures and Haxe signatures.
-const documentation = spawnSync('node', ['scripts/generate-reference.mjs'], {
+const documentation = spawnSync('npm', ['run', 'docs'], {
   cwd: root, stdio: 'inherit'
 });
 if (documentation.error || documentation.status !== 0) {
-  console.error(documentation.error?.message ?? 'Documentation generation failed');
+  console.error(documentation.error?.message ?? 'Documentation provenance/reference generation failed');
   process.exit(documentation.status ?? 1);
 }
 console.log('Mira Studio static assets ready in dist/studio (cache ' + buildId + ')');
