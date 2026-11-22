@@ -105,7 +105,7 @@ test('PWA assets are self-hosted and have a relative GitHub Pages scope', () => 
 });
 
 test('mobile UI JavaScript, SW and execution worker have valid syntax', () => {
-  for (const file of ['app.js', 'examples.js', 'worker.js', 'sw.js']) {
+  for (const file of ['app.js', 'reference-ui.js', 'examples.js', 'worker.js', 'sw.js']) {
     execFileSync('node', ['--check', resolve(site, file)]);
   }
 });
@@ -154,6 +154,26 @@ test('all Studio examples match the syntax currently implemented', async () => {
       const result = bridge.compile(example.source, target);
       assert.equal(result.ok, expectedSuccess,
         example.id + ' (' + target + '): ' + (result.message ?? 'unexpected success'));
+    }
+  }
+});
+
+test('Studio offers all generated feature examples and real Haxe API links offline', () => {
+  const reference = JSON.parse(read('reference.json'));
+  assert.equal(reference.features.length, 15);
+  assert.equal(reference.examples.length, 30);
+  assert.ok(reference.api.length >= 45);
+  assert.match(read('sw.js'), /\.\/reference\.json/);
+  assert.match(read('sw.js'), /\.\/reference-ui\.js/);
+  assert.match(read('index.html'), /data-view="reference"/);
+  assert.match(read('app.js'), /initializeReference/);
+
+  for (const example of reference.examples) {
+    const shouldWork = example.expect.kind !== 'error';
+    for (const target of ['js', 'php']) {
+      const compilation = bridge.compile(example.source, target);
+      assert.equal(compilation.ok, shouldWork,
+        example.id + ' ' + target + ': ' + compilation.message);
     }
   }
 });
