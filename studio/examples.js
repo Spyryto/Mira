@@ -43,6 +43,14 @@ increment = (add: _, and: 1);
 result = 2 ~ increment ~ (square: _) ~ (add: _, and: 1);`
   },
   {
+    id: 'host-log',
+    name: 'Interoperabilità: log',
+    source: `# La funzione log arriva dall'oggetto host di Studio.
+log "hey there";
+log (4 + 5);
+result = 9;`
+  },
+  {
     id: 'errors',
     name: 'Ambiguità (errore)',
     source: `# Senza delimitatori la chiamata non è univoca.

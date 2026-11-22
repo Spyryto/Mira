@@ -8,6 +8,7 @@ class Definition {
     public final parameters:Array<String>;
     public final bodyTokens:Array<Token>;
     public final origin:Token;
+    public final isStatement:Bool;
     public var body:Null<Expr> = null;
 
     public function new(
@@ -15,17 +16,19 @@ class Definition {
         labels:Array<String>,
         parameters:Array<String>,
         bodyTokens:Array<Token>,
-        origin:Token
+        origin:Token,
+        isStatement:Bool = false
     ) {
         this.name = name;
         this.labels = labels;
         this.parameters = parameters;
         this.bodyTokens = bodyTokens;
         this.origin = origin;
+        this.isStatement = isStatement;
     }
 
     public function isFunction():Bool {
-        return labels.length > 0;
+        return !isStatement && labels.length > 0;
     }
 
     public function selector():String {

@@ -34,7 +34,7 @@ jobs:
       - name: Verify all documented JS/PHP examples
         run: |
           npm run build
-          node --test test/catalog.test.mjs
+          node --test test/catalog.test.mjs test/dogfood.test.mjs
       - name: Upload generated reference Markdown
         uses: actions/upload-artifact@v4
         with:

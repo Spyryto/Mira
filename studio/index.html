@@ -85,12 +85,29 @@
           <div class="output-toolbar">
             <label class="field-label" for="structureSelect">Analisi del compilatore</label>
             <select id="structureSelect">
-              <option value="ast">AST canonico</option>
+              <option value="inspector">Inspector visuale · scritto in Mira</option>
+              <option value="ast">AST canonico (JSON)</option>
               <option value="tokens">Token e posizioni</option>
             </select>
           </div>
           <pre id="structure" tabindex="0" class="code-output"><code>Compila per esplorare la struttura.</code></pre>
-          <p class="structure-note">Dati reali dal compilatore Haxe di Mira. Nessuna AST simulata nell'interfaccia.</p>
+          <div id="astInspector" class="ast-inspector" hidden>
+            <p class="inspector-intro">L'albero arriva dal compilatore Haxe; le statistiche sono calcolate eseguendo <strong>codice Mira</strong> sullo stesso AST.</p>
+            <div id="inspectorStatus" class="inspector-status" role="status" aria-live="polite">Preparazione dell'inspector…</div>
+            <div id="inspectorStats" class="inspector-stats" aria-label="Statistiche calcolate in Mira"></div>
+            <h3>Albero delle espressioni</h3>
+            <div id="inspectorTree" class="inspector-tree" aria-label="Albero AST esplorabile"></div>
+            <details class="inspector-code-area">
+              <summary>Il programma Mira che calcola le statistiche</summary>
+              <p>Modifica questa copia, poi premi «Ricalcola» per verificare come cambia il risultato. Il browser fornisce soltanto l'albero e le primitive <code>fold:with:from:</code> e <code>node:is:</code>.</p>
+              <textarea id="inspectorProgram" aria-label="Sorgente dell'inspector scritto in Mira" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"></textarea>
+              <div class="inspector-actions">
+                <button type="button" id="inspectorReset">Ripristina</button>
+                <button type="button" id="inspectorRecalculate">Ricalcola con Mira</button>
+              </div>
+            </details>
+          </div>
+          <p class="structure-note">AST e token reali dal compilatore Haxe. Le statistiche dell'inspector non sono calcolate dall'interfaccia JavaScript.</p>
         </div>
 
         <div class="panel" id="view-reference" role="tabpanel" aria-labelledby="tab-reference" hidden>

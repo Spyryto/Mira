@@ -1,5 +1,6 @@
 package mira.resolve;
 
+import mira.HostEnvironment;
 import mira.MiraError;
 import mira.lex.Token;
 import mira.lex.Token.TokenKind;
@@ -8,46 +9,58 @@ import mira.syntax.Definition;
 class Symbols {
     public final functions:Array<Definition> = [];
     public final globals:Array<String> = [];
-    // All user-visible symbols after host-language mangling.
-    // Generated section parameters must not shadow any of these names.
     public final hostNames:Array<String> = [];
+    public final environment:HostEnvironment;
 
-    public function new(definitions:Array<Definition>) {
+    public function new(definitions:Array<Definition>, ?environment:HostEnvironment) {
+        this.environment = environment == null ? HostEnvironment.empty() : environment;
         final seenSelectors = new Map<String, Bool>();
         final seenGlobals = new Map<String, Bool>();
-        final hostNames = new Map<String, String>();
+        final mangled = new Map<String, String>();
+
+        for (name in this.environment.values.concat(this.environment.callables)) {
+            seenGlobals.set(name, true);
+            hostNames.push(Mangle.name(name));
+        }
+        for (selector in this.environment.selectors) {
+            seenSelectors.set(selector, true);
+            hostNames.push(Mangle.selector(selector.substr(0, selector.length - 1).split(":")));
+            final labels = selector.substr(0, selector.length - 1).split(":");
+            final parameters = [for (i in 0...labels.length) "hostArg" + i];
+            functions.push(new Definition("", labels, parameters, [],
+                new Token(Word, labels[0], 1, 1)));
+        }
 
         for (definition in definitions) {
+            if (definition.isStatement) continue;
             final identifier = definition.isFunction()
-                ? definition.selector()
-                : definition.name;
+                ? definition.selector() : definition.name;
             final hostName = definition.isFunction()
-                ? Mangle.selector(definition.labels)
-                : Mangle.name(definition.name);
+                ? Mangle.selector(definition.labels) : Mangle.name(definition.name);
 
             if (definition.isFunction()) {
                 if (seenSelectors.exists(identifier)) {
-                    throw new MiraError("Duplicate selector " + identifier, definition.origin);
+                    throw new MiraError("Duplicate or conflicting selector " + identifier, definition.origin);
                 }
                 seenSelectors.set(identifier, true);
                 functions.push(definition);
 
-                final localNames = new Map<String, Bool>();
+                final locals = new Map<String, Bool>();
                 for (parameter in definition.parameters) {
                     if (parameter == "_") {
                         throw new MiraError("'_' is reserved for section placeholders", definition.origin);
                     }
-                    if (localNames.exists(parameter)) {
+                    if (locals.exists(parameter)) {
                         throw new MiraError("Duplicate parameter " + parameter, definition.origin);
                     }
-                    localNames.set(parameter, true);
+                    locals.set(parameter, true);
                 }
             } else {
                 if (identifier == "_") {
                     throw new MiraError("'_' is reserved for section placeholders", definition.origin);
                 }
                 if (seenGlobals.exists(identifier)) {
-                    throw new MiraError("Duplicate value " + identifier, definition.origin);
+                    throw new MiraError("Duplicate or conflicting value " + identifier, definition.origin);
                 }
                 seenGlobals.set(identifier, true);
                 globals.push(definition.name);
@@ -56,36 +69,41 @@ class Symbols {
             if (!~/^[A-Za-z_][A-Za-z_0-9]*$/.match(hostName)) {
                 throw new MiraError("Invalid generated symbol " + hostName, definition.origin);
             }
-            if (hostNames.exists(hostName)) {
-                throw new MiraError(
-                    "Generated-name collision " + hostName + " (" + hostNames.get(hostName) + " and " + identifier + ")",
-                    definition.origin
-                );
+            if (hostName == "__miraHost") {
+                throw new MiraError("Reserved generated symbol " + hostName, definition.origin);
             }
-            hostNames.set(hostName, identifier);
-            this.hostNames.push(hostName);
+            if (mangled.exists(hostName)) {
+                throw new MiraError("Generated-name collision " + hostName
+                    + " (" + mangled.get(hostName) + " and " + identifier + ")", definition.origin);
+            }
+            mangled.set(hostName, identifier);
+            hostNames.push(hostName);
         }
+    }
+
+    public function isHostName(name:String):Bool {
+        return environment.values.indexOf(name) >= 0
+            || environment.callables.indexOf(name) >= 0;
+    }
+
+    public function isHostSelector(selector:String):Bool {
+        return environment.selectors.indexOf(selector) >= 0;
     }
 
     public function matchingFunctions(tokens:Array<Token>, start:Int):Array<Definition> {
-        final results:Array<Definition> = [];
+        final matches:Array<Definition> = [];
         for (definition in functions) {
-            if (matchesWords(tokens, start, definition.labels[0])) {
-                results.push(definition);
-            }
+            if (matchesWords(tokens, start, definition.labels[0])) matches.push(definition);
         }
-        return results;
+        return matches;
     }
 
     public function resolveName(tokens:Array<Token>, start:Int, locals:Array<String>):Null<String> {
-        final names = locals.concat(globals);
-        names.sort(function(a, b) {
-            return b.split(" ").length - a.split(" ").length;
-        });
-
-        for (name in names) {
-            if (matchesWords(tokens, start, name)) return name;
-        }
+        final names = locals.concat(globals)
+            .concat(environment.values)
+            .concat(environment.callables);
+        names.sort(function(a, b) return b.split(" ").length - a.split(" ").length);
+        for (name in names) if (matchesWords(tokens, start, name)) return name;
         return null;
     }
 
@@ -93,9 +111,7 @@ class Symbols {
         final words = name.split(" ");
         if (start + words.length > tokens.length) return false;
         for (i in 0...words.length) {
-            if (tokens[start + i].kind != Word || tokens[start + i].value != words[i]) {
-                return false;
-            }
+            if (tokens[start + i].kind != Word || tokens[start + i].value != words[i]) return false;
         }
         return true;
     }

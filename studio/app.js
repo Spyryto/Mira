@@ -1,5 +1,6 @@
 import { examples, defaultSource } from './examples.js';
 import { mountReference } from './reference-ui.js';
+import { createAstInspector } from './ast-inspector.js';
 
 // Mira Studio's controller concerns browser UX only.
 // All language semantics are delegated to the Haxe compiler bridge.
@@ -7,6 +8,7 @@ const compiler = globalThis.MiraStudioCompiler;
 const catalogExamples = [];
 let referenceViewer = null;
 const $ = id => document.getElementById(id);
+const astInspector = createAstInspector(compiler);
 
 const ui = {
   source: $('source'),
@@ -37,6 +39,7 @@ const state = {
   output: '',
   valid: false,
   exampleInvocation: null,
+  hostJson: undefined,
   debounce: 0,
   worker: null,
   workerTimeout: 0,
@@ -130,7 +133,7 @@ function compile(revealOutput = false) {
   }
 
   const begin = performance.now();
-  const result = compiler.compile(ui.source.value, state.target);
+  const result = compiler.compile(ui.source.value, state.target, state.hostJson);
   const elapsed = performance.now() - begin;
 
   if (!result?.ok) {
@@ -154,9 +157,20 @@ function compile(revealOutput = false) {
 function updateStructure() {
   if (!compiler) return;
 
+  if (ui.structureSelect.value === 'inspector') {
+    ui.structure.hidden = true;
+    $('astInspector').hidden = false;
+    astInspector.refresh(ui.source.value);
+    return;
+  }
+
+  astInspector.cancel();
+  ui.structure.hidden = false;
+  $('astInspector').hidden = true;
   const inspector = ui.structureSelect.value === 'tokens'
     ? compiler.tokens : compiler.ast;
-  const result = inspector(ui.source.value);
+  const result = ui.structureSelect.value === 'tokens'
+    ? inspector(ui.source.value) : inspector(ui.source.value, state.hostJson);
   ui.structure.textContent = result?.ok
     ? result.output
     : result?.message || 'Impossibile analizzare il sorgente.';
@@ -428,6 +442,7 @@ function start() {
   wireEvents();
   updateEditorIndicators();
   setTarget(state.target);
+  initializeHost();
   initializeReference();
   installServiceWorker();
 }
@@ -472,6 +487,17 @@ async function initializeReference() {
   } catch (error) {
     root.textContent = 'Documentazione non disponibile: ' +
       String(error?.message ?? error);
+  }
+}
+
+async function initializeHost() {
+  try {
+    const response = await fetch('./host.json');
+    if (!response.ok) throw new Error('Host manifest unavailable');
+    state.hostJson = await response.text();
+    compile(false);
+  } catch {
+    // The compiler still works without host functions.
   }
 }
 

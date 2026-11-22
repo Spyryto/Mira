@@ -1,0 +1,18 @@
+# Dogfooding 01: this code is normal Mira, without extern declarations.
+# Host bindings are registered separately in studio/dogfood/host.json.
+# Only traversal and node-kind inspection are host capabilities.
+
+count: total, node: item = total + 1;
+count matching: kind, total: total, node: item =
+  total + (node: item, is: kind);
+
+count kind: wanted = (count matching: wanted, total: _, node: _);
+
+total nodes = fold: ast tree, with: (count: _, node: _), from: 0;
+function nodes = fold: ast tree, with: (count kind: "Function"), from: 0;
+value nodes = fold: ast tree, with: (count kind: "Value"), from: 0;
+call nodes = fold: ast tree, with: (count kind: "Call"), from: 0;
+binary nodes = fold: ast tree, with: (count kind: "Binary"), from: 0;
+section nodes = fold: ast tree, with: (count kind: "Section"), from: 0;
+apply nodes = fold: ast tree, with: (count kind: "Apply"), from: 0;
+result = total nodes;

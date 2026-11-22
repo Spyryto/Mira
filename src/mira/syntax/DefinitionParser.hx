@@ -13,7 +13,6 @@ class DefinitionParser {
 
         while (index < tokens.length && tokens[index].kind != End) {
             final token = tokens[index];
-
             if (token.isSymbol("(")) {
                 depth++;
             } else if (token.isSymbol(")")) {
@@ -34,7 +33,6 @@ class DefinitionParser {
         if (start != index) {
             throw new MiraError("Expected ; after definition", tokens[index - 1]);
         }
-
         return definitions;
     }
 
@@ -47,7 +45,11 @@ class DefinitionParser {
             }
         }
 
-        if (equals <= 0 || equals == tokens.length - 1) {
+        // No '=' means an expression statement, such as log "hey there";
+        if (equals == -1) {
+            return new Definition("", [], [], tokens, tokens[0], true);
+        }
+        if (equals == 0 || equals == tokens.length - 1) {
             throw new MiraError("A definition needs a name, = and a body", tokens[0]);
         }
 
