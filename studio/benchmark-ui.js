@@ -14,6 +14,8 @@ const format=(value,digits=2)=>Number.isFinite(value)
   ?value.toLocaleString('it-IT',{maximumFractionDigits:digits,minimumFractionDigits:digits})
   :'—';
 const count=value=>Number.isFinite(value)?Math.round(value).toLocaleString('it-IT'):'—';
+const runtimeTime=ms=>ms<0.001
+  ?format(ms*1000000,1)+' ns':format(ms*1000,3)+' µs';
 
 function compilation(compiler,source,target) {
   for(let i=0;i<5;i++){
@@ -93,7 +95,7 @@ export function mountBenchmark(root,compiler) {
   const note=el('p','bench-note',
     'Compilazione: 5 warmup + 25 misure, frontend Haxe già caricato (lexer → emitter), senza I/O. '+
     'Righe/s: righe fisiche non vuote e non commentate ÷ tempo mediano. '+
-    'Esecuzione: funzione Mira run: ripetuta nel Worker, esclusa la compilazione JavaScript. '+
+    'Esecuzione: funzione Mira run: con ingressi variabili e checksum nel Worker, esclusa la compilazione JavaScript. '+
     'PHP si compila sul dispositivo, ma l’esecuzione PHP viene misurata nella CI, non nel browser.');
   const ci=el('a','bench-ci','Benchmark JS/PHP della CI ↗');
   ci.href='https://github.com/Spyryto/Mira/actions/workflows/ci.yml';
@@ -162,7 +164,7 @@ export function mountBenchmark(root,compiler) {
             count(linesPerSecond(lines,js.medianMs))+' righe/s'],
           ['PHP · compilazione',format(php.medianMs,3)+' ms',
             count(linesPerSecond(lines,php.medianMs))+' righe/s'],
-          ['JS · esecuzione',format(executed.medianMs,5)+' ms',
+          ['JS · esecuzione',runtimeTime(executed.medianMs),
             count(executed.operationsPerSecond)+' esecuzioni/s']
         ],lines));
       }
