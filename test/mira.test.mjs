@@ -72,7 +72,10 @@ test('multiword arguments are preserved in parenthesized shorthand', () => {
 
   for (const target of ['js', 'php']) {
     assert.equal(run(source, target), '5');
-    assert.match(compile(source, target), /add__and\(aNumber, anotherNumber\)/);
+    const expected = target === 'php'
+      ? /add__and\(\$aNumber, \$anotherNumber\)/
+      : /add__and\(aNumber, anotherNumber\)/;
+    assert.match(compile(source, target), expected);
   }
 });
 
