@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f0e6">
+  <meta name="description" content="Mira Studio: sperimenta la sintassi discorsiva, traspila in JavaScript e PHP, esplora token e AST. Anche offline.">
+  <title>Mira Studio · Sintassi discorsiva</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="masthead">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">m<span>.</span></div>
+        <div class="brand-copy">
+          <div class="brand-name">Mira <span>Studio</span></div>
+          <p>Codice a colpo d'occhio.</p>
+        </div>
+      </div>
+      <span id="connection" class="connection" aria-label="Stato connessione">● Offline-ready</span>
+    </header>
+
+    <div class="intro">
+      <p class="eyebrow">IL LABORATORIO DELLA SINTASSI DISCORSIVA <span>V 0.1</span></p>
+      <h1>Scrivi come <em>pensi.</em></h1>
+      <p>Un piccolo linguaggio, due target, tante idee. Provalo direttamente nel browser.</p>
+    </div>
+
+    <main id="main">
+      <section class="workspace" aria-label="Mira Studio">
+        <div class="workspace-heading">
+          <div class="workspace-title">
+            <span class="workspace-dot" aria-hidden="true"></span>
+            <span>Workbench</span>
+          </div>
+          <span id="saveStatus" class="save-status">Salvataggio locale</span>
+        </div>
+
+        <nav class="tabs" role="tablist" aria-label="Viste Studio">
+          <button type="button" class="tab active" id="tab-code" role="tab" data-view="code" aria-selected="true" aria-controls="view-code">01 <strong>Scrivi</strong></button>
+          <button type="button" class="tab" id="tab-output" role="tab" data-view="output" aria-selected="false" aria-controls="view-output">02 <strong>Output</strong></button>
+          <button type="button" class="tab" id="tab-structure" role="tab" data-view="structure" aria-selected="false" aria-controls="view-structure">03 <strong>Esplora</strong></button>
+        </nav>
+
+        <div class="panel" id="view-code" role="tabpanel" aria-labelledby="tab-code">
+          <div class="editor-toolbar">
+            <label class="field-label" for="exampleSelect">Esempi</label>
+            <select id="exampleSelect" aria-label="Carica un esempio">
+              <option value="arithmetic">Somma discorsiva</option>
+            </select>
+            <button class="icon-button" id="openFile" type="button" title="Apri file Mira" aria-label="Apri file Mira">Apri</button>
+          </div>
+          <div class="editor-frame">
+            <div id="lineNumbers" class="line-numbers" aria-hidden="true">1</div>
+            <textarea id="source" aria-label="Codice sorgente Mira" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" wrap="off"></textarea>
+          </div>
+          <div class="editor-footer">
+            <span id="position">Riga 1 · Col 1</span>
+            <span>*.mira</span>
+            <button class="text-button" id="saveSource" type="button">Salva file</button>
+          </div>
+        </div>
+
+        <div class="panel" id="view-output" role="tabpanel" aria-labelledby="tab-output" hidden>
+          <div class="output-toolbar">
+            <span id="outputTitle" class="field-label">JavaScript generato</span>
+            <div class="inline-buttons">
+              <button class="text-button" id="copyOutput" type="button">Copia</button>
+              <button class="text-button" id="saveOutput" type="button">Scarica</button>
+            </div>
+          </div>
+          <pre id="output" tabindex="0" class="code-output"><code>Premi «Compila» per vedere il codice generato.</code></pre>
+          <div class="run-result" aria-live="polite">
+            <div class="run-result-title"><span class="run-dot"></span> Esecuzione JavaScript</div>
+            <output id="runOutput">Non eseguito.</output>
+          </div>
+        </div>
+
+        <div class="panel" id="view-structure" role="tabpanel" aria-labelledby="tab-structure" hidden>
+          <div class="output-toolbar">
+            <label class="field-label" for="structureSelect">Analisi del compilatore</label>
+            <select id="structureSelect">
+              <option value="ast">AST canonico</option>
+              <option value="tokens">Token e posizioni</option>
+            </select>
+          </div>
+          <pre id="structure" tabindex="0" class="code-output"><code>Compila per esplorare la struttura.</code></pre>
+          <p class="structure-note">Dati reali dal compilatore Haxe di Mira. Nessuna AST simulata nell'interfaccia.</p>
+        </div>
+
+        <div class="action-bar">
+          <div class="target-picker" role="group" aria-label="Target di traspilazione">
+            <button type="button" class="target active" data-target="js" aria-pressed="true">JS</button>
+            <button type="button" class="target" data-target="php" aria-pressed="false">PHP</button>
+          </div>
+          <button type="button" class="button-compile" id="compile">Compila <span aria-hidden="true">↗</span></button>
+          <button type="button" class="button-run" id="run" title="Esegue il JavaScript generato in un Web Worker">▶ Esegui</button>
+        </div>
+
+        <div id="status" class="status ready" role="status" aria-live="polite">
+          <span class="status-indicator" aria-hidden="true"></span>
+          <span id="statusText">Pronto per compilare.</span>
+          <span id="statusDetail" class="status-detail"></span>
+        </div>
+      </section>
+
+      <section class="guide" aria-label="Una guida rapida">
+        <div class="guide-heading">
+          <span>01 — IL CONCETTO</span>
+          <span class="guide-asterisk" aria-hidden="true">✳</span>
+        </div>
+        <h2>Il significato sta <em>nelle parole.</em></h2>
+        <p>Due scritture possono rappresentare lo stesso selettore. Mira riconosce le parole-chiave senza inventare interpretazioni ambigue.</p>
+        <div class="comparison">
+          <span>Esplicito</span>
+          <code>add: 2, and: 3</code>
+          <div class="comparison-arrow" aria-hidden="true">⇣</div>
+          <span>Discorsivo</span>
+          <code>add 2 and 3</code>
+        </div>
+        <p class="guide-foot">Mira 0.1 supporta un sottoinsieme: selettori, nomi composti ed espressioni aritmetiche. Tipi, record, closure e pipeline sono ancora in progetto.</p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Mira Studio <span aria-hidden="true">✳</span> un esperimento vivo</span>
+      <a href="https://github.com/Spyryto/Mira" target="_blank" rel="noopener noreferrer">Sorgente su GitHub</a>
+    </footer>
+  </div>
+
+  <div id="updateNotice" class="update-notice" role="status" hidden>
+    <span>Una nuova versione di Mira Studio è disponibile.</span>
+    <button id="updateNow" type="button">Aggiorna</button>
+  </div>
+  <input type="file" id="fileInput" accept=".mira,text/plain" hidden>
+
+  <script src="./compiler.js"></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
