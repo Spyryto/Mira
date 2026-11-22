@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.2.0');
+  assert.equal(bridge.version, '0.3.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
