@@ -130,3 +130,17 @@ JS/PHP equivalenti per i dati JSON.
 Le operazioni `get:from:`, `map:with:` e `fold:with:from:` negli
 esempi sono selettori **dell'host**, non parole riservate del parser.
 Vedi [i casi d'uso verificati](structured-data.md).
+
+## Estensioni implementate in Mira 0.4
+
+- Nuovi letterali `true`/`false` e comparatori `== != < > <= >=`,
+  con lo stesso livello di precedenza e associatività degli operatori
+  esistenti (usare parentesi esplicite).
+- `field "nome"` genera una funzione accessor compilata nativamente
+  in JS e PHP. È possibile applicarla con `record ~ accessor`.
+- `if: (condition), then: (value), else: (value)` è una forma
+  speciale del parser, non un selettore host. Valuta soltanto un ramo.
+- `filter:with:` resta una funzione host limitata, che esegue un
+  predicato Mira su ogni elemento della collezione.
+
+[Language Tour 0.4](mira04.md).
