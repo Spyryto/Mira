@@ -1,4 +1,4 @@
-name: Publish generated reference
+name: Publish reference and provenance report
 
 on:
   push:
@@ -6,8 +6,10 @@ on:
     paths:
       - 'catalog/**'
       - 'README.md'
+      - 'docs/**'
       - 'src/**/*.hx'
       - 'scripts/generate-reference.mjs'
+      - 'scripts/generate-documentation-origin.mjs'
       - '.github/workflows/reference.yml'
   workflow_dispatch:
 
@@ -28,15 +30,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Generate interlinked Markdown and Haxe API signatures
+      - name: Generate interlinked reference and documentation provenance
         run: npm run docs
-      - name: Commit generated README matrix and reference when changed
+      - name: Commit reference and provenance when changed
         run: |
-          git add README.md docs/reference/language.md docs/reference/examples.md docs/reference/api.md
+          git add README.md docs/reference/language.md docs/reference/examples.md docs/reference/api.md docs/documentation-origin.md
           if ! git diff --cached --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit -m "docs: regenerate Mira language and API reference"
+            git commit -m "docs: regenerate Mira reference and documentation provenance"
             git push origin HEAD:main
           else
             echo "Reference is already up to date."
