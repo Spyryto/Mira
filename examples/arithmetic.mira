@@ -1,0 +1,10 @@
+# A small executable subset of discursive Mira.
+add: a number, and: another number = a number + another number;
+square: value = value * value;
+
+two = add: 1, and: 1;
+five = add: 2, and: 3;
+six = add 3 and 3;
+four = add 2 and 2;
+seven = add (two) and (five);
+result = square: (seven);
