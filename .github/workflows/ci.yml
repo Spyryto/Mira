@@ -1,20 +1,24 @@
-name: Mira smoke tests
+name: Mira Haxe compiler and JS/PHP tests
 on:
   push:
   pull_request:
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: '4.3.7'
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-      - run: node --test
-      - run: node src/mira.mjs examples/arithmetic.mira js > /tmp/mira.mjs
-      - run: node src/mira.mjs examples/arithmetic.mira php > /tmp/mira.php
-      - run: node --check /tmp/mira.mjs
-      - run: php -l /tmp/mira.php
+      - run: npm test
+      - run: node dist/mira.cjs examples/arithmetic.mira js > /tmp/mira-generated.mjs
+      - run: node dist/mira.cjs examples/arithmetic.mira php > /tmp/mira-generated.php
+      - run: node --check /tmp/mira-generated.mjs
+      - run: php -l /tmp/mira-generated.php
