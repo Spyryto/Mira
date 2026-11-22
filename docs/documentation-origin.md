@@ -7,11 +7,11 @@
 
 | Categoria | Parole | Quota | Documenti coinvolti |
 | --- | ---: | ---: | ---: |
-| Generata automaticamente dal tooling | 8847 | 52,2% | 4 |
-| Redatta con assistenza IA (dichiarata) | 6584 | 38,9% | 9 |
+| Generata automaticamente dal tooling | 9093 | 52,7% | 4 |
+| Redatta con assistenza IA (dichiarata) | 6581 | 38,2% | 9 |
 | Redazione umana dichiarata | 0 | 0,0% | 0 |
-| Provenienza non verificata | 1503 | 8,9% | 3 |
-| **Totale** | **16.934** | **100%** | **15** |
+| Provenienza non verificata | 1576 | 9,1% | 3 |
+| **Totale** | **17.250** | **100%** | **15** |
 
 I documenti coinvolti **non sono sommabili**: per esempio il README contiene
 una sezione generata dal tooling e altre sezioni editoriali. Le percentuali
@@ -29,15 +29,15 @@ arrotondamenti).
 | [`docs/grammar.md`](../docs/grammar.md) | Intero documento | Provenienza non verificata | 717 | — |
 | [`docs/mira04.md`](../docs/mira04.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 657 | — |
 | [`docs/performance.md`](../docs/performance.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 698 | — |
-| [`docs/reference/api.md`](../docs/reference/api.md) | Intero documento | Generata automaticamente dal tooling | 4195 | `scripts/generate-reference.mjs` |
-| [`docs/reference/examples.md`](../docs/reference/examples.md) | Intero documento | Generata automaticamente dal tooling | 2840 | `scripts/generate-reference.mjs` |
-| [`docs/reference/language.md`](../docs/reference/language.md) | Intero documento | Generata automaticamente dal tooling | 1537 | `scripts/generate-reference.mjs` |
+| [`docs/reference/api.md`](../docs/reference/api.md) | Intero documento | Generata automaticamente dal tooling | 4244 | `scripts/generate-reference.mjs` |
+| [`docs/reference/examples.md`](../docs/reference/examples.md) | Intero documento | Generata automaticamente dal tooling | 2940 | `scripts/generate-reference.mjs` |
+| [`docs/reference/language.md`](../docs/reference/language.md) | Intero documento | Generata automaticamente dal tooling | 1623 | `scripts/generate-reference.mjs` |
 | [`docs/reference/README.md`](../docs/reference/README.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 161 | — |
 | [`docs/structured-data.md`](../docs/structured-data.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 546 | — |
 | [`docs/studio.md`](../docs/studio.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 876 | — |
-| [`docs/syntax.md`](../docs/syntax.md) | Intero documento | Provenienza non verificata | 536 | — |
-| [`README.md`](../README.md) | Resto del documento | Redatta con assistenza IA (dichiarata) | 1600 | — |
-| [`README.md`](../README.md) | Sezione generata | Generata automaticamente dal tooling | 275 | `scripts/generate-reference.mjs` |
+| [`docs/syntax.md`](../docs/syntax.md) | Intero documento | Provenienza non verificata | 609 | — |
+| [`README.md`](../README.md) | Resto del documento | Redatta con assistenza IA (dichiarata) | 1597 | — |
+| [`README.md`](../README.md) | Sezione generata | Generata automaticamente dal tooling | 286 | `scripts/generate-reference.mjs` |
 
 ## Come interpretare le cifre
 
@@ -78,5 +78,5 @@ npm run docs
 node scripts/generate-documentation-origin.mjs --check
 ```
 
-Dimensione totale classificata: **129.622 byte UTF-8**,
+Dimensione totale classificata: **132.234 byte UTF-8**,
 in **15 documenti** e **16 sezioni attribuite**.

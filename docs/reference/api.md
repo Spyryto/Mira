@@ -157,7 +157,7 @@ Feature: [Sezioni con più `_`](language.md#feature-multi-sections), [Cattura le
 public static function hostAccess(name:String, target:Target):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L113)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L116)
 
 <a id="api-mira-hostenvironment"></a>
 ### `mira.HostEnvironment`
@@ -930,7 +930,7 @@ Feature: [Sezioni unarie](language.md#feature-sections), [Pipeline `~`](language
 Apply(callee:Expr, argument:Expr)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L20)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L21)
 
 <a id="api-mira-syntax-expr-binary"></a>
 ### `mira.syntax.Expr.Binary`
@@ -965,7 +965,7 @@ Feature: [Booleani e confronti](language.md#feature-comparisons)
 Call(selector:String, arguments:Array<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L15)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L16)
 
 <a id="api-mira-syntax-expr-conditional"></a>
 ### `mira.syntax.Expr.Conditional`
@@ -1002,7 +1002,7 @@ Feature: [Accessor funzionali di record](language.md#feature-accessors)
 HostCall(selector:String, arguments:Array<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L16)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L17)
 
 <a id="api-mira-syntax-expr-hostref"></a>
 ### `mira.syntax.Expr.HostRef`
@@ -1024,7 +1024,7 @@ HostRef(name:String)
 HostSection(selector:String, arguments:Array<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L19)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L20)
 
 <a id="api-mira-syntax-expr-name"></a>
 ### `mira.syntax.Expr.Name`
@@ -1048,6 +1048,17 @@ Numeric(value:String)
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L7)
 
+<a id="api-mira-syntax-expr-operatorsection"></a>
+### `mira.syntax.Expr.OperatorSection`
+
+**variant** · AST canonico, indipendente dalla grafia superficiale dei selettori.
+
+```haxe
+OperatorSection(symbol:String, left:Expr, right:Expr)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L15)
+
 <a id="api-mira-syntax-expr-placeholder"></a>
 ### `mira.syntax.Expr.Placeholder`
 
@@ -1057,7 +1068,7 @@ Numeric(value:String)
 Placeholder
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L17)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L18)
 
 <a id="api-mira-syntax-expr-record"></a>
 ### `mira.syntax.Expr.Record`
@@ -1081,7 +1092,7 @@ Feature: [Record e dati strutturati](language.md#feature-records)
 Section(selector:String, arguments:Array<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L18)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L19)
 
 <a id="api-mira-syntax-expr-sequence"></a>
 ### `mira.syntax.Expr.Sequence`
@@ -1124,10 +1135,10 @@ class ExpressionParser
 **constructor** · Crea il parser per i token di un'espressione e uno scope di parametri.
 
 ```haxe
-public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<String>)
+public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<String>, ?allowOperatorArgument:Bool = false)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L16)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L18)
 
 <a id="api-mira-syntax-expressionparser-parse"></a>
 ### `mira.syntax.ExpressionParser.parse`
@@ -1138,9 +1149,9 @@ public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<Strin
 public function parse():Expr
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L25)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L28)
 
-Feature: [Operatori aritmetici](language.md#feature-arithmetic), [Parentesi](language.md#feature-grouping)
+Feature: [Operatori aritmetici](language.md#feature-arithmetic), [Parentesi](language.md#feature-grouping), [Sezioni di operatori](language.md#feature-operator-sections)
 
 <a id="api-mira-target"></a>
 ### `mira.Target`
