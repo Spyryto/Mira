@@ -54,7 +54,7 @@ class Compiler
 public static function inspectTokens(source:String):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L38)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L32)
 
 <a id="api-mira-compiler-parse"></a>
 ### `mira.Compiler.parse`
@@ -62,7 +62,7 @@ public static function inspectTokens(source:String):String
 **method** · Genera definizioni con corpi risolti dopo la raccolta delle firme dei selettori.
 
 ```haxe
-public static function parse(source:String):Array<Definition>
+public static function parse(source:String, ?host:HostEnvironment):Array<Definition>
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L13)
@@ -75,10 +75,10 @@ Feature: [Dichiarazioni successive](language.md#feature-forward)
 **method** · Converte il sorgente Mira nel target tipizzato `JavaScript` o `Php`.
 
 ```haxe
-public static function transpile(source:String, target:Target):String
+public static function transpile(source:String, target:Target, ?host:HostEnvironment):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L28)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L23)
 
 <a id="api-mira-emit-jsemitter"></a>
 ### `mira.emit.JsEmitter`
@@ -147,6 +147,94 @@ public static function expression(expr:Expr, target:Target, scope:Array<String>,
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L9)
 
 Feature: [Sezioni con più `_`](language.md#feature-multi-sections), [Cattura lessicale](language.md#feature-captures)
+
+<a id="api-mira-emit-sourceemitter-hostaccess"></a>
+### `mira.emit.SourceEmitter.hostAccess`
+
+**method** · Emette espressioni Mira su un backend tipizzato, incluse closure e pipeline.
+
+```haxe
+public static function hostAccess(name:String, target:Target):String
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L65)
+
+<a id="api-mira-hostenvironment"></a>
+### `mira.HostEnvironment`
+
+**class** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+class HostEnvironment
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L6)
+
+<a id="api-mira-hostenvironment-callables"></a>
+### `mira.HostEnvironment.callables`
+
+**field** · Membro pubblico di mira.HostEnvironment.
+
+```haxe
+public final callables:Array<String>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L9)
+
+<a id="api-mira-hostenvironment-empty"></a>
+### `mira.HostEnvironment.empty`
+
+**method** · Membro pubblico di mira.HostEnvironment.
+
+```haxe
+public static function empty():HostEnvironment
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L38)
+
+<a id="api-mira-hostenvironment-fromjson"></a>
+### `mira.HostEnvironment.fromJson`
+
+**method** · Membro pubblico di mira.HostEnvironment.
+
+```haxe
+public static function fromJson(source:String):HostEnvironment
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L42)
+
+<a id="api-mira-hostenvironment-new"></a>
+### `mira.HostEnvironment.new`
+
+**constructor** · Membro pubblico di mira.HostEnvironment.
+
+```haxe
+public function new(?values:Array<String>, ?callables:Array<String>, ?selectors:Array<String>)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L12)
+
+<a id="api-mira-hostenvironment-selectors"></a>
+### `mira.HostEnvironment.selectors`
+
+**field** · Membro pubblico di mira.HostEnvironment.
+
+```haxe
+public final selectors:Array<String>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L10)
+
+<a id="api-mira-hostenvironment-values"></a>
+### `mira.HostEnvironment.values`
+
+**field** · Membro pubblico di mira.HostEnvironment.
+
+```haxe
+public final values:Array<String>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L8)
 
 <a id="api-mira-lex-lexer"></a>
 ### `mira.lex.Lexer`
@@ -493,7 +581,18 @@ public final selector:String
 class Symbols
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L6)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L7)
+
+<a id="api-mira-resolve-symbols-environment"></a>
+### `mira.resolve.Symbols.environment`
+
+**field** · Indice delle definizioni, firme dei selettori e simboli generati.
+
+```haxe
+public final environment:HostEnvironment
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L13)
 
 <a id="api-mira-resolve-symbols-functions"></a>
 ### `mira.resolve.Symbols.functions`
@@ -504,7 +603,7 @@ class Symbols
 public final functions:Array<Definition>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L9)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L10)
 
 <a id="api-mira-resolve-symbols-globals"></a>
 ### `mira.resolve.Symbols.globals`
@@ -515,7 +614,7 @@ public final functions:Array<Definition>
 public final globals:Array<String>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L10)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L11)
 
 <a id="api-mira-resolve-symbols-hostnames"></a>
 ### `mira.resolve.Symbols.hostNames`
@@ -526,7 +625,29 @@ public final globals:Array<String>
 public final hostNames:Array<String>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L13)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L12)
+
+<a id="api-mira-resolve-symbols-ishostname"></a>
+### `mira.resolve.Symbols.isHostName`
+
+**method** · Indice delle definizioni, firme dei selettori e simboli generati.
+
+```haxe
+public function isHostName(name:String):Bool
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L84)
+
+<a id="api-mira-resolve-symbols-ishostselector"></a>
+### `mira.resolve.Symbols.isHostSelector`
+
+**method** · Indice delle definizioni, firme dei selettori e simboli generati.
+
+```haxe
+public function isHostSelector(selector:String):Bool
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L89)
 
 <a id="api-mira-resolve-symbols-matcheswords"></a>
 ### `mira.resolve.Symbols.matchesWords`
@@ -537,7 +658,7 @@ public final hostNames:Array<String>
 public static function matchesWords(tokens:Array<Token>, start:Int, name:String):Bool
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L92)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L110)
 
 <a id="api-mira-resolve-symbols-matchingfunctions"></a>
 ### `mira.resolve.Symbols.matchingFunctions`
@@ -548,7 +669,7 @@ public static function matchesWords(tokens:Array<Token>, start:Int, name:String)
 public function matchingFunctions(tokens:Array<Token>, start:Int):Array<Definition>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L70)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L93)
 
 <a id="api-mira-resolve-symbols-new"></a>
 ### `mira.resolve.Symbols.new`
@@ -556,7 +677,7 @@ public function matchingFunctions(tokens:Array<Token>, start:Int):Array<Definiti
 **constructor** · Raccoglie le firme e rileva collisioni e parametri ripetuti.
 
 ```haxe
-public function new(definitions:Array<Definition>)
+public function new(definitions:Array<Definition>, ?environment:HostEnvironment)
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L15)
@@ -570,7 +691,7 @@ public function new(definitions:Array<Definition>)
 public function resolveName(tokens:Array<Token>, start:Int, locals:Array<String>):Null<String>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L80)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L101)
 
 Feature: [Identificatori composti](language.md#feature-names)
 
@@ -583,7 +704,7 @@ Feature: [Identificatori composti](language.md#feature-names)
 class Bridge
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L10)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L8)
 
 <a id="api-mira-studio-bridge-ast"></a>
 ### `mira.studio.Bridge.ast`
@@ -591,10 +712,10 @@ class Bridge
 **method** · API browser: restituisce JSON con AST canonico del programma.
 
 ```haxe
-public static function ast(source:String):Dynamic
+public static function ast(source:String, ?hostJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L39)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L38)
 
 <a id="api-mira-studio-bridge-compile"></a>
 ### `mira.studio.Bridge.compile`
@@ -602,10 +723,10 @@ public static function ast(source:String):Dynamic
 **method** · API browser: `{ok,output}` o `{ok:false,message}` per `js` e `php`.
 
 ```haxe
-public static function compile(source:String, targetName:String):Dynamic
+public static function compile(source:String, targetName:String, ?hostJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L22)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L21)
 
 <a id="api-mira-studio-bridge-main"></a>
 ### `mira.studio.Bridge.main`
@@ -616,7 +737,7 @@ public static function compile(source:String, targetName:String):Dynamic
 public static function main():Void
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L12)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L11)
 
 <a id="api-mira-studio-bridge-tokens"></a>
 ### `mira.studio.Bridge.tokens`
@@ -627,7 +748,7 @@ public static function main():Void
 public static function tokens(source:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L33)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L34)
 
 <a id="api-mira-syntax-definition"></a>
 ### `mira.syntax.Definition`
@@ -649,7 +770,7 @@ class Definition
 public var body:Null<Expr>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L11)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L12)
 
 <a id="api-mira-syntax-definition-bodytokens"></a>
 ### `mira.syntax.Definition.bodyTokens`
@@ -671,7 +792,18 @@ public final bodyTokens:Array<Token>
 public function isFunction():Bool
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L27)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L30)
+
+<a id="api-mira-syntax-definition-isstatement"></a>
+### `mira.syntax.Definition.isStatement`
+
+**field** · Definizione Mira, valore o funzione keyword, con testo del corpo e origine.
+
+```haxe
+public final isStatement:Bool
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L11)
 
 <a id="api-mira-syntax-definition-labels"></a>
 ### `mira.syntax.Definition.labels`
@@ -701,10 +833,10 @@ public final name:String
 **constructor** · Costruisce una definizione con header e token del corpo.
 
 ```haxe
-public function new(name:String, labels:Array<String>, parameters:Array<String>, bodyTokens:Array<Token>, origin:Token)
+public function new(name:String, labels:Array<String>, parameters:Array<String>, bodyTokens:Array<Token>, origin:Token, isStatement:Bool = false)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L13)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L14)
 
 <a id="api-mira-syntax-definition-origin"></a>
 ### `mira.syntax.Definition.origin`
@@ -737,7 +869,7 @@ public final parameters:Array<String>
 public function selector():String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L31)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L34)
 
 <a id="api-mira-syntax-definitionparser"></a>
 ### `mira.syntax.DefinitionParser`
@@ -772,7 +904,7 @@ Feature: [Definizioni di valori](language.md#feature-values), [Funzioni con para
 enum Expr
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L5)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L3)
 
 Feature: [Sezioni unarie](language.md#feature-sections), [Pipeline `~`](language.md#feature-pipelines)
 
@@ -785,7 +917,7 @@ Feature: [Sezioni unarie](language.md#feature-sections), [Pipeline `~`](language
 Apply(callee:Expr, argument:Expr)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L14)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L15)
 
 <a id="api-mira-syntax-expr-binary"></a>
 ### `mira.syntax.Expr.Binary`
@@ -796,7 +928,7 @@ Apply(callee:Expr, argument:Expr)
 Binary(symbol:String, left:Expr, right:Expr)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L10)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L9)
 
 <a id="api-mira-syntax-expr-call"></a>
 ### `mira.syntax.Expr.Call`
@@ -807,7 +939,40 @@ Binary(symbol:String, left:Expr, right:Expr)
 Call(selector:String, arguments:Array<Expr>)
 ```
 
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L10)
+
+<a id="api-mira-syntax-expr-hostcall"></a>
+### `mira.syntax.Expr.HostCall`
+
+**variant** · AST canonico, indipendente dalla grafia superficiale dei selettori.
+
+```haxe
+HostCall(selector:String, arguments:Array<Expr>)
+```
+
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L11)
+
+<a id="api-mira-syntax-expr-hostref"></a>
+### `mira.syntax.Expr.HostRef`
+
+**variant** · AST canonico, indipendente dalla grafia superficiale dei selettori.
+
+```haxe
+HostRef(name:String)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L6)
+
+<a id="api-mira-syntax-expr-hostsection"></a>
+### `mira.syntax.Expr.HostSection`
+
+**variant** · AST canonico, indipendente dalla grafia superficiale dei selettori.
+
+```haxe
+HostSection(selector:String, arguments:Array<Expr>)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L14)
 
 <a id="api-mira-syntax-expr-name"></a>
 ### `mira.syntax.Expr.Name`
@@ -818,7 +983,7 @@ Call(selector:String, arguments:Array<Expr>)
 Name(value:String)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L7)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L5)
 
 <a id="api-mira-syntax-expr-numeric"></a>
 ### `mira.syntax.Expr.Numeric`
@@ -829,7 +994,7 @@ Name(value:String)
 Numeric(value:String)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L8)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L7)
 
 <a id="api-mira-syntax-expr-placeholder"></a>
 ### `mira.syntax.Expr.Placeholder`
@@ -862,7 +1027,7 @@ Section(selector:String, arguments:Array<Expr>)
 Text(value:String)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L9)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L8)
 
 <a id="api-mira-syntax-expressionparser"></a>
 ### `mira.syntax.ExpressionParser`
