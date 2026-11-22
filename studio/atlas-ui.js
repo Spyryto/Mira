@@ -389,8 +389,8 @@ export function mountAtlas(root, compiler, getSource, getHostJson) {
       render();
     });
     content.append(select);
-    const eligible = graph.filter==='Tutti'?modules:
-      modules.filter(m=>m.group===graph.filter);
+    // Filtering and the conditional are executed in compiled Mira.
+    const eligible = atlas_select_modules(modules, graph.filter);
     const graphScroller = node('div', 'atlas-graph-scroll');
     graphScroller.append(drawGraph(eligible));
     content.append(graphScroller);
