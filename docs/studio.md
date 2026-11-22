@@ -18,6 +18,21 @@ Each function returns `{ ok: true, output: string }` or
 in UI event handlers. These methods can later serve other editors without
 coupling parsing to the PWA.
 
+## Guida interlinkata e API
+
+La scheda **Guida** carica `reference.json`, prodotto da
+`scripts/generate-reference.mjs` a partire da `catalog/manifest.json`,
+`catalog/examples/*.mira` e da tutte le dichiarazioni pubbliche Haxe.
+
+Ogni feature ha almeno due esempi reali, entrambi testati nei backend JS/PHP;
+inoltre l'interfaccia offre ricerca, collegamenti feature → esempio → API,
+collegamenti al codice sorgente e pulsanti per aprire gli esempi nell'editor.
+
+Le sezioni con più `_` producono funzioni a più parametri: il worker può
+invocare le funzioni generate usando gli argomenti predefiniti nel catalogo
+perché Mira 0.2 non ha ancora una sintassi per l'applicazione generica n-aria.
+La documentazione, incluso il riferimento API, è inclusa nella cache offline.
+
 ## Features in the first release
 
 - **Scrivi**: keyboard-friendly editor with line numbers, position indicator,
