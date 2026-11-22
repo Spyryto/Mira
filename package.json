@@ -1,0 +1,13 @@
+{
+  "name": "mira-discursive",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Mira discursive syntax frontend: Haxe source, JS/PHP emitters",
+  "scripts": {
+    "build": "node -e \"require('node:fs').mkdirSync('dist',{recursive:true})\" && haxe build.hxml",
+    "test": "npm run build && node --test"
+  },
+  "engines": { "node": ">=22" },
+  "license": "MIT"
+}
