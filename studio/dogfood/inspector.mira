@@ -16,3 +16,13 @@ binary nodes = fold: ast tree, with: (count kind: "Binary"), from: 0;
 section nodes = fold: ast tree, with: (count kind: "Section"), from: 0;
 apply nodes = fold: ast tree, with: (count kind: "Apply"), from: 0;
 result = total nodes;
+
+# The first structured report authored entirely in Mira. JS only renders it.
+summarize: definition = {
+  name: (get: "name", from: (definition)),
+  kind: (get: "kind", from: (definition)),
+  nodes: (fold: definition, with: (count: _, node: _), from: 0),
+  calls: (fold: definition, with: (count kind: "Call"), from: 0)
+};
+definition summaries = map: (get: "definitions", from: ast tree),
+  with: (summarize: _);
