@@ -108,7 +108,11 @@ class SourceEmitter {
         final callee = fromHost
             ? hostAccess(selector, target)
             : Mangle.selector(selector.substr(0, selector.length - 1).split(":"));
-        return "(" + callee + ")(" + arguments.join(", ") + ")";
+        // PHP cannot invoke a named function through "(name)(args)":
+        // it would resolve 'name' as a constant. Host array callables do
+        // require the parentheses, ordinary functions do not.
+        return (fromHost ? "(" + callee + ")" : callee)
+            + "(" + arguments.join(", ") + ")";
     }
 
     static function freshParameter(
