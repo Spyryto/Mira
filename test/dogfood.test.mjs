@@ -150,6 +150,20 @@ test('Mira calculates genuine AST node metrics', () => {
   assert.equal(stats.binary, 1);
 });
 
+test('Mira itself constructs per-definition records with subtree metrics', () => {
+  const {ast, stats} = inspect(fixture);
+  assert.equal(stats.definitions.length, ast.definitions.length);
+  assert.deepEqual(stats.definitions.map(item => item.name),
+    ['add:and:', 'increment', 'result']);
+  for (const entry of stats.definitions) {
+    assert.ok(entry.nodes >= 2, entry.name);
+    assert.ok(Number.isInteger(entry.calls));
+    assert.ok(['Function', 'Value'].includes(entry.kind));
+  }
+  assert.equal(stats.definitions[0].calls, 0);
+  assert.equal(stats.definitions[1].calls, 0);
+});
+
 test('changing a Mira reducer changes the result without changing the host', () => {
   const baseline = inspect(fixture);
   const modified = inspectorSource.replace(
@@ -181,7 +195,8 @@ test('the PHP host array and JS host object run identical Mira reducers', () => 
     php.stdout.replace(/^<\?php\s*declare\(strict_types=1\);\s*/, '') +
     '\necho json_encode(["total"=>$totalNodes, "functions"=>$functionNodes,' +
     '"values"=>$valueNodes, "calls"=>$callNodes, "binary"=>$binaryNodes,' +
-    '"sections"=>$sectionNodes, "applies"=>$applyNodes]);\n';
+    '"sections"=>$sectionNodes, "applies"=>$applyNodes,' +
+    '"definitions"=>$definitionSummaries]);\n';
   const dir = mkdtempSync(join(tmpdir(), 'mira-inspector-php-'));
   try {
     const file = join(dir, 'inspector.php');
