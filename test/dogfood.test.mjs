@@ -188,10 +188,11 @@ test('the PHP host array and JS host object run identical Mira reducers', () => 
   const {ast, stats} = inspect(fixture);
   const php = transpile(inspectorSource, 'php', hostJson);
   assert.equal(php.status, 0, php.stderr);
-  const adapter = readFileSync(resolve(root, 'test/fixtures/InspectorHost.php'), 'utf8');
+  const adapter = resolve(root, 'test/fixtures/InspectorHost.php');
   const encoded = Buffer.from(JSON.stringify(ast)).toString('base64');
-  const script = adapter +
-    '\n$GLOBALS["__miraHost"] = makeInspectorHost(json_decode(base64_decode("' + encoded + '"), true));\n' +
+  const script = '<?php\ndeclare(strict_types=1);\nrequire_once ' +
+    JSON.stringify(adapter) + ';\n' +
+    '$GLOBALS["__miraHost"] = makeInspectorHost(json_decode(base64_decode("' + encoded + '"), true));\n' +
     php.stdout.replace(/^<\?php\s*declare\(strict_types=1\);\s*/, '') +
     '\necho json_encode(["total"=>$totalNodes, "functions"=>$functionNodes,' +
     '"values"=>$valueNodes, "calls"=>$callNodes, "binary"=>$binaryNodes,' +
