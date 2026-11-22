@@ -72,8 +72,9 @@ e 100 passi di funzione. Ogni programma contiene anche `run:` e
 restituiscano lo stesso risultato.
 
 Per l'esecuzione si usano 200 chiamate di warmup, poi 21 batch di
-chiamate. Il numero di chiamate per batch viene calibrato per ridurre
-il rumore del timer. Sono mostrati mediana, p95 e chiamate/secondo,
+chiamate con **input variabili e checksum** del risultato, per evitare
+che il JIT elimini calcoli apparentemente inutilizzati. Il numero di
+chiamate per batch viene calibrato per ridurre il rumore del timer. Sono mostrati mediana, p95 e chiamate/secondo,
 non una media di processi lanciati ripetutamente.
 
 Il report `dist/benchmark-results.json` contiene sia `samples`
