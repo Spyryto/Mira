@@ -31,6 +31,15 @@ class Benchmark {
             totalMs += elapsed;
         }
 
+        final medianMs = percentile(elapsedMs, 0.50);
+        var sourceLines = 0;
+        for (line in source.split("\n")) {
+            final trimmed = StringTools.trim(line);
+            if (trimmed.length > 0 && !StringTools.startsWith(trimmed, "#")) {
+                sourceLines++;
+            }
+        }
+
         return {
             target: switch (target) {
                 case JavaScript: "js";
@@ -38,8 +47,10 @@ class Benchmark {
             },
             iterations: iterations,
             sourceLength: source.length,
+            sourceLines: sourceLines,
+            linesPerSecond: medianMs > 0 ? sourceLines * 1000.0 / medianMs : 0.0,
             generatedBytes: generatedBytes,
-            medianMs: percentile(elapsedMs, 0.50),
+            medianMs: medianMs,
             p95Ms: percentile(elapsedMs, 0.95),
             meanMs: totalMs / iterations
         };
