@@ -37,7 +37,7 @@ class Benchmark {
                 case Php: "php";
             },
             iterations: iterations,
-            sourceBytes: source.length,
+            sourceLength: source.length,
             generatedBytes: generatedBytes,
             medianMs: percentile(elapsedMs, 0.50),
             p95Ms: percentile(elapsedMs, 0.95),
