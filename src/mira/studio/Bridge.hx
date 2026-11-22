@@ -93,6 +93,23 @@ class Bridge {
                     selector: selector,
                     arguments: [for (arg in args) expression(arg)]
                 };
+
+            case Section(selector, args):
+                {
+                    kind: "Section",
+                    selector: selector,
+                    arguments: [for (arg in args) expression(arg)]
+                };
+
+            case Placeholder:
+                {kind: "Placeholder"};
+
+            case Apply(callee, argument):
+                {
+                    kind: "Apply",
+                    callee: expression(callee),
+                    argument: expression(argument)
+                };
         };
     }
 
