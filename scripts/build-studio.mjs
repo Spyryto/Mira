@@ -12,6 +12,9 @@ const assets = [
   'styles.css',
   'app.js',
   'reference-ui.js',
+  'ast-inspector.js',
+  'inspector-host.js',
+  'inspector-worker.js',
   'examples.js',
   'worker.js',
   'manifest.webmanifest',
@@ -19,6 +22,9 @@ const assets = [
   'icon-192.png',
   'icon-512.png'
 ];
+
+copyFileSync(resolve(root, 'studio/dogfood/inspector.mira'),
+  resolve(destination, 'inspector.mira'));
 
 for (const filename of assets) {
   copyFileSync(resolve(root, 'studio', filename), resolve(destination, filename));
