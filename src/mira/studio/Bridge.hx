@@ -1,13 +1,12 @@
 package mira.studio;
 
 import mira.Compiler;
+import mira.HostEnvironment;
 import mira.Target;
 import mira.MiraError;
 import mira.syntax.Expr;
 import mira.syntax.Definition;
 
-// This is the only boundary between the Haxe compiler and the browser.
-// UI JavaScript never reimplements parsing, selector resolution or emission.
 class Bridge {
     public static function main():Void {
         final global:Dynamic = js.Syntax.code("globalThis");
@@ -15,101 +14,74 @@ class Bridge {
             compile: compile,
             tokens: tokens,
             ast: ast,
-            version: "0.2.0"
+            version: "0.2.0-experiment"
         });
     }
 
-    public static function compile(source:String, targetName:String):Dynamic {
+    public static function compile(source:String, targetName:String, ?hostJson:String):Dynamic {
         return safely(function() {
             final target = switch (targetName) {
                 case "js": JavaScript;
                 case "php": Php;
                 default: throw new MiraError("Unknown target: " + targetName);
             };
-            return Compiler.transpile(source, target);
+            final host = hostJson == null ? HostEnvironment.empty()
+                : HostEnvironment.fromJson(hostJson);
+            return Compiler.transpile(source, target, host);
         });
     }
 
     public static function tokens(source:String):Dynamic {
-        return safely(function() {
-            return Compiler.inspectTokens(source);
-        });
+        return safely(function() return Compiler.inspectTokens(source));
     }
 
-    public static function ast(source:String):Dynamic {
+    public static function ast(source:String, ?hostJson:String):Dynamic {
         return safely(function() {
-            final definitions = Compiler.parse(source);
+            final host = hostJson == null ? HostEnvironment.empty()
+                : HostEnvironment.fromJson(hostJson);
+            final definitions = Compiler.parse(source, host);
             final tree:Array<Dynamic> = [];
-
             for (definition in definitions) {
                 final node:Dynamic = {
-                    kind: definition.isFunction() ? "Function" : "Value",
+                    kind: definition.isStatement ? "ExpressionStatement"
+                        : definition.isFunction() ? "Function" : "Value",
                     line: definition.origin.line,
                     column: definition.origin.column,
                     body: expression(definition.body)
                 };
-
                 if (definition.isFunction()) {
                     Reflect.setField(node, "selector", definition.selector());
                     Reflect.setField(node, "labels", definition.labels);
                     Reflect.setField(node, "parameters", definition.parameters);
-                } else {
+                } else if (!definition.isStatement) {
                     Reflect.setField(node, "name", definition.name);
                 }
                 tree.push(node);
             }
-
-            return haxe.Json.stringify({
-                kind: "Program",
-                definitions: tree
-            }, null, "  ");
+            return haxe.Json.stringify({kind: "Program", definitions: tree}, null, "  ");
         });
     }
 
     static function expression(value:Null<Expr>):Dynamic {
         if (value == null) return null;
-
         return switch (value) {
-            case Name(name):
-                {kind: "Name", value: name};
-
-            case Numeric(number):
-                {kind: "Number", value: number};
-
-            case Text(text):
-                {kind: "Text", value: text};
-
+            case Name(name): {kind: "Name", value: name};
+            case HostRef(name): {kind: "HostRef", name: name};
+            case Numeric(number): {kind: "Number", value: number};
+            case Text(text): {kind: "Text", value: text};
             case Binary(symbol, left, right):
-                {
-                    kind: "Binary",
-                    symbol: symbol,
-                    left: expression(left),
-                    right: expression(right)
-                };
-
+                {kind: "Binary", symbol: symbol, left: expression(left), right: expression(right)};
             case Call(selector, args):
-                {
-                    kind: "Call",
-                    selector: selector,
-                    arguments: [for (arg in args) expression(arg)]
-                };
-
+                {kind: "Call", selector: selector, arguments: [for (arg in args) expression(arg)]};
+            case HostCall(selector, args):
+                {kind: "HostCall", selector: selector, arguments: [for (arg in args) expression(arg)]};
             case Section(selector, args):
-                {
-                    kind: "Section",
-                    selector: selector,
-                    arguments: [for (arg in args) expression(arg)]
-                };
-
-            case Placeholder:
-                {kind: "Placeholder"};
-
-            case Apply(callee, argument):
-                {
-                    kind: "Apply",
-                    callee: expression(callee),
-                    argument: expression(argument)
-                };
+                {kind: "Section", selector: selector, arguments: [for (arg in args) expression(arg)]};
+            case HostSection(selector, args):
+                {kind: "HostSection", selector: selector, arguments: [for (arg in args) expression(arg)]};
+            case Placeholder: {kind: "Placeholder"};
+            case Apply(callee, arg):
+                {kind: "Apply", callee: expression(callee), argument: expression(arg)};
         };
     }
 

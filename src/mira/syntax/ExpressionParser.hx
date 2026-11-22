@@ -24,7 +24,6 @@ class ExpressionParser {
 
     public function parse():Expr {
         final result = expression();
-
         if (current().kind != End) {
             throw new MiraError("Unexpected token " + current().value, current());
         }
@@ -32,104 +31,112 @@ class ExpressionParser {
     }
 
     function expression():Expr {
-        var left = primary();
+        var left = application();
 
-        // Operators share one precedence level and group left-to-right.
-        // A pipeline supplies its left value as the argument of its right function.
+        // The existing Mira binary operators and pipeline share one level,
+        // all grouping left. Unary application binds before these operators.
         while (current().kind == Symbol && isOperator(current().value)) {
-            final operatorToken = consume();
-            final right = primary();
-
-            if (operatorToken.value == "~") {
+            final token = consume();
+            final right = application();
+            if (token.value == "~") {
                 switch (right) {
-                    case Section(_, arguments):
-                        var missing = 0;
-                        for (argument in arguments) {
-                            if (isPlaceholder(argument)) missing++;
-                        }
-                        if (missing != 1) {
-                            throw new MiraError(
-                                "Pipeline needs a unary section; this section has " + missing + " holes",
-                                operatorToken
-                            );
+                    case Section(_, args) | HostSection(_, args):
+                        var holes = 0;
+                        for (arg in args) if (isPlaceholder(arg)) holes++;
+                        if (holes != 1) {
+                            throw new MiraError("Pipeline needs a unary section; this section has "
+                                + holes + " holes", token);
                         }
                     case Numeric(_) | Text(_) | Binary(_, _, _) | Placeholder:
-                        throw new MiraError("Pipeline target must be a function", operatorToken);
+                        throw new MiraError("Pipeline target must be a function", token);
                     default:
                 }
                 left = Apply(right, left);
             } else {
-                left = Binary(operatorToken.value, left, right);
+                left = Binary(token.value, left, right);
             }
         }
         return left;
     }
 
+    // Juxtaposition is unary function application: log "hello", double (x).
+    // It never consumes operators and never consults inferred types.
+    function application():Expr {
+        var callee = primary();
+        while (startsPrimary(current()) && isPotentialCallable(callee)) {
+            final argument = primary();
+            callee = Apply(callee, argument);
+        }
+        return callee;
+    }
+
+    static function startsPrimary(token:Token):Bool {
+        return token.kind == Word || token.kind == Number || token.kind == Text
+            || token.isSymbol("(");
+    }
+
+    static function isPotentialCallable(expr:Expr):Bool {
+        return switch (expr) {
+            case Name(_) | HostRef(_) | Call(_, _) | HostCall(_, _) | Section(_, _)
+                | HostSection(_, _) | Apply(_, _): true;
+            default: false;
+        };
+    }
+
     function primary():Expr {
         final token = current();
-
         if (token.isSymbol("(")) {
             consume();
             final inner = expression();
-            if (!current().isSymbol(")")) {
-                throw new MiraError("Expected closing )", current());
-            }
+            if (!current().isSymbol(")")) throw new MiraError("Expected closing )", current());
             consume();
             return inner;
         }
-
         if (token.kind == Number) {
             consume();
             return Numeric(token.value);
         }
-
         if (token.kind == Text) {
             consume();
             return Text(token.value);
         }
-
-        if (token.kind != Word) {
-            throw new MiraError("Expected expression", token);
-        }
-
+        if (token.kind != Word) throw new MiraError("Expected expression", token);
         if (token.value == "_") {
-            throw new MiraError(
-                "Placeholder '_' must be a complete keyword-selector argument",
-                token
-            );
+            throw new MiraError("Placeholder '_' must be a complete keyword-selector argument", token);
         }
 
-        final selectorMatch = selectorResolver.match(tokens, position);
-        if (selectorMatch != null) {
-            position = selectorMatch.end;
-            final arguments:Array<Expr> = [];
-            var holeCount = 0;
-
-            for (argumentTokens in selectorMatch.arguments) {
+        final matched = selectorResolver.match(tokens, position);
+        if (matched != null) {
+            position = matched.end;
+            final args:Array<Expr> = [];
+            var holes = 0;
+            for (argumentTokens in matched.arguments) {
                 if (argumentTokens.length == 1 && argumentTokens[0].kind == Word
                     && argumentTokens[0].value == "_") {
-                    arguments.push(Placeholder);
-                    holeCount++;
+                    args.push(Placeholder);
+                    holes++;
                 } else {
-                    arguments.push(new ExpressionParser(
-                        argumentTokens, symbols, localNames
-                    ).parse());
+                    args.push(new ExpressionParser(argumentTokens, symbols, localNames).parse());
                 }
             }
-
-            return holeCount > 0
-                ? Section(selectorMatch.selector, arguments)
-                : Call(selectorMatch.selector, arguments);
+            if (symbols.isHostSelector(matched.selector)) {
+                return holes == 0 ? HostCall(matched.selector, args)
+                    : HostSection(matched.selector, args);
+            }
+            return holes == 0 ? Call(matched.selector, args) : Section(matched.selector, args);
         }
 
         final name = symbols.resolveName(tokens, position, localNames);
         if (name != null) {
             position += name.split(" ").length;
+            // Local parameter shadows an external name if explicitly present.
+            if (localNames.indexOf(name) == -1 && symbols.isHostName(name)) {
+                return HostRef(name);
+            }
             return Name(name);
         }
-
         throw new MiraError(
-            "Unknown identifier or incomplete selector; use explicit labels and parentheses",
+            "Unknown identifier or incomplete selector; register host names explicitly",
             token
         );
     }

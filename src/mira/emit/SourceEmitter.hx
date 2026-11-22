@@ -14,11 +14,12 @@ class SourceEmitter {
     ):String {
         return switch (expr) {
             case Name(name):
-                if (scope.indexOf(name) < 0) {
-                    throw new MiraError("Unbound name " + name);
-                }
+                if (scope.indexOf(name) < 0) throw new MiraError("Unbound name " + name);
                 final symbol = Mangle.name(name);
                 target == Php ? "$" + symbol : symbol;
+
+            case HostRef(name):
+                hostAccess(name, target);
 
             case Numeric(value):
                 value;
@@ -33,31 +34,38 @@ class SourceEmitter {
                 if (["+", "-", "*", "/", "%"].indexOf(symbol) < 0) {
                     throw new MiraError("Unsupported operator " + symbol);
                 }
-
-                "(" + expression(left, target, scope, reservedHostNames)
-                    + " " + symbol + " "
-                    + expression(right, target, scope, reservedHostNames) + ")";
+                "(" + expression(left, target, scope, reservedHostNames) + " "
+                    + symbol + " " + expression(right, target, scope, reservedHostNames) + ")";
 
             case Call(selector, arguments):
-                final emittedArguments = [
-                    for (argument in arguments)
-                        expression(argument, target, scope, reservedHostNames)
-                ];
-                selectorCall(selector, emittedArguments);
+                selectorCall(selector, [
+                    for (arg in arguments) expression(arg, target, scope, reservedHostNames)
+                ], target, false);
+
+            case HostCall(selector, arguments):
+                selectorCall(selector, [
+                    for (arg in arguments) expression(arg, target, scope, reservedHostNames)
+                ], target, true);
 
             case Section(selector, arguments):
-                section(selector, arguments, target, scope, reservedHostNames);
+                section(selector, arguments, target, scope, reservedHostNames, false);
 
-            case Apply(callee, argument):
-                // Explicit parentheses also keep anonymous-function calls
-                // syntactically valid for both JavaScript and PHP.
+            case HostSection(selector, arguments):
+                section(selector, arguments, target, scope, reservedHostNames, true);
+
+            case Apply(callee, arg):
                 "(" + expression(callee, target, scope, reservedHostNames)
-                    + ")(" + expression(argument, target, scope, reservedHostNames) + ")";
+                    + ")(" + expression(arg, target, scope, reservedHostNames) + ")";
 
             case Placeholder:
-                throw new MiraError(
-                    "A placeholder cannot be emitted outside a selector section"
-                );
+                throw new MiraError("A placeholder cannot be emitted outside a selector section");
+        };
+    }
+
+    public static function hostAccess(name:String, target:Target):String {
+        return switch (target) {
+            case JavaScript: '__miraHost[' + haxe.Json.stringify(name) + ']';
+            case Php: '$GLOBALS["__miraHost"][' + phpString(name) + ']';
         };
     }
 
@@ -66,64 +74,49 @@ class SourceEmitter {
         arguments:Array<Expr>,
         target:Target,
         scope:Array<String>,
-        reservedHostNames:Array<String>
+        reservedHostNames:Array<String>,
+        fromHost:Bool
     ):String {
-        final parameters:Array<String> = [];
-        final callArguments:Array<String> = [];
-
+        final params:Array<String> = [];
+        final emittedArgs:Array<String> = [];
         for (argument in arguments) {
             switch (argument) {
                 case Placeholder:
-                    final parameter = freshParameter(
-                        parameters, scope, reservedHostNames
-                    );
-                    parameters.push(parameter);
-                    callArguments.push(target == Php ? "$" + parameter : parameter);
-
+                    final param = freshParameter(params, scope, reservedHostNames);
+                    params.push(param);
+                    emittedArgs.push(target == Php ? "$" + param : param);
                 default:
-                    callArguments.push(
-                        expression(argument, target, scope, reservedHostNames)
-                    );
+                    emittedArgs.push(expression(argument, target, scope, reservedHostNames));
             }
         }
+        if (params.length == 0) throw new MiraError("A section needs a placeholder");
 
-        if (parameters.length == 0) {
-            throw new MiraError("A section must contain at least one placeholder");
-        }
-
-        final body = selectorCall(selector, callArguments);
-        final formals = [
-            for (parameter in parameters)
-                target == Php ? "$" + parameter : parameter
-        ];
-
+        final body = selectorCall(selector, emittedArgs, target, fromHost);
+        final formals = [for (param in params) target == Php ? "$" + param : param];
         return switch (target) {
-            case JavaScript:
-                "((" + formals.join(", ") + ") => " + body + ")";
-
-            case Php:
-                "(fn(" + formals.join(", ") + ") => " + body + ")";
+            case JavaScript: "((" + formals.join(", ") + ") => " + body + ")";
+            case Php: "(fn(" + formals.join(", ") + ") => " + body + ")";
         };
     }
 
-    static function selectorCall(selector:String, arguments:Array<String>):String {
-        final labels = selector.substr(0, selector.length - 1).split(":");
-        final name = Mangle.selector(labels);
-        return name + "(" + arguments.join(", ") + ")";
+    static function selectorCall(
+        selector:String,
+        arguments:Array<String>,
+        target:Target,
+        fromHost:Bool
+    ):String {
+        final callee = fromHost
+            ? hostAccess(selector, target)
+            : Mangle.selector(selector.substr(0, selector.length - 1).split(":"));
+        return "(" + callee + ")(" + arguments.join(", ") + ")";
     }
 
     static function freshParameter(
-        parameters:Array<String>,
-        scope:Array<String>,
-        reservedHostNames:Array<String>
+        parameters:Array<String>, scope:Array<String>, reservedHostNames:Array<String>
     ):String {
         var candidate = "__miraSection" + parameters.length;
-
-        // Scope contains original user names; reservedHostNames contains
-        // ALL generated top-level names, including selector functions.
-        // This keeps section binding hygienic without forbidding user names.
-        while (parameters.indexOf(candidate) != -1
-            || reservedHostNames.indexOf(candidate) != -1
+        while (parameters.indexOf(candidate) >= 0
+            || reservedHostNames.indexOf(candidate) >= 0
             || shadowsLocal(candidate, scope)) {
             candidate += "_";
         }
@@ -131,11 +124,7 @@ class SourceEmitter {
     }
 
     static function shadowsLocal(candidate:String, scope:Array<String>):Bool {
-        for (name in scope) {
-            if (Mangle.name(name) == candidate) {
-                return true;
-            }
-        }
+        for (name in scope) if (Mangle.name(name) == candidate) return true;
         return false;
     }
 
