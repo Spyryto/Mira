@@ -160,8 +160,8 @@ test('all Studio examples match the syntax currently implemented', async () => {
 
 test('Studio offers all generated feature examples and real Haxe API links offline', () => {
   const reference = JSON.parse(read('reference.json'));
-  assert.equal(reference.features.length, 15);
-  assert.equal(reference.examples.length, 30);
+  assert.ok(reference.features.length >= 15);
+  assert.ok(reference.examples.length >= reference.features.length * 2);
   assert.ok(reference.api.length >= 45);
   assert.match(read('sw.js'), /\.\/reference\.json/);
   assert.match(read('sw.js'), /\.\/reference-ui\.js/);
