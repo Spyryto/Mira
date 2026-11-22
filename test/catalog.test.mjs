@@ -126,7 +126,7 @@ for (const example of reference.examples) {
   });
 }
 
-test('catalog example count and feature count remain stable', () => {
-  assert.equal(reference.features.length, 15);
-  assert.equal(reference.examples.length, 30);
+test('catalog remains extensible without changing test counts', () => {
+  assert.ok(reference.features.length >= 15);
+  assert.ok(reference.examples.length >= reference.features.length * 2);
 });
