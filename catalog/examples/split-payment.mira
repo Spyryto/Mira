@@ -1,0 +1,5 @@
+gross amount = 100;
+first group = 2;
+second group = 3;
+extra per person = 4 * 2;
+result = gross amount / (first group + second group) + extra per person;

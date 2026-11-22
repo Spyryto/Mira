@@ -1,0 +1,3 @@
+adjust: price, by: percent, with fee: fee = price * percent / 100 + fee;
+adjustment = (adjust: _, by: _, with fee: 6);
+result = 0;

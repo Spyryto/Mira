@@ -1,0 +1,2 @@
+add: x, and: x = x + x;
+result = add 2 and 3;

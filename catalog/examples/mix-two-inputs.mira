@@ -1,0 +1,3 @@
+blend: first, with: second = first * 2 + second;
+mixer = (blend: _, with: _);
+result = 0;

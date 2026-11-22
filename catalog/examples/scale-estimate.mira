@@ -1,0 +1,4 @@
+scale: value, by: factor = value * factor;
+original value = 12;
+multiplier = 6;
+result = scale: original value, by: multiplier;

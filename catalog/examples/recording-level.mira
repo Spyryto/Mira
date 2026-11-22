@@ -1,0 +1,4 @@
+add: a, and: b = a + b;
+multiply: a, by: b = a * b;
+input level = 6;
+result = input level ~ (multiply: _, by: 3) ~ (add: _, and: 4);

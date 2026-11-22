@@ -1,0 +1,4 @@
+distance travelled = 240;
+fuel consumed = 16;
+average kilometers per liter = distance travelled / fuel consumed;
+result = average kilometers per liter;

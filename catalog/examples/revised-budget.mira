@@ -1,0 +1,4 @@
+subtract: amount, by: deduction = amount - deduction;
+scale: amount, by: multiplier = amount * multiplier;
+original budget = 50;
+result = original budget ~ (subtract: _, by: 5) ~ (scale: _, by: 2);

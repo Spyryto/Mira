@@ -1,0 +1,5 @@
+unit price = 12.5;
+quantity = 4;
+packing fee = 2.75;
+subtotal = unit price * quantity;
+result = subtotal + packing fee;

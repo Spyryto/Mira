@@ -1,0 +1,4 @@
+add: a, and: b = a + b;
+add extra: extra = (add: _, and: extra);
+base budget = 12;
+result = base budget ~ (add extra: 8);

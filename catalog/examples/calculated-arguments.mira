@@ -1,0 +1,2 @@
+add: a, and: b = a + b;
+result = add (12 * 3) and (7 + 5);

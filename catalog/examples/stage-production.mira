@@ -1,0 +1,5 @@
+participants = 5;
+guests = 7;
+meal cost = 10;
+discount = 4;
+result = (participants + guests) * (meal cost - discount) / 3;

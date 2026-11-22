@@ -1,0 +1,3 @@
+label: value = value;
+band name = "I Liberamente";
+result = label: band name;

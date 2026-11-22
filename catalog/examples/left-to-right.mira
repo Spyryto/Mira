@@ -1,0 +1,5 @@
+start balance = 8;
+bonus = 2;
+factor = 5;
+deduction = 10;
+result = start balance + bonus * factor - deduction / 2;

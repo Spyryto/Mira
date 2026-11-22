@@ -1,0 +1,5 @@
+hourly rate = 28;
+rehearsal hours = 3;
+travel expense = 14;
+work subtotal = hourly rate * rehearsal hours;
+result = work subtotal + travel expense;

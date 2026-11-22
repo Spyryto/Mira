@@ -1,0 +1,4 @@
+scale: value, by: factor = value * factor;
+triple = (scale: _, by: 3);
+boxes = 14;
+result = boxes ~ triple;
