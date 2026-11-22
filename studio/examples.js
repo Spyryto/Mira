@@ -1,4 +1,4 @@
-// Intentionally limited to syntax implemented by Mira 0.1.
+// Only examples accepted by the current Haxe Mira compiler.
 // The UI does not pretend that unimplemented features work.
 export const examples = [
   {
@@ -31,6 +31,16 @@ calculated left to right = 1 + 2 * 3;
 calculated with parentheses = 1 + (2 * 3);
 
 result = calculated with parentheses;`
+  },
+  {
+    id: 'sections',
+    name: 'Sezioni e pipeline',
+    source: `# _ trasforma una chiamata in una funzione.
+add: left, and: right = left + right;
+square: value = value * value;
+
+increment = (add: _, and: 1);
+result = 2 ~ increment ~ (square: _) ~ (add: _, and: 1);`
   },
   {
     id: 'errors',

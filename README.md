@@ -55,11 +55,22 @@ The labeled form `add: x, and: y` and the parenthesized abbreviation `add (x) an
 
 Explicit `:` remains essential when a bare multiword argument has no unambiguous boundary. Mira rejects ambiguous input rather than guessing from inferred types.
 
-## Current 0.1 restrictions
+## Mira 0.2: sections and pipelines
 
-This prototype recognizes function/value definitions, multiword names, numeric and string literals, delimited selector calls, parentheses, and basic binary numeric operators. The supported binary operators group **left-to-right with no arithmetic precedence**; parentheses are explicit.
+Mira now supports **first-class selector sections**: a complete keyword call with one or more `_` arguments creates a function value. `x ~ f` applies the value `x` to the unary function `f` and pipelines group left to right.
 
-**Not implemented:** function values, partial application, `_`, `~`, user-defined operators, lists, closures, records, types, imports, macros or MVU. Those remain syntax proposals, not advertised runtime features.
+```mira
+add: x, and: y = x + y;
+square: value = value * value;
+increment = (add: _, and: 1);
+result = 2 ~ increment ~ (square: _) ~ (add: _, and: 1);
+```
+
+The resulting value is `10`, for both JS and PHP. See [executable example](examples/sections.mira). Sections can close over surrounding parameters in both backends. The compiler generates fresh placeholder parameter names without shadowing user symbols.
+
+**Implemented subset:** value/function definitions, multiword names, literal and parenthesized selector arguments, numeric/string literals, binary arithmetic, keyword sections and pipelines. Operators still group **left-to-right at one precedence level**; parentheses control grouping.
+
+**Not yet implemented:** a general lambda syntax, non-selector sections such as `(_ + 1)`, implicit missing-argument sections, user-defined operators, lists, records, types, imports, macros, MVU, type-checking or full currying. A multi-hole section produces a function of that arity; passing it directly to a unary pipeline is rejected.
 
 See [syntax and examples](docs/syntax.md), [grammar notes](docs/grammar.md) and [design decisions](docs/decisions.md).
 

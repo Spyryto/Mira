@@ -15,7 +15,7 @@ class Bridge {
             compile: compile,
             tokens: tokens,
             ast: ast,
-            version: "0.1.0"
+            version: "0.2.0"
         });
     }
 
@@ -92,6 +92,23 @@ class Bridge {
                     kind: "Call",
                     selector: selector,
                     arguments: [for (arg in args) expression(arg)]
+                };
+
+            case Section(selector, args):
+                {
+                    kind: "Section",
+                    selector: selector,
+                    arguments: [for (arg in args) expression(arg)]
+                };
+
+            case Placeholder:
+                {kind: "Placeholder"};
+
+            case Apply(callee, argument):
+                {
+                    kind: "Apply",
+                    callee: expression(callee),
+                    argument: expression(argument)
                 };
         };
     }

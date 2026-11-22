@@ -4,7 +4,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { runInNewContext } from 'node:vm';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const site = resolve(root, 'dist/studio');
@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.1.0');
+  assert.equal(bridge.version, '0.2.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -107,5 +107,53 @@ test('PWA assets are self-hosted and have a relative GitHub Pages scope', () => 
 test('mobile UI JavaScript, SW and execution worker have valid syntax', () => {
   for (const file of ['app.js', 'examples.js', 'worker.js', 'sw.js']) {
     execFileSync('node', ['--check', resolve(site, file)]);
+  }
+});
+
+
+test('browser compiler supports section and pipeline with real AST nodes', () => {
+  const example = [
+    'add: x, and: y = x + y;',
+    'increment = (add: _, and: 1);',
+    'result = 5 ~ increment;'
+  ].join('\n');
+
+  const js = bridge.compile(example, 'js');
+  assert.equal(js.ok, true, js.message);
+  assert.equal(runInNewContext(js.output + '\nresult', {}), 6);
+
+  const php = bridge.compile(example, 'php');
+  assert.equal(php.ok, true, php.message);
+  const process = spawnSync('php', ['-r',
+    php.output.replace(/^<\?php/, '') + '\necho $result;'
+  ], {encoding: 'utf8'});
+  assert.equal(process.status, 0, process.stderr);
+  assert.equal(process.stdout, '6');
+
+  const result = bridge.ast(example);
+  assert.equal(result.ok, true, result.message);
+  const ast = JSON.parse(result.output);
+  const increment = ast.definitions.find(item => item.name === 'increment');
+  assert.equal(increment.body.kind, 'Section');
+  assert.equal(increment.body.selector, 'add:and:');
+  assert.equal(increment.body.arguments[0].kind, 'Placeholder');
+
+  const final = ast.definitions.find(item => item.name === 'result');
+  assert.equal(final.body.kind, 'Apply');
+  assert.equal(final.body.callee.value, 'increment');
+});
+
+test('all Studio examples match the syntax currently implemented', async () => {
+  const url = pathToFileURL(resolve(site, 'examples.js')).href;
+  const { examples, defaultSource } = await import(url);
+  assert.equal(defaultSource, examples[0].source);
+
+  for (const example of examples) {
+    const expectedSuccess = example.id !== 'errors';
+    for (const target of ['js', 'php']) {
+      const result = bridge.compile(example.source, target);
+      assert.equal(result.ok, expectedSuccess,
+        example.id + ' (' + target + '): ' + (result.message ?? 'unexpected success'));
+    }
   }
 });

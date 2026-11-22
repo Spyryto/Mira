@@ -168,3 +168,130 @@ test('benchmark rejects invalid sample counts', () => {
   assert.notEqual(outcome.status, 0);
   assert.match(outcome.stderr, /iterations/);
 });
+
+
+const sectionExample = readFileSync(
+  new URL('../examples/sections.mira', import.meta.url), 'utf8'
+);
+
+test('keyword sections and pipeline work on JS and PHP', () => {
+  for (const target of ['js', 'php']) {
+    assert.equal(run(sectionExample, target), '10');
+    const generated = compile(sectionExample, target);
+    assert.match(generated, /add__and/);
+    assert.match(generated, /__miraSection/);
+  }
+});
+
+test('a named section can be used as a first-class unary function', () => {
+  const source = [
+    'add: left, and: right = left + right;',
+    'increment = (add: _, and: 1);',
+    'result = 5 ~ increment;'
+  ].join('\n');
+
+  for (const target of ['js', 'php']) {
+    assert.equal(run(source, target), '6');
+  }
+});
+
+test('two placeholder slots create a real two-argument function', () => {
+  const source = [
+    'add: left, and: right = left + right;',
+    'adder = (add: _, and: _);',
+    'result = 0;'
+  ].join('\n');
+
+  for (const target of ['js', 'php']) {
+    const generated = compile(source, target);
+    withSource(source, (_, directory) => {
+      const extension = target === 'js' ? 'mjs' : 'php';
+      const file = join(directory, 'section.' + extension);
+      const invocation = target === 'js'
+        ? '\nconsole.log(adder(8, 9));\n'
+        : '\necho $adder(8, 9), "\n";\n';
+      writeFileSync(file, generated + invocation);
+      const output = execFileSync(
+        target === 'js' ? 'node' : 'php', [file], {encoding: 'utf8'}
+      ).trim();
+      assert.equal(output, '17');
+    });
+  }
+});
+
+test('selector section captures an outer parameter on JS and PHP', () => {
+  const source = [
+    'add: left, and: right = left + right;',
+    'add by: amount = (add: _, and: amount);',
+    'result = 5 ~ (add by: 4);'
+  ].join('\n');
+
+  for (const target of ['js', 'php']) {
+    assert.equal(run(source, target), '9');
+  }
+});
+
+test('section arguments are hygienic even if a user name resembles an internal name', () => {
+  const source = [
+    'add: left, and: right = left + right;',
+    '__miraSection0 = 99;',
+    'increment = (add: _, and: __miraSection0);',
+    'result = 1 ~ increment;'
+  ].join('\n');
+
+  for (const target of ['js', 'php']) {
+    assert.equal(run(source, target), '100');
+  }
+});
+
+test('pipeline operators group left to right with numeric arithmetic', () => {
+  const source = [
+    'add: left, and: right = left + right;',
+    'result = 1 + 2 ~ (add: _, and: 4);'
+  ].join('\n');
+
+  for (const target of ['js', 'php']) {
+    assert.equal(run(source, target), '7');
+  }
+});
+
+test('pipeline refuses direct multi-hole sections', () => {
+  const source = [
+    'add: left, and: right = left + right;',
+    'result = 5 ~ (add: _, and: _);'
+  ].join('\n');
+
+  const outcome = compileError(source);
+  assert.notEqual(outcome.status, 0);
+  assert.match(outcome.stderr, /unary section/);
+});
+
+test('standalone and nested placeholders fail with a clear diagnostic', () => {
+  const snippets = [
+    'result = _;',
+    'add: left, and: right = left + right; result = add: (_ + 1), and: 2;'
+  ];
+
+  for (const snippet of snippets) {
+    const outcome = compileError(snippet);
+    assert.notEqual(outcome.status, 0);
+    assert.match(outcome.stderr, /Placeholder/);
+  }
+});
+
+test('pipeline rejects an obviously non-callable literal', () => {
+  const outcome = compileError('result = 5 ~ 3;');
+  assert.notEqual(outcome.status, 0);
+  assert.match(outcome.stderr, /Pipeline target/);
+});
+
+test('underscore cannot be declared as a value or parameter', () => {
+  for (const source of [
+    '_ = 1;',
+    'add: _, and: value = value;'
+  ]) {
+    const outcome = compileError(source);
+    assert.notEqual(outcome.status, 0);
+    assert.match(outcome.stderr, /reserved/);
+  }
+});

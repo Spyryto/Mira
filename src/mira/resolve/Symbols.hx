@@ -8,6 +8,9 @@ import mira.syntax.Definition;
 class Symbols {
     public final functions:Array<Definition> = [];
     public final globals:Array<String> = [];
+    // All user-visible symbols after host-language mangling.
+    // Generated section parameters must not shadow any of these names.
+    public final hostNames:Array<String> = [];
 
     public function new(definitions:Array<Definition>) {
         final seenSelectors = new Map<String, Bool>();
@@ -31,12 +34,18 @@ class Symbols {
 
                 final localNames = new Map<String, Bool>();
                 for (parameter in definition.parameters) {
+                    if (parameter == "_") {
+                        throw new MiraError("'_' is reserved for section placeholders", definition.origin);
+                    }
                     if (localNames.exists(parameter)) {
                         throw new MiraError("Duplicate parameter " + parameter, definition.origin);
                     }
                     localNames.set(parameter, true);
                 }
             } else {
+                if (identifier == "_") {
+                    throw new MiraError("'_' is reserved for section placeholders", definition.origin);
+                }
                 if (seenGlobals.exists(identifier)) {
                     throw new MiraError("Duplicate value " + identifier, definition.origin);
                 }
@@ -54,6 +63,7 @@ class Symbols {
                 );
             }
             hostNames.set(hostName, identifier);
+            this.hostNames.push(hostName);
         }
     }
 

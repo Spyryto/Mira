@@ -1,0 +1,20 @@
+# Mira 0.2: keyword sections are first-class functions.
+add: left, and: right = left + right;
+square: value = value * value;
+
+# The placeholder becomes a function parameter.
+increment = (add: _, and: 1);
+add five = (add: _, and: 5);
+
+# Pipeline passes its left expression to the function on the right.
+six = 5 ~ increment;
+ten = 2 ~ increment ~ (square: _) ~ (add: _, and: 1);
+
+# An arbitrary selector can return a function that captures a parameter.
+add by: amount = (add: _, and: amount);
+nine = 5 ~ (add by: 4);
+
+# One underscore for each argument means a two-argument function value.
+adder = (add: _, and: _);
+
+result = ten;

@@ -1,6 +1,6 @@
 # Mira: syntax experiments
 
-**Only the first sections are implemented in the 0.1 prototype.** The rest are ideas under evaluation.
+**Mira 0.2 implements full selectors, selector sections and pipelines.** Other forms below remain under evaluation.
 
 ## Implemented: complete selectors
 
@@ -22,16 +22,40 @@ These are equivalent **as calls within a program defining `add:and:`**. The punc
 
 The prototype requires `;` after each top-level definition. It supports numeric operators `+ - * / %` with equal precedence and left grouping; parentheses control grouping. Operators are not yet overloaded or unary.
 
-## Proposed: first-class functions, sections and pipeline
+## Implemented: selector sections and pipelines
+
+```mira
+add: left, and: right = left + right;
+square: x = x * x;
+
+increment = (add: _, and: 1);
+adder = (add: _, and: _);
+result = 2 ~ increment ~ (square: _);
+```
+
+`_` is a **whole missing selector argument**, not a generic anonymous
+variable inside arbitrary expressions. `increment` is a unary function
+value, and `adder` is a binary function value. Sections preserve captured
+local arguments on JavaScript and PHP.
+
+The pipeline `x ~ f` applies the value on the left to the function on
+the right; it lowers to `Apply(f, x)`. Operators associate left to right
+without mathematical precedence. Both `5 ~ increment` and
+`5 ~ (add: _, and: 1)` are supported. Sections with two or more holes
+cannot be used directly as unary pipeline targets.
+
+## Proposed: general closures and partial selector notation
 
 ```mira
 greater than: limit = {x | x > limit};
 filter: items, with: (_ > 5);
-join: _, with: " ";
-items ~ fold, with: +, start with: 0;
+join, with " "
 ```
 
-`{}` for closures/blocks is a **hypothesis**, not a finalized grammar. Keep parser decisions structural, without consulting expected types.
+These are **not implemented**: an explicit closure grammar (`{}`),
+arithmetic/comparison operator sections and implicit omitted keyword
+arguments need separate design. They must not require type inference to
+parse.
 
 ## Proposed: type declarations and MVU records
 
@@ -62,4 +86,4 @@ The UI functions can build a data tree without DOM side effects. This does **not
 
 Tokenize (preserve locations) → collect selector signatures → parse with boundaries → canonical AST → emit JS/PHP.
 
-The 0.1 grammar deliberately has no type inference and does not claim JS/PHP behavior equivalence beyond its numeric smoke tests.
+The 0.2 grammar deliberately has no type inference. Selector sections and pipelines are tested through executed JavaScript and PHP, with explicit limits on supported forms.
