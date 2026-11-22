@@ -163,3 +163,25 @@ select { min-width: 0; max-width: 230px; flex: 1; border: 1.5px solid var(--line
 .tab { font-size: 10px; }
 .tab strong { font-size: 12px; }
 @media (max-width:380px) { .tab strong {font-size: 11px;} .reference-area {padding: 14px 10px;} }
+
+/* AST inspector: Haxe supplies the tree; a Mira program computes the metrics. */
+.ast-inspector { padding: 13px; background: var(--white); }
+.inspector-intro { font-size: 12px; line-height: 1.55; color: var(--sub); margin: 3px 0 13px; }
+.inspector-status { padding: 10px; border-radius: 7px; background: var(--teal); font-size: 11px; font-weight: 700; overflow-wrap: anywhere; }
+.inspector-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 12px 0 19px; }
+.inspector-metric { min-height: 66px; border: 1.5px solid var(--line); border-radius: 7px; background: #f8f4e9; padding: 8px; display: flex; flex-direction: column; gap: 3px; }
+.inspector-metric strong { font-size: 24px; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.inspector-metric span { font-size: 11px; color: var(--sub); }
+.ast-inspector h3 { font-size: 14px; margin: 17px 0 8px; }
+.inspector-tree { border: 1.5px solid var(--line); background: #fcfbf6; border-radius: 8px; padding: 10px; max-height: 420px; overflow: auto; font: 12px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.ast-branch, .ast-leaf { margin: 2px 0; }
+.ast-branch summary { cursor: pointer; font-weight: 700; }
+.ast-children { margin-left: 11px; padding-left: 10px; border-left: 1.5px solid #c4cfc4; }
+.ast-leaf { color: #4b635b; overflow-wrap: anywhere; }
+.inspector-code-area { margin-top: 18px; border-top: 1px solid #d7d7cf; padding-top: 14px; }
+.inspector-code-area summary { font-size: 12px; font-weight: 850; cursor: pointer; }
+.inspector-code-area p { font-size: 11px; color: var(--sub); line-height: 1.55; }
+#inspectorProgram { width: 100%; min-height: 280px; padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: #faf8f1; color: var(--ink); font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; resize: vertical; white-space: pre; overflow: auto; }
+.inspector-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+.inspector-actions button { border: 1.5px solid var(--line); background: var(--white); font-weight: 800; font-size: 12px; padding: 9px 10px; border-radius: 7px; }
+#inspectorRecalculate { background: var(--orange); }
