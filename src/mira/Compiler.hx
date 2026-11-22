@@ -25,14 +25,13 @@ class Compiler {
         return definitions;
     }
 
-    public static function transpile(source:String, target:String):String {
+    public static function transpile(source:String, target:Target):String {
         final definitions = parse(source);
         final symbols = new Symbols(definitions);
 
         return switch (target) {
-            case "js": JsEmitter.emit(definitions, symbols);
-            case "php": PhpEmitter.emit(definitions, symbols);
-            default: throw new MiraError("Target must be js or php");
+            case JavaScript: JsEmitter.emit(definitions, symbols);
+            case Php: PhpEmitter.emit(definitions, symbols);
         };
     }
 

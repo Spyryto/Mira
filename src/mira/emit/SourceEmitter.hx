@@ -1,27 +1,27 @@
 package mira.emit;
 
 import mira.MiraError;
+import mira.Target;
 import mira.syntax.Expr;
 import mira.resolve.Mangle;
 
 class SourceEmitter {
-    public static function expression(expr:Expr, target:String, scope:Array<String>):String {
+    public static function expression(expr:Expr, target:Target, scope:Array<String>):String {
         return switch (expr) {
             case Name(name):
                 if (scope.indexOf(name) < 0) {
                     throw new MiraError("Unbound name " + name);
                 }
                 final symbol = Mangle.name(name);
-                target == "php" ? "$" + symbol : symbol;
+                target == Php ? "$" + symbol : symbol;
 
             case Numeric(value):
                 value;
 
             case Text(value):
-                if (target == "js") {
-                    haxe.Json.stringify(value);
-                } else {
-                    phpString(value);
+                switch (target) {
+                    case JavaScript: haxe.Json.stringify(value);
+                    case Php: phpString(value);
                 }
 
             case Binary(symbol, left, right):
