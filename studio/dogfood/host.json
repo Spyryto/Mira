@@ -1,0 +1,12 @@
+{
+  "values": [
+    "ast tree"
+  ],
+  "callables": [
+    "log"
+  ],
+  "selectors": [
+    "fold:with:from:",
+    "node:is:"
+  ]
+}

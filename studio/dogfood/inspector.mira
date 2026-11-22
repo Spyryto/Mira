@@ -1,10 +1,7 @@
-# First dogfooding: Mira transforms its own compiler's AST.
+# Dogfooding 01: this code is normal Mira, without extern declarations.
+# Host bindings are registered separately in studio/dogfood/host.json.
 # Only traversal and node-kind inspection are host capabilities.
-extern ast tree;
-extern fold: nodes, with: reducer, from: initial;
-extern node: item, is: kind;
 
-# All arithmetic and selection logic below runs in Mira.
 count: total, node: item = total + 1;
 count matching: kind, total: total, node: item =
   total + (node: item, is: kind);
