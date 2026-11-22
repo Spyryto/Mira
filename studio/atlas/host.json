@@ -2,8 +2,8 @@
   "values": [],
   "callables": [],
   "selectors": [
-    "get:from:",
     "map:with:",
-    "count:"
+    "count:",
+    "filter:with:"
   ]
 }
