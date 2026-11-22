@@ -8,6 +8,8 @@ Apri [Mira Studio](https://spyryto.github.io/Mira/#/guide) per consultare gli es
 <a id="feature-values"></a>
 ## Definizioni di valori
 
+**Disponibile dalla versione 0.1**
+
 Valori intermedi nominati, separati da `;`.
 
 Il corpo della definizione viene valutato sul backend di destinazione.
@@ -19,6 +21,8 @@ API collegata: [`mira.syntax.DefinitionParser.parse`](api.md#api-mira-syntax-def
 
 <a id="feature-names"></a>
 ## Identificatori composti
+
+**Disponibile dalla versione 0.1**
 
 Nomi formati da più parole.
 
@@ -32,6 +36,8 @@ API collegata: [`mira.resolve.Symbols.resolveName`](api.md#api-mira-resolve-symb
 <a id="feature-functions"></a>
 ## Funzioni con parametri
 
+**Disponibile dalla versione 0.1**
+
 Definizioni di funzioni con argomenti leggibili.
 
 La sintassi `label: parametro` dichiara una funzione; i suoi parametri possono avere più parole.
@@ -43,6 +49,8 @@ API collegata: [`mira.syntax.DefinitionParser.parse`](api.md#api-mira-syntax-def
 
 <a id="feature-selectors"></a>
 ## Selettori con più keyword
+
+**Disponibile dalla versione 0.1**
 
 Firme articolate con etichette significative.
 
@@ -56,6 +64,8 @@ API collegata: [`mira.resolve.SelectorResolver.match`](api.md#api-mira-resolve-s
 <a id="feature-shorthand"></a>
 ## Chiamate discorsive
 
+**Disponibile dalla versione 0.1**
+
 Abbreviazioni senza `:` quando non ambigue.
 
 Letterali e parentesi rendono deterministici i confini degli argomenti.
@@ -67,6 +77,8 @@ API collegata: [`mira.resolve.SelectorResolver.match`](api.md#api-mira-resolve-s
 
 <a id="feature-numbers"></a>
 ## Letterali numerici
+
+**Disponibile dalla versione 0.1**
 
 Interi e decimali.
 
@@ -80,6 +92,8 @@ API collegata: [`mira.lex.Lexer.tokenize`](api.md#api-mira-lex-lexer-tokenize)
 <a id="feature-strings"></a>
 ## Letterali testuali
 
+**Disponibile dalla versione 0.1**
+
 Testo delimitato da doppi apici.
 
 Le stringhe sono dati utilizzabili nei selettori. Non esiste ancora una libreria di manipolazione del testo.
@@ -91,6 +105,8 @@ API collegata: [`mira.lex.Lexer.tokenize`](api.md#api-mira-lex-lexer-tokenize)
 
 <a id="feature-arithmetic"></a>
 ## Operatori aritmetici
+
+**Disponibile dalla versione 0.1**
 
 `+`, `-`, `*`, `/` e `%`.
 
@@ -104,6 +120,8 @@ API collegata: [`mira.syntax.ExpressionParser.parse`](api.md#api-mira-syntax-exp
 <a id="feature-grouping"></a>
 ## Parentesi
 
+**Disponibile dalla versione 0.1**
+
 Esplicitare il raggruppamento.
 
 Permettono anche di delimitare espressioni negli argomenti discorsivi.
@@ -115,6 +133,8 @@ API collegata: [`mira.syntax.ExpressionParser.parse`](api.md#api-mira-syntax-exp
 
 <a id="feature-sections"></a>
 ## Sezioni unarie
+
+**Disponibile dalla versione 0.2**
 
 Un `_` in un selettore crea una funzione.
 
@@ -128,6 +148,8 @@ API collegata: [`mira.syntax.Expr`](api.md#api-mira-syntax-expr)
 <a id="feature-multi-sections"></a>
 ## Sezioni con più `_`
 
+**Disponibile dalla versione 0.2**
+
 Più segnaposto producono più parametri.
 
 Il compilatore emette funzioni di arità corrispondente. In Mira 0.2 le applicazioni binarie generiche non hanno ancora sintassi nel sorgente.
@@ -139,6 +161,8 @@ API collegata: [`mira.emit.SourceEmitter.expression`](api.md#api-mira-emit-sourc
 
 <a id="feature-pipelines"></a>
 ## Pipeline `~`
+
+**Disponibile dalla versione 0.2**
 
 Composizione da sinistra a destra.
 
@@ -152,6 +176,8 @@ API collegata: [`mira.syntax.Expr`](api.md#api-mira-syntax-expr)
 <a id="feature-captures"></a>
 ## Cattura lessicale
 
+**Disponibile dalla versione 0.2**
+
 Funzioni che restituiscono sezioni parametrizzate.
 
 Le arrow function JS/PHP conservano i parametri della funzione esterna.
@@ -163,6 +189,8 @@ API collegata: [`mira.emit.SourceEmitter.expression`](api.md#api-mira-emit-sourc
 
 <a id="feature-forward"></a>
 ## Dichiarazioni successive
+
+**Disponibile dalla versione 0.1**
 
 I selettori possono essere dichiarati dopo l'uso.
 
@@ -176,6 +204,8 @@ API collegata: [`mira.Compiler.parse`](api.md#api-mira-compiler-parse)
 <a id="feature-diagnostics"></a>
 ## Diagnostica e ambiguità
 
+**Disponibile dalla versione 0.1**
+
 Esempi di errori intenzionali.
 
 Sono esercizi negativi: fallire con una diagnostica precisa è il comportamento corretto.
@@ -187,6 +217,8 @@ API collegata: [`mira.MiraError`](api.md#api-mira-miraerror)
 
 <a id="feature-sequences"></a>
 ## Sequenze e trasformazioni
+
+**Disponibile dalla versione 0.3**
 
 Liste letterali e trasformazioni funzionali con un host minimo.
 
@@ -200,6 +232,8 @@ API collegata: [`mira.syntax.Expr.Sequence`](api.md#api-mira-syntax-expr-sequenc
 <a id="feature-records"></a>
 ## Record e dati strutturati
 
+**Disponibile dalla versione 0.3**
+
 Costruzione di record anonimi portabili tra JavaScript e PHP.
 
 I record `{campo: espressione}` diventano oggetti JavaScript e array associativi PHP. Il selettore host `get:from:` legge una chiave; chiavi duplicate e delimitatori errati vengono rifiutati.
@@ -211,6 +245,8 @@ API collegata: [`mira.syntax.Expr.Record`](api.md#api-mira-syntax-expr-record)
 
 <a id="feature-browser-ui"></a>
 ## UI web e interoperabilità
+
+**Disponibile dalla versione 0.3**
 
 Visualizzazione dichiarativa, alert e gestione degli eventi con funzioni Mira collegate a un host browser.
 
