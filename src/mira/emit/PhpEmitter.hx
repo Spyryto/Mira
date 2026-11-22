@@ -1,6 +1,7 @@
 package mira.emit;
 
 import mira.MiraError;
+import mira.Target;
 import mira.syntax.Definition;
 import mira.resolve.Mangle;
 import mira.resolve.Symbols;
@@ -13,7 +14,7 @@ class PhpEmitter {
             if (definition.body == null) throw new MiraError("Missing resolved body", definition.origin);
 
             final scope = definition.isFunction() ? definition.parameters : symbols.globals;
-            final expr = SourceEmitter.expression(cast definition.body, "php", scope);
+            final expr = SourceEmitter.expression(cast definition.body, Php, scope);
 
             if (definition.isFunction()) {
                 final arguments = [for (param in definition.parameters) "$" + Mangle.name(param)];
