@@ -21,7 +21,7 @@ e presenta queste fasi, tutte basate su chiamate reali al compilatore Haxe:
 | JS | Programma traspilato | `Bridge.compile(..., "js")` |
 | PHP | Programma traspilato | `Bridge.compile(..., "php")` |
 
-**Precisione:** nella versione 0.3 c'è un unico `Lexer` che esegue la
+**Precisione:** nella versione 0.4 c'è un unico `Lexer` che esegue la
 tokenizzazione, non un tokenizer autonomo. La tabella dei simboli nasce
 dall'analisi delle dichiarazioni; la risoluzione delle espressioni avviene
 nel parser delle espressioni con `Symbols` e `SelectorResolver`.
@@ -47,14 +47,16 @@ Il programma sorgente
 
 È **Mira vero**, traspilato in JavaScript durante la CI, non una
 trascrizione manuale delle stesse trasformazioni in JavaScript.
-Le sole primitive dell'host sono `get:from:`, `map:with:` e `count:`.
+Con Mira 0.4 gli accessor e il filtraggio per gruppo sono scritti in Mira.
+Le sole primitive host rimaste nel modulo Atlas sono `map:with:`,
+`filter:with:` e `count:`.
 Il risultato è `dist/studio/atlas-program.js`.
 
 L'host [`studio/atlas-ui.js`](../studio/atlas-ui.js) possiede solo
 responsabilità del browser: caricamento del JSON, navigazione, rendering
 DOM/SVG, gestione dei clic e invocazione delle API del compilatore.
-Non è ancora possibile scrivere in Mira i filtri, i predicati e il layout
-del grafo senza introdurre altro supporto.
+I filtri e i predicati del gruppo sono ora in Mira; il layout SVG,
+la navigazione e l'interazione rimangono responsabilità del browser.
 
 ## JSON, offline e prestazioni
 
@@ -89,16 +91,16 @@ dell'implementazione manuale equivalente (**circa 11 volte più lento**).
 La differenza deriva in larga parte dai molti accessi dinamici
 `get:from:` e dalle chiamate host; non è una misura del linguaggio
 in generale né una prova della velocità di rendering.
-Accessi ai record nativi/ottimizzati e una migliore compilazione dei
-riferimenti host sono opportunità concrete per ridurre questo overhead.
+Gli accessor nativi di Mira 0.4 riducono il numero delle chiamate
+all'host; il benchmark continuo verifica se questo porta benefici reali.
 
 ## Quali feature Mira mancano dopo questo esperimento?
 
 | Priorità | Feature desiderata | Ostacolo emerso |
 | --- | --- | --- |
-| Alta | Accessor funzionali nativi o library di accesso ai record | I modelli ripetono `get: "campo", from: record` |
-| Alta | Confronti booleani, condizioni e predicati | Filtri dei moduli e ricerca restano JS |
-| Alta | `filter`, `sort`, `groupBy` portabili | La composizione del grafo e del catalogo richiede logica host |
+| ✅ 0.4 | Accessor funzionali nativi | `field "campo"` e `record ~ accessor` ora sostituiscono le chiamate host |
+| ✅ 0.4 | Confronti e condizioni | Il filtro per gruppo di Atlas usa ora predicati e condizioni in Mira |
+| Alta | `sort` e `groupBy` portabili | `filter:with:` è ancora una capability host, gli altri operatori mancano |
 | Media | Funzioni anonime e applicazione generale | Le sezioni funzionano, ma obbligano a dichiarazioni nominate per molti trasformatori |
 | Media | Tipi somma e pattern matching | L'elaborazione di nodi AST differenziati resta verbosa |
 | Media | Stringhe, interpolazione e template text | Formattazione etichette e riassunti rimane nell'host |
