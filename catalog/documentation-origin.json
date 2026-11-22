@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "explanation": "Dichiarazioni editoriali, non inferenze automatiche sullo stile o sulla cronologia Git. Classificare i nuovi documenti quando vengono aggiunti; le attribuzioni storiche non verificabili restano unverified.",
+  "files": {
+    "README.md": {
+      "kind": "ai_assisted",
+      "note": "Testo editoriale sviluppato con assistenza IA; la tabella delle feature è generata dal tooling ed è conteggiata separatamente."
+    },
+    "docs/browser-interop.md": {
+      "kind": "ai_assisted",
+      "note": "Documentazione redatta durante lo sviluppo assistito dall'IA."
+    },
+    "docs/dogfooding.md": {
+      "kind": "ai_assisted",
+      "note": "Documentazione redatta durante lo sviluppo assistito dall'IA."
+    },
+    "docs/performance.md": {
+      "kind": "ai_assisted",
+      "note": "Documentazione redatta durante lo sviluppo assistito dall'IA."
+    },
+    "docs/structured-data.md": {
+      "kind": "ai_assisted",
+      "note": "Documentazione redatta durante lo sviluppo assistito dall'IA."
+    },
+    "docs/studio.md": {
+      "kind": "ai_assisted",
+      "note": "Documentazione redatta durante lo sviluppo assistito dall'IA."
+    },
+    "docs/reference/README.md": {
+      "kind": "ai_assisted",
+      "note": "Introduzione editoriale alla documentazione generata."
+    },
+    "docs/decisions.md": {
+      "kind": "unverified",
+      "note": "Origine redazionale storica non certificata per intero."
+    },
+    "docs/grammar.md": {
+      "kind": "unverified",
+      "note": "Origine redazionale storica non certificata per intero."
+    },
+    "docs/syntax.md": {
+      "kind": "unverified",
+      "note": "Origine redazionale storica non certificata per intero."
+    },
+    "docs/reference/language.md": {
+      "kind": "tool_generated",
+      "generator": "scripts/generate-reference.mjs",
+      "note": "Composizione automatica di materiale proveniente da catalog/manifest.json."
+    },
+    "docs/reference/examples.md": {
+      "kind": "tool_generated",
+      "generator": "scripts/generate-reference.mjs",
+      "note": "Composizione automatica di esempi .mira e metadati editoriali."
+    },
+    "docs/reference/api.md": {
+      "kind": "tool_generated",
+      "generator": "scripts/generate-reference.mjs",
+      "note": "Firme estratte automaticamente dai sorgenti Haxe; descrizioni prese da catalog/api-notes.json."
+    }
+  },
+  "generatedSections": {
+    "README.md": [
+      {
+        "start": "<!-- START GENERATED FEATURE MATRIX -->",
+        "end": "<!-- END GENERATED FEATURE MATRIX -->",
+        "generator": "scripts/generate-reference.mjs"
+      }
+    ]
+  },
+  "excluded": [
+    "docs/documentation-origin.md"
+  ],
+  "extraSources": [
+    "catalog/manifest.json",
+    "catalog/api-notes.json",
+    "catalog/examples/*.mira"
+  ],
+  "scope": "README.md e tutti i Markdown sotto docs/, escluso il report stesso. File JSON e programmi Mira sono sorgenti non conteggiate come pagine di documentazione."
+}
