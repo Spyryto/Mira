@@ -4,6 +4,65 @@
 
 Mira is currently a standalone **syntax and transpiler experiment**, not a replacement for NailLang. It explores multiword identifiers and Smalltalk-inspired keyword selectors, with a deliberately small executable core.
 
+## Funzionalità e versioni
+
+La tabella distingue le feature **già implementate** (✅) da quelle
+**ancora da progettare** (⬜). La colonna *Prima versione* indica
+quando la funzionalità è stata introdotta, sulla base dello storico Git
+(`0.1` nucleo discorsivo, `0.2` sezioni e pipeline, `0.3`
+dati strutturati e interoperabilità).
+
+La parte ✅ è **generata automaticamente** da
+[catalog/manifest.json](catalog/manifest.json), tramite `npm run docs`;
+i collegamenti portano alla [guida interlinkata](docs/reference/language.md)
+e agli [esempi](docs/reference/examples.md).
+
+<!-- START GENERATED FEATURE MATRIX -->
+| Stato | Funzionalità | Prima versione | Documentazione |
+| :---: | --- | :---: | --- |
+| ✅ | Definizioni di valori | `0.1` | [Dettagli](docs/reference/language.md#feature-values) |
+| ✅ | Identificatori composti | `0.1` | [Dettagli](docs/reference/language.md#feature-names) |
+| ✅ | Funzioni con parametri | `0.1` | [Dettagli](docs/reference/language.md#feature-functions) |
+| ✅ | Selettori con più keyword | `0.1` | [Dettagli](docs/reference/language.md#feature-selectors) |
+| ✅ | Chiamate discorsive | `0.1` | [Dettagli](docs/reference/language.md#feature-shorthand) |
+| ✅ | Letterali numerici | `0.1` | [Dettagli](docs/reference/language.md#feature-numbers) |
+| ✅ | Letterali testuali | `0.1` | [Dettagli](docs/reference/language.md#feature-strings) |
+| ✅ | Operatori aritmetici | `0.1` | [Dettagli](docs/reference/language.md#feature-arithmetic) |
+| ✅ | Parentesi | `0.1` | [Dettagli](docs/reference/language.md#feature-grouping) |
+| ✅ | Dichiarazioni successive | `0.1` | [Dettagli](docs/reference/language.md#feature-forward) |
+| ✅ | Diagnostica e ambiguità | `0.1` | [Dettagli](docs/reference/language.md#feature-diagnostics) |
+| ✅ | Sezioni unarie | `0.2` | [Dettagli](docs/reference/language.md#feature-sections) |
+| ✅ | Sezioni con più `_` | `0.2` | [Dettagli](docs/reference/language.md#feature-multi-sections) |
+| ✅ | Pipeline `~` | `0.2` | [Dettagli](docs/reference/language.md#feature-pipelines) |
+| ✅ | Cattura lessicale | `0.2` | [Dettagli](docs/reference/language.md#feature-captures) |
+| ✅ | Sequenze e trasformazioni | `0.3` | [Dettagli](docs/reference/language.md#feature-sequences) |
+| ✅ | Record e dati strutturati | `0.3` | [Dettagli](docs/reference/language.md#feature-records) |
+| ✅ | UI web e interoperabilità | `0.3` | [Dettagli](docs/reference/language.md#feature-browser-ui) |
+| ✅ | Applicazione funzionale per giustapposizione (`log "ciao"`) | `0.3` | [Dettagli](docs/dogfooding.md#nuove-regole-sintattiche-sperimentali) |
+| ✅ | Istruzioni-espressione terminate da `;` | `0.3` | [Dettagli](docs/dogfooding.md#nuove-regole-sintattiche-sperimentali) |
+| ✅ | Interop: riferimenti a funzioni/valori dell'host | `0.3` | [Dettagli](docs/dogfooding.md#che-cosa-contiene-il-manifest) |
+<!-- END GENERATED FEATURE MATRIX -->
+
+Le funzioni **host** non sono primitive incorporate nel linguaggio:
+la loro disponibilità dipende da un manifest e dall'ambiente di esecuzione.
+Le view interattive sono attualmente eseguite nel browser JavaScript; il
+backend PHP ne traspila il sorgente ma non fornisce un renderer DOM.
+
+### Funzionalità non ancora implementate
+
+Nessuna versione è assegnata finché non esiste un'implementazione verificata.
+
+| Stato | Funzionalità | Prima versione | Documentazione |
+| :---: | --- | :---: | --- |
+| ⬜ | Funzioni anonime generali e sezioni di operatori come `(_ + 1)` | — | [Decisioni aperte](docs/decisions.md#open-questions) |
+| ⬜ | Currying completo e applicazione parziale generalizzata | — | [Decisioni aperte](docs/decisions.md#open-questions) |
+| ⬜ | Tipi dichiarati, record tipizzati e type checker | — | [Proposta di sintassi](docs/syntax.md#proposed-type-declarations-and-mvu-records) |
+| ⬜ | Pattern matching e confronti booleani nel nucleo | — | [Limiti attuali](docs/structured-data.md#limiti-conosciuti) |
+| ⬜ | Moduli/import e scoping strutturato delle capability | — | [Questioni aperte](docs/dogfooding.md#limiti-e-questioni-aperte) |
+| ⬜ | Operatori definiti dall'utente | — | [Decisioni aperte](docs/decisions.md#open-questions) |
+| ⬜ | Metaprogrammazione e macro | — | [Decisioni architetturali](docs/decisions.md) |
+| ⬜ | Runtime/libreria MVU generale con lifecycle e diffing | — | [Limiti dell'host UI](docs/browser-interop.md#anteprima-e-limiti) |
+
 ## What this repository contains
 
 The compiler is **written entirely in Haxe** and compiled to JavaScript for the CLI. That CLI generates **both JavaScript and PHP** from Mira source. No Haxe-generated PHP is involved, no runtime VM is required, and the parser never asks a type checker to resolve syntax.
@@ -68,18 +127,20 @@ result = 2 ~ increment ~ (square: _) ~ (add: _, and: 1);
 
 The resulting value is `10`, for both JS and PHP. See [executable example](examples/sections.mira). Sections can close over surrounding parameters in both backends. The compiler generates fresh placeholder parameter names without shadowing user symbols.
 
-**Implemented subset:** value/function definitions, multiword names, literal and parenthesized selector arguments, numeric/string literals, binary arithmetic, keyword sections and pipelines. Operators still group **left-to-right at one precedence level**; parentheses control grouping.
-
-**Not yet implemented:** a general lambda syntax, non-selector sections such as `(_ + 1)`, implicit missing-argument sections, user-defined operators, typed records, types, imports, macros, MVU, type-checking or full currying. A multi-hole section produces a function of that arity; passing it directly to a unary pipeline is rejected.
+**Stato completo:** consulta la [tabella delle funzionalità e versioni](#funzionalità-e-versioni).
+Gli operatori binari attuali condividono un unico livello di precedenza, con
+associatività a sinistra. Una sezione con più `_` genera una funzione di
+arità corrispondente, ma non si può applicare direttamente a una pipeline unaria.
 
 See [syntax and examples](docs/syntax.md), [grammar notes](docs/grammar.md) and [design decisions](docs/decisions.md).
 
 ## Guida ed esempi verificati
 
-Il [catalogo delle feature](catalog/manifest.json) descrive tutte le 15 aree
-del linguaggio Mira 0.3, con **almeno 34 esempi** sotto `catalog/examples/`, almeno
-due per ogni feature. Ogni esempio ha un risultato previsto oppure una
-diagnostica attesa; la CI esegue tutti i programmi su entrambi i backend.
+Il [catalogo delle feature](catalog/manifest.json) descrive le aree
+attualmente implementate, con almeno due esempi per ciascuna sotto
+`catalog/examples/`. La CI verifica i risultati dei programmi su JS e PHP;
+per gli esempi UI verifica la compilazione di entrambi i target e l'esecuzione
+interattiva sull'host JavaScript.
 
 `npm run docs` genera tre riferimenti Markdown interlinkati:
 [linguaggio](docs/reference/language.md),
