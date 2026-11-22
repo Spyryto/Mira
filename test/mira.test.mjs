@@ -384,3 +384,40 @@ test('missing field access is rejected consistently at runtime', () => {
     }
   });
 });
+
+
+test('0.5 operator sections are first-class unary functions on JS and PHP', () => {
+  for (const [source, expected] of [
+    ['result = 7 ~ (_ > 5);', 'true'],
+    ['result = 3 ~ (10 - _);', '7'],
+    ['result = 5 ~ (_ * 2);', '10'],
+    ['accept: predicate = 8 ~ predicate; result = accept: (_ >= 7);', 'true'],
+    ['threshold = 3; result = 7 ~ (_ > threshold);', 'true'],
+    ['result = 3 ~ (_ != 4);', 'true']
+  ]) {
+    for (const target of ['js', 'php']) {
+      assert.equal(run(source, target), expected, source + ' / ' + target);
+    }
+  }
+});
+
+test('operator sections support two holes but pipelines require one', () => {
+  const source = 'sum = (_ + _); result = 0;';
+  withSource(source, (path, dir) => {
+    for (const target of ['js', 'php']) {
+      const output = execFileSync('node', [compiler, path, target], {encoding:'utf8'});
+      const filename = join(dir, 'section.' + (target==='js' ? 'mjs' : 'php'));
+      writeFileSync(filename, output + (target==='js'
+        ? '\nconsole.log(sum(3, 4));'
+        : '\necho $sum(3, 4);'));
+      assert.equal(execFileSync(target==='js' ? 'node' : 'php',
+        [filename], {encoding:'utf8'}).trim(), '7');
+    }
+  });
+  const invalid = compileError('result = 4 ~ (_ + _);');
+  assert.notEqual(invalid.status, 0);
+  assert.match(invalid.stderr, /unary operator section/);
+  const bare = compileError('result = _ + 1;');
+  assert.notEqual(bare.status, 0);
+  assert.match(bare.stderr, /Placeholder/);
+});

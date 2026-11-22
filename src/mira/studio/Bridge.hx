@@ -18,7 +18,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.4.0"
+            version: "0.5.0"
         });
     }
 
@@ -137,6 +137,9 @@ class Bridge {
                     {key: keys[index], value: expression(values[index])}]};
             case Binary(symbol, left, right):
                 {kind: "Binary", symbol: symbol, left: expression(left), right: expression(right)};
+            case OperatorSection(symbol, left, right):
+                {kind: "OperatorSection", symbol: symbol,
+                    left: expression(left), right: expression(right)};
             case Call(selector, args):
                 {kind: "Call", selector: selector, arguments: [for (arg in args) expression(arg)]};
             case HostCall(selector, args):

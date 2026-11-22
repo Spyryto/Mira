@@ -85,6 +85,9 @@ class SourceEmitter {
                     + (symbol == "==" ? "===" : symbol == "!=" ? "!==" : symbol)
                     + " " + expression(right, target, scope, reservedHostNames) + ")";
 
+            case OperatorSection(symbol, left, right):
+                operatorSection(symbol, left, right, target, scope, reservedHostNames);
+
             case Call(selector, arguments):
                 selectorCall(selector, [
                     for (arg in arguments) expression(arg, target, scope, reservedHostNames)
@@ -114,6 +117,40 @@ class SourceEmitter {
         return switch (target) {
             case JavaScript: '__miraHost[' + haxe.Json.stringify(name) + ']';
             case Php: "$GLOBALS[\"__miraHost\"][" + phpString(name) + "]";
+        };
+    }
+
+    static function operatorSection(
+        symbol:String,
+        left:Expr,
+        right:Expr,
+        target:Target,
+        scope:Array<String>,
+        reservedHostNames:Array<String>
+    ):String {
+        if (["+", "-", "*", "/", "%", "==", "!=", "<", ">", "<=", ">="].indexOf(symbol) < 0) {
+            throw new MiraError("Unsupported operator section " + symbol);
+        }
+        final parameters:Array<String> = [];
+        final operands:Array<String> = [];
+        for (operand in [left, right]) {
+            switch (operand) {
+                case Placeholder:
+                    final parameter = freshParameter(parameters, scope, reservedHostNames);
+                    parameters.push(parameter);
+                    operands.push(target == Php ? "$" + parameter : parameter);
+                default:
+                    operands.push(expression(operand, target, scope, reservedHostNames));
+            }
+        }
+        if (parameters.length == 0) throw new MiraError("Operator section needs a placeholder");
+        final formals = [for (parameter in parameters)
+            target == Php ? "$" + parameter : parameter];
+        final emittedOperator = symbol == "==" ? "===" : symbol == "!=" ? "!==" : symbol;
+        final body = "(" + operands[0] + " " + emittedOperator + " " + operands[1] + ")";
+        return switch (target) {
+            case JavaScript: "((" + formals.join(", ") + ") => " + body + ")";
+            case Php: "(fn(" + formals.join(", ") + ") => " + body + ")";
         };
     }
 

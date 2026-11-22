@@ -1,6 +1,6 @@
 # Mira: syntax experiments
 
-**Mira 0.4 implements selectors, selector sections, pipelines, sequence literals and anonymous records.** Typed records and other advanced forms remain under evaluation.
+**Mira 0.5 implements selectors, selector/operator sections, pipelines, sequence literals and anonymous records.** Typed records and other advanced forms remain under evaluation.
 
 ## Implemented: complete selectors
 
@@ -63,18 +63,34 @@ I predicati permettono `filter:with:` tramite una capability host.
 
 [Dettagli e limiti della versione 0.4](mira04.md).
 
-## Proposed: general closures and partial selector notation
+## Implementato in Mira 0.5: sezioni di operatori
+
+```mira
+over five = (_ > 5);
+increment = (_ + 1);
+subtract from ten = (10 - _);
+sum = (_ + _);
+result = 7 ~ over five;
+```
+
+Un operatore binario tra parentesi, con uno o due operandi `_`, produce
+una funzione. Le sezioni accettano `+ - * / % == != < > <= >=` e sono
+emesse come arrow function su JS/PHP. La pipeline `~` richiede sempre una
+funzione unaria: `7 ~ (_ + _)` è rifiutato. Le parentesi sono obbligatorie;
+`result = _ + 1` resta un errore. Non c'è inferenza dei tipi.
+
+`accept: predicate = 8 ~ predicate; result = accept: (_ > 5);`
+dimostra che una sezione può essere passata come argomento di selettore.
+
+## Proposto: closure generali e selettori parziali
 
 ```mira
 greater than: limit = {x | x > limit};
-filter: items, with: (_ > 5);
 join, with " "
 ```
 
-These are **not implemented**: an explicit closure grammar (`{}`),
-arithmetic/comparison operator sections and implicit omitted keyword
-arguments need separate design. They must not require type inference to
-parse.
+**Non implementati**: closure esplicite con parametri arbitrari,
+selector parziali con argomenti impliciti e type checker.
 
 ## Proposed: type declarations and MVU records
 
