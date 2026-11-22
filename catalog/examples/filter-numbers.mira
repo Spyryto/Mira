@@ -1,0 +1,3 @@
+numbers = [2, 5, 9, 1];
+greater than four: value = value > 4;
+result = filter: numbers, with: (greater than four: _);

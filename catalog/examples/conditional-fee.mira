@@ -1,0 +1,2 @@
+fee = 4;
+result = {bonus: (if: (fee >= 6), then: (10), else: (0)))};

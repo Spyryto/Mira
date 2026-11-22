@@ -1,0 +1,4 @@
+student = {name: "Ada", minutes: 90};
+name = field "name";
+minutes = field "minutes";
+result = {student: (student ~ name), hours: ((student ~ minutes) / 60)};
