@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anteprima Mira</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; color: #1e2529; background: #fffdf7; }
+    body { margin: 0; padding: 15px; }
+    .mira-ui-column { display: grid; gap: 12px; }
+    .mira-ui-title { margin: 0; font-size: 22px; letter-spacing: -.03em; }
+    .mira-ui-text { margin: 0; font-size: 16px; line-height: 1.5; overflow-wrap: anywhere; }
+    .mira-ui-button { background: #ff965f; border: 2px solid #1e2529; border-radius: 8px;
+      padding: 11px 15px; font-size: 14px; font-weight: 750; cursor: pointer; }
+    .mira-ui-button:focus-visible { outline: 3px solid #2a8875; outline-offset: 2px; }
+    .mira-ui-state { display: block; }
+    .mira-ui-dialog { border: 2px solid #1e2529; border-radius: 12px; padding: 18px;
+      width: min(320px, calc(100vw - 60px)); box-shadow: 4px 4px 0 #ff965f; }
+    .mira-ui-dialog::backdrop { background: #1e252990; }
+    .mira-ui-dialog-message { margin-top: 0; line-height: 1.5; overflow-wrap: anywhere; }
+    #errors { color: #8f382d; font-size: 12px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <div id="mira-root" aria-label="View prodotta da Mira"></div>
+  <div id="errors" role="alert" aria-live="assertive"></div>
+  <script src="./ui-host.js"></script>
+  <script src="./ui-preview.js"></script>
+</body>
+</html>
