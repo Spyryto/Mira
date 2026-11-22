@@ -30,6 +30,31 @@ class SourceEmitter {
                     case Php: phpString(value);
                 }
 
+            case BooleanLiteral(value):
+                value ? "true" : "false";
+
+            case FieldAccessor(key):
+                final accessor = switch (target) {
+                    case JavaScript:
+                        final quoted = haxe.Json.stringify(key);
+                        '((__miraFieldRecord) => { if (__miraFieldRecord == null'
+                            + ' || !Object.hasOwn(__miraFieldRecord, ' + quoted + '))'
+                            + ' throw new Error("Missing record field: " + ' + quoted + ');'
+                            + ' return __miraFieldRecord[' + quoted + ']; })';
+                    case Php:
+                        final quoted = phpString(key);
+                        '(static function($__miraFieldRecord) { if (!is_array($__miraFieldRecord)'
+                            + ' || !array_key_exists(' + quoted + ', $__miraFieldRecord))'
+                            + ' throw new \\RuntimeException("Missing record field: " . ' + quoted + ');'
+                            + ' return $__miraFieldRecord[' + quoted + ']; })';
+                };
+                accessor;
+
+            case Conditional(condition, whenTrue, whenFalse):
+                "(" + expression(condition, target, scope, reservedHostNames)
+                    + " ? " + expression(whenTrue, target, scope, reservedHostNames)
+                    + " : " + expression(whenFalse, target, scope, reservedHostNames) + ")";
+
             case Sequence(items):
                 "[" + [for (item in items)
                     expression(item, target, scope, reservedHostNames)].join(", ") + "]";
@@ -53,11 +78,12 @@ class SourceEmitter {
                 }
 
             case Binary(symbol, left, right):
-                if (["+", "-", "*", "/", "%"].indexOf(symbol) < 0) {
+                if (["+", "-", "*", "/", "%", "==", "!=", "<", ">", "<=", ">="].indexOf(symbol) < 0) {
                     throw new MiraError("Unsupported operator " + symbol);
                 }
                 "(" + expression(left, target, scope, reservedHostNames) + " "
-                    + symbol + " " + expression(right, target, scope, reservedHostNames) + ")";
+                    + (symbol == "==" ? "===" : symbol == "!=" ? "!==" : symbol)
+                    + " " + expression(right, target, scope, reservedHostNames) + ")";
 
             case Call(selector, arguments):
                 selectorCall(selector, [
