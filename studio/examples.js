@@ -43,6 +43,14 @@ increment = (add: _, and: 1);
 result = 2 ~ increment ~ (square: _) ~ (add: _, and: 1);`
   },
   {
+    id: 'operator-sections',
+    name: 'Sezioni di operatori · 0.5',
+    source: `# I predicati sono funzioni, senza definizioni con parametro.
+minimum = 6;
+passes = (_ >= minimum);
+result = 8 ~ passes;`
+  },
+  {
     id: 'host-log',
     name: 'Interoperabilità: log',
     source: `# La funzione log arriva dall'oggetto host di Studio.

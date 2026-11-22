@@ -1,0 +1,2 @@
+accept: predicate = 8 ~ predicate;
+result = accept: (_ > 5);

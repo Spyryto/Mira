@@ -1,0 +1,3 @@
+minimum = 6;
+passes = (_ >= minimum);
+result = 8 ~ passes;

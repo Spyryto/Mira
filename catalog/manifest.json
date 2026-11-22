@@ -1,5 +1,5 @@
 {
-  "version": "0.4.0",
+  "version": "0.5.0",
   "features": [
     {
       "id": "values",
@@ -265,6 +265,18 @@
         "filter-lessons"
       ],
       "since": "0.4"
+    },
+    {
+      "id": "operator-sections",
+      "title": "Sezioni di operatori",
+      "summary": "`(_ > 5)` e `(10 - _)` sono funzioni, senza nuova sintassi lambda.",
+      "details": "Un operatore aritmetico o di confronto con uno o due placeholder diretti, delimitato da parentesi, produce una funzione di prima classe. La pipeline accetta solo sezioni unarie. Gli emettitori JS/PHP generano closure native senza inferenza dei tipi.",
+      "api": "mira.syntax.ExpressionParser.parse",
+      "examples": [
+        "operator-threshold",
+        "operator-as-argument"
+      ],
+      "since": "0.5"
     }
   ],
   "examples": [
@@ -847,6 +859,28 @@
           "Ada",
           "Lia"
         ]
+      }
+    },
+    {
+      "id": "operator-threshold",
+      "feature": "operator-sections",
+      "title": "Soglia come funzione",
+      "description": "Un predicato con un valore catturato diventa una funzione chiamabile nella pipeline.",
+      "path": "catalog/examples/operator-threshold.mira",
+      "expect": {
+        "kind": "result",
+        "value": true
+      }
+    },
+    {
+      "id": "operator-as-argument",
+      "feature": "operator-sections",
+      "title": "Predicato passato a un selettore",
+      "description": "Una sezione di operatore è un normale valore funzione passato a un selettore discorsivo.",
+      "path": "catalog/examples/operator-as-argument.mira",
+      "expect": {
+        "kind": "result",
+        "value": true
       }
     }
   ],
