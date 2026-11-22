@@ -65,7 +65,7 @@ class SourceEmitter {
     public static function hostAccess(name:String, target:Target):String {
         return switch (target) {
             case JavaScript: '__miraHost[' + haxe.Json.stringify(name) + ']';
-            case Php: '$GLOBALS["__miraHost"][' + phpString(name) + ']';
+            case Php: "$GLOBALS[\"__miraHost\"][" + phpString(name) + "]";
         };
     }
 
