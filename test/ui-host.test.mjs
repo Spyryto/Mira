@@ -31,8 +31,9 @@ class FakeElement {
     this.open = false;
   }
   set textContent(value) {
+    for (const child of this.children) child.parentNode = null;
+    this.children = [];
     this._text = String(value);
-    this.replaceChildren();
   }
   get textContent() {
     return this._text + this.children.map(child => child.textContent).join('');
