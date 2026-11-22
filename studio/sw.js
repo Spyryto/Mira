@@ -9,7 +9,9 @@ const ASSETS = [
   './compiler.js',
   './worker.js',
   './manifest.webmanifest',
-  './icon.svg'
+  './icon.svg',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', event => {
