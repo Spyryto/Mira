@@ -177,6 +177,20 @@ L'AST Inspector di Studio ora produce anche un report strutturato per
 ogni definizione, trasformando l'AST con Mira. Dettagli e limiti:
 [esempi strutturati e dogfooding](docs/structured-data.md).
 
+## Mira Atlas — documentazione viva
+
+La [vista **Atlas** di Mira Studio](https://spyryto.github.io/Mira/#/atlas)
+mostra le fasi reali del compilatore sul programma aperto nell'editor:
+token, dichiarazioni, simboli, AST canonico e codice JS/PHP. Un grafo SVG
+navigabile rappresenta le dipendenze estratte dagli **import espliciti**
+dei sorgenti Haxe/JS, con collegamenti ai moduli.
+
+Le schede e i riepiloghi sono elaborati dal programma
+[`studio/atlas/atlas.mira`](studio/atlas/atlas.mira), compilato
+**durante la build** in JavaScript. L'host JavaScript si occupa di rete,
+DOM, SVG e layout. Non esiste ancora un type checker o un tokenizer
+separato dal lexer. [Architettura, limiti e benchmark](docs/atlas.md).
+
 ## Interoperabilità browser: alert, view e pulsante
 
 Tre nuovi esempi interattivi mostrano che le funzioni host possono collegare
