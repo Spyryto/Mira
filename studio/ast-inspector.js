@@ -10,7 +10,8 @@ const metricLabels = Object.freeze({
   applies: 'Applicazioni'
 });
 
-const STORAGE_KEY = 'mira-studio:inspector-program:v1';
+// A stored v1 inspector may not define the new structured report.
+const STORAGE_KEY = 'mira-studio:inspector-program:v2';
 
 function labelOf(node) {
   switch (node.kind) {
@@ -109,6 +110,7 @@ export function createAstInspector(compiler) {
   let defaultProgram = '';
   let inspectorHostJson = '';
   let latestSource = '';
+  let latestSourceHostJson = undefined;
   let requestId = 0;
   let worker = null;
   let deadline = null;
@@ -149,9 +151,10 @@ export function createAstInspector(compiler) {
     worker = null;
   }
 
-  async function refresh(source) {
+  async function refresh(source, sourceHostJson = undefined) {
     cancel();
     latestSource = source;
+    latestSourceHostJson = sourceHostJson;
     const id = requestId;
     status.textContent = 'Analisi e trasformazione in Mira…';
     stats.replaceChildren();
@@ -162,17 +165,23 @@ export function createAstInspector(compiler) {
       await loadDefaultProgram();
       if (id !== requestId) return;
 
-      const parsed = compiler.ast(source);
+      // Match editor resolution: parse the user's program with its host
+      // environment, not with the different inspector-program environment.
+      const parsed = compiler.ast(source, sourceHostJson);
       if (!parsed?.ok) {
-        throw new Error(parsed?.message ?? 'Impossibile ottenere l’AST');
+        throw new Error('AST del programma: ' +
+          (parsed?.message ?? 'Impossibile ottenere l’AST'));
       }
       const ast = JSON.parse(parsed.output);
+
+      // The canonical AST does not depend on successful execution of the
+      // editable Mira inspector. Keep the tree usable if its reducer fails.
+      renderTree(tree, ast);
+
       const compiled = compiler.compile(editor.value, 'js', inspectorHostJson);
       if (!compiled?.ok) {
         throw new Error('Programma Mira dell’inspector: ' + compiled.message);
       }
-
-      renderTree(tree, ast);
 
       worker = new Worker('./inspector-worker.js', {type: 'module'});
       worker.onmessage = event => {
@@ -213,7 +222,7 @@ export function createAstInspector(compiler) {
 
   recalculate.addEventListener('click', () => {
     try { localStorage.setItem(STORAGE_KEY, editor.value); } catch {}
-    refresh(latestSource);
+    refresh(latestSource, latestSourceHostJson);
   });
 
   reset.addEventListener('click', () => {
