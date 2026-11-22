@@ -34,11 +34,33 @@ class ExpressionParser {
     function expression():Expr {
         var left = primary();
 
-        // All supported binary operators have the same precedence and group left.
+        // Operators share one precedence level and group left-to-right.
+        // A pipeline supplies its left value as the argument of its right function.
         while (current().kind == Symbol && isOperator(current().value)) {
-            final symbol = consume().value;
+            final operatorToken = consume();
             final right = primary();
-            left = Binary(symbol, left, right);
+
+            if (operatorToken.value == "~") {
+                switch (right) {
+                    case Section(_, arguments):
+                        var missing = 0;
+                        for (argument in arguments) {
+                            if (isPlaceholder(argument)) missing++;
+                        }
+                        if (missing != 1) {
+                            throw new MiraError(
+                                "Pipeline needs a unary section; this section has " + missing + " holes",
+                                operatorToken
+                            );
+                        }
+                    case Numeric(_) | Text(_) | Binary(_, _, _) | Placeholder:
+                        throw new MiraError("Pipeline target must be a function", operatorToken);
+                    default:
+                }
+                left = Apply(right, left);
+            } else {
+                left = Binary(operatorToken.value, left, right);
+            }
         }
         return left;
     }
@@ -70,14 +92,34 @@ class ExpressionParser {
             throw new MiraError("Expected expression", token);
         }
 
+        if (token.value == "_") {
+            throw new MiraError(
+                "Placeholder '_' must be a complete keyword-selector argument",
+                token
+            );
+        }
+
         final selectorMatch = selectorResolver.match(tokens, position);
         if (selectorMatch != null) {
             position = selectorMatch.end;
             final arguments:Array<Expr> = [];
+            var holeCount = 0;
+
             for (argumentTokens in selectorMatch.arguments) {
-                arguments.push(new ExpressionParser(argumentTokens, symbols, localNames).parse());
+                if (argumentTokens.length == 1 && argumentTokens[0].kind == Word
+                    && argumentTokens[0].value == "_") {
+                    arguments.push(Placeholder);
+                    holeCount++;
+                } else {
+                    arguments.push(new ExpressionParser(
+                        argumentTokens, symbols, localNames
+                    ).parse());
+                }
             }
-            return Call(selectorMatch.selector, arguments);
+
+            return holeCount > 0
+                ? Section(selectorMatch.selector, arguments)
+                : Call(selectorMatch.selector, arguments);
         }
 
         final name = symbols.resolveName(tokens, position, localNames);
@@ -100,7 +142,14 @@ class ExpressionParser {
         return tokens[position++];
     }
 
+    static function isPlaceholder(expr:Expr):Bool {
+        return switch (expr) {
+            case Placeholder: true;
+            default: false;
+        };
+    }
+
     static function isOperator(value:String):Bool {
-        return ["+", "-", "*", "/", "%"].indexOf(value) >= 0;
+        return ["+", "-", "*", "/", "%", "~"].indexOf(value) >= 0;
     }
 }
