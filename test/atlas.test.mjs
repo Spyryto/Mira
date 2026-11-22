@@ -86,6 +86,11 @@ test('Atlas view models are executed from compiled Mira, not JS copies',()=>{
   const modules=mira.atlas_modules(data.modules);
   assert.equal(modules[0].path,data.modules[0].path);
   assert.equal(modules[0].dependencies,data.modules[0].imports.length);
+  assert.equal(mira.atlas_select_modules(modules,'Tutti').length,modules.length);
+  const actual = mira.atlas_select_modules(modules,'Lexer');
+  const expected = modules.filter(item=>item.group==='Lexer');
+  assert.deepEqual(actual,expected);
+  assert.equal(mira.atlas_select_modules(modules,'No such group').length,0);
   const program=JSON.parse(bridge.ast('value = 4;').output);
   const cards=mira.atlas_ast(program.definitions);
   assert.deepEqual(cards,[{name:'value',kind:'Value',line:1}]);
