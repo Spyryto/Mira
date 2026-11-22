@@ -1,57 +1,134 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync,mkdtempSync,writeFileSync,rmSync} from 'node:fs';
-import {tmpdir} from 'node:os';
-import {join} from 'node:path';
-import {execFileSync} from 'node:child_process';
-import {transpile,parse} from '../src/mira.mjs';
-const run=(src,target)=>{
-  const dir=mkdtempSync(join(tmpdir(),'mira-'));
-  try{
-    const file=join(dir,`main.${target==='js'?'mjs':'php'}`);
-    const value=target==='js'?'result':'$result';
-    const code=transpile(src,target)+(target==='js'?`\nconsole.log(JSON.stringify(${value}));\n`:`\necho json_encode(${value}), "\\n";\n`);
-    writeFileSync(file,code);
-    return execFileSync(target==='js'?'node':'php',[file],{encoding:'utf8'}).trim();
-  }finally{rmSync(dir,{recursive:true,force:true});}
-};
-const sample=readFileSync(new URL('../examples/arithmetic.mira',import.meta.url),'utf8');
-test('same canonical selector for explicit and abbreviated calls',()=>{
-  const ast=parse(sample);
-  const calls=ast.definitions.filter(x=>x.kind==='value'&&['two','six','four','seven'].includes(x.name));
-  assert.deepEqual(calls.map(x=>x.expr.selector),['add:and:','add:and:','add:and:','add:and:']);
-});
-test('both JS and PHP compute the same result',()=>{
-  assert.equal(run(sample,'js'),'49');
-  assert.equal(run(sample,'php'),'49');
-});
-test('multiword names survive transpilation and are mangled',()=>{
-  for(const target of ['js','php']){
-    const code=transpile(sample,target);
-    assert.match(code,/function add__and\(.*aNumber.*anotherNumber/);
+import { readFileSync, mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const compiler = fileURLToPath(new URL('../dist/mira.cjs', import.meta.url));
+const sample = readFileSync(new URL('../examples/arithmetic.mira', import.meta.url), 'utf8');
+
+function withSource(source, fn) {
+  const directory = mkdtempSync(join(tmpdir(), 'mira-'));
+  try {
+    const path = join(directory, 'example.mira');
+    writeFileSync(path, source);
+    return fn(path, directory);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
   }
-});
-test('bare multiword positional args are rejected',()=>{
-  assert.throws(()=>transpile('add: a number, and: another number = a number + another number; x = add a number and another number;','js'));
-});
-test('undeclared selector is rejected, not guessed',()=>{
-  assert.throws(()=>transpile('x = add 2 and 3;','js'));
-});
-test('unknown lexical tokens show source location',()=>{
-  assert.throws(()=>transpile('x = @;','js'),/1:5/);
-});
-test('generated name collisions are rejected',()=>{
-  assert.throws(()=>transpile('a b = 1; aB = 2;','js'),/collision/);
-});
-test('arithmetic operators have equal precedence, left-associative',()=>{
-  assert.equal(run('result = 1 + 2 * 3;','js'),'9');
-  assert.equal(run('result = 1 + (2 * 3);','php'),'7');
+}
+
+function compile(source, target) {
+  return withSource(source, path => execFileSync(
+    'node', [compiler, path, target], { encoding: 'utf8' }
+  ));
+}
+
+function compileError(source, target = 'js') {
+  return withSource(source, path => spawnSync(
+    'node', [compiler, path, target], { encoding: 'utf8' }
+  ));
+}
+
+function run(source, target) {
+  return withSource(source, (path, directory) => {
+    const generated = execFileSync(
+      'node', [compiler, path, target], { encoding: 'utf8' }
+    );
+    const extension = target === 'js' ? 'mjs' : 'php';
+    const outputPath = join(directory, 'program.' + extension);
+    const suffix = target === 'js'
+      ? '\nconsole.log(JSON.stringify(result));\n'
+      : '\necho json_encode($result), "\\n";\n';
+
+    writeFileSync(outputPath, generated + suffix);
+    return execFileSync(target === 'js' ? 'node' : 'php',
+      [outputPath], { encoding: 'utf8' }).trim();
+  });
+}
+
+test('full and abbreviated selectors have one canonical host name', () => {
+  const generated = compile(sample, 'js');
+  assert.match(generated, /function add__and\(aNumber, anotherNumber\)/);
+  assert.match(generated, /const two = add__and\(1, 1\);/);
+  assert.match(generated, /const six = add__and\(3, 3\);/);
+  assert.match(generated, /const seven = add__and\(two, five\);/);
 });
 
-test('parenthesized multiword arguments are equivalent to labeled arguments',()=>{
-  const source='add: a number, and: another number = a number + another number; copy add: a number, and: another number = add (a number) and (another number); result = copy add 2 and 3;';
-  for(const target of ['js','php']) assert.equal(run(source,target),'5');
+test('the same program runs on JavaScript and PHP', () => {
+  for (const target of ['js', 'php']) {
+    assert.equal(run(sample, target), '49');
+  }
 });
-test('missing top-level statement terminator is rejected',()=>{
-  assert.throws(()=>transpile('result = 1','js'),/Expected ;/);
+
+test('multiword arguments are preserved in parenthesized shorthand', () => {
+  const source = [
+    'add: a number, and: another number = a number + another number;',
+    'copy add: a number, and: another number = add (a number) and (another number);',
+    'result = copy add 2 and 3;'
+  ].join('\n');
+
+  for (const target of ['js', 'php']) {
+    assert.equal(run(source, target), '5');
+    assert.match(compile(source, target), /add__and\(aNumber, anotherNumber\)/);
+  }
+});
+
+test('selector resolution is independent of declaration order', () => {
+  assert.equal(run('result = add 2 and 3; add: a, and: b = a + b;', 'js'), '5');
+});
+
+test('abbreviated calls reject bare multiword variable arguments', () => {
+  const source = 'add: a number, and: another number = a number + another number; result = add a number and another number;';
+  const outcome = compileError(source);
+  assert.notEqual(outcome.status, 0);
+});
+
+test('an unknown selector is not inferred or guessed', () => {
+  const outcome = compileError('result = add 2 and 3;');
+  assert.notEqual(outcome.status, 0);
+  assert.match(outcome.stderr, /Unknown identifier/);
+});
+
+test('invalid characters have line-and-column diagnostics', () => {
+  const outcome = compileError('result = @;');
+  assert.notEqual(outcome.status, 0);
+  assert.match(outcome.stderr, /1:10/);
+});
+
+test('mangled names cannot collide', () => {
+  const outcome = compileError('a b = 1; aB = 2;');
+  assert.notEqual(outcome.status, 0);
+  assert.match(outcome.stderr, /collision/);
+});
+
+test('operators are left-associative without arithmetic precedence', () => {
+  assert.equal(run('result = 1 + 2 * 3;', 'js'), '9');
+  assert.equal(run('result = 1 + (2 * 3);', 'php'), '7');
+});
+
+test('each definition needs a semicolon', () => {
+  const outcome = compileError('result = 1');
+  assert.notEqual(outcome.status, 0);
+  assert.match(outcome.stderr, /Expected ;/);
+});
+
+test('token inspection retains source positions', () => {
+  const tokens = JSON.parse(compile('result = 5;\n', '--tokens'));
+  assert.deepEqual(
+    tokens.slice(0, 3).map(t => [t.kind, t.value, t.line, t.column]),
+    [
+      ['Word', 'result', 1, 1],
+      ['Symbol', '=', 1, 8],
+      ['Number', '5', 1, 10]
+    ]
+  );
+});
+
+test('duplicate function parameters are rejected', () => {
+  const outcome = compileError('add: x, and: x = x + x;');
+  assert.notEqual(outcome.status, 0);
+  assert.match(outcome.stderr, /Duplicate parameter/);
 });
