@@ -177,3 +177,39 @@ test('Studio offers all generated feature examples and real Haxe API links offli
     }
   }
 });
+
+
+test('Studio execution worker evaluates documented multi-hole sections', () => {
+  const reference = JSON.parse(read('reference.json'));
+  for (const example of reference.examples.filter(item => item.expect.kind === 'invoke')) {
+    const compiled = bridge.compile(example.source, 'js');
+    assert.equal(compiled.ok, true, compiled.message);
+
+    let reply;
+    const context = {
+      self: { postMessage(message) { reply = message; } }
+    };
+    runInNewContext(read('worker.js'), context);
+    context.self.onmessage({
+      data: {
+        code: compiled.output,
+        invoke: { name: example.expect.name, args: example.expect.args }
+      }
+    });
+
+    assert.equal(reply?.ok, true, reply?.message);
+    assert.equal(reply.output, String(example.expect.value));
+  }
+});
+
+test('Studio execution worker rejects malformed fixture invocations', () => {
+  let reply;
+  const context = { self: { postMessage(message) { reply = message; } } };
+  runInNewContext(read('worker.js'), context);
+  context.self.onmessage({ data: {
+    code: 'const result = 10;',
+    invoke: {name: 'bad;process.exit(1)', args: []}
+  }});
+  assert.equal(reply?.ok, false);
+  assert.match(reply.message, /Invalid example invocation/);
+});
