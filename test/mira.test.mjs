@@ -135,3 +135,36 @@ test('duplicate function parameters are rejected', () => {
   assert.notEqual(outcome.status, 0);
   assert.match(outcome.stderr, /Duplicate parameter/);
 });
+
+test('CLI rejects an unknown target at its external boundary', () => {
+  const outcome = compileError('result = 1;', 'ruby');
+  assert.notEqual(outcome.status, 0);
+  assert.match(outcome.stderr, /Unknown target: ruby/);
+});
+
+test('in-process benchmark reports valid timing metrics for both enum targets', () => {
+  for (const target of ['js', 'php']) {
+    const report = withSource('result = 2 + 3;', path => {
+      const stdout = execFileSync(
+        'node', [compiler, '--benchmark', path, target, '12'],
+        { encoding: 'utf8' }
+      );
+      return JSON.parse(stdout);
+    });
+
+    assert.equal(report.target, target);
+    assert.equal(report.iterations, 12);
+    assert.ok(report.medianMs >= 0);
+    assert.ok(report.p95Ms >= report.medianMs);
+    assert.ok(report.generatedBytes > 0);
+  }
+});
+
+test('benchmark rejects invalid sample counts', () => {
+  const outcome = withSource('result = 1;', path => spawnSync(
+    'node', [compiler, '--benchmark', path, 'js', '0'],
+    { encoding: 'utf8' }
+  ));
+  assert.notEqual(outcome.status, 0);
+  assert.match(outcome.stderr, /iterations/);
+});
