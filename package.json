@@ -1,0 +1,10 @@
+{
+  "name": "mira-discursive",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Experimental discursive syntax and JS/PHP transpiler",
+  "scripts": { "test": "node --test" },
+  "engines": { "node": ">=22" },
+  "license": "MIT"
+}
