@@ -2,6 +2,7 @@ import { examples, defaultSource } from './examples.js';
 import { mountReference } from './reference-ui.js';
 import { createAstInspector } from './ast-inspector.js';
 import { mountAtlas } from './atlas-ui.js';
+import { mountBenchmark } from './benchmark-ui.js';
 
 // Mira Studio's controller concerns browser UX only.
 // All language semantics are delegated to the Haxe compiler bridge.
@@ -9,6 +10,7 @@ const compiler = globalThis.MiraStudioCompiler;
 const catalogExamples = [];
 let referenceViewer = null;
 let atlasViewer = null;
+let benchmarkViewer = null;
 const $ = id => document.getElementById(id);
 const astInspector = createAstInspector(compiler);
 
@@ -90,8 +92,9 @@ function updateEditorIndicators() {
 }
 
 function setView(view) {
-  if (!['code', 'output', 'structure', 'reference', 'atlas'].includes(view)) return;
+  if (!['code', 'output', 'structure', 'reference', 'atlas', 'benchmark'].includes(view)) return;
 
+  if (state.view === 'benchmark' && view !== 'benchmark') benchmarkViewer?.toggleFullscreen(false);
   state.view = view;
   for (const button of ui.viewButtons) {
     const selected = button.dataset.view === view;
@@ -99,7 +102,7 @@ function setView(view) {
     button.setAttribute('aria-selected', String(selected));
   }
 
-  for (const name of ['code', 'output', 'structure', 'reference', 'atlas']) {
+  for (const name of ['code', 'output', 'structure', 'reference', 'atlas', 'benchmark']) {
     $('view-' + name).hidden = name !== view;
   }
 
@@ -458,6 +461,7 @@ function wireEvents() {
   ui.exampleSelect.addEventListener('change', () => loadExample(ui.exampleSelect.value));
   window.addEventListener('hashchange', () => {
     if (location.hash === '#/atlas') setView('atlas');
+    if (location.hash === '#/benchmark') setView('benchmark');
     if (isReferenceRoute(location.hash) && referenceViewer) {
       setView('reference');
       referenceViewer.render();
@@ -512,6 +516,7 @@ function start() {
   initializeHost();
   initializeReference();
   initializeAtlas();
+  initializeBenchmark();
   installServiceWorker();
 }
 
@@ -520,6 +525,11 @@ function initializeAtlas() {
   atlasViewer = mountAtlas($('atlas'), compiler,
     () => ui.source.value, () => state.hostJson);
   if (location.hash === '#/atlas') setView('atlas');
+}
+
+function initializeBenchmark() {
+  benchmarkViewer = mountBenchmark($('benchmark'), compiler);
+  if (location.hash === '#/benchmark') setView('benchmark');
 }
 
 function isReferenceRoute(hash) {
