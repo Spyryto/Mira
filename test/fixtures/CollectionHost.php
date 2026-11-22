@@ -11,6 +11,12 @@ function makeCollectionHost(): array {
             }
             return $record[$key];
         },
+        'filter:with:' => static function($items, $callback) {
+            if (!is_array($items) || !is_callable($callback) || count($items) > 10000) {
+                throw new RuntimeException('filter:with: expects a bounded list and predicate');
+            }
+            return array_values(array_filter($items, $callback));
+        },
         'map:with:' => static function($items, $callback) {
             if (!is_array($items) || !is_callable($callback) || count($items) > 10000) {
                 throw new RuntimeException('map:with: expects a bounded list and function');
