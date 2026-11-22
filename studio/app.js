@@ -1,5 +1,6 @@
 import { examples, defaultSource } from './examples.js';
 import { mountReference } from './reference-ui.js';
+import { createAstInspector } from './ast-inspector.js';
 
 // Mira Studio's controller concerns browser UX only.
 // All language semantics are delegated to the Haxe compiler bridge.
@@ -7,6 +8,7 @@ const compiler = globalThis.MiraStudioCompiler;
 const catalogExamples = [];
 let referenceViewer = null;
 const $ = id => document.getElementById(id);
+const astInspector = createAstInspector(compiler);
 
 const ui = {
   source: $('source'),
@@ -154,6 +156,16 @@ function compile(revealOutput = false) {
 function updateStructure() {
   if (!compiler) return;
 
+  if (ui.structureSelect.value === 'inspector') {
+    ui.structure.hidden = true;
+    $('astInspector').hidden = false;
+    astInspector.refresh(ui.source.value);
+    return;
+  }
+
+  astInspector.cancel();
+  ui.structure.hidden = false;
+  $('astInspector').hidden = true;
   const inspector = ui.structureSelect.value === 'tokens'
     ? compiler.tokens : compiler.ast;
   const result = inspector(ui.source.value);
