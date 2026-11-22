@@ -50,8 +50,8 @@ class SourceEmitter {
                 };
                 accessor;
 
-            case Conditional(condition, whenTrue, whenFalse):
-                "(" + expression(condition, target, scope, reservedHostNames)
+            case Conditional(predicate, whenTrue, whenFalse):
+                "(" + expression(predicate, target, scope, reservedHostNames)
                     + " ? " + expression(whenTrue, target, scope, reservedHostNames)
                     + " : " + expression(whenFalse, target, scope, reservedHostNames) + ")";
 
