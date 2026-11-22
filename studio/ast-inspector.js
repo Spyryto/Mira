@@ -89,6 +89,7 @@ export function createAstInspector(compiler) {
   let latestSource = '';
   let requestId = 0;
   let worker = null;
+  let deadline = null;
 
   async function loadDefaultProgram() {
     if (!programPromise) {
@@ -113,6 +114,8 @@ export function createAstInspector(compiler) {
 
   function cancel() {
     requestId++;
+    if (deadline !== null) clearTimeout(deadline);
+    deadline = null;
     if (worker) worker.terminate();
     worker = null;
   }
@@ -144,9 +147,13 @@ export function createAstInspector(compiler) {
       worker = new Worker('./inspector-worker.js', {type: 'module'});
       worker.onmessage = event => {
         if (id !== requestId) return;
+        if (deadline !== null) clearTimeout(deadline);
+        deadline = null;
         if (!event.data?.ok) {
           status.textContent = 'Errore nell’inspector Mira: ' +
             (event.data?.message ?? 'esecuzione fallita');
+          if (worker) worker.terminate();
+          worker = null;
           return;
         }
         renderMetrics(stats, event.data.stats);
@@ -158,8 +165,14 @@ export function createAstInspector(compiler) {
       worker.onerror = () => {
         if (id !== requestId) return;
         status.textContent = 'Errore durante l’esecuzione dell’inspector.';
+        cancel();
       };
       worker.postMessage({code: compiled.output, ast});
+      deadline = setTimeout(() => {
+        if (id !== requestId) return;
+        status.textContent = 'Esecuzione Mira interrotta: tempo massimo di 2 secondi.';
+        cancel();
+      }, 2000);
     } catch (error) {
       if (id === requestId) {
         status.textContent = String(error?.message ?? error);
