@@ -109,3 +109,36 @@ test('mobile UI JavaScript, SW and execution worker have valid syntax', () => {
     execFileSync('node', ['--check', resolve(site, file)]);
   }
 });
+
+
+test('browser compiler supports section and pipeline with real AST nodes', () => {
+  const example = [
+    'add: x, and: y = x + y;',
+    'increment = (add: _, and: 1);',
+    'result = 5 ~ increment;'
+  ].join('\n');
+
+  const js = bridge.compile(example, 'js');
+  assert.equal(js.ok, true, js.message);
+  assert.equal(runInNewContext(js.output + '\nresult', {}), 6);
+
+  const php = bridge.compile(example, 'php');
+  assert.equal(php.ok, true, php.message);
+  const process = spawnSync('php', ['-r',
+    php.output.replace(/^<\?php/, '') + '\necho $result;'
+  ], {encoding: 'utf8'});
+  assert.equal(process.status, 0, process.stderr);
+  assert.equal(process.stdout, '6');
+
+  const result = bridge.ast(example);
+  assert.equal(result.ok, true, result.message);
+  const ast = JSON.parse(result.output);
+  const increment = ast.definitions.find(item => item.name === 'increment');
+  assert.equal(increment.body.kind, 'Section');
+  assert.equal(increment.body.selector, 'add:and:');
+  assert.equal(increment.body.arguments[0].kind, 'Placeholder');
+
+  const final = ast.definitions.find(item => item.name === 'result');
+  assert.equal(final.body.kind, 'Apply');
+  assert.equal(final.body.callee.value, 'increment');
+});
