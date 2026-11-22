@@ -30,7 +30,7 @@ collegamenti al codice sorgente e pulsanti per aprire gli esempi nell'editor.
 
 Le sezioni con più `_` producono funzioni a più parametri: il worker può
 invocare le funzioni generate usando gli argomenti predefiniti nel catalogo
-perché Mira 0.2 non ha ancora una sintassi per l'applicazione generica n-aria.
+perché Mira 0.3 non ha ancora una sintassi per l'applicazione generica n-aria.
 La documentazione, incluso il riferimento API, è inclusa nella cache offline.
 
 ## Features in the first release
@@ -48,8 +48,8 @@ La documentazione, incluso il riferimento API, è inclusa nella cache offline.
   worker, offline asset cache and an update notification. Source drafts are
   retained locally before app refresh.
 
-This is a frontend for **Mira 0.2**. It supports keyword-selector sections and left-to-right pipelines. It does not silently implement
-arbitrary closure expressions, records, types, general currying, or HTML/MVU.
+This is a frontend for **Mira 0.3**. It supports keyword-selector sections and left-to-right pipelines. It does not silently implement
+arbitrary closure expressions, typed records, types, general currying, or HTML/MVU.
 
 ### Useful shortcuts
 
