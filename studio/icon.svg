@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Mira Studio</title>
+  <rect width="512" height="512" rx="108" fill="#ff925d"/>
+  <rect x="24" y="24" width="464" height="464" rx="91" fill="none" stroke="#1e2529" stroke-width="19"/>
+  <path d="M116 350V186h50v19c17-21 42-30 69-24 15 3 29 12 39 25 16-18 34-27 58-27 46 0 70 30 70 75v96h-52v-96c0-19-10-30-27-30-19 0-30 13-30 33v93h-52v-96c0-19-10-30-27-30-20 0-31 13-31 34v92z" fill="#1e2529"/>
+  <circle cx="417" cy="350" r="22" fill="#fffdf7"/>
+</svg>
