@@ -11,7 +11,10 @@ class PhpEmitter {
         final lines = ["<?php", "declare(strict_types=1);", ""];
         for (definition in definitions) {
             if (definition.body == null) throw new MiraError("Missing resolved body", definition.origin);
-            final scope = definition.isFunction() ? definition.parameters : symbols.globals;
+            // Function parameters shadow outer named values, but global values remain
+            // accessible from every function in both backends.
+            final scope = definition.isFunction()
+                ? definition.parameters.concat(symbols.globals) : symbols.globals;
             final expr = SourceEmitter.expression(
                 cast definition.body, Php, scope, symbols.hostNames
             );
@@ -22,6 +25,11 @@ class PhpEmitter {
                 final args = [for (param in definition.parameters) "$" + Mangle.name(param)];
                 lines.push("function " + Mangle.selector(definition.labels)
                     + "(" + args.join(", ") + ") {");
+                // PHP named functions do not capture top-level variables
+                // automatically. Exclude parameters to preserve lexical shadows.
+                final globals = [for (name in symbols.globals)
+                    if (definition.parameters.indexOf(name) == -1) "$" + Mangle.name(name)];
+                if (globals.length > 0) lines.push("  global " + globals.join(", ") + ";");
                 lines.push("  return " + expr + ";");
                 lines.push("}");
                 lines.push("");
