@@ -14,21 +14,27 @@ self.onmessage=event=>{
     if(typeof run!=='function' || run(7)!==expected){
       throw new Error('Il codice generato ha restituito un risultato errato');
     }
-    for(let i=0;i<200;i++)run(7);
+    for(let i=0;i<200;i++)run(i);
+    // Vary the input and consume every output to avoid constant folding
+    // or elimination of pure calls by the JS engine.
+    const batch=count=>{
+      let checksum=0;
+      for(let i=0;i<count;i++)checksum+=run(i);
+      const expectedSum=count*(count-1)/2 + count*(expected-7);
+      if(checksum!==expectedSum)throw new Error('Checksum runtime non valido');
+    };
     // Calibrate to a measurable batch to avoid sub-millisecond timer noise.
     let repetitions=1;
     while(repetitions<100000){
       const started=performance.now();
-      for(let i=0;i<repetitions;i++)run(7);
+      batch(repetitions);
       if(performance.now()-started>=8)break;
       repetitions=Math.min(100000,repetitions*2);
     }
     const samples=[];
     for(let sample=0;sample<21;sample++){
       const started=performance.now();
-      let result=0;
-      for(let i=0;i<repetitions;i++)result=run(7);
-      if(result!==expected)throw new Error('Il benchmark ha restituito un valore inatteso');
+      batch(repetitions);
       samples.push((performance.now()-started)/repetitions);
     }
     samples.sort((a,b)=>a-b);
