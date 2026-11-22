@@ -69,6 +69,11 @@ class Bridge {
             case HostRef(name): {kind: "HostRef", name: name};
             case Numeric(number): {kind: "Number", value: number};
             case Text(text): {kind: "Text", value: text};
+            case Sequence(items):
+                {kind: "Sequence", items: [for (item in items) expression(item)]};
+            case Record(keys, values):
+                {kind: "Record", fields: [for (index in 0...keys.length)
+                    {key: keys[index], value: expression(values[index])}]};
             case Binary(symbol, left, right):
                 {kind: "Binary", symbol: symbol, left: expression(left), right: expression(right)};
             case Call(selector, args):
