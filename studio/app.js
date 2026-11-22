@@ -36,6 +36,7 @@ const state = {
   view: 'code',
   output: '',
   valid: false,
+  exampleInvocation: null,
   debounce: 0,
   worker: null,
   workerTimeout: 0,
@@ -169,6 +170,7 @@ function scheduleCompile() {
 }
 
 function sourceChanged() {
+  state.exampleInvocation = null;
   stopWorker();
   ui.runOutput.textContent = 'Non eseguito.';
   updateEditorIndicators();
@@ -220,6 +222,9 @@ function loadExample(exampleId) {
   ui.source.value = example.source;
   updateEditorIndicators();
   sourceChanged();
+  state.exampleInvocation = example.expect?.kind === 'invoke'
+    ? {name: example.expect.name, args: example.expect.args}
+    : null;
   setView('code');
   return true;
 }
@@ -265,7 +270,7 @@ function runJavaScript() {
     ui.runOutput.textContent = 'Errore durante l’esecuzione JavaScript.';
     stopWorker();
   };
-  worker.postMessage({ code: state.output });
+  worker.postMessage({ code: state.output, invoke: state.exampleInvocation });
 }
 
 function loadFile(file) {
@@ -443,7 +448,7 @@ async function initializeReference() {
     }
 
     catalogExamples.push(...data.examples.map(item => ({
-      id: item.id, name: item.title, source: item.source
+      id: item.id, name: item.title, source: item.source, expect: item.expect
     })));
 
     const group = document.createElement('optgroup');
