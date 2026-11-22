@@ -6,6 +6,8 @@ enum Expr {
     HostRef(name:String);
     Numeric(value:String);
     Text(value:String);
+    Sequence(items:Array<Expr>);
+    Record(keys:Array<String>, values:Array<Expr>);
     Binary(symbol:String, left:Expr, right:Expr);
     Call(selector:String, arguments:Array<Expr>);
     HostCall(selector:String, arguments:Array<Expr>);
