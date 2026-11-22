@@ -9,7 +9,8 @@
     "test": "npm run build && npm run build:studio && node --test",
     "benchmark": "npm run build && node scripts/benchmark.mjs",
     "build:studio": "node scripts/build-studio.mjs",
-    "test:studio": "npm run build:studio && node --test test/studio.test.mjs"
+    "test:studio": "npm run build:studio && node --test test/studio.test.mjs",
+    "docs": "node scripts/generate-reference.mjs"
   },
   "engines": {
     "node": ">=22"
