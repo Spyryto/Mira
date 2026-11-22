@@ -111,7 +111,7 @@ const compiled = run('node', [
   'dist/mira.cjs', 'studio/atlas/atlas.mira', 'js',
   '--host', 'studio/atlas/host.json'
 ]);
-const exports = ['atlas_stages','atlas_modules','atlas_declarations','atlas_ast','atlas_overview','atlas_select_modules'];
+const exports = ['atlas_stages','atlas_modules','atlas_declarations','atlas_ast','atlas_overview','atlas_select_modules__group'];
 for (const symbol of exports) {
   if (!compiled.includes('function ' + symbol + '(')) {
     throw new Error('Missing compiled Mira Atlas export: ' + symbol);
@@ -130,7 +130,10 @@ const prefix = [
   ''
 ].join('\n');
 writeFileSync(join(dist, 'atlas-program.js'),
-  prefix + compiled + '\nexport {' + exports.join(', ') + '};\n');
+  prefix + compiled + '\nexport {' + exports.map(name =>
+    name === 'atlas_select_modules__group'
+      ? 'atlas_select_modules__group as atlas_select_modules' : name
+  ).join(', ') + '};\n');
 console.log('Mira Atlas generated: '+modules.length+' source modules, '+
   edges.length+' verified imports, '+phases.length+' compiler stages; '+
   compiled.length+' bytes of generated Mira→JS.');
