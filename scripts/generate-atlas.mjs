@@ -111,7 +111,7 @@ const compiled = run('node', [
   'dist/mira.cjs', 'studio/atlas/atlas.mira', 'js',
   '--host', 'studio/atlas/host.json'
 ]);
-const exports = ['atlas_stages','atlas_modules','atlas_declarations','atlas_ast','atlas_overview'];
+const exports = ['atlas_stages','atlas_modules','atlas_declarations','atlas_ast','atlas_overview','atlas_select_modules'];
 for (const symbol of exports) {
   if (!compiled.includes('function ' + symbol + '(')) {
     throw new Error('Missing compiled Mira Atlas export: ' + symbol);
