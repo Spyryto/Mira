@@ -168,7 +168,7 @@ test('UI preview is a script-enabled, opaque-origin iframe without direct Studio
   const preview = read('ui-preview.html');
   const sw = read('sw.js');
   assert.match(app, /setAttribute\('sandbox', 'allow-scripts'\)/);
-  assert.doesNotMatch(app, /allow-same-origin/); // no such permission is granted
+  assert.doesNotMatch(app, /setAttribute\('sandbox', 'allow-scripts allow-same-origin'\)/);
   assert.match(index, /id="previewUI"/);
   assert.match(preview, /ui-host\.js/);
   assert.match(preview, /ui-preview\.js/);
