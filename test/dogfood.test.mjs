@@ -141,3 +141,35 @@ test('dogfooding assets are self-hosted and offline-cacheable', () => {
   assert.match(index, /id="astInspector"/);
   assert.match(index, /id="inspectorProgram"/);
 });
+
+
+test('PHP executes the same Mira reducers over the same AST as JavaScript', () => {
+  const {ast, stats} = inspect(fixture);
+  const compiledPhp = transpile(inspectorSource, 'php');
+  assert.equal(compiledPhp.status, 0, compiledPhp.stderr);
+
+  const adapter = readFileSync(resolve(root, 'test/fixtures/InspectorHost.php'), 'utf8');
+  const encoded = Buffer.from(JSON.stringify(ast), 'utf8').toString('base64');
+  const program = adapter +
+    '\nMiraHost::initialize(json_decode(base64_decode("' + encoded + '"), true));\n' +
+    compiledPhp.stdout.replace(/^<\?php\s*declare\(strict_types=1\);\s*/, '') +
+    '\necho json_encode([' +
+    '"total"=>$totalNodes,' +
+    '"functions"=>$functionNodes,' +
+    '"values"=>$valueNodes,' +
+    '"calls"=>$callNodes,' +
+    '"binary"=>$binaryNodes,' +
+    '"sections"=>$sectionNodes,' +
+    '"applies"=>$applyNodes]);\n';
+
+  const dir = mkdtempSync(join(tmpdir(), 'mira-inspector-php-'));
+  try {
+    const file = join(dir, 'inspector.php');
+    writeFileSync(file, program);
+    const result = spawnSync('php', [file], {encoding: 'utf8'});
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(JSON.parse(result.stdout), stats);
+  } finally {
+    rmSync(dir, {recursive: true, force: true});
+  }
+});
