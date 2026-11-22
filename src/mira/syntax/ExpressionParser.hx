@@ -12,18 +12,22 @@ class ExpressionParser {
     final selectorResolver:SelectorResolver;
     final localNames:Array<String>;
     var position:Int = 0;
+    var operatorDepth:Int = 0;
+    final allowOperatorArgument:Bool;
 
-    public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<String>) {
+    public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<String>, ?allowOperatorArgument:Bool = false) {
         this.tokens = tokens.copy();
         final last = tokens.length > 0 ? tokens[tokens.length - 1] : new Token(End, "", 1, 1);
         this.tokens.push(new Token(End, "", last.line, last.column));
         this.symbols = symbols;
         this.localNames = localNames;
+        this.allowOperatorArgument = allowOperatorArgument;
         this.selectorResolver = new SelectorResolver(symbols);
     }
 
     public function parse():Expr {
-        final result = expression();
+        final parsed = expression();
+        final result = allowOperatorArgument ? sectionify(parsed) : parsed;
         if (current().kind != End) {
             throw new MiraError("Unexpected token " + current().value, current());
         }
@@ -45,6 +49,13 @@ class ExpressionParser {
                         for (arg in args) if (isPlaceholder(arg)) holes++;
                         if (holes != 1) {
                             throw new MiraError("Pipeline needs a unary section; this section has "
+                                + holes + " holes", token);
+                        }
+                    case OperatorSection(_, sectionLeft, sectionRight):
+                        final holes = (isPlaceholder(sectionLeft) ? 1 : 0)
+                            + (isPlaceholder(sectionRight) ? 1 : 0);
+                        if (holes != 1) {
+                            throw new MiraError("Pipeline needs a unary operator section; this section has "
                                 + holes + " holes", token);
                         }
                     case Numeric(_) | Text(_) | BooleanLiteral(_) | Binary(_, _, _) | Placeholder:
@@ -78,7 +89,7 @@ class ExpressionParser {
     static function isPotentialCallable(expr:Expr):Bool {
         return switch (expr) {
             case Name(_) | HostRef(_) | Call(_, _) | HostCall(_, _) | Section(_, _)
-                | HostSection(_, _) | Apply(_, _): true;
+                | HostSection(_, _) | OperatorSection(_, _, _) | Apply(_, _): true;
             default: false;
         };
     }
@@ -89,10 +100,12 @@ class ExpressionParser {
         if (token.isSymbol("{")) return record();
         if (token.isSymbol("(")) {
             consume();
+            operatorDepth++;
             final inner = expression();
+            operatorDepth--;
             if (!current().isSymbol(")")) throw new MiraError("Expected closing )", current());
             consume();
-            return inner;
+            return sectionify(inner);
         }
         if (token.kind == Number) {
             consume();
@@ -117,6 +130,10 @@ class ExpressionParser {
             return conditional();
         }
         if (token.value == "_") {
+            if (operatorDepth > 0 || allowOperatorArgument) {
+                consume();
+                return Placeholder;
+            }
             throw new MiraError("Placeholder '_' must be a complete keyword-selector argument", token);
         }
 
@@ -131,7 +148,7 @@ class ExpressionParser {
                     args.push(Placeholder);
                     holes++;
                 } else {
-                    args.push(new ExpressionParser(argumentTokens, symbols, localNames).parse());
+                    args.push(new ExpressionParser(argumentTokens, symbols, localNames, true).parse());
                 }
             }
             if (symbols.isHostSelector(matched.selector)) {
@@ -244,6 +261,19 @@ class ExpressionParser {
 
     function consume():Token {
         return tokens[position++];
+    }
+
+    // Parenthesized binary expressions can be functions without a new lambda
+    // grammar. The holes must be direct operands; grouping stays explicit.
+    function sectionify(expr:Expr):Expr {
+        return switch (expr) {
+            case Binary(symbol, left, right):
+                isPlaceholder(left) || isPlaceholder(right)
+                    ? OperatorSection(symbol, left, right) : expr;
+            case Placeholder:
+                throw new MiraError("Placeholder '_' requires an operator section", current());
+            default: expr;
+        };
     }
 
     static function isPlaceholder(expr:Expr):Bool {

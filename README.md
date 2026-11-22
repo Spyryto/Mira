@@ -45,6 +45,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Booleani e confronti | `0.4` | [Dettagli](docs/reference/language.md#feature-comparisons) |
 | ✅ | Espressioni condizionali | `0.4` | [Dettagli](docs/reference/language.md#feature-conditionals) |
 | ✅ | Filtri con predicati Mira | `0.4` | [Dettagli](docs/reference/language.md#feature-filtering) |
+| ✅ | Sezioni di operatori | `0.5` | [Dettagli](docs/reference/language.md#feature-operator-sections) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
@@ -58,7 +59,7 @@ Nessuna versione è assegnata finché non esiste un'implementazione verificata.
 
 | Stato | Funzionalità | Prima versione | Documentazione |
 | :---: | --- | :---: | --- |
-| ⬜ | Funzioni anonime generali e sezioni di operatori come `(_ + 1)` | — | [Decisioni aperte](docs/decisions.md#open-questions) |
+| ⬜ | Funzioni anonime generali con parametri arbitrari | — | [Decisioni aperte](docs/decisions.md#open-questions) |
 | ⬜ | Currying completo e applicazione parziale generalizzata | — | [Decisioni aperte](docs/decisions.md#open-questions) |
 | ⬜ | Tipi dichiarati, record tipizzati e type checker | — | [Proposta di sintassi](docs/syntax.md#proposed-type-declarations-and-mvu-records) |
 | ⬜ | Pattern matching e confronti booleani nel nucleo | — | [Limiti attuali](docs/structured-data.md#limiti-conosciuti) |

@@ -1,4 +1,4 @@
-# Guida a Mira 0.4.0
+# Guida a Mira 0.5.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -313,4 +313,18 @@ API collegata: [`mira.HostEnvironment`](api.md#api-mira-hostenvironment)
 
 - [Numeri sopra soglia](examples.md#example-filter-numbers) — result = [5,9]
 - [Lezioni da fatturare](examples.md#example-filter-lessons) — result = ["Ada","Lia"]
+
+<a id="feature-operator-sections"></a>
+## Sezioni di operatori
+
+**Disponibile dalla versione 0.5**
+
+`(_ > 5)` e `(10 - _)` sono funzioni, senza nuova sintassi lambda.
+
+Un operatore aritmetico o di confronto con uno o due placeholder diretti, delimitato da parentesi, produce una funzione di prima classe. La pipeline accetta solo sezioni unarie. Gli emettitori JS/PHP generano closure native senza inferenza dei tipi.
+
+API collegata: [`mira.syntax.ExpressionParser.parse`](api.md#api-mira-syntax-expressionparser-parse)
+
+- [Soglia come funzione](examples.md#example-operator-threshold) — result = true
+- [Predicato passato a un selettore](examples.md#example-operator-as-argument) — result = true
 

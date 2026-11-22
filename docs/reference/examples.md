@@ -864,3 +864,36 @@ result = map: (filter: lessons, with: (billable: _)),
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/filter-lessons)
 
+<a id="example-operator-threshold"></a>
+## Soglia come funzione
+
+Un predicato con un valore catturato diventa una funzione chiamabile nella pipeline.
+
+Feature: [Sezioni di operatori](language.md#feature-operator-sections)
+
+```mira
+minimum = 6;
+passes = (_ >= minimum);
+result = 8 ~ passes;
+```
+
+**Risultato:** result = true
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/operator-threshold)
+
+<a id="example-operator-as-argument"></a>
+## Predicato passato a un selettore
+
+Una sezione di operatore è un normale valore funzione passato a un selettore discorsivo.
+
+Feature: [Sezioni di operatori](language.md#feature-operator-sections)
+
+```mira
+accept: predicate = 8 ~ predicate;
+result = accept: (_ > 5);
+```
+
+**Risultato:** result = true
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/operator-as-argument)
+
