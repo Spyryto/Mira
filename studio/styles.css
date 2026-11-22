@@ -64,12 +64,12 @@ select { min-width: 0; max-width: 230px; flex: 1; border: 1.5px solid var(--line
 .icon-button, .text-button { padding: 6px 9px; border-radius: 6px; border: 1.5px solid var(--line);
   background: transparent; font-size: 11px; font-weight: 800; white-space: nowrap; }
 .text-button { border: none; text-decoration: underline; text-underline-offset: 3px; }
-.editor-frame { display: flex; background: #fdfbf6; min-height: 300px; position: relative; }
+.editor-frame { display: flex; background: #fdfbf6; height: min(43svh, 420px); min-height: 300px; position: relative; }
 .line-numbers { background: #ede8de; border-right: 1px solid #d5d0c8; text-align: right;
   padding: 15px 8px 15px 4px; font: 13px/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  color: #8a8d88; user-select: none; overflow: hidden; min-width: 34px; white-space: pre; }
+  color: #8a8d88; user-select: none; overflow: hidden; min-width: 34px; white-space: pre; height: 100%; }
 #source { display: block; border: 0; outline: 0; flex: 1; min-width: 0; width: 100%;
-  padding: 15px 10px; resize: vertical; min-height: 300px; height: min(43svh, 420px);
+  padding: 15px 10px; resize: none; min-height: 0; height: 100%;
   font: 13px/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   tab-size: 2; color: #1f2933; background: transparent; overflow: auto; white-space: pre; }
 #source:focus { outline: none; }
