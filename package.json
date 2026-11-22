@@ -11,7 +11,8 @@
     "build:studio": "node scripts/build-studio.mjs",
     "test:studio": "npm run build:studio && node --test test/studio.test.mjs",
     "docs": "node scripts/generate-reference.mjs && node scripts/generate-documentation-origin.mjs",
-    "docs:check": "node scripts/generate-documentation-origin.mjs --check"
+    "docs:check": "node scripts/generate-documentation-origin.mjs --check",
+    "benchmark:atlas": "npm run build:studio && node scripts/benchmark-atlas.mjs"
   },
   "engines": {
     "node": ">=22"
