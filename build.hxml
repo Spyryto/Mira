@@ -1,0 +1,4 @@
+-cp src
+-main mira.Main
+-js dist/mira.cjs
+-D js-es=6
