@@ -105,3 +105,12 @@ lifetime delle capability richiederanno un disegno successivo.
 
 La PR deve rimanere aperta per confrontare questo sistema con il precedente
 prototipo `extern` e decidere se introdurre più avanti uno scope `use Host`.
+
+## Secondo esperimento: un vero report strutturato
+
+L'inspector non produce più soltanto conteggi scalari: il programma Mira
+costruisce ora record per ogni definizione (nome, tipo, nodi e chiamate)
+e una sequenza di riepiloghi. L'host fornisce `map:with:` e
+`get:from:`, senza costruire esso stesso i report. Il browser renderizza
+i dati ricevuti. Questo esperimento è documentato in
+[Structured Data](structured-data.md).
