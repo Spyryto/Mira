@@ -115,7 +115,7 @@ function validateCatalog(api) {
     if (!example.path.startsWith('catalog/examples/') || !example.path.endsWith('.mira')) {
       throw new Error('Unsafe example path ' + example.path);
     }
-    if (!['result', 'invoke', 'error'].includes(example.expect?.kind)) {
+    if (!['result', 'invoke', 'error', 'ui'].includes(example.expect?.kind)) {
       throw new Error('Unsupported expected result for ' + example.id);
     }
     examples.push({ ...example, source: readFileSync(join(root, example.path), 'utf8') });
@@ -141,6 +141,7 @@ function validateCatalog(api) {
 
 function resultText(expected) {
   if (expected.kind === 'error') return 'Errore atteso: ' + expected.contains;
+  if (expected.kind === 'ui') return 'Anteprima interattiva (browser JS; PHP compilato soltanto)';
   if (expected.kind === 'invoke') {
     return expected.name + '(' + expected.args.join(', ') + ') = ' + JSON.stringify(expected.value);
   }
@@ -176,7 +177,7 @@ function examplesMarkdown(examples) {
   const lines = [
     '# Esempi eseguibili Mira',
     '',
-    'Catalogo generato, validato dalla CI su JavaScript e PHP. Gli esempi con errore atteso sono contrassegnati.',
+    'Catalogo generato e validato in CI. Gli esempi numerici vengono eseguiti su JS/PHP; gli esempi UI sono compilati su entrambi i target ed eseguiti con il DOM host JS.',
     ''
   ];
   for (const example of examples) {
