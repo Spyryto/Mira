@@ -134,6 +134,15 @@ arità corrispondente, ma non si può applicare direttamente a una pipeline unar
 
 See [syntax and examples](docs/syntax.md), [grammar notes](docs/grammar.md) and [design decisions](docs/decisions.md).
 
+## Provenienza della documentazione
+
+Il rapporto [**IA vs tooling: quantità e percentuali**](docs/documentation-origin.md)
+indica quanta documentazione Markdown viene assemblata dagli strumenti,
+quanta è dichiarata redatta con assistenza IA e quanta ha un'origine non
+verificabile. Il rapporto è rigenerato automaticamente da `npm run docs`
+e controllato dalla CI. Le attribuzioni per file sono documentate in
+[catalog/documentation-origin.json](catalog/documentation-origin.json).
+
 ## Guida ed esempi verificati
 
 Il [catalogo delle feature](catalog/manifest.json) descrive le aree
