@@ -8,6 +8,7 @@ class Definition {
     public final parameters:Array<String>;
     public final bodyTokens:Array<Token>;
     public final origin:Token;
+    public final isExtern:Bool;
     public var body:Null<Expr> = null;
 
     public function new(
@@ -15,13 +16,15 @@ class Definition {
         labels:Array<String>,
         parameters:Array<String>,
         bodyTokens:Array<Token>,
-        origin:Token
+        origin:Token,
+        isExtern:Bool = false
     ) {
         this.name = name;
         this.labels = labels;
         this.parameters = parameters;
         this.bodyTokens = bodyTokens;
         this.origin = origin;
+        this.isExtern = isExtern;
     }
 
     public function isFunction():Bool {
