@@ -30,7 +30,7 @@ jobs:
       - name: Compile Haxe browser frontend and assemble PWA
         run: npm run build:studio
       - name: Verify browser compiler and static assets
-        run: node --test test/studio.test.mjs
+        run: node --test test/studio.test.mjs test/inspector-ui.test.mjs
       - name: Verify all documented JS/PHP examples
         run: |
           npm run build
