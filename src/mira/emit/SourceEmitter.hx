@@ -24,12 +24,12 @@ class SourceEmitter {
                     phpString(value);
                 }
 
-            case Binary(operator, left, right):
-                if (["+", "-", "*", "/", "%"].indexOf(operator) < 0) {
-                    throw new MiraError("Unsupported operator " + operator);
+            case Binary(symbol, left, right):
+                if (["+", "-", "*", "/", "%"].indexOf(symbol) < 0) {
+                    throw new MiraError("Unsupported operator " + symbol);
                 }
                 "(" + expression(left, target, scope)
-                    + " " + operator + " "
+                    + " " + symbol + " "
                     + expression(right, target, scope) + ")";
 
             case Call(selector, arguments):
