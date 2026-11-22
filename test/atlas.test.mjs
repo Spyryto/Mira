@@ -103,3 +103,60 @@ test('Atlas modules and JSON are cached for offline PWA use',()=>{
   assert.match(read('index.html'),/data-view="atlas"/);
   assert.match(read('app.js'),/mountAtlas/);
 });
+
+
+test('Atlas browser controller renders real compiler results, caches steps and navigates SVG',async()=>{
+  const {mountAtlas}=await import(pathToFileURL(resolve(site,'atlas-ui.js')).href);
+  class FakeElement {
+    constructor(tag){this.tagName=tag;this.children=[];this.attributes=new Map();
+      this.listeners=new Map();this._text='';this.value='';this.hidden=false;}
+    set textContent(value){this._text=String(value);this.children=[];}
+    get textContent(){return this._text+this.children.map(c=>c.textContent).join('');}
+    append(...items){this.children.push(...items);}
+    replaceChildren(...items){this.children=[...items];this._text='';}
+    setAttribute(name,value){this.attributes.set(name,String(value));}
+    addEventListener(event,fn){this.listeners.set(event,fn);}
+    click(){this.listeners.get('click')?.({});}
+  }
+  const find=(root,tag)=>[
+    ...(root.tagName===tag?[root]:[]),
+    ...root.children.flatMap(child=>find(child,tag))
+  ];
+  globalThis.document={
+    createElement:tag=>new FakeElement(tag),
+    createElementNS:(ns,tag)=>new FakeElement(tag)
+  };
+  globalThis.fetch=async()=>({ok:true,json:async()=>data});
+  const count={tokens:0,trace:0,ast:0,compile:0};
+  const mocked={
+    tokens:src=>{count.tokens++;return bridge.tokens(src);},
+    trace:(src,host)=>{count.trace++;return bridge.trace(src,host);},
+    ast:(src,host)=>{count.ast++;return bridge.ast(src,host);},
+    compile:(src,target,host)=>{count.compile++;return bridge.compile(src,target,host);}
+  };
+  const rootNode=new FakeElement('root');
+  let source='result = 2 + 3;';
+  const atlas=mountAtlas(rootNode,mocked,()=>source,()=>undefined);
+  await atlas.ready;
+  assert.match(rootNode.textContent,/Mira Atlas/);
+  assert.match(rootNode.textContent,/Lexer/);
+  assert.ok(find(rootNode,'button').some(b=>b.textContent==='Aggiorna dal sorgente'));
+  assert.equal(count.tokens,1);
+  assert.equal(count.trace,1);
+  assert.equal(count.ast,1);
+  assert.equal(count.compile,2);
+
+  find(rootNode,'button').find(b=>b.textContent==='AST risolto').click();
+  assert.match(rootNode.textContent,/AST canonico/);
+  assert.equal(count.trace,1,'Switching stages must reuse the compiler snapshot');
+
+  source='result = 9;';
+  atlas.refresh();
+  assert.equal(count.tokens,2);
+  assert.equal(count.trace,2);
+
+  find(rootNode,'button').find(b=>b.textContent==='Mappa architetturale').click();
+  assert.ok(find(rootNode,'svg').length===1,'The architecture graph must be SVG');
+  assert.ok(find(rootNode,'g').length>=data.modules.length);
+  assert.match(rootNode.textContent,/import espliciti/);
+});
