@@ -100,6 +100,9 @@ export function mountAtlas(root, compiler, getSource, getHostJson) {
   let selectedStage = 'tokens';
   let selectedModule = null;
   let mode = 'journey';
+  let traceCache = null;
+  let cachedSource = null;
+  let cachedHost = null;
 
   const title = node('div', 'atlas-heading');
   title.append(node('h2', '', 'Mira Atlas'),
@@ -133,6 +136,11 @@ export function mountAtlas(root, compiler, getSource, getHostJson) {
   function trace() {
     const source = getSource();
     const host = getHostJson();
+    // Stage switching reuses one compilation snapshot. Editing the source or
+    // changing the declared host invalidates the snapshot.
+    if (traceCache && source === cachedSource && host === cachedHost) {
+      return traceCache;
+    }
     const result = {
       source,
       tokens: null,
@@ -166,6 +174,9 @@ export function mountAtlas(root, compiler, getSource, getHostJson) {
         } else result.errors[key] = safeText(error.message);
       }
     }
+    traceCache = result;
+    cachedSource = source;
+    cachedHost = host;
     return result;
   }
 
@@ -415,5 +426,12 @@ export function mountAtlas(root, compiler, getSource, getHostJson) {
     message.textContent='Atlas non disponibile: '+safeText(error.message);
     content.replaceChildren();
   });
-  return {ready, refresh:()=>{if(data)render();}, show:chooseMode};
+  return {
+    ready,
+    refresh:()=>{
+      traceCache = null;
+      if(data) render();
+    },
+    show:chooseMode
+  };
 }
