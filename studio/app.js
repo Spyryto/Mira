@@ -1,12 +1,14 @@
 import { examples, defaultSource } from './examples.js';
 import { mountReference } from './reference-ui.js';
 import { createAstInspector } from './ast-inspector.js';
+import { mountAtlas } from './atlas-ui.js';
 
 // Mira Studio's controller concerns browser UX only.
 // All language semantics are delegated to the Haxe compiler bridge.
 const compiler = globalThis.MiraStudioCompiler;
 const catalogExamples = [];
 let referenceViewer = null;
+let atlasViewer = null;
 const $ = id => document.getElementById(id);
 const astInspector = createAstInspector(compiler);
 
@@ -88,7 +90,7 @@ function updateEditorIndicators() {
 }
 
 function setView(view) {
-  if (!['code', 'output', 'structure', 'reference'].includes(view)) return;
+  if (!['code', 'output', 'structure', 'reference', 'atlas'].includes(view)) return;
 
   state.view = view;
   for (const button of ui.viewButtons) {
@@ -97,11 +99,12 @@ function setView(view) {
     button.setAttribute('aria-selected', String(selected));
   }
 
-  for (const name of ['code', 'output', 'structure', 'reference']) {
+  for (const name of ['code', 'output', 'structure', 'reference', 'atlas']) {
     $('view-' + name).hidden = name !== view;
   }
 
   if (view === 'structure') updateStructure();
+  if (view === 'atlas') atlasViewer?.refresh();
   if (view === 'reference') {
     if (!isReferenceRoute(location.hash)) location.hash = '#/guide';
     referenceViewer?.render();
@@ -454,6 +457,7 @@ function wireEvents() {
   ui.structureSelect.addEventListener('change', updateStructure);
   ui.exampleSelect.addEventListener('change', () => loadExample(ui.exampleSelect.value));
   window.addEventListener('hashchange', () => {
+    if (location.hash === '#/atlas') setView('atlas');
     if (isReferenceRoute(location.hash) && referenceViewer) {
       setView('reference');
       referenceViewer.render();
@@ -507,9 +511,16 @@ function start() {
   setTarget(state.target);
   initializeHost();
   initializeReference();
+  initializeAtlas();
   installServiceWorker();
 }
 
+
+function initializeAtlas() {
+  atlasViewer = mountAtlas($('atlas'), compiler,
+    () => ui.source.value, () => state.hostJson);
+  if (location.hash === '#/atlas') setView('atlas');
+}
 
 function isReferenceRoute(hash) {
   return /^#\/(guide|feature\/|example\/|api(?:\/|$))/.test(hash);
