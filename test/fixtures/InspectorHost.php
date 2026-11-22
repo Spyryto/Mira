@@ -37,5 +37,5 @@ function makeInspectorHost(array $ast): array {
             return $accumulator;
         },
         'log' => static function($message): void { echo $message, "\n"; }
-    ];
+    ]);
 }
