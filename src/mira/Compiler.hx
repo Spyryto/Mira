@@ -16,6 +16,7 @@ class Compiler {
         final symbols = new Symbols(definitions);
 
         for (definition in definitions) {
+            if (definition.isExtern) continue;
             final locals = definition.isFunction() ? definition.parameters : [];
             definition.body = new ExpressionParser(
                 definition.bodyTokens, symbols, locals
