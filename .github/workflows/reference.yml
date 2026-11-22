@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'catalog/**'
+      - 'README.md'
       - 'src/**/*.hx'
       - 'scripts/generate-reference.mjs'
       - '.github/workflows/reference.yml'
@@ -29,9 +30,9 @@ jobs:
           node-version: '22'
       - name: Generate interlinked Markdown and Haxe API signatures
         run: npm run docs
-      - name: Commit generated Markdown when changed
+      - name: Commit generated README matrix and reference when changed
         run: |
-          git add docs/reference/language.md docs/reference/examples.md docs/reference/api.md
+          git add README.md docs/reference/language.md docs/reference/examples.md docs/reference/api.md
           if ! git diff --cached --quiet; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

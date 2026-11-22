@@ -10,7 +10,8 @@
       "examples": [
         "invoice-total",
         "concert-margin"
-      ]
+      ],
+      "since": "0.1"
     },
     {
       "id": "names",
@@ -21,7 +22,8 @@
       "examples": [
         "salary-adjustment",
         "fuel-efficiency"
-      ]
+      ],
+      "since": "0.1"
     },
     {
       "id": "functions",
@@ -32,7 +34,8 @@
       "examples": [
         "cash-discount",
         "scale-estimate"
-      ]
+      ],
+      "since": "0.1"
     },
     {
       "id": "selectors",
@@ -43,7 +46,8 @@
       "examples": [
         "three-step-score",
         "tax-and-discount"
-      ]
+      ],
+      "since": "0.1"
     },
     {
       "id": "shorthand",
@@ -54,7 +58,8 @@
       "examples": [
         "calculated-arguments",
         "shipping-charge"
-      ]
+      ],
+      "since": "0.1"
     },
     {
       "id": "numbers",
@@ -65,7 +70,8 @@
       "examples": [
         "fractional-invoice",
         "minutes-rate"
-      ]
+      ],
+      "since": "0.1"
     },
     {
       "id": "strings",
@@ -76,7 +82,8 @@
       "examples": [
         "band-title",
         "welcome-label"
-      ]
+      ],
+      "since": "0.1"
     },
     {
       "id": "arithmetic",
@@ -87,7 +94,8 @@
       "examples": [
         "left-to-right",
         "modulo-remainder"
-      ]
+      ],
+      "since": "0.1"
     },
     {
       "id": "grouping",
@@ -98,7 +106,8 @@
       "examples": [
         "stage-production",
         "split-payment"
-      ]
+      ],
+      "since": "0.1"
     },
     {
       "id": "sections",
@@ -109,7 +118,8 @@
       "examples": [
         "reduce-price",
         "triple-quantity"
-      ]
+      ],
+      "since": "0.2"
     },
     {
       "id": "multi-sections",
@@ -120,7 +130,8 @@
       "examples": [
         "mix-two-inputs",
         "fee-calculator"
-      ]
+      ],
+      "since": "0.2"
     },
     {
       "id": "pipelines",
@@ -131,7 +142,8 @@
       "examples": [
         "recording-level",
         "revised-budget"
-      ]
+      ],
+      "since": "0.2"
     },
     {
       "id": "captures",
@@ -142,7 +154,8 @@
       "examples": [
         "extra-budget",
         "rate-factory"
-      ]
+      ],
+      "since": "0.2"
     },
     {
       "id": "forward",
@@ -153,7 +166,8 @@
       "examples": [
         "declare-later",
         "commented-forward"
-      ]
+      ],
+      "since": "0.1"
     },
     {
       "id": "diagnostics",
@@ -164,7 +178,8 @@
       "examples": [
         "ambiguous-words",
         "duplicate-parameter"
-      ]
+      ],
+      "since": "0.1"
     },
     {
       "id": "sequences",
@@ -175,7 +190,8 @@
       "examples": [
         "practice-log",
         "setlist-plan"
-      ]
+      ],
+      "since": "0.3"
     },
     {
       "id": "records",
@@ -186,7 +202,8 @@
       "examples": [
         "gig-ledger",
         "teaching-ledger"
-      ]
+      ],
+      "since": "0.3"
     },
     {
       "id": "browser-ui",
@@ -198,7 +215,8 @@
         "browser-alert",
         "browser-view",
         "browser-counter"
-      ]
+      ],
+      "since": "0.3"
     }
   ],
   "examples": [
@@ -681,6 +699,26 @@
         "kind": "ui",
         "description": "Anteprima interattiva nel browser"
       }
+    }
+  ],
+  "additionalCapabilities": [
+    {
+      "id": "unary-application",
+      "title": "Applicazione funzionale per giustapposizione (`log \"ciao\"`)",
+      "since": "0.3",
+      "doc": "docs/dogfooding.md#nuove-regole-sintattiche-sperimentali"
+    },
+    {
+      "id": "expression-statements",
+      "title": "Istruzioni-espressione terminate da `;`",
+      "since": "0.3",
+      "doc": "docs/dogfooding.md#nuove-regole-sintattiche-sperimentali"
+    },
+    {
+      "id": "host-environment",
+      "title": "Interop: riferimenti a funzioni/valori dell'host",
+      "since": "0.3",
+      "doc": "docs/dogfooding.md#che-cosa-contiene-il-manifest"
     }
   ]
 }

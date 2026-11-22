@@ -96,12 +96,27 @@ function extractApi() {
 }
 
 function validateCatalog(api) {
+  const currentMinor = Number(manifest.version.split('.')[1]);
+  const checkVersion = (item, label) => {
+    if (typeof item.since !== 'string' || !/^0\.[0-9]+$/.test(item.since) ||
+        Number(item.since.split('.')[1]) > currentMinor) {
+      throw new Error('Invalid or missing first implementation version for ' + label);
+    }
+  };
+  for (const item of manifest.additionalCapabilities ?? []) {
+    checkVersion(item, item.id);
+    if (!/^docs\/[a-zA-Z0-9/_-]+\.md(#[a-z0-9-]+)?$/.test(item.doc)) {
+      throw new Error('Invalid documentation link for ' + item.id);
+    }
+    readFileSync(join(root, item.doc.split('#')[0]), 'utf8');
+  }
   const featureIds = new Set();
   const exampleIds = new Set();
   const examples = [];
 
   for (const feature of manifest.features) {
     if (featureIds.has(feature.id)) throw new Error('Duplicate feature ' + feature.id);
+    checkVersion(feature, feature.id);
     featureIds.add(feature.id);
     if (!Array.isArray(feature.examples) || feature.examples.length < 2) {
       throw new Error('Feature needs >=2 examples: ' + feature.id);
@@ -160,7 +175,9 @@ function languageMarkdown(examples) {
   ];
   for (const feature of manifest.features) {
     lines.push('<a id="feature-' + asId(feature.id) + '"></a>');
-    lines.push('## ' + feature.title, '', feature.summary, '', feature.details, '');
+    lines.push('## ' + feature.title, '',
+      '**Disponibile dalla versione ' + feature.since + '**', '',
+      feature.summary, '', feature.details, '');
     lines.push('API collegata: ['
       + tick + feature.api + tick + '](api.md#api-' + asId(feature.api) + ')', '');
     for (const id of feature.examples) {
@@ -227,8 +244,51 @@ function apiMarkdown(api) {
   return lines.join('\n') + '\n';
 }
 
+// The README feature matrix is kept in sync with the canonical catalog.
+// Everything outside the two markers remains hand-edited Markdown.
+function updateReadmeFeatureMatrix() {
+  const readmePath = join(root, 'README.md');
+  const start = '<!-- START GENERATED FEATURE MATRIX -->';
+  const end = '<!-- END GENERATED FEATURE MATRIX -->';
+  const original = readFileSync(readmePath, 'utf8');
+  const begin = original.indexOf(start);
+  const finish = original.indexOf(end);
+  if (begin < 0 || finish <= begin || original.indexOf(start, begin + 1) !== -1 ||
+      original.indexOf(end, finish + 1) !== -1) {
+    throw new Error('Missing or duplicated README feature matrix markers');
+  }
+
+  const features = [
+    ...manifest.features.map(item => ({
+      name: item.title,
+      since: item.since,
+      doc: 'docs/reference/language.md#feature-' + asId(item.id)
+    })),
+    ...(manifest.additionalCapabilities ?? []).map(item => ({
+      name: item.title, since: item.since, doc: item.doc
+    }))
+  ];
+
+  features.sort((a, b) =>
+    Number(a.since.split('.')[1]) - Number(b.since.split('.')[1])
+  );
+
+  const rows = [
+    '| Stato | Funzionalità | Prima versione | Documentazione |',
+    '| :---: | --- | :---: | --- |',
+    ...features.map(item =>
+      '| ✅ | ' + item.name + ' | ' + tick + item.since + tick +
+      ' | [Dettagli](' + item.doc + ') |'
+    )
+  ];
+  const rewritten = original.slice(0, begin + start.length) + '\n' +
+    rows.join('\n') + '\n' + original.slice(finish);
+  if (rewritten !== original) writeFileSync(readmePath, rewritten);
+}
+
 const api = extractApi();
 const examples = validateCatalog(api);
+updateReadmeFeatureMatrix();
 const dataset = {
   version: manifest.version,
   generatedFrom: ['catalog/manifest.json', 'catalog/api-notes.json', 'src/**/*.hx'],
