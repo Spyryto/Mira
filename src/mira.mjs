@@ -73,7 +73,9 @@ function parseHeader(head) {
   return {kind:'function',labels,params,selector:labels.join(':')+':'};
 }
 function parseDefinitions(tokens) {
-  const units=splitTop(tokens.slice(0,-1),';');
+  const content=tokens.slice(0,-1);
+  if(content.length && content.at(-1).type!==';') throw new MiraError('Expected ; to terminate the final definition',content.at(-1));
+  const units=splitTop(content,';');
   const defs=[];
   for(const chunk of units){
     if(!chunk.length)continue;
