@@ -105,7 +105,7 @@ test('PWA assets are self-hosted and have a relative GitHub Pages scope', () => 
 });
 
 test('mobile UI JavaScript, SW and execution worker have valid syntax', () => {
-  for (const file of ['app.js', 'reference-ui.js', 'examples.js', 'worker.js', 'sw.js']) {
+  for (const file of ['app.js', 'reference-ui.js', 'ast-inspector.js', 'inspector-host.js', 'inspector-worker.js', 'examples.js', 'worker.js', 'sw.js']) {
     execFileSync('node', ['--check', resolve(site, file)]);
   }
 });
