@@ -43,10 +43,10 @@ class SourceEmitter {
                             + ' return __miraFieldRecord[' + quoted + ']; })';
                     case Php:
                         final quoted = phpString(key);
-                        "((static function(\$__miraFieldRecord) { if (!is_array(\$__miraFieldRecord)"
-                            + " || !array_key_exists(" + quoted + ", \$__miraFieldRecord))"
+                        "((static function($__miraFieldRecord) { if (!is_array($__miraFieldRecord)"
+                            + " || !array_key_exists(" + quoted + ", $__miraFieldRecord))"
                             + " throw new \\RuntimeException('Missing record field: ' . " + quoted + ");"
-                            + " return \$__miraFieldRecord[" + quoted + "]; }))";
+                            + " return $__miraFieldRecord[" + quoted + "]; }))";
                 };
                 accessor;
 
