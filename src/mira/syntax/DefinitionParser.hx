@@ -13,7 +13,6 @@ class DefinitionParser {
 
         while (index < tokens.length && tokens[index].kind != End) {
             final token = tokens[index];
-
             if (token.isSymbol("(")) {
                 depth++;
             } else if (token.isSymbol(")")) {
@@ -34,15 +33,10 @@ class DefinitionParser {
         if (start != index) {
             throw new MiraError("Expected ; after definition", tokens[index - 1]);
         }
-
         return definitions;
     }
 
     static function parseOne(tokens:Array<Token>):Definition {
-        // "extern" is syntax for an explicit host dependency, not a user name.
-        // It requires a signature but no Mira body. Normal definitions still
-        // require exactly one "=" and a nonempty expression.
-        final isExtern = tokens[0].kind == Word && tokens[0].value == "extern";
         var equals = -1;
         for (i in 0...tokens.length) {
             if (tokens[i].isSymbol("=")) {
@@ -51,22 +45,20 @@ class DefinitionParser {
             }
         }
 
-        if (isExtern && equals != -1) {
-            throw new MiraError("Extern declarations cannot define a body", tokens[0]);
+        // No '=' means an expression statement, such as log "hey there";
+        if (equals == -1) {
+            return new Definition("", [], [], tokens, tokens[0], true);
         }
-        if (!isExtern && (equals <= 0 || equals == tokens.length - 1)) {
+        if (equals == 0 || equals == tokens.length - 1) {
             throw new MiraError("A definition needs a name, = and a body", tokens[0]);
         }
 
-        final header = isExtern ? tokens.slice(1) : tokens.slice(0, equals);
-        if (header.length == 0) {
-            throw new MiraError("Extern declaration needs a name or selector", tokens[0]);
-        }
-        final body = isExtern ? [] : tokens.slice(equals + 1);
+        final header = tokens.slice(0, equals);
+        final body = tokens.slice(equals + 1);
         final parts = splitHeader(header);
 
         if (parts.length == 1 && !containsColon(parts[0])) {
-            return new Definition(readWords(header), [], [], body, tokens[0], isExtern);
+            return new Definition(readWords(header), [], [], body, tokens[0]);
         }
 
         final labels:Array<String> = [];
@@ -86,7 +78,7 @@ class DefinitionParser {
             parameters.push(readWords(part.slice(colon + 1)));
         }
 
-        return new Definition("", labels, parameters, body, tokens[0], isExtern);
+        return new Definition("", labels, parameters, body, tokens[0]);
     }
 
     static function splitHeader(tokens:Array<Token>):Array<Array<Token>> {
