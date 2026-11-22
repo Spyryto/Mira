@@ -26,6 +26,7 @@ Requires Haxe **4.3.7**, Node.js **22+**, and PHP **8+** to execute the PHP test
 ```sh
 npm run build
 npm test
+npm run benchmark
 
 node dist/mira.cjs examples/arithmetic.mira js > example.mjs
 node dist/mira.cjs examples/arithmetic.mira php > example.php
@@ -33,6 +34,8 @@ node dist/mira.cjs examples/arithmetic.mira --tokens
 ```
 
 `build.hxml` compiles Haxe into `dist/mira.cjs` (CommonJS). The directory `dist/` is not committed. CI compiles the frontend and runs the emitted programs on Node and PHP.
+
+The compiler API uses the typed `Target` enum (`JavaScript` or `Php`). Only the CLI converts `js`/`php` strings to these enum values. CI also measures Haxe build duration and warmed-up Mira→JS/PHP transpilation (small and 100-definition fixtures). See [timing methodology](docs/performance.md) and the workflow run summary and `mira-timings` artifacts.
 
 ## A small executable example
 
