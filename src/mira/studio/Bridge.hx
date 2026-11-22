@@ -82,7 +82,7 @@ class Bridge {
             case Binary(symbol, left, right):
                 {
                     kind: "Binary",
-                    operator: symbol,
+                    symbol: symbol,
                     left: expression(left),
                     right: expression(right)
                 };
