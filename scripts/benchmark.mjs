@@ -68,10 +68,10 @@ try {
     '',
     `**Haxe → Mira CLI build:** ${build.haxeBuildMs.toFixed(2)} ms`,
     '',
-    '| Mira input | Backend | Source bytes | Median (ms) | p95 (ms) | Runs |',
+    '| Mira input | Backend | Source length | Median (ms) | p95 (ms) | Runs |',
     '|:--|:--|--:|--:|--:|--:|',
     ...samples.map(s =>
-      `| ${s.workload} | ${s.target.toUpperCase()} | ${s.sourceBytes} | ${s.medianMs.toFixed(3)} | ${s.p95Ms.toFixed(3)} | ${s.iterations} |`
+      `| ${s.workload} | ${s.target.toUpperCase()} | ${s.sourceLength} | ${s.medianMs.toFixed(3)} | ${s.p95Ms.toFixed(3)} | ${s.iterations} |`
     ),
     '',
     'Mira timings measure only the warmed-up, in-process lexer → parser → emit path.',
