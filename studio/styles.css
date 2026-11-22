@@ -190,3 +190,19 @@ select { min-width: 0; max-width: 230px; flex: 1; border: 1.5px solid var(--line
 .inspector-definition { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; background: #e9f6ef; border: 1px solid #9cb9aa; border-radius: 7px; }
 .inspector-definition strong { font-size: 12px; overflow-wrap: anywhere; }
 .inspector-definition span { font-size: 11px; color: #456756; }
+
+/* Sandboxed UI preview: isolated iframe, one-column mobile layout. */
+.button-ui { background: var(--teal); border: 2px solid var(--line); border-radius: 7px;
+  padding: 9px 11px; font-size: 11px; font-weight: 900; white-space: nowrap; cursor: pointer; }
+.button-ui:disabled { opacity: .4; cursor: not-allowed; }
+.ui-preview-panel { border-top: 2px solid var(--line); background: #fffdf7; padding: 12px; }
+.ui-preview-heading { display: flex; align-items: baseline; justify-content: space-between;
+  gap: 10px; padding-bottom: 9px; }
+.ui-preview-heading strong { font-size: 13px; }
+.ui-preview-heading span { font-size: 10px; color: var(--sub); }
+.mira-ui-frame { display: block; box-sizing: border-box; width: 100%; min-height: 265px;
+  border: 1.5px solid var(--line); border-radius: 8px; background: #fffdf7; }
+@media (max-width: 500px) {
+  .action-bar { flex-wrap: wrap; }
+  .button-ui { flex-basis: 100%; }
+}
