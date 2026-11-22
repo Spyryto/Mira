@@ -127,8 +127,8 @@ class Bridge {
             case Text(text): {kind: "Text", value: text};
             case BooleanLiteral(value): {kind: "Boolean", value: value};
             case FieldAccessor(key): {kind: "FieldAccessor", key: key};
-            case Conditional(condition, whenTrue, whenFalse):
-                {kind: "Conditional", condition: expression(condition),
+            case Conditional(predicate, whenTrue, whenFalse):
+                {kind: "Conditional", condition: expression(predicate),
                     whenTrue: expression(whenTrue), whenFalse: expression(whenFalse)};
             case Sequence(items):
                 {kind: "Sequence", items: [for (item in items) expression(item)]};
