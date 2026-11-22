@@ -36,9 +36,9 @@ class ExpressionParser {
 
         // All supported binary operators have the same precedence and group left.
         while (current().kind == Symbol && isOperator(current().value)) {
-            final operator = consume().value;
+            final symbol = consume().value;
             final right = primary();
-            left = Binary(operator, left, right);
+            left = Binary(symbol, left, right);
         }
         return left;
     }
