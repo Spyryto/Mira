@@ -309,7 +309,7 @@ test('0.6 browser AST separates FieldGet, FieldSection and Apply', () => {
     'direct = lesson ~ hours;',
     'from section = lesson >> (_ ~ hours);',
     'result = 5 >> (_ + 1);'
-  ].join('\\n');
+  ].join('\n');
   for (const target of ['js','php']) {
     const compiled=bridge.compile(src,target);
     assert.equal(compiled.ok,true,compiled.message);
