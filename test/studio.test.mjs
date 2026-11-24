@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.6.2');
+  assert.equal(bridge.version, '0.6.3');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -101,6 +101,12 @@ test('PWA assets are self-hosted and have a relative GitHub Pages scope', () => 
   assert.ok(existsSync(resolve(site, 'workbench-fullscreen.js')));
   assert.match(read('sw.js'), /\.\/workbench-fullscreen\.js/);
   assert.match(html, /id="languageVersion"/);
+  assert.match(html, /id="sourceHighlight"/);
+  assert.match(html, /class="source-layer"/);
+  assert.match(read('app.js'), /mountMiraHighlight/);
+  assert.match(read('styles.css'), /mira-highlight-ready/);
+  assert.ok(existsSync(resolve(site,'syntax-highlight.js')));
+  assert.match(read('sw.js'), /\.\/syntax-highlight\.js/);
   assert.doesNotMatch(html, /V 0\.4/);
   assert.match(read('app.js'), /compiler\.version/);
   for (const file of ['app.js', 'compiler.js', 'styles.css', 'manifest.webmanifest']) {
@@ -116,7 +122,7 @@ test('PWA assets are self-hosted and have a relative GitHub Pages scope', () => 
 });
 
 test('mobile UI JavaScript, SW and execution worker have valid syntax', () => {
-  for (const file of ['app.js', 'workbench-fullscreen.js', 'reference-ui.js', 'atlas-ui.js', 'atlas-program.js', 'benchmark-ui.js', 'benchmark-cases.js', 'benchmark-worker.js', 'ast-inspector.js', 'inspector-host.js', 'collection-host.js', 'inspector-worker.js', 'examples.js', 'worker.js', 'ui-host.js', 'ui-preview.js', 'sw.js']) {
+  for (const file of ['app.js', 'workbench-fullscreen.js', 'syntax-highlight.js', 'reference-ui.js', 'atlas-ui.js', 'atlas-program.js', 'benchmark-ui.js', 'benchmark-cases.js', 'benchmark-worker.js', 'ast-inspector.js', 'inspector-host.js', 'collection-host.js', 'inspector-worker.js', 'examples.js', 'worker.js', 'ui-host.js', 'ui-preview.js', 'sw.js']) {
     execFileSync('node', ['--check', resolve(site, file)]);
   }
 });
@@ -280,7 +286,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.6.2');
+  assert.equal(bridge.version,'0.6.3');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
