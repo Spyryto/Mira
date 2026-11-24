@@ -104,3 +104,26 @@ sono controllate staticamente per argomenti e valore restituito.
 
 Le due nuove forme sintattiche sono sperimentali prima di Mira 1.0;
 il loro utilizzo nei case study ci aiuterà a decidere cosa conservare.
+
+## Alias di collezione (Mira 0.6.3)
+
+Gli alias sono selettori dell'host, non parole riservate del compilatore.
+La semantica è uniforme su JS e PHP, con lo stesso limite di 10.000 elementi.
+
+| Operazione | Selettori equivalenti |
+| --- | --- |
+| Filtrare una lista | `filter:with:`, `select:with:`, `select:if:`, `collect:if:` |
+| Trasformare gli elementi | `map:with:`, `collect:with:` |
+
+L'esempio richiesto si può scrivere direttamente:
+
+```mira
+billable: lesson = (lesson ~ hours) >= 1;
+result = collect: lessons, if: (billable: _);
+```
+
+Per mantenere la distinzione con Smalltalk, `collect:with:` trasforma
+ogni elemento (come `collect:` in Smalltalk), mentre la forma discorsiva
+`collect:if:` seleziona gli elementi per cui il predicato è vero.
+Gli alias riutilizzano le implementazioni esistenti: niente duplicazione
+dei cicli di iterazione e nessuna modifica al parser di Mira.

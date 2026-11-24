@@ -12,6 +12,7 @@ const assets = [
   'styles.css',
   'app.js',
   'workbench-fullscreen.js',
+  'syntax-highlight.js',
   'reference-ui.js',
   'atlas-ui.js',
   'benchmark-ui.js',

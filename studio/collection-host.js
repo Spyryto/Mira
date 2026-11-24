@@ -21,6 +21,12 @@ export function collectionHost() {
     return items.filter(item => predicate(item));
   };
 
+  // Shared implementations: select filters; collect:with: transforms.
+  // collect:if: is the explicit "collect if" filtering spelling.
+  api['select:with:'] = api['filter:with:'];
+  api['select:if:'] = api['filter:with:'];
+  api['collect:if:'] = api['filter:with:'];
+
   api['map:with:'] = (items, callback) => {
     if (!Array.isArray(items) || typeof callback !== 'function' ||
         items.length > MAX_ITEMS) {
@@ -28,6 +34,8 @@ export function collectionHost() {
     }
     return items.map(value => callback(value));
   };
+
+  api['collect:with:'] = api['map:with:'];
 
   api['fold:with:from:'] = (items, callback, initial) => {
     if (!Array.isArray(items) || typeof callback !== 'function' ||

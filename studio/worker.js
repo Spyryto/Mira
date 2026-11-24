@@ -19,7 +19,7 @@ self.onmessage = event => {
     }
 
     const messages = [];
-    const host = Object.freeze({
+    const host = {
       log: message => messages.push(String(message)),
       "get:from:": (key, record) => {
         if (typeof key !== "string" || !record || typeof record !== "object" ||
@@ -49,7 +49,13 @@ self.onmessage = event => {
         }
         return items.reduce(callback, seed);
       }
-    });
+    };
+    // Mirror the aliases of collection-host.js without duplicating any loop.
+    host['select:with:'] = host['filter:with:'];
+    host['select:if:'] = host['filter:with:'];
+    host['collect:if:'] = host['filter:with:'];
+    host['collect:with:'] = host['map:with:'];
+    Object.freeze(host);
     const value = new Function('__miraHost',
       '"use strict";\n' + code + '\nreturn (' + expression + ');'
     )(host);

@@ -9,6 +9,10 @@
     "fold:with:from:",
     "map:with:",
     "get:from:",
-    "filter:with:"
+    "filter:with:",
+    "select:with:",
+    "select:if:",
+    "collect:if:",
+    "collect:with:"
   ]
 }

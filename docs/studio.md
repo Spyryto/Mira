@@ -36,8 +36,8 @@ La documentazione, incluso il riferimento API, è inclusa nella cache offline.
 ## Features in the first release
 
 - **Scrivi**: keyboard-friendly editor with line numbers, position indicator,
-  selector examples, import/export of local `.mira` files and automatic local
-  persistence (browser localStorage).
+  native Mira syntax highlighting, selector examples, import/export of local
+  `.mira` files and automatic local persistence (browser localStorage).
 - **Output**: compile to JavaScript or PHP, copy or download generated code.
 - **Esplora**: inspect **real** source tokens with locations and canonical AST
   from the Haxe compiler.
@@ -136,8 +136,9 @@ runs inside the PWA.
 ```
 
 The UI can evolve independently of Mira's semantics. Future work might add
-structured diagnostics with source spans, native editor syntax highlighting,
-or source/AST cross-references, but these are not part of this first release.
+structured diagnostics with source spans or source/AST cross-references. Mira
+syntax highlighting is implemented by a lightweight, presentation-only scanner;
+the Haxe lexer/parser remain the only authority for program meaning.
 
 ## Interoperabilità UI
 
@@ -171,3 +172,17 @@ riduce il Workbench da qualsiasi scheda, inclusa **Bench**.
 
 Il controllo è implementato in `studio/workbench-fullscreen.js`, copiato
 nella build e incluso nella cache offline del service worker.
+
+## Colori nell'editor Mira
+
+La syntax highlighting riconosce i commenti `#`, stringhe, numeri, booleani,
+placeholder `_`, selettori come `collect:` / `if:` e operatori come
+`~` e `>>`. È un overlay DOM non editabile sincronizzato con il `textarea`:
+tastiera mobile, selezione, undo e inserimento restano nativi. Il sorgente
+viene inserito come nodi di testo, non come HTML; non ci sono dipendenze CDN.
+La PWA lo rende disponibile offline. Per sorgenti oltre 50 KB la
+colorazione viene disabilitata per mantenere fluido l'editor.
+
+Il modulo `studio/syntax-highlight.js` riconosce soltanto le forme lessicali
+per colorare: sintassi incompleta e diagnostica sono responsabilità del
+compilatore Haxe, non del coloratore.
