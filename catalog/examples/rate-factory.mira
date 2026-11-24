@@ -1,4 +1,4 @@
 multiply: a, by: b = a * b;
 multiply by: multiplier = (multiply: _, by: multiplier);
 items count = 7;
-result = items count ~ (multiply by: 6);
+result = items count >> (multiply by: 6);
