@@ -100,6 +100,8 @@ same hours = lesson >> (_ ~ hours);
 variabili. Dalla 0.6.1 ammette **identificatori composti** senza virgolette:
 `lesson ~ total hours` è equivalente a `lesson ~ "total hours"`.
 Le parole consecutive terminano al successivo operatore o delimitatore.
+La stessa regola vale nella costruzione dei record: `{total hours: 3}`
+è equivalente a `{"total hours": 3}`. Non servono dichiarazioni di tipo.
 Se manca il campo, JS/PHP generano un errore.
 `>>` applica la funzione a destra al valore a sinistra. Entrambi
 mantengono associatività a sinistra, senza type inference.
