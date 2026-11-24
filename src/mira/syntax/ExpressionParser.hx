@@ -42,14 +42,23 @@ class ExpressionParser {
         while (current().kind == Symbol && isOperator(current().value)) {
             final token = consume();
             if (token.value == "~") {
-                // The right operand is a literal field key, never a variable.
-                // A quoted key supports spaces and other non-identifier names.
+                // Like multiword identifiers, consecutive words form one
+                // literal field name. An operator or punctuation ends it.
+                // Quoted keys remain available for non-word characters.
                 final key = current();
                 if (key.kind != Word && key.kind != Text) {
                     throw new MiraError("Expected a field name after ~", key);
                 }
-                consume();
-                left = FieldGet(left, key.value);
+                if (key.kind == Text) {
+                    consume();
+                    left = FieldGet(left, key.value);
+                } else {
+                    final words:Array<String> = [];
+                    while (current().kind == Word) {
+                        words.push(consume().value);
+                    }
+                    left = FieldGet(left, words.join(" "));
+                }
             } else {
                 final right = application();
                 if (token.value == ">>") {

@@ -325,3 +325,18 @@ test('0.6 browser AST separates FieldGet, FieldSection and Apply', () => {
   assert.equal(defs[2].body.callee.key,'hours');
   assert.equal(defs[3].body.kind,'Apply');
 });
+
+test('browser compiler and AST preserve multiword field keys', () => {
+  const source = 'lesson = {"total hours": 3}; result = lesson ~ total hours;';
+  const js = bridge.compile(source, 'js');
+  const php = bridge.compile(source, 'php');
+  assert.equal(js.ok, true, js.message);
+  assert.equal(php.ok, true, php.message);
+  assert.equal(runInNewContext(js.output + '\\nresult', {}), 3);
+  const ast = bridge.ast(source);
+  assert.equal(ast.ok, true, ast.message);
+  const field = JSON.parse(ast.output).definitions[1].body;
+  assert.equal(field.kind, 'FieldGet');
+  assert.equal(field.key, 'total hours');
+  assert.equal(field.record.kind, 'Name');
+});
