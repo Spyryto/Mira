@@ -12,6 +12,7 @@ let referenceViewer = null;
 let atlasViewer = null;
 let benchmarkViewer = null;
 const $ = id => document.getElementById(id);
+$('languageVersion').textContent = 'V ' + compiler.version;
 const astInspector = createAstInspector(compiler);
 
 const ui = {
