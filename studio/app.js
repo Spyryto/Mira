@@ -3,6 +3,7 @@ import { mountReference } from './reference-ui.js';
 import { createAstInspector } from './ast-inspector.js';
 import { mountAtlas } from './atlas-ui.js';
 import { mountBenchmark } from './benchmark-ui.js';
+import { mountWorkbenchFullscreen } from './workbench-fullscreen.js';
 
 // Mira Studio's controller concerns browser UX only.
 // All language semantics are delegated to the Haxe compiler bridge.
@@ -511,6 +512,7 @@ function start() {
   ui.source.value = getSaved(STORAGE_KEY, defaultSource);
   state.target = getSaved(TARGET_KEY, 'js') === 'php' ? 'php' : 'js';
 
+  mountWorkbenchFullscreen($('workbench'), $('workbenchFullscreen'), document);
   wireEvents();
   updateEditorIndicators();
   setTarget(state.target);

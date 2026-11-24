@@ -92,6 +92,14 @@ test('PWA assets are self-hosted and have a relative GitHub Pages scope', () => 
   }
 
   const html = read('index.html');
+  assert.match(html, /id="workbench"/);
+  assert.match(html, /id="workbenchFullscreen"/);
+  assert.match(html, /aria-pressed="false"/);
+  assert.match(read('app.js'), /mountWorkbenchFullscreen/);
+  assert.match(read('styles.css'), /\.workspace\.workbench-fullscreen/);
+  assert.match(read('styles.css'), /#view-code \.editor-frame/);
+  assert.ok(existsSync(resolve(site, 'workbench-fullscreen.js')));
+  assert.match(read('sw.js'), /\.\/workbench-fullscreen\.js/);
   assert.match(html, /id="languageVersion"/);
   assert.doesNotMatch(html, /V 0\.4/);
   assert.match(read('app.js'), /compiler\.version/);
@@ -108,7 +116,7 @@ test('PWA assets are self-hosted and have a relative GitHub Pages scope', () => 
 });
 
 test('mobile UI JavaScript, SW and execution worker have valid syntax', () => {
-  for (const file of ['app.js', 'reference-ui.js', 'atlas-ui.js', 'atlas-program.js', 'benchmark-ui.js', 'benchmark-cases.js', 'benchmark-worker.js', 'ast-inspector.js', 'inspector-host.js', 'collection-host.js', 'inspector-worker.js', 'examples.js', 'worker.js', 'ui-host.js', 'ui-preview.js', 'sw.js']) {
+  for (const file of ['app.js', 'workbench-fullscreen.js', 'reference-ui.js', 'atlas-ui.js', 'atlas-program.js', 'benchmark-ui.js', 'benchmark-cases.js', 'benchmark-worker.js', 'ast-inspector.js', 'inspector-host.js', 'collection-host.js', 'inspector-worker.js', 'examples.js', 'worker.js', 'ui-host.js', 'ui-preview.js', 'sw.js']) {
     execFileSync('node', ['--check', resolve(site, file)]);
   }
 });

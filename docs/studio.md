@@ -154,3 +154,20 @@ senza `allow-same-origin`. Le view non possono essere eseguite
 direttamente su PHP, anche se il sorgente Mira traspila in PHP.
 
 [Descrizione dell'esperimento e sorgenti](browser-interop.md).
+
+## Workbench a schermo intero
+
+Il pulsante **⛶ Espandi** nella barra gialla di Workbench porta l'intero
+laboratorio a occupare la finestra: editor, schede, compilazione, esecuzione,
+anteprima UI e stato rimangono disponibili. Il pannello **Scrivi** fa crescere
+automaticamente l'area del codice e mantiene visibili i comandi. **✕ Riduci**
+ripristina l'impaginazione normale; da tastiera si può usare anche `Esc`.
+
+Non viene usata la Fullscreen API, che non è disponibile uniformemente su
+iPhone: è un layout CSS con `position: fixed` e `100dvh` per il viewport
+dinamico. Il sorgente e il pannello selezionato restano invariati. Se il
+benchmark viene espanso mentre il Workbench lo è già, `Esc` chiude prima
+il benchmark; una seconda pressione riduce il Workbench.
+
+Il controllo è implementato in `studio/workbench-fullscreen.js`, copiato
+nella build e incluso nella cache offline del service worker.
