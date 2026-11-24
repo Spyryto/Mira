@@ -20,7 +20,7 @@ const {createInspectorHost, executeInspector, childrenOf} = await import(
   pathToFileURL(resolve(studio, 'inspector-host.js')).href
 );
 const fixture = 'add: x, and: y = x + y;\n' +
-  'increment = (add: _, and: 1);\nresult = 5 ~ increment;';
+  'increment = (add: _, and: 1);\nresult = 5 >> increment;';
 
 function transpile(source, target, manifest) {
   const directory = mkdtempSync(join(tmpdir(), 'mira-host-'));

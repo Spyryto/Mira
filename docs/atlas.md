@@ -47,7 +47,7 @@ Il programma sorgente
 
 È **Mira vero**, traspilato in JavaScript durante la CI, non una
 trascrizione manuale delle stesse trasformazioni in JavaScript.
-Con Mira 0.4 gli accessor e il filtraggio per gruppo sono scritti in Mira.
+Con Mira 0.6 i campi si leggono direttamente con `~`, senza dichiarare accessor; il filtraggio per gruppo resta in Mira.
 Le sole primitive host rimaste nel modulo Atlas sono `map:with:`,
 `filter:with:` e `count:`.
 Il risultato è `dist/studio/atlas-program.js`.
@@ -98,7 +98,8 @@ all'host; il benchmark continuo verifica se questo porta benefici reali.
 
 | Priorità | Feature desiderata | Ostacolo emerso |
 | --- | --- | --- |
-| ✅ 0.4 | Accessor funzionali nativi | `field "campo"` e `record ~ accessor` ora sostituiscono le chiamate host |
+| ✅ 0.4 | Accessor funzionali nativi | `field "campo"` resta un accessor di prima classe |
+| ✅ 0.6 | Accesso diretto e pipeline distinta | `record ~ campo` legge il campo, `value >> funzione` applica una funzione |
 | ✅ 0.4 | Confronti e condizioni | Il filtro per gruppo di Atlas usa ora predicati e condizioni in Mira |
 | Alta | `sort` e `groupBy` portabili | `filter:with:` è ancora una capability host, gli altri operatori mancano |
 | Media | Funzioni anonime e applicazione generale | Le sezioni funzionano, ma obbligano a dichiarazioni nominate per molti trasformatori |

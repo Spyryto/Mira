@@ -187,7 +187,7 @@ test('a named section can be used as a first-class unary function', () => {
   const source = [
     'add: left, and: right = left + right;',
     'increment = (add: _, and: 1);',
-    'result = 5 ~ increment;'
+    'result = 5 >> increment;'
   ].join('\n');
 
   for (const target of ['js', 'php']) {
@@ -223,7 +223,7 @@ test('selector section captures an outer parameter on JS and PHP', () => {
   const source = [
     'add: left, and: right = left + right;',
     'add by: amount = (add: _, and: amount);',
-    'result = 5 ~ (add by: 4);'
+    'result = 5 >> (add by: 4);'
   ].join('\n');
 
   for (const target of ['js', 'php']) {
@@ -236,7 +236,7 @@ test('section arguments are hygienic even if a user name resembles an internal n
     'add: left, and: right = left + right;',
     '__miraSection0 = 99;',
     'increment = (add: _, and: __miraSection0);',
-    'result = 1 ~ increment;'
+    'result = 1 >> increment;'
   ].join('\n');
 
   for (const target of ['js', 'php']) {
@@ -247,7 +247,7 @@ test('section arguments are hygienic even if a user name resembles an internal n
 test('pipeline operators group left to right with numeric arithmetic', () => {
   const source = [
     'add: left, and: right = left + right;',
-    'result = 1 + 2 ~ (add: _, and: 4);'
+    'result = 1 + 2 >> (add: _, and: 4);'
   ].join('\n');
 
   for (const target of ['js', 'php']) {
@@ -258,7 +258,7 @@ test('pipeline operators group left to right with numeric arithmetic', () => {
 test('pipeline refuses direct multi-hole sections', () => {
   const source = [
     'add: left, and: right = left + right;',
-    'result = 5 ~ (add: _, and: _);'
+    'result = 5 >> (add: _, and: _);'
   ].join('\n');
 
   const outcome = compileError(source);
@@ -280,7 +280,7 @@ test('unbound and isolated placeholders fail with a clear diagnostic', () => {
 });
 
 test('pipeline rejects an obviously non-callable literal', () => {
-  const outcome = compileError('result = 5 ~ 3;');
+  const outcome = compileError('result = 5 >> 3;');
   assert.notEqual(outcome.status, 0);
   assert.match(outcome.stderr, /Pipeline target/);
 });
@@ -315,7 +315,7 @@ test('native field accessors are first-class callable values on both targets', (
   const source = [
     'hours = field "hours";',
     'lesson = {hours: 1.5};',
-    'result = lesson ~ hours;'
+    'result = lesson >> hours;'
   ].join('\n');
   for (const target of ['js', 'php']) {
     assert.equal(run(source, target), '1.5');
@@ -327,7 +327,7 @@ test('native field accessors are first-class callable values on both targets', (
 test('Mira conditions are lazy on JS and PHP', () => {
   const source = [
     'result = if: (false),',
-    '  then: (({value: 1} ~ field "missing")),',
+    '  then: (({value: 1} ~ missing)),',
     '  else: (if: (2 > 1), then: (42), else: (0));'
   ].join('\n');
   for (const target of ['js', 'php']) {
@@ -372,7 +372,7 @@ test('malformed native conditional has a diagnostic instead of an implicit selec
 });
 
 test('missing field access is rejected consistently at runtime', () => {
-  const source = 'result = {score: 1} ~ field "age";';
+  const source = 'result = {score: 1} ~ age;';
   withSource(source,(file,dir)=>{
     for(const target of ['js','php']){
       const generated=execFileSync('node',[compiler,file,target],{encoding:'utf8'});
@@ -388,12 +388,12 @@ test('missing field access is rejected consistently at runtime', () => {
 
 test('0.5 operator sections are first-class unary functions on JS and PHP', () => {
   for (const [source, expected] of [
-    ['result = 7 ~ (_ > 5);', 'true'],
-    ['result = 3 ~ (10 - _);', '7'],
-    ['result = 5 ~ (_ * 2);', '10'],
-    ['accept: predicate = 8 ~ predicate; result = accept: (_ >= 7);', 'true'],
-    ['threshold = 3; result = 7 ~ (_ > threshold);', 'true'],
-    ['result = 3 ~ (_ != 4);', 'true']
+    ['result = 7 >> (_ > 5);', 'true'],
+    ['result = 3 >> (10 - _);', '7'],
+    ['result = 5 >> (_ * 2);', '10'],
+    ['accept: predicate = 8 >> predicate; result = accept: (_ >= 7);', 'true'],
+    ['threshold = 3; result = 7 >> (_ > threshold);', 'true'],
+    ['result = 3 >> (_ != 4);', 'true']
   ]) {
     for (const target of ['js', 'php']) {
       assert.equal(run(source, target), expected, source + ' / ' + target);
@@ -414,10 +414,38 @@ test('operator sections support two holes but pipelines require one', () => {
         [filename], {encoding:'utf8'}).trim(), '7');
     }
   });
-  const invalid = compileError('result = 4 ~ (_ + _);');
+  const invalid = compileError('result = 4 >> (_ + _);');
   assert.notEqual(invalid.status, 0);
   assert.match(invalid.stderr, /unary operator section/);
   const bare = compileError('result = _ + 1;');
   assert.notEqual(bare.status, 0);
   assert.match(bare.stderr, /Placeholder/);
+});
+
+// Mira 0.6 gives field reading and function application separate AST semantics.
+test('0.6 static record fields, shadowed names and chained keys on JS/PHP', () => {
+  for (const [source, expected] of [
+    ['lesson = {hours: 2, rate: 30}; result = lesson ~ hours;', '2'],
+    ['hours = 999; lesson = {hours: 2}; result = lesson ~ hours;', '2'],
+    ['student = {address: {city: "Padova"}}; result = student ~ address ~ city;', '"Padova"'],
+    ['lesson = {"total hours": 3}; result = lesson ~ "total hours";', '3'],
+    ['lesson = {hours: 2}; result = lesson >> (_ ~ hours);', '2'],
+    ['result = 5 >> (_ * 2) >> (_ + 1);', '11'],
+    ['hours = field "hours"; lesson = {hours: 2}; result = lesson >> hours;', '2']
+  ]) for (const target of ['js','php']) {
+    assert.equal(run(source,target), expected, source+' / '+target);
+  }
+});
+
+test('0.6 rejects invalid field targets and reserves complex holes for blocks', () => {
+  for (const [source, expected] of [
+    ['result = 5 ~ (_ + 1);', /Expected a field name after ~/],
+    ['result = 1 ~ 2;', /Expected a field name after ~/],
+    ['result = {hours: 2} >> (_ ~ hours >= 1);', /Complex placeholders require blocks/],
+    ['result = 5 >> (_ + _);', /unary operator section/]
+  ]) {
+    const failed = compileError(source);
+    assert.notEqual(failed.status, 0, source);
+    assert.match(failed.stderr, expected, source);
+  }
 });

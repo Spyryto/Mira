@@ -40,7 +40,7 @@ add: left, and: right = left + right;
 square: value = value * value;
 
 increment = (add: _, and: 1);
-result = 2 ~ increment ~ (square: _) ~ (add: _, and: 1);`
+result = 2 >> increment >> (square: _) >> (add: _, and: 1);`
   },
   {
     id: 'operator-sections',
@@ -48,7 +48,15 @@ result = 2 ~ increment ~ (square: _) ~ (add: _, and: 1);`
     source: `# I predicati sono funzioni, senza definizioni con parametro.
 minimum = 6;
 passes = (_ >= minimum);
-result = 8 ~ passes;`
+result = 8 >> passes;`
+  },
+  {
+    id: 'record-fields',
+    name: 'Campi e funzioni · 0.6',
+    source: `# ~ legge campi; >> applica funzioni.
+lesson = {hours: 2, rate: 30};
+fee: item = (item ~ hours) * (item ~ rate);
+result = lesson >> (fee: _);`
   },
   {
     id: 'host-log',

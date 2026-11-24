@@ -1,0 +1,2 @@
+lesson = {"total hours": 3};
+result = lesson ~ "total hours";

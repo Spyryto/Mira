@@ -1,0 +1,2 @@
+student = {address: {city: "Padova"}};
+result = student ~ address ~ city;

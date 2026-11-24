@@ -26,6 +26,8 @@ function labelOf(node) {
     case 'Binary': return 'Binary · ' + node.symbol;
     case 'Boolean': return 'Boolean · ' + String(node.value);
     case 'FieldAccessor': return 'Accessor · ' + node.key;
+    case 'FieldGet': return 'Campo ~ ' + node.key;
+    case 'FieldSection': return 'Sezione campo · ' + node.key;
     case 'Conditional': return 'Conditional · if/then/else';
     case 'Call':
     case 'Section':

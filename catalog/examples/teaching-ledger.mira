@@ -3,9 +3,6 @@ lessons = [
   {student: "Luca", hours: 2, rate: 25},
   {student: "Mia", hours: 1, rate: 35}
 ];
-hours = field "hours";
-rate = field "rate";
-student = field "student";
 fee: lesson = (lesson ~ hours) * (lesson ~ rate);
 accumulate fee: total, with: lesson = total + (fee: lesson);
 invoice: lesson = {

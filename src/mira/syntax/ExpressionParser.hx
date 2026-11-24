@@ -37,12 +37,22 @@ class ExpressionParser {
     function expression():Expr {
         var left = application();
 
-        // The existing Mira binary operators and pipeline share one level,
-        // all grouping left. Unary application binds before these operators.
+        // Fields (~), function application (>>) and binary operators group
+        // left to right. Unary juxtaposition binds before them.
         while (current().kind == Symbol && isOperator(current().value)) {
             final token = consume();
-            final right = application();
             if (token.value == "~") {
+                // The right operand is a literal field key, never a variable.
+                // A quoted key supports spaces and other non-identifier names.
+                final key = current();
+                if (key.kind != Word && key.kind != Text) {
+                    throw new MiraError("Expected a field name after ~", key);
+                }
+                consume();
+                left = FieldGet(left, key.value);
+            } else {
+                final right = application();
+                if (token.value == ">>") {
                 switch (right) {
                     case Section(_, args) | HostSection(_, args):
                         var holes = 0;
@@ -58,13 +68,15 @@ class ExpressionParser {
                             throw new MiraError("Pipeline needs a unary operator section; this section has "
                                 + holes + " holes", token);
                         }
-                    case Numeric(_) | Text(_) | BooleanLiteral(_) | Binary(_, _, _) | Placeholder:
+                    case Numeric(_) | Text(_) | BooleanLiteral(_) | Binary(_, _, _) | Placeholder
+                        | FieldGet(_, _):
                         throw new MiraError("Pipeline target must be a function", token);
                     default:
                 }
-                left = Apply(right, left);
-            } else {
-                left = Binary(token.value, left, right);
+                    left = Apply(right, left);
+                } else {
+                    left = Binary(token.value, left, right);
+                }
             }
         }
         return left;
@@ -89,7 +101,8 @@ class ExpressionParser {
     static function isPotentialCallable(expr:Expr):Bool {
         return switch (expr) {
             case Name(_) | HostRef(_) | Call(_, _) | HostCall(_, _) | Section(_, _)
-                | HostSection(_, _) | OperatorSection(_, _, _) | Apply(_, _): true;
+                | HostSection(_, _) | OperatorSection(_, _, _) | FieldSection(_)
+                | Apply(_, _): true;
             default: false;
         };
     }
@@ -268,8 +281,15 @@ class ExpressionParser {
     function sectionify(expr:Expr):Expr {
         return switch (expr) {
             case Binary(symbol, left, right):
+                switch ([left, right]) {
+                    case [FieldGet(Placeholder, _), _] | [_, FieldGet(Placeholder, _)]:
+                        throw new MiraError("Complex placeholders require blocks; use a named function for now", current());
+                    default:
+                }
                 isPlaceholder(left) || isPlaceholder(right)
                     ? OperatorSection(symbol, left, right) : expr;
+            case FieldGet(Placeholder, key):
+                FieldSection(key);
             case Placeholder:
                 throw new MiraError("Placeholder '_' requires an operator section", current());
             default: expr;
@@ -284,6 +304,6 @@ class ExpressionParser {
     }
 
     static function isOperator(value:String):Bool {
-        return ["+", "-", "*", "/", "%", "~", "==", "!=", "<", ">", "<=", ">="].indexOf(value) >= 0;
+        return ["+", "-", "*", "/", "%", "~", ">>", "==", "!=", "<", ">", "<=", ">="].indexOf(value) >= 0;
     }
 }

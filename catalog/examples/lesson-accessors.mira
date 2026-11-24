@@ -1,4 +1,4 @@
 lesson = {hours: 1.5, rate: 30};
 hours = field "hours";
 rate = field "rate";
-result = (lesson ~ hours) * (lesson ~ rate);
+result = (lesson >> hours) * (lesson >> rate);

@@ -33,6 +33,15 @@ class SourceEmitter {
             case BooleanLiteral(value):
                 value ? "true" : "false";
 
+            case FieldGet(record, key):
+                // Evaluate the receiver once and preserve the same missing-key
+                // error semantics as the first-class field accessor.
+                "(" + expression(FieldAccessor(key), target, scope, reservedHostNames)
+                    + ")(" + expression(record, target, scope, reservedHostNames) + ")";
+
+            case FieldSection(key):
+                expression(FieldAccessor(key), target, scope, reservedHostNames);
+
             case FieldAccessor(key):
                 final accessor = switch (target) {
                     case JavaScript:

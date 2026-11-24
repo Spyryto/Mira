@@ -18,7 +18,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.5.0"
+            version: "0.6.0"
         });
     }
 
@@ -127,6 +127,10 @@ class Bridge {
             case Text(text): {kind: "Text", value: text};
             case BooleanLiteral(value): {kind: "Boolean", value: value};
             case FieldAccessor(key): {kind: "FieldAccessor", key: key};
+            case FieldGet(record, key):
+                {kind: "FieldGet", record: expression(record), key: key};
+            case FieldSection(key):
+                {kind: "FieldSection", key: key};
             case Conditional(predicate, whenTrue, whenFalse):
                 {kind: "Conditional", condition: expression(predicate),
                     whenTrue: expression(whenTrue), whenFalse: expression(whenFalse)};
