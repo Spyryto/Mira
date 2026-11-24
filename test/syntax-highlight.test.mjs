@@ -73,3 +73,13 @@ test('editor overlay uses text nodes, stays scroll-synchronized, and preserves e
   assert.equal(classes.has('mira-highlight-ready'),false);
   assert.equal(handlers.size,0);
 });
+
+test('natural if then else is highlighted as language keywords',()=>{
+  const source='result = if (1 < 2) then "valid" else "invalid";';
+  const tokens=tokenizeMira(source);
+  assert.equal(tokens.map(token=>token.text).join(''),source);
+  assert.deepEqual(tokens.filter(token=>token.kind==='keyword').map(token=>token.text),
+    ['if','then','else']);
+  assert.deepEqual(tokens.filter(token=>token.kind==='string').map(token=>token.text),
+    ['"valid"','"invalid"']);
+});
