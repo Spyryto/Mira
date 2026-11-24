@@ -1,5 +1,5 @@
 {
-  "version": "0.5.0",
+  "version": "0.6.0",
   "features": [
     {
       "id": "values",
@@ -135,9 +135,9 @@
     },
     {
       "id": "pipelines",
-      "title": "Pipeline `~`",
-      "summary": "Composizione da sinistra a destra.",
-      "details": "`x ~ f` applica `f` a `x`; non supporta sezioni con più fori direttamente.",
+      "title": "Pipeline `>>`",
+      "summary": "Applicazione funzionale esplicita da sinistra a destra.",
+      "details": "`x >> f` applica `f` a `x` e si associa a sinistra; `>>` sostituisce il precedente `~` (0.2–0.5). Le sezioni a due placeholder non sono applicabili direttamente.",
       "api": "mira.syntax.Expr",
       "examples": [
         "recording-level",
@@ -221,8 +221,8 @@
     {
       "id": "accessors",
       "title": "Accessor funzionali di record",
-      "summary": "`field \"name\"` produce una funzione accessor: `lesson ~ hours`.",
-      "details": "Gli accessor sono un costrutto nativo compilato in funzioni JS/PHP, non una chiamata all'host. Una chiave inesistente solleva un errore runtime. In assenza di type checker non viene verificata la forma del record.",
+      "summary": "`field \"name\"` costruisce una funzione accessor, applicabile con `lesson >> hours`.",
+      "details": "Resta un valore funzione di prima classe (0.4): un campo mancante produce un errore runtime. In Mira 0.6 gli accessi diretti senza dichiarazioni si scrivono `lesson ~ hours`.",
       "api": "mira.syntax.Expr.FieldAccessor",
       "examples": [
         "lesson-accessors",
@@ -270,13 +270,25 @@
       "id": "operator-sections",
       "title": "Sezioni di operatori",
       "summary": "`(_ > 5)` e `(10 - _)` sono funzioni, senza nuova sintassi lambda.",
-      "details": "Un operatore aritmetico o di confronto con uno o due placeholder diretti, delimitato da parentesi, produce una funzione di prima classe. La pipeline accetta solo sezioni unarie. Gli emettitori JS/PHP generano closure native senza inferenza dei tipi.",
+      "details": "Un operatore aritmetico o di confronto con uno o due placeholder diretti, delimitato da parentesi, produce una funzione di prima classe. La pipeline `>>` accetta solo sezioni unarie. Gli emettitori JS/PHP generano closure native senza inferenza dei tipi.",
       "api": "mira.syntax.ExpressionParser.parse",
       "examples": [
         "operator-threshold",
         "operator-as-argument"
       ],
       "since": "0.5"
+    },
+    {
+      "id": "field-get",
+      "title": "Accesso diretto ai campi `~`",
+      "summary": "`record ~ field` legge un campo senza dichiarare accessor.",
+      "details": "Il nome dopo `~` è un campo letterale (Word o stringa), non una variabile; gli accessi si concatenano. La lettura controlla la presenza del campo su JS/PHP. `(_ ~ field)` è una sezione unaria; le sezioni complesse attendono i blocchi.",
+      "api": "mira.syntax.Expr.FieldGet",
+      "examples": [
+        "record-field-path",
+        "record-field-quoted"
+      ],
+      "since": "0.6"
     }
   ],
   "examples": [
@@ -764,7 +776,7 @@
       "id": "lesson-accessors",
       "feature": "accessors",
       "title": "Fattura di una lezione",
-      "description": "Gli accessor field sono funzioni di prima classe e la pipeline legge i campi del record senza host esterno.",
+      "description": "Gli accessor `field` restano funzioni di prima classe, applicate con `>>`.",
       "path": "catalog/examples/lesson-accessors.mira",
       "expect": {
         "kind": "result",
@@ -850,7 +862,7 @@
       "id": "filter-lessons",
       "feature": "filtering",
       "title": "Lezioni da fatturare",
-      "description": "Accessor, predicato, filter e map collaborano su una lista di lezioni.",
+      "description": "Accesso diretto `~`, predicati Mira, filter e map compongono una lista di lezioni.",
       "path": "catalog/examples/filter-lessons.mira",
       "host": "studio/host.json",
       "expect": {
@@ -881,6 +893,28 @@
       "expect": {
         "kind": "result",
         "value": true
+      }
+    },
+    {
+      "id": "record-field-path",
+      "feature": "field-get",
+      "title": "Navigazione di record annidati",
+      "description": "Lettura diretta e concatenata dei campi senza accessor intermedi.",
+      "path": "catalog/examples/record-field-path.mira",
+      "expect": {
+        "kind": "result",
+        "value": "Padova"
+      }
+    },
+    {
+      "id": "record-field-quoted",
+      "feature": "field-get",
+      "title": "Campo con spazi",
+      "description": "Una chiave testuale letterale permette campi con nomi non identificatori.",
+      "path": "catalog/examples/record-field-quoted.mira",
+      "expect": {
+        "kind": "result",
+        "value": 3
       }
     }
   ],
