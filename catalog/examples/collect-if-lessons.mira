@@ -1,0 +1,7 @@
+lessons = [
+  {student: "Ada", hours: 1.5},
+  {student: "Eva", hours: 0.5},
+  {student: "Lia", hours: 2}
+];
+billable: lesson = (lesson ~ hours) >= 1;
+result = collect: lessons, if: (billable: _);
