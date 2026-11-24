@@ -80,14 +80,10 @@ test('Escape closes the Workbench without losing its UI state',()=>{
   instance.dispose();
 });
 
-test('Escape closes a nested fullscreen benchmark before the Workbench',()=>{
-  const {root,button,benchmark,doc}=setup();
+test('Escape closes the whole Workbench when Bench is the selected tab',()=>{
+  const {root,button,doc}=setup();
   const instance=mountWorkbenchFullscreen(root,button,doc);
   button.dispatch('click');
-  benchmark.classList.toggle('bench-fullscreen',true);
-  doc.dispatch('keydown',{key:'Escape'});
-  assert.equal(root.classList.contains('workbench-fullscreen'),true);
-  benchmark.classList.toggle('bench-fullscreen',false);
   doc.dispatch('keydown',{key:'Escape'});
   assert.equal(root.classList.contains('workbench-fullscreen'),false);
   instance.dispose();

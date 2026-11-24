@@ -162,12 +162,12 @@ laboratorio a occupare la finestra: editor, schede, compilazione, esecuzione,
 anteprima UI e stato rimangono disponibili. Il pannello **Scrivi** fa crescere
 automaticamente l'area del codice e mantiene visibili i comandi. **✕ Riduci**
 ripristina l'impaginazione normale; da tastiera si può usare anche `Esc`.
+La scheda **Bench** usa questo stesso controllo, senza un secondo pulsante fullscreen.
 
 Non viene usata la Fullscreen API, che non è disponibile uniformemente su
 iPhone: è un layout CSS con `position: fixed` e `100dvh` per il viewport
-dinamico. Il sorgente e il pannello selezionato restano invariati. Se il
-benchmark viene espanso mentre il Workbench lo è già, `Esc` chiude prima
-il benchmark; una seconda pressione riduce il Workbench.
+dinamico. Il sorgente e il pannello selezionato restano invariati. `Esc`
+riduce il Workbench da qualsiasi scheda, inclusa **Bench**.
 
 Il controllo è implementato in `studio/workbench-fullscreen.js`, copiato
 nella build e incluso nella cache offline del service worker.

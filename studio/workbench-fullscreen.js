@@ -1,8 +1,5 @@
 // Expand the whole Workbench without requiring the browser Fullscreen API.
-// The benchmark has its own overlay, which Escape must close first.
 export function mountWorkbenchFullscreen(root, button, doc = document) {
-  const benchmark = doc.getElementById('benchmark');
-
   function toggleFullscreen(force) {
     const open = typeof force === 'boolean'
       ? force : !root.classList.contains('workbench-fullscreen');
@@ -18,7 +15,6 @@ export function mountWorkbenchFullscreen(root, button, doc = document) {
   const onClick = () => toggleFullscreen();
   const onKey = event => {
     if (event.key !== 'Escape' || !root.classList.contains('workbench-fullscreen')) return;
-    if (benchmark?.classList.contains('bench-fullscreen')) return;
     toggleFullscreen(false);
   };
   button.addEventListener('click', onClick);
