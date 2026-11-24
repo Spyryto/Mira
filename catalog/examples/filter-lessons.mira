@@ -3,8 +3,6 @@ lessons = [
   {student: "Eva", hours: 0.5},
   {student: "Lia", hours: 2}
 ];
-hours = field "hours";
-student name = field "student";
 billable: lesson = (lesson ~ hours) >= 1;
 result = map: (filter: lessons, with: (billable: _)),
-  with: (student name);
+  with: (_ ~ student);
