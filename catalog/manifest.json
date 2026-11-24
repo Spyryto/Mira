@@ -1,5 +1,5 @@
 {
-  "version": "0.6.2",
+  "version": "0.6.3",
   "features": [
     {
       "id": "values",
@@ -185,11 +185,12 @@
       "id": "sequences",
       "title": "Sequenze e trasformazioni",
       "summary": "Liste letterali e trasformazioni funzionali con un host minimo.",
-      "details": "Le sequenze `[a, b]` sono valori di Mira. `map:with:` e `fold:with:from:` sono funzioni esplicite dell'host, non keyword del linguaggio; i reducer rimangono funzioni Mira.",
+      "details": "Le sequenze `[a, b]` sono valori di Mira. `map:with:` e `fold:with:from:` sono funzioni esplicite dell'host, non keyword del linguaggio; i reducer rimangono funzioni Mira. `collect:with:` è l'alias di `map:with:` in stile Smalltalk.",
       "api": "mira.syntax.Expr.Sequence",
       "examples": [
         "practice-log",
-        "setlist-plan"
+        "setlist-plan",
+        "collect-with-numbers"
       ],
       "since": "0.3"
     },
@@ -258,11 +259,12 @@
       "id": "filtering",
       "title": "Filtri con predicati Mira",
       "summary": "`filter: list, with: (predicate: _)` filtrando con funzioni Mira.",
-      "details": "Il predicato e la selezione delle condizioni sono scritti in Mira; il runtime host mette a disposizione solo l'iterazione limitata delle liste. La lista restituita è indicizzata da zero ed è portabile fra JS e PHP.",
+      "details": "Il predicato è scritto in Mira; l'host esegue solo l'iterazione limitata delle liste. `filter:with:`, `select:with:`, `select:if:` e `collect:if:` sono alias di filtraggio: conservano l'ordine e restituiscono una lista reindicizzata su JS/PHP. `collect:if:` significa «raccogli se», distinto da `collect:with:` che trasforma come il `collect:` di Smalltalk.",
       "api": "mira.HostEnvironment",
       "examples": [
         "filter-numbers",
-        "filter-lessons"
+        "filter-lessons",
+        "collect-if-lessons"
       ],
       "since": "0.4"
     },
@@ -927,6 +929,43 @@
       "expect": {
         "kind": "result",
         "value": 3
+      }
+    },
+    {
+      "id": "collect-if-lessons",
+      "feature": "filtering",
+      "title": "Collect if: selezionare lezioni",
+      "description": "`collect:if:` filtra usando un predicato Mira, senza introdurre un secondo algoritmo.",
+      "path": "catalog/examples/collect-if-lessons.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "result",
+        "value": [
+          {
+            "student": "Ada",
+            "hours": 1.5
+          },
+          {
+            "student": "Lia",
+            "hours": 2
+          }
+        ]
+      }
+    },
+    {
+      "id": "collect-with-numbers",
+      "feature": "sequences",
+      "title": "Collect with: trasformare valori",
+      "description": "`collect:with:` è l'alias per la trasformazione `map:with:`.",
+      "path": "catalog/examples/collect-with-numbers.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "result",
+        "value": [
+          2,
+          4,
+          6
+        ]
       }
     }
   ],
