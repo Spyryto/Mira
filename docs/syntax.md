@@ -63,6 +63,29 @@ I predicati permettono `filter:with:` tramite una capability host.
 
 [Dettagli storici della versione 0.4](mira04.md). Dalla 0.6 la stessa lettura diretta si scrive `lesson ~ hours` senza dichiarare `hours = field "hours"`.
 
+## Implementato in Mira 0.7: condizionali sintetici
+
+```mira
+result = if (1 < 2) then "valid" else "invalid";
+```
+
+Questa forma produce **lo stesso nodo AST `Conditional`** della
+versione con i due punti:
+
+```mira
+result = if: (1 < 2), then: ("valid"), else: ("invalid");
+```
+
+La condizione deve rimanere tra parentesi per delimitare l'argomento.
+Le espressioni nei rami possono essere semplici oppure composte, per
+esempio `if (true) then (1 + 2 * 3) else 0`. Il ramo `then`
+termina al primo `else` non racchiuso fra parentesi: per annidare
+condizionali nella forma discorsiva, usare le parentesi, ad esempio
+`if (true) then (if (false) then 1 else 2) else 3`.
+Solo il ramo selezionato viene eseguito, su JS e PHP. I due punti
+restano supportati per compatibilità con tutti i programmi precedenti.
+
+
 ## Implementato in Mira 0.5: sezioni di operatori
 
 ```mira

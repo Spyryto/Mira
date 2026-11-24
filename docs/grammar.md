@@ -65,6 +65,23 @@ selector label. Parentheses or the labeled/commas form must be used.
 A well-formed partial prefix of a selector is not automatically a function
 value: `add` is *not* an alias for `add:and:`.
 
+## Native conditionals (0.4 / 0.7)
+
+Both spellings lower to the same lazy `Conditional` AST node:
+
+```mira
+result = if: (1 < 2), then: ("valid"), else: ("invalid");
+result = if (1 < 2) then "valid" else "invalid";
+```
+
+In the second form, the condition must be parenthesized.
+The `then` argument is delimited by the first top-level bare `else`,
+while the final `else` argument consumes the remaining expression.
+When nesting concise conditionals, parentheses disambiguate branch
+boundaries: `if (true) then (if (false) then 1 else 2) else 3`.
+The unused branch never runs on either JS or PHP. No selector lookup
+or type inference is involved.
+
 ## Sections and pipelines (implemented in 0.2)
 
 A placeholder `_` is accepted **only as the entire argument of a complete
