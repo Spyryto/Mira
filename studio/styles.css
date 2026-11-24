@@ -373,3 +373,29 @@ body.workbench-fullscreen-open { overflow:hidden; }
   .workspace.workbench-fullscreen .save-status { display:none; }
   .workbench-expand { padding:7px 8px; font-size:10px; }
 }
+
+/* Syntax colors are presentation only: the native textarea owns all editing. */
+.source-layer { flex:1; min-width:0; min-height:0; position:relative; }
+.source-layer #source { position:relative; z-index:1; display:block;
+  width:100%; height:100%; background:transparent; }
+.source-highlight { display:none; position:absolute; inset:0; margin:0;
+  padding:15px 10px; overflow:hidden; white-space:pre;
+  pointer-events:none; user-select:none;
+  font:13px/1.65 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  tab-size:2; color:#1f2933; }
+body.mira-highlight-ready .source-highlight { display:block; }
+body.mira-highlight-ready #source {
+  color:transparent; -webkit-text-fill-color:transparent;
+  caret-color:#1f2933;
+}
+body.mira-highlight-ready #source::selection {
+  background:rgba(248,187,87,.5); color:transparent;
+}
+.mira-syntax-comment { color:#65816b; font-style:italic; }
+.mira-syntax-string { color:#a44534; }
+.mira-syntax-number { color:#356b9b; }
+.mira-syntax-selector { color:#644bb0; font-weight:650; }
+.mira-syntax-operator { color:#ad5d18; font-weight:750; }
+.mira-syntax-punctuation { color:#65716e; }
+.mira-syntax-boolean, .mira-syntax-keyword { color:#7856aa; font-weight:650; }
+.mira-syntax-placeholder { color:#a64d82; font-weight:750; }
