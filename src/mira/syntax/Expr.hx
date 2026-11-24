@@ -8,6 +8,8 @@ enum Expr {
     Text(value:String);
     BooleanLiteral(value:Bool);
     FieldAccessor(key:String);
+    FieldGet(record:Expr, key:String);
+    FieldSection(key:String);
     Conditional(condition:Expr, whenTrue:Expr, whenFalse:Expr);
     Sequence(items:Array<Expr>);
     Record(keys:Array<String>, values:Array<Expr>);
