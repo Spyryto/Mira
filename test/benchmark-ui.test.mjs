@@ -67,40 +67,34 @@ test('execution worker measures only warmed JavaScript calls and validates resul
   assert.match(reply.message,/risultato errato/);
 });
 
-test('benchmark full-screen controls and Escape work without Fullscreen API',async()=>{
+test('benchmark keeps only the run action and uses the current compiler version',async()=>{
   const {mountBenchmark}=await import(pathToFileURL(resolve(site,'benchmark-ui.js')).href);
-  function classes(){
-    const items=new Set();
-    return {contains:name=>items.has(name),
-      toggle:(name,on)=>{const selected=on===undefined?!items.has(name):on;
-        if(selected)items.add(name);else items.delete(name);return selected;}};
-  }
+  const previousDocument=globalThis.document;
   class Element {
-    constructor(tag){this.tagName=tag;this.classList=classes();
+    constructor(tag){this.tagName=tag;this.className='';
       this.children=[];this.listeners=new Map();this.attributes=new Map();
       this.textContent='';}
-    append(...items){this.children.push(...items);}
-    replaceChildren(...items){this.children=[...items];}
+    append(...nodes){this.children.push(...nodes);}
+    replaceChildren(...nodes){this.children=[...nodes];}
     setAttribute(name,value){this.attributes.set(name,String(value));}
-    addEventListener(type,handler){this.listeners.set(type,handler);}
-    focus(){this.focused=true;}
+    addEventListener(name,listener){this.listeners.set(name,listener);}
   }
-  const handlers=new Map();
-  globalThis.document={
-    body:{classList:classes()},
-    createElement:tag=>new Element(tag),
-    addEventListener:(name,handler)=>handlers.set(name,handler),
-    removeEventListener:name=>handlers.delete(name)
-  };
-  const rootNode=new Element('section');
-  const viewer=mountBenchmark(rootNode,bridge);
-  viewer.toggleFullscreen(true);
-  assert.equal(rootNode.classList.contains('bench-fullscreen'),true);
-  assert.equal(document.body.classList.contains('bench-fullscreen-open'),true);
-  handlers.get('keydown')({key:'Escape'});
-  assert.equal(rootNode.classList.contains('bench-fullscreen'),false);
-  viewer.dispose();
-  assert.equal(handlers.has('keydown'),false);
+  try {
+    globalThis.document={createElement:tag=>new Element(tag)};
+    const rootNode=new Element('section');
+    const viewer=mountBenchmark(rootNode,bridge);
+    const header=rootNode.children[0];
+    const [marker,,,actions]=header.children;
+    assert.equal(marker.textContent,'PERFORMANCE LAB · MIRA '+bridge.version);
+    assert.equal(actions.children.length,1);
+    assert.equal(actions.children[0].textContent,'▶ Avvia benchmark');
+    assert.equal(actions.children[0].className,'bench-run');
+    assert.equal(typeof viewer.run,'function');
+    assert.equal('toggleFullscreen' in viewer,false);
+  } finally {
+    if(previousDocument===undefined)delete globalThis.document;
+    else globalThis.document=previousDocument;
+  }
 });
 
 test('benchmark assets are cached and route has a visible tab',()=>{
@@ -110,5 +104,6 @@ test('benchmark assets are cached and route has a visible tab',()=>{
   }
   assert.match(read('index.html'),/data-view="benchmark"/);
   assert.match(read('app.js'),/mountBenchmark/);
-  assert.match(read('styles.css'),/\.benchmark-area\.bench-fullscreen/);
+  assert.doesNotMatch(read('benchmark-ui.js'),/bench-expand|toggleFullscreen/);
+  assert.doesNotMatch(read('styles.css'),/\.benchmark-area\.bench-fullscreen|\.bench-expand|body\.bench-fullscreen-open/);
 });

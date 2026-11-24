@@ -69,17 +69,13 @@ function metric(label,value,unit,small=false) {
 
 export function mountBenchmark(root,compiler) {
   const header=el('header','bench-header');
-  const marker=el('span','bench-eyebrow','PERFORMANCE LAB · MIRA 0.4');
+  const marker=el('span','bench-eyebrow','PERFORMANCE LAB · MIRA '+compiler.version);
   const title=el('h2','', 'Quanto corre Mira?');
   const description=el('p','','Misura compilazione ed esecuzione direttamente su questo dispositivo.');
   const actions=el('div','bench-actions');
   const runButton=el('button','bench-run','▶ Avvia benchmark');
   runButton.type='button';
-  const fullButton=el('button','bench-expand','⛶ Schermo intero');
-  fullButton.type='button';
-  fullButton.setAttribute('aria-pressed','false');
-  fullButton.setAttribute('aria-label','Espandi il benchmark a schermo intero');
-  actions.append(runButton,fullButton);
+  actions.append(runButton);
   header.append(marker,title,description,actions);
 
   const status=el('p','bench-status','Pronto. Tre programmi Mira: 5, 50 e 100 passi.');
@@ -101,24 +97,6 @@ export function mountBenchmark(root,compiler) {
   ci.href='https://github.com/Spyryto/Mira/actions/workflows/ci.yml';
   ci.target='_blank';ci.rel='noopener noreferrer';
   root.replaceChildren(header,status,highlights,grid,note,ci);
-
-  function toggleFullscreen(force) {
-    const open=typeof force==='boolean'?force:!root.classList.contains('bench-fullscreen');
-    root.classList.toggle('bench-fullscreen',open);
-    document.body.classList.toggle('bench-fullscreen-open',open);
-    fullButton.setAttribute('aria-pressed',String(open));
-    fullButton.textContent=open?'✕ Chiudi schermo intero':'⛶ Schermo intero';
-    fullButton.setAttribute('aria-label',open?'Chiudi il benchmark a schermo intero':
-      'Espandi il benchmark a schermo intero');
-    if(open)fullButton.focus();
-  }
-  fullButton.addEventListener('click',()=>toggleFullscreen());
-  const onKey=event=>{
-    if(event.key==='Escape' && root.classList.contains('bench-fullscreen')){
-      toggleFullscreen(false);
-    }
-  };
-  document.addEventListener('keydown',onKey);
 
   function resultCard(workload,rows,lines) {
     const panel=el('article','bench-result-card');
@@ -182,8 +160,5 @@ export function mountBenchmark(root,compiler) {
     }
   }
   runButton.addEventListener('click',run);
-  return {run,toggleFullscreen,dispose:()=>{
-    document.removeEventListener('keydown',onKey);
-    toggleFullscreen(false);
-  }};
+  return {run};
 }

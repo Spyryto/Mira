@@ -11,7 +11,6 @@ const compiler = globalThis.MiraStudioCompiler;
 const catalogExamples = [];
 let referenceViewer = null;
 let atlasViewer = null;
-let benchmarkViewer = null;
 const $ = id => document.getElementById(id);
 $('languageVersion').textContent = 'V ' + compiler.version;
 const astInspector = createAstInspector(compiler);
@@ -96,7 +95,6 @@ function updateEditorIndicators() {
 function setView(view) {
   if (!['code', 'output', 'structure', 'reference', 'atlas', 'benchmark'].includes(view)) return;
 
-  if (state.view === 'benchmark' && view !== 'benchmark') benchmarkViewer?.toggleFullscreen(false);
   state.view = view;
   for (const button of ui.viewButtons) {
     const selected = button.dataset.view === view;
@@ -531,7 +529,7 @@ function initializeAtlas() {
 }
 
 function initializeBenchmark() {
-  benchmarkViewer = mountBenchmark($('benchmark'), compiler);
+  mountBenchmark($('benchmark'), compiler);
   if (location.hash === '#/benchmark') setView('benchmark');
 }
 
