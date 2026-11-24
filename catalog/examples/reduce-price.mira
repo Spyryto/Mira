@@ -1,4 +1,4 @@
 subtract: amount, by: deduction = amount - deduction;
 reduce by ten = (subtract: _, by: 10);
 listed price = 85;
-result = listed price ~ reduce by ten;
+result = listed price >> reduce by ten;
