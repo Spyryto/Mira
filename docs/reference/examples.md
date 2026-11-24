@@ -924,3 +924,19 @@ result = lesson ~ "total hours";
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/record-field-quoted)
 
+<a id="example-record-field-words"></a>
+## Campo con nome composto, senza virgolette
+
+Dopo ~, le parole consecutive sono un solo nome di campo; nessuna dichiarazione di accessor.
+
+Feature: [Accesso diretto ai campi `~`](language.md#feature-field-get)
+
+```mira
+lesson = {"total hours": 3};
+result = lesson ~ total hours;
+```
+
+**Risultato:** result = 3
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/record-field-words)
+

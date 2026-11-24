@@ -1,4 +1,4 @@
-# Guida a Mira 0.6.0
+# Guida a Mira 0.6.1
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -335,10 +335,11 @@ API collegata: [`mira.syntax.ExpressionParser.parse`](api.md#api-mira-syntax-exp
 
 `record ~ field` legge un campo senza dichiarare accessor.
 
-Il nome dopo `~` è un campo letterale (Word o stringa), non una variabile; gli accessi si concatenano. La lettura controlla la presenza del campo su JS/PHP. `(_ ~ field)` è una sezione unaria; le sezioni complesse attendono i blocchi.
+Il nome dopo `~` è un campo letterale: una o più parole consecutive, oppure una stringa tra virgolette. Un operatore o delimitatore termina il nome, che non viene cercato tra le variabili. Gli accessi si concatenano e i campi mancanti producono lo stesso errore su JS/PHP. `(_ ~ total hours)` è una sezione unaria; le espressioni complesse attendono i blocchi.
 
 API collegata: [`mira.syntax.Expr.FieldGet`](api.md#api-mira-syntax-expr-fieldget)
 
 - [Navigazione di record annidati](examples.md#example-record-field-path) — result = "Padova"
 - [Campo con spazi](examples.md#example-record-field-quoted) — result = 3
+- [Campo con nome composto, senza virgolette](examples.md#example-record-field-words) — result = 3
 
