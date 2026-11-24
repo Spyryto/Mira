@@ -66,6 +66,14 @@ lesson = {total hours: 3};
 result = lesson ~ total hours;`
   },
   {
+    id: 'collect-if',
+    name: 'Collect if · collezioni',
+    source: `# collect:if: filtra; collect:with: trasforma.
+lessons = [{student: "Ada", hours: 1.5}, {student: "Eva", hours: 0.5}];
+billable: lesson = (lesson ~ hours) >= 1;
+result = collect: lessons, if: (billable: _);`
+  },
+  {
     id: 'host-log',
     name: 'Interoperabilità: log',
     source: `# La funzione log arriva dall'oggetto host di Studio.
