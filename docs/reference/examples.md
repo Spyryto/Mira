@@ -1007,3 +1007,18 @@ result = if (true) then 42 else ({value: 0} ~ missing);
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/conditional-natural-lazy)
 
+<a id="example-conditional-optional-commas"></a>
+## Virgole e due punti opzionali
+
+`if (test), then: (a), else: (b)` resta identico alla sintassi sintetica senza punteggiatura.
+
+Feature: [Espressioni condizionali](language.md#feature-conditionals)
+
+```mira
+result = if (1 < 2), then: ("valid"), else: ("invalid");
+```
+
+**Risultato:** result = "valid"
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/conditional-optional-commas)
+
