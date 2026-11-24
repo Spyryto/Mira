@@ -194,6 +194,20 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
 
+## Mira 0.7: condizionali discorsivi
+
+```mira
+result = if (1 < 2) then "valid" else "invalid";
+```
+
+La sintassi `if (test) then valore else valore` è equivalente alla
+precedente `if: (test), then: (valore), else: (valore)`. Entrambe
+generano lo stesso nodo `Conditional`, quindi i rami restano lazy
+su JavaScript e PHP. La condizione richiede parentesi; i condizionali
+annidati si delimitano con parentesi. Non servono macro, runtime
+aggiuntivi o un type checker.
+
+
 ## Mira 0.6: campi e applicazione hanno sintassi distinte
 
 ```mira

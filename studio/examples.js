@@ -74,6 +74,12 @@ billable: lesson = (lesson ~ hours) >= 1;
 result = collect: lessons, if: (billable: _);`
   },
   {
+    id: 'natural-if',
+    name: 'If then else · 0.7',
+    source: `# Due sintassi, un solo condizionale lazy.
+result = if (1 < 2) then "valid" else "invalid";`
+  },
+  {
     id: 'host-log',
     name: 'Interoperabilità: log',
     source: `# La funzione log arriva dall'oggetto host di Studio.

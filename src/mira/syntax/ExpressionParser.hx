@@ -133,8 +133,9 @@ class ExpressionParser {
             final key = consume().value;
             return FieldAccessor(key);
         }
-        if (token.value == "if" && tokens[position + 1].isSymbol(":")) {
-            return conditional();
+        if (token.value == "if") {
+            if (tokens[position + 1].isSymbol(":")) return conditional();
+            if (tokens[position + 1].isSymbol("(")) return conciseConditional();
         }
         if (token.value == "_") {
             if (operatorDepth > 0 || allowOperatorArgument) {
@@ -194,6 +195,44 @@ class ExpressionParser {
         requireWord("else");
         requireSymbol(":");
         final whenFalse = parenthesizedBranch("else");
+        return Conditional(predicate, whenTrue, whenFalse);
+    }
+
+    // Friendly spelling of the same native, lazy AST node:
+    //   if (condition) then value else value
+    // The condition has a mandatory delimiter; the then branch ends at
+    // the outermost bare "else". Parentheses delimit nested conditionals.
+    function conciseConditional():Expr {
+        consume(); // if
+        final predicate = parenthesizedBranch("if");
+        requireWord("then");
+
+        final start = position;
+        var nested = 0;
+        while (current().kind != End) {
+            final token = current();
+            if (nested == 0 && token.kind == Word && token.value == "else") break;
+            if (nested == 0 && (token.isSymbol(";") || token.isSymbol(",")
+                || token.isSymbol(")") || token.isSymbol("]") || token.isSymbol("}"))) break;
+            if (token.isSymbol("(") || token.isSymbol("[") || token.isSymbol("{")) {
+                nested++;
+            } else if (token.isSymbol(")") || token.isSymbol("]") || token.isSymbol("}")) {
+                nested--;
+            }
+            consume();
+        }
+        if (start == position) throw new MiraError("Expected then expression", current());
+        if (current().kind != Word || current().value != "else") {
+            throw new MiraError("Expected else branch", current());
+        }
+        final whenTrue = new ExpressionParser(tokens.slice(start, position), symbols,
+            localNames, allowOperatorArgument).parse();
+        consume(); // else
+        if (current().kind == End || current().isSymbol(";") || current().isSymbol(",")
+            || current().isSymbol(")") || current().isSymbol("]") || current().isSymbol("}")) {
+            throw new MiraError("Expected else expression", current());
+        }
+        final whenFalse = expression();
         return Conditional(predicate, whenTrue, whenFalse);
     }
 

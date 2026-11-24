@@ -516,3 +516,38 @@ test('record literal missing colon keeps a clear source diagnostic', () => {
   assert.notEqual(failure.status, 0);
   assert.match(failure.stderr, /Expected : after record key/);
 });
+
+test('natural if then else syntax shares lazy conditional semantics on JS and PHP', () => {
+  for (const [source, expected] of [
+    ['result = if (1 < 2) then "valid" else "invalid";', '"valid"'],
+    ['result = if (1 > 2) then "valid" else "invalid";', '"invalid"'],
+    ['result = if (true) then 42 else 0;', '42'],
+    ['result = if (false) then 42 else 0;', '0'],
+    ['result = if (true) then (1 + 2 * 3) else 0;', '9'],
+    ['result = if (false) then ({value: 0} ~ missing) else 7;', '7'],
+    ['result = if (true) then 7 else ({value: 0} ~ missing);', '7'],
+    ['result = if (true) then (if (false) then "wrong" else "nested") else "outer";', '"nested"'],
+    ['result = {label: if (1 < 2) then "valid" else "invalid"};', '{"label":"valid"}'],
+    ['hourly rate = 30; result = if (hourly rate > 20) then hourly rate else 10;', '30'],
+    ['result = if: (1 < 2), then: ("valid"), else: ("invalid");', '"valid"']
+  ]) {
+    for (const target of ['js', 'php']) {
+      assert.equal(run(source, target), expected, source + ' / ' + target);
+    }
+  }
+});
+
+test('natural conditionals diagnose missing then and else boundaries', () => {
+  const invalid = [
+    ['result = if (true) 1 else 2;', /Expected then branch/],
+    ['result = if (true) then 1;', /Expected else branch/],
+    ['result = if (true) then else 2;', /Expected then expression/],
+    ['result = if (true) then 1 else;', /Expected else expression/],
+    ['result = if (1 < 2) then (1 + 2) else;', /Expected else expression/]
+  ];
+  for (const [source, diagnostic] of invalid) {
+    const error = compileError(source);
+    assert.notEqual(error.status, 0, source);
+    assert.match(error.stderr, diagnostic, source);
+  }
+});
