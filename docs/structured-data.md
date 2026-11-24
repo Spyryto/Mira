@@ -7,7 +7,9 @@ i servizi sulle collezioni come normali callable dell'ambiente:
 - **Record anonimi**: `{venue: "Padova", fee: 240}`.
 
 I record possono contenere campi calcolati, liste e altri record. Le chiavi
-possono essere singole parole o letterali di testo; le chiavi duplicate e
+possono essere parole singole, nomi composti senza virgolette (per esempio
+`{total hours: 3}`) oppure letterali di testo (`{"total hours": 3}`).
+Le forme con e senza virgolette sono equivalenti; le chiavi duplicate e
 le virgole finali vengono rifiutate. Non sono ancora tipi record dichiarati
 né oggetti con metodi.
 

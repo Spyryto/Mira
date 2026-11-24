@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.6.1');
+  assert.equal(bridge.version, '0.6.2');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -92,6 +92,9 @@ test('PWA assets are self-hosted and have a relative GitHub Pages scope', () => 
   }
 
   const html = read('index.html');
+  assert.match(html, /id="languageVersion"/);
+  assert.doesNotMatch(html, /V 0\.4/);
+  assert.match(read('app.js'), /compiler\.version/);
   for (const file of ['app.js', 'compiler.js', 'styles.css', 'manifest.webmanifest']) {
     assert.match(html, new RegExp(file.replace('.', '\\.'), 'i'));
   }
@@ -269,7 +272,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.6.1');
+  assert.equal(bridge.version,'0.6.2');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -339,4 +342,20 @@ test('browser compiler and AST preserve multiword field keys', () => {
   assert.equal(field.kind, 'FieldGet');
   assert.equal(field.key, 'total hours');
   assert.equal(field.record.kind, 'Name');
+});
+
+test('browser parser supports unquoted multiword record keys', () => {
+  const source = 'lesson = {total hours: 3}; result = lesson ~ total hours;';
+  for (const target of ['js', 'php']) {
+    const compilation = bridge.compile(source, target);
+    assert.equal(compilation.ok, true, compilation.message);
+    if (target === 'js') assert.equal(runInNewContext(compilation.output + '\nresult', {}), 3);
+  }
+  const inspected = bridge.ast(source);
+  assert.equal(inspected.ok, true, inspected.message);
+  const definitions = JSON.parse(inspected.output).definitions;
+  assert.equal(definitions[0].body.kind, 'Record');
+  assert.equal(definitions[0].body.fields[0].key, 'total hours');
+  assert.equal(definitions[1].body.kind, 'FieldGet');
+  assert.equal(definitions[1].body.key, 'total hours');
 });

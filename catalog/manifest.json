@@ -1,5 +1,5 @@
 {
-  "version": "0.6.1",
+  "version": "0.6.2",
   "features": [
     {
       "id": "values",
@@ -197,7 +197,7 @@
       "id": "records",
       "title": "Record e dati strutturati",
       "summary": "Costruzione di record anonimi portabili tra JavaScript e PHP.",
-      "details": "I record `{campo: espressione}` diventano oggetti JavaScript e array associativi PHP. Il selettore host `get:from:` legge una chiave; chiavi duplicate e delimitatori errati vengono rifiutati.",
+      "details": "I record `{campo: espressione}` diventano oggetti JavaScript e array associativi PHP. Le chiavi possono essere parole composte senza virgolette, come `{total hours: 3}`, o stringhe esplicite. Il selettore host `get:from:` legge una chiave; chiavi duplicate (anche fra forme con e senza virgolette) e delimitatori errati vengono rifiutati.",
       "api": "mira.syntax.Expr.Record",
       "examples": [
         "gig-ledger",
@@ -922,7 +922,7 @@
       "id": "record-field-words",
       "feature": "field-get",
       "title": "Campo con nome composto, senza virgolette",
-      "description": "Dopo ~, le parole consecutive sono un solo nome di campo; nessuna dichiarazione di accessor.",
+      "description": "La stessa chiave composta si scrive senza virgolette nella dichiarazione del record e dopo ~.",
       "path": "catalog/examples/record-field-words.mira",
       "expect": {
         "kind": "result",

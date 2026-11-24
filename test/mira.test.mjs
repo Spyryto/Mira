@@ -482,3 +482,37 @@ test('multiword fields keep a checked missing-key error', () => {
     }
   });
 });
+
+test('multiword record declarations and accesses agree on JS and PHP', () => {
+  for (const [source, expected] of [
+    ['lesson = {total hours: 3}; result = lesson ~ total hours;', '3'],
+    ['lesson = { total hours: 3}; result = lesson ~ total hours;', '3'],
+    ['lesson = {total hours: 3}; result = lesson ~ "total hours";', '3'],
+    ['lesson = {"total hours": 3}; result = lesson ~ total hours;', '3'],
+    ['student = {address: {postal code: "30032"}}; result = student ~ address ~ postal code;', '"30032"'],
+    ['lesson = {total hours: 3}; result = lesson >> (_ ~ total hours);', '3'],
+    ['hourly rate = 30; hours = 2; pay = hourly rate * hours; result = pay;', '60'],
+    ['summary = {total hours: 2 + 3, hourly rate: 12}; result = summary ~ total hours;', '5']
+  ]) {
+    for (const target of ['js','php']) {
+      assert.equal(run(source, target), expected, source + ' / ' + target);
+    }
+  }
+});
+
+test('duplicate keys are detected across quoted and bare multiword forms', () => {
+  for (const source of [
+    'result = {total hours: 3, "total hours": 4};',
+    'result = {"total hours": 3, total hours: 4};'
+  ]) {
+    const failure = compileError(source);
+    assert.notEqual(failure.status, 0, source);
+    assert.match(failure.stderr, /Duplicate record key total hours/);
+  }
+});
+
+test('record literal missing colon keeps a clear source diagnostic', () => {
+  const failure = compileError('lesson = {total hours 3}; result = 0;');
+  assert.notEqual(failure.status, 0);
+  assert.match(failure.stderr, /Expected : after record key/);
+});

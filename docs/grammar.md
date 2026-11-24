@@ -37,6 +37,7 @@ expression    = primary, { binary-operator, primary } ;
 primary       = number | string | name | "(", expression, ")" | selector-call ;
 binary-operator = "+" | "-" | "*" | "/" | "%" | ">>" ;
 field-access    = expression, "~", (name | string) ;
+record-key      = name | string ;
 ```
 
 Operators share one precedence level and group left; `1 + 2 * 3` means
@@ -99,7 +100,9 @@ functions, both with hygienic generated parameter names.
 (`FieldGet`). Starting in 0.6.1, unquoted keys can be **multiword
 identifiers**, just like declared names: `lesson ~ total hours`.
 Consecutive words belong to one key until an operator or delimiter;
-quoted strings remain valid (`lesson ~ "total hours"`). Field keys do
+quoted strings remain valid (`lesson ~ "total hours"`). Record
+literals use the same rule: `{total hours: 3}` and
+`{"total hours": 3}` are equivalent. Field keys do
 not resolve as ordinary variables. `(_ ~ total hours)` produces
 `FieldSection`, a callable unary accessor with `>>`. More complex
 placeholder expressions are deferred until blocks.
