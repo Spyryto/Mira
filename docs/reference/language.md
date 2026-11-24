@@ -1,4 +1,4 @@
-# Guida a Mira 0.6.3
+# Guida a Mira 0.7.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -292,14 +292,16 @@ API collegata: [`mira.syntax.Expr.BooleanLiteral`](api.md#api-mira-syntax-expr-b
 
 **Disponibile dalla versione 0.4**
 
-`if: (condizione), then: (vero), else: (falso)` valuta un solo ramo.
+`if: (cond), then: (a), else: (b)` e `if (cond) then a else b` valutano un solo ramo.
 
-I tre argomenti sono obbligatoriamente tra parentesi per evitare ambiguità; il parser crea il nodo Conditional, e l'emettitore traduce nell'espressione condizionale nativa JS/PHP. Non è una normale funzione host, quindi i rami sono lazy.
+Due sintassi per lo stesso nodo AST nativo Conditional: `if: (cond), then: (a), else: (b)` e la forma sintetica `if (cond) then a else b`. La condizione usa parentesi per delimitare i confini; i rami sintetici possono essere letterali, nomi o espressioni e per i condizionali annidati sono necessarie parentesi. JS e PHP emettono un'espressione condizionale lazy: il ramo non selezionato non viene valutato.
 
 API collegata: [`mira.syntax.Expr.Conditional`](api.md#api-mira-syntax-expr-conditional)
 
 - [Scelta di un'etichetta](examples.md#example-conditional-label) — result = "valid"
 - [Soglia per uno sconto](examples.md#example-conditional-fee) — result = {"bonus":0}
+- [Selezione discorsiva senza due punti](examples.md#example-conditional-natural-label) — result = "valid"
+- [Ramo non selezionato mai eseguito](examples.md#example-conditional-natural-lazy) — result = 42
 
 <a id="feature-filtering"></a>
 ## Filtri con predicati Mira

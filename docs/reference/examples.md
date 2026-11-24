@@ -977,3 +977,33 @@ result = collect: numbers, with: (_ * 2);
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/collect-with-numbers)
 
+<a id="example-conditional-natural-label"></a>
+## Selezione discorsiva senza due punti
+
+`if (test) then value else value` equivale alla forma con `if:then:else:`.
+
+Feature: [Espressioni condizionali](language.md#feature-conditionals)
+
+```mira
+result = if (1 < 2) then "valid" else "invalid";
+```
+
+**Risultato:** result = "valid"
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/conditional-natural-label)
+
+<a id="example-conditional-natural-lazy"></a>
+## Ramo non selezionato mai eseguito
+
+La forma discorsiva mantiene il ramo falso lazy anche quando contiene un campo inesistente.
+
+Feature: [Espressioni condizionali](language.md#feature-conditionals)
+
+```mira
+result = if (true) then 42 else ({value: 0} ~ missing);
+```
+
+**Risultato:** result = 42
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/conditional-natural-lazy)
+
