@@ -82,6 +82,16 @@ boundaries: `if (true) then (if (false) then 1 else 2) else 3`.
 The unused branch never runs on either JS or PHP. No selector lookup
 or type inference is involved.
 
+Since 0.7.1, the two commas and the three label colons are optional,
+independently, like selector-call separators:
+
+```mira
+result = if (1 < 2), then: ("valid"), else: ("invalid");
+```
+
+This produces the very same `Conditional` AST and keeps the original
+laziness and source locations.
+
 ## Sections and pipelines (implemented in 0.2)
 
 A placeholder `_` is accepted **only as the entire argument of a complete

@@ -85,6 +85,24 @@ condizionali nella forma discorsiva, usare le parentesi, ad esempio
 Solo il ramo selezionato viene eseguito, su JS e PHP. I due punti
 restano supportati per compatibilità con tutti i programmi precedenti.
 
+### Mira 0.7.1: virgole e due punti opzionali
+
+Le separazioni tra `if`, `then` ed `else` seguono la stessa
+convenzione delle chiamate di selettore: virgole opzionali e
+due punti opzionali dopo ciascuna parola chiave.
+
+```mira
+result = if (1 < 2), then: ("valid"), else: ("invalid");
+result = if (1 < 2) then "valid" else "invalid";
+result = if: (1 < 2), then: ("valid"), else: ("invalid");
+result = if (1 < 2) then: ("valid") else: ("invalid");
+```
+
+Le quattro forme producono **esattamente lo stesso AST**; non cambiano
+né il risultato né la valutazione lazy. La condizione rimane tra parentesi,
+mentre per i due rami le parentesi sono necessarie solo quando servono
+per delimitare espressioni annidate.
+
 
 ## Implementato in Mira 0.5: sezioni di operatori
 
