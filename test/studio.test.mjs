@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.6.0');
+  assert.equal(bridge.version, '0.6.1');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -269,7 +269,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.6.0');
+  assert.equal(bridge.version,'0.6.1');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -332,7 +332,7 @@ test('browser compiler and AST preserve multiword field keys', () => {
   const php = bridge.compile(source, 'php');
   assert.equal(js.ok, true, js.message);
   assert.equal(php.ok, true, php.message);
-  assert.equal(runInNewContext(js.output + '\\nresult', {}), 3);
+  assert.equal(runInNewContext(js.output + '\nresult', {}), 3);
   const ast = bridge.ast(source);
   assert.equal(ast.ok, true, ast.message);
   const field = JSON.parse(ast.output).definitions[1].body;

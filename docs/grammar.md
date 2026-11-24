@@ -36,7 +36,7 @@ expression bodies are resolved.
 expression    = primary, { binary-operator, primary } ;
 primary       = number | string | name | "(", expression, ")" | selector-call ;
 binary-operator = "+" | "-" | "*" | "/" | "%" | ">>" ;
-field-access    = expression, "~", (word | string) ;
+field-access    = expression, "~", (name | string) ;
 ```
 
 Operators share one precedence level and group left; `1 + 2 * 3` means
@@ -96,10 +96,13 @@ functions, both with hygienic generated parameter names.
 ## Record fields in 0.6
 
 `record ~ field` compiles to a checked literal field lookup in the AST
-(`FieldGet`). Keys are words or quoted string literals; field names do
-not resolve as ordinary variables. `(_ ~ field)` produces `FieldSection`,
-a callable unary accessor usable with `>>`. More complex placeholder
-expressions are deferred until blocks.
+(`FieldGet`). Starting in 0.6.1, unquoted keys can be **multiword
+identifiers**, just like declared names: `lesson ~ total hours`.
+Consecutive words belong to one key until an operator or delimiter;
+quoted strings remain valid (`lesson ~ "total hours"`). Field keys do
+not resolve as ordinary variables. `(_ ~ total hours)` produces
+`FieldSection`, a callable unary accessor with `>>`. More complex
+placeholder expressions are deferred until blocks.
 
 `field "name"` from 0.4 remains a first-class accessor. The meaning
 of `~` changed in 0.6; older programs must migrate their pipelines

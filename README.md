@@ -210,6 +210,17 @@ come accessor di prima classe. Il controllo di esistenza del campo è
 mantenuto su JS e PHP (nessun type checker richiesto).
 Questa è una modifica incompatibile con la sintassi 0.5.
 
+Dalla **0.6.1**, il nome di un campo può contenere più parole anche
+senza virgolette:
+
+```mira
+lesson = {"total hours": 3};
+result = lesson ~ total hours;
+```
+
+`lesson ~ "total hours"` rimane equivalente. Non è richiesto un
+type checker; i test JS/PHP controllano anche i campi mancanti.
+
 ## Benchmark interattivi
 
 La scheda **[Bench della PWA](https://spyryto.github.io/Mira/#/benchmark)**
