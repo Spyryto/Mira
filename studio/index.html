@@ -31,13 +31,18 @@
     </div>
 
     <main id="main">
-      <section class="workspace" aria-label="Mira Studio">
+      <section class="workspace" id="workbench" aria-label="Mira Studio">
         <div class="workspace-heading">
           <div class="workspace-title">
             <span class="workspace-dot" aria-hidden="true"></span>
             <span>Workbench</span>
           </div>
-          <span id="saveStatus" class="save-status">Salvataggio locale</span>
+          <div class="workspace-controls">
+            <span id="saveStatus" class="save-status">Salvataggio locale</span>
+            <button type="button" id="workbenchFullscreen" class="workbench-expand"
+              aria-label="Espandi il Workbench a schermo intero"
+              aria-pressed="false" title="Espandi il Workbench">⛶ Espandi</button>
+          </div>
         </div>
 
         <nav class="tabs" role="tablist" aria-label="Viste Studio">

@@ -345,3 +345,40 @@ body.bench-fullscreen-open { overflow: hidden; }
   .bench-grid { grid-template-columns: repeat(auto-fit,minmax(250px,1fr)); }
   .bench-metric-value {font-size:25px;}
 }
+
+/* Workbench-wide fullscreen. This works in iOS/PWA without the Fullscreen API. */
+.workspace-controls { display:flex; align-items:center; gap:10px; min-width:0; }
+.workbench-expand { flex:0 0 auto; border:2px solid var(--line); border-radius:8px;
+  padding:7px 10px; font-size:11px; font-weight:900; background:var(--white);
+  color:var(--ink); box-shadow:2px 2px 0 var(--line); }
+body.workbench-fullscreen-open { overflow:hidden; }
+.workspace.workbench-fullscreen { position:fixed; inset:0; z-index:1000;
+  width:100%; height:100dvh; max-height:100dvh; display:flex;
+  flex-direction:column; border-radius:0; border:0; box-shadow:none; overflow:hidden; }
+.workspace.workbench-fullscreen > .workspace-heading {
+  flex:0 0 auto;
+  padding-top:max(13px,env(safe-area-inset-top,0px));
+}
+.workspace.workbench-fullscreen > .tabs { flex:0 0 auto; }
+.workspace.workbench-fullscreen > .panel:not([hidden]) {
+  flex:1 1 auto; min-height:0; overflow:auto; overscroll-behavior:contain;
+}
+.workspace.workbench-fullscreen > #view-code:not([hidden]) {
+  display:flex; flex-direction:column; overflow:hidden;
+}
+.workspace.workbench-fullscreen #view-code .editor-toolbar,
+.workspace.workbench-fullscreen #view-code .editor-footer { flex:0 0 auto; }
+.workspace.workbench-fullscreen #view-code .editor-frame {
+  flex:1 1 auto; min-height:0; height:auto;
+}
+.workspace.workbench-fullscreen .code-output { max-height:none; }
+.workspace.workbench-fullscreen > .action-bar { flex:0 0 auto; }
+.workspace.workbench-fullscreen > .status { flex:0 0 auto;
+  max-height:20dvh; overflow:auto;
+  padding-bottom:max(13px,env(safe-area-inset-bottom,0px));
+}
+@media (max-width:380px) {
+  .workspace-controls { gap:5px; }
+  .workspace.workbench-fullscreen .save-status { display:none; }
+  .workbench-expand { padding:7px 8px; font-size:10px; }
+}
