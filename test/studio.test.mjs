@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.6.3');
+  assert.equal(bridge.version, '0.7.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.6.3');
+  assert.equal(bridge.version,'0.7.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -373,4 +373,34 @@ test('browser parser supports unquoted multiword record keys', () => {
   assert.equal(definitions[0].body.fields[0].key, 'total hours');
   assert.equal(definitions[1].body.kind, 'FieldGet');
   assert.equal(definitions[1].body.key, 'total hours');
+});
+
+test('0.7 natural conditional and if:then:else: have the same canonical AST', () => {
+  const concise = 'result = if (1 < 2) then "valid" else "invalid";';
+  const verbose = 'result = if: (1 < 2), then: ("valid"), else: ("invalid");';
+  const a = bridge.ast(concise);
+  const b = bridge.ast(verbose);
+  assert.equal(a.ok, true, a.message);
+  assert.equal(b.ok, true, b.message);
+  const left = JSON.parse(a.output).definitions[0].body;
+  const right = JSON.parse(b.output).definitions[0].body;
+  assert.deepEqual(left, right);
+  assert.equal(left.kind, 'Conditional');
+  assert.equal(left.condition.kind, 'Binary');
+  for (const target of ['js', 'php']) {
+    const output = bridge.compile(concise, target);
+    assert.equal(output.ok, true, output.message);
+    assert.equal(typeof output.output, 'string');
+  }
+});
+
+test('Studio natural conditional preset compiles with no host declarations', async () => {
+  const url = pathToFileURL(resolve(site, 'examples.js')).href;
+  const {examples} = await import(url);
+  const example = examples.find(x => x.id === 'natural-if');
+  assert.ok(example);
+  for (const target of ['js', 'php']) {
+    const built = bridge.compile(example.source, target);
+    assert.equal(built.ok, true, built.message);
+  }
 });
