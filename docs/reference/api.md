@@ -157,7 +157,7 @@ Feature: [Sezioni con più `_`](language.md#feature-multi-sections), [Cattura le
 public static function hostAccess(name:String, target:Target):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L116)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L125)
 
 <a id="api-mira-hostenvironment"></a>
 ### `mira.HostEnvironment`
@@ -919,7 +919,7 @@ enum Expr
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L3)
 
-Feature: [Sezioni unarie](language.md#feature-sections), [Pipeline `~`](language.md#feature-pipelines)
+Feature: [Sezioni unarie](language.md#feature-sections), [Pipeline `>>`](language.md#feature-pipelines)
 
 <a id="api-mira-syntax-expr-apply"></a>
 ### `mira.syntax.Expr.Apply`
@@ -930,7 +930,7 @@ Feature: [Sezioni unarie](language.md#feature-sections), [Pipeline `~`](language
 Apply(callee:Expr, argument:Expr)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L21)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L23)
 
 <a id="api-mira-syntax-expr-binary"></a>
 ### `mira.syntax.Expr.Binary`
@@ -941,7 +941,7 @@ Apply(callee:Expr, argument:Expr)
 Binary(symbol:String, left:Expr, right:Expr)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L14)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L16)
 
 <a id="api-mira-syntax-expr-booleanliteral"></a>
 ### `mira.syntax.Expr.BooleanLiteral`
@@ -965,7 +965,7 @@ Feature: [Booleani e confronti](language.md#feature-comparisons)
 Call(selector:String, arguments:Array<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L16)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L18)
 
 <a id="api-mira-syntax-expr-conditional"></a>
 ### `mira.syntax.Expr.Conditional`
@@ -976,7 +976,7 @@ Call(selector:String, arguments:Array<Expr>)
 Conditional(condition:Expr, whenTrue:Expr, whenFalse:Expr)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L11)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L13)
 
 Feature: [Espressioni condizionali](language.md#feature-conditionals)
 
@@ -993,6 +993,30 @@ FieldAccessor(key:String)
 
 Feature: [Accessor funzionali di record](language.md#feature-accessors)
 
+<a id="api-mira-syntax-expr-fieldget"></a>
+### `mira.syntax.Expr.FieldGet`
+
+**variant** · AST canonico, indipendente dalla grafia superficiale dei selettori.
+
+```haxe
+FieldGet(record:Expr, key:String)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L11)
+
+Feature: [Accesso diretto ai campi `~`](language.md#feature-field-get)
+
+<a id="api-mira-syntax-expr-fieldsection"></a>
+### `mira.syntax.Expr.FieldSection`
+
+**variant** · AST canonico, indipendente dalla grafia superficiale dei selettori.
+
+```haxe
+FieldSection(key:String)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L12)
+
 <a id="api-mira-syntax-expr-hostcall"></a>
 ### `mira.syntax.Expr.HostCall`
 
@@ -1002,7 +1026,7 @@ Feature: [Accessor funzionali di record](language.md#feature-accessors)
 HostCall(selector:String, arguments:Array<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L17)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L19)
 
 <a id="api-mira-syntax-expr-hostref"></a>
 ### `mira.syntax.Expr.HostRef`
@@ -1024,7 +1048,7 @@ HostRef(name:String)
 HostSection(selector:String, arguments:Array<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L20)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L22)
 
 <a id="api-mira-syntax-expr-name"></a>
 ### `mira.syntax.Expr.Name`
@@ -1057,7 +1081,7 @@ Numeric(value:String)
 OperatorSection(symbol:String, left:Expr, right:Expr)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L15)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L17)
 
 <a id="api-mira-syntax-expr-placeholder"></a>
 ### `mira.syntax.Expr.Placeholder`
@@ -1068,7 +1092,7 @@ OperatorSection(symbol:String, left:Expr, right:Expr)
 Placeholder
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L18)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L20)
 
 <a id="api-mira-syntax-expr-record"></a>
 ### `mira.syntax.Expr.Record`
@@ -1079,7 +1103,7 @@ Placeholder
 Record(keys:Array<String>, values:Array<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L13)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L15)
 
 Feature: [Record e dati strutturati](language.md#feature-records)
 
@@ -1092,7 +1116,7 @@ Feature: [Record e dati strutturati](language.md#feature-records)
 Section(selector:String, arguments:Array<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L19)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L21)
 
 <a id="api-mira-syntax-expr-sequence"></a>
 ### `mira.syntax.Expr.Sequence`
@@ -1103,7 +1127,7 @@ Section(selector:String, arguments:Array<Expr>)
 Sequence(items:Array<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L12)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L14)
 
 Feature: [Sequenze e trasformazioni](language.md#feature-sequences)
 

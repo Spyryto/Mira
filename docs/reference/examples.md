@@ -334,7 +334,7 @@ Feature: [Sezioni unarie](language.md#feature-sections)
 subtract: amount, by: deduction = amount - deduction;
 reduce by ten = (subtract: _, by: 10);
 listed price = 85;
-result = listed price ~ reduce by ten;
+result = listed price >> reduce by ten;
 ```
 
 **Risultato:** result = 75
@@ -352,7 +352,7 @@ Feature: [Sezioni unarie](language.md#feature-sections)
 scale: value, by: factor = value * factor;
 triple = (scale: _, by: 3);
 boxes = 14;
-result = boxes ~ triple;
+result = boxes >> triple;
 ```
 
 **Risultato:** result = 42
@@ -398,13 +398,13 @@ result = 0;
 
 Moltiplica e aggiunge in una pipeline.
 
-Feature: [Pipeline `~`](language.md#feature-pipelines)
+Feature: [Pipeline `>>`](language.md#feature-pipelines)
 
 ```mira
 add: a, and: b = a + b;
 multiply: a, by: b = a * b;
 input level = 6;
-result = input level ~ (multiply: _, by: 3) ~ (add: _, and: 4);
+result = input level >> (multiply: _, by: 3) >> (add: _, and: 4);
 ```
 
 **Risultato:** result = 22
@@ -416,13 +416,13 @@ result = input level ~ (multiply: _, by: 3) ~ (add: _, and: 4);
 
 Due trasformazioni consecutive.
 
-Feature: [Pipeline `~`](language.md#feature-pipelines)
+Feature: [Pipeline `>>`](language.md#feature-pipelines)
 
 ```mira
 subtract: amount, by: deduction = amount - deduction;
 scale: amount, by: multiplier = amount * multiplier;
 original budget = 50;
-result = original budget ~ (subtract: _, by: 5) ~ (scale: _, by: 2);
+result = original budget >> (subtract: _, by: 5) >> (scale: _, by: 2);
 ```
 
 **Risultato:** result = 90
@@ -440,7 +440,7 @@ Feature: [Cattura lessicale](language.md#feature-captures)
 add: a, and: b = a + b;
 add extra: extra = (add: _, and: extra);
 base budget = 12;
-result = base budget ~ (add extra: 8);
+result = base budget >> (add extra: 8);
 ```
 
 **Risultato:** result = 20
@@ -458,7 +458,7 @@ Feature: [Cattura lessicale](language.md#feature-captures)
 multiply: a, by: b = a * b;
 multiply by: multiplier = (multiply: _, by: multiplier);
 items count = 7;
-result = items count ~ (multiply by: 6);
+result = items count >> (multiply by: 6);
 ```
 
 **Risultato:** result = 42
@@ -629,9 +629,6 @@ lessons = [
   {student: "Luca", hours: 2, rate: 25},
   {student: "Mia", hours: 1, rate: 35}
 ];
-hours = field "hours";
-rate = field "rate";
-student = field "student";
 fee: lesson = (lesson ~ hours) * (lesson ~ rate);
 accumulate fee: total, with: lesson = total + (fee: lesson);
 invoice: lesson = {
@@ -729,7 +726,7 @@ render {
 <a id="example-lesson-accessors"></a>
 ## Fattura di una lezione
 
-Gli accessor field sono funzioni di prima classe e la pipeline legge i campi del record senza host esterno.
+Gli accessor `field` restano funzioni di prima classe, applicate con `>>`.
 
 Feature: [Accessor funzionali di record](language.md#feature-accessors)
 
@@ -737,7 +734,7 @@ Feature: [Accessor funzionali di record](language.md#feature-accessors)
 lesson = {hours: 1.5, rate: 30};
 hours = field "hours";
 rate = field "rate";
-result = (lesson ~ hours) * (lesson ~ rate);
+result = (lesson >> hours) * (lesson >> rate);
 ```
 
 **Risultato:** result = 45
@@ -755,7 +752,7 @@ Feature: [Accessor funzionali di record](language.md#feature-accessors)
 student = {name: "Ada", minutes: 90};
 name = field "name";
 minutes = field "minutes";
-result = {student: (student ~ name), hours: ((student ~ minutes) / 60)};
+result = {student: (student >> name), hours: ((student >> minutes) / 60)};
 ```
 
 **Risultato:** result = {"student":"Ada","hours":1.5}
@@ -843,7 +840,7 @@ result = filter: numbers, with: (greater than four: _);
 <a id="example-filter-lessons"></a>
 ## Lezioni da fatturare
 
-Accessor, predicato, filter e map collaborano su una lista di lezioni.
+Accesso diretto `~`, predicati Mira, filter e map compongono una lista di lezioni.
 
 Feature: [Filtri con predicati Mira](language.md#feature-filtering)
 
@@ -853,11 +850,9 @@ lessons = [
   {student: "Eva", hours: 0.5},
   {student: "Lia", hours: 2}
 ];
-hours = field "hours";
-student name = field "student";
 billable: lesson = (lesson ~ hours) >= 1;
 result = map: (filter: lessons, with: (billable: _)),
-  with: (student name);
+  with: (_ ~ student);
 ```
 
 **Risultato:** result = ["Ada","Lia"]
@@ -874,7 +869,7 @@ Feature: [Sezioni di operatori](language.md#feature-operator-sections)
 ```mira
 minimum = 6;
 passes = (_ >= minimum);
-result = 8 ~ passes;
+result = 8 >> passes;
 ```
 
 **Risultato:** result = true
@@ -889,11 +884,43 @@ Una sezione di operatore è un normale valore funzione passato a un selettore di
 Feature: [Sezioni di operatori](language.md#feature-operator-sections)
 
 ```mira
-accept: predicate = 8 ~ predicate;
+accept: predicate = 8 >> predicate;
 result = accept: (_ > 5);
 ```
 
 **Risultato:** result = true
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/operator-as-argument)
+
+<a id="example-record-field-path"></a>
+## Navigazione di record annidati
+
+Lettura diretta e concatenata dei campi senza accessor intermedi.
+
+Feature: [Accesso diretto ai campi `~`](language.md#feature-field-get)
+
+```mira
+student = {address: {city: "Padova"}};
+result = student ~ address ~ city;
+```
+
+**Risultato:** result = "Padova"
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/record-field-path)
+
+<a id="example-record-field-quoted"></a>
+## Campo con spazi
+
+Una chiave testuale letterale permette campi con nomi non identificatori.
+
+Feature: [Accesso diretto ai campi `~`](language.md#feature-field-get)
+
+```mira
+lesson = {"total hours": 3};
+result = lesson ~ "total hours";
+```
+
+**Risultato:** result = 3
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/record-field-quoted)
 

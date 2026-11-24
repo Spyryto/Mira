@@ -1,4 +1,4 @@
-# Guida a Mira 0.5.0
+# Guida a Mira 0.6.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -160,13 +160,13 @@ API collegata: [`mira.emit.SourceEmitter.expression`](api.md#api-mira-emit-sourc
 - [Due argomenti liberi](examples.md#example-fee-calculator) — adjustment(125, 20) = 31
 
 <a id="feature-pipelines"></a>
-## Pipeline `~`
+## Pipeline `>>`
 
 **Disponibile dalla versione 0.2**
 
-Composizione da sinistra a destra.
+Applicazione funzionale esplicita da sinistra a destra.
 
-`x ~ f` applica `f` a `x`; non supporta sezioni con più fori direttamente.
+`x >> f` applica `f` a `x` e si associa a sinistra; `>>` sostituisce il precedente `~` (0.2–0.5). Le sezioni a due placeholder non sono applicabili direttamente.
 
 API collegata: [`mira.syntax.Expr`](api.md#api-mira-syntax-expr)
 
@@ -263,9 +263,9 @@ API collegata: [`mira.HostEnvironment`](api.md#api-mira-hostenvironment)
 
 **Disponibile dalla versione 0.4**
 
-`field "name"` produce una funzione accessor: `lesson ~ hours`.
+`field "name"` costruisce una funzione accessor, applicabile con `lesson >> hours`.
 
-Gli accessor sono un costrutto nativo compilato in funzioni JS/PHP, non una chiamata all'host. Una chiave inesistente solleva un errore runtime. In assenza di type checker non viene verificata la forma del record.
+Resta un valore funzione di prima classe (0.4): un campo mancante produce un errore runtime. In Mira 0.6 gli accessi diretti senza dichiarazioni si scrivono `lesson ~ hours`.
 
 API collegata: [`mira.syntax.Expr.FieldAccessor`](api.md#api-mira-syntax-expr-fieldaccessor)
 
@@ -321,10 +321,24 @@ API collegata: [`mira.HostEnvironment`](api.md#api-mira-hostenvironment)
 
 `(_ > 5)` e `(10 - _)` sono funzioni, senza nuova sintassi lambda.
 
-Un operatore aritmetico o di confronto con uno o due placeholder diretti, delimitato da parentesi, produce una funzione di prima classe. La pipeline accetta solo sezioni unarie. Gli emettitori JS/PHP generano closure native senza inferenza dei tipi.
+Un operatore aritmetico o di confronto con uno o due placeholder diretti, delimitato da parentesi, produce una funzione di prima classe. La pipeline `>>` accetta solo sezioni unarie. Gli emettitori JS/PHP generano closure native senza inferenza dei tipi.
 
 API collegata: [`mira.syntax.ExpressionParser.parse`](api.md#api-mira-syntax-expressionparser-parse)
 
 - [Soglia come funzione](examples.md#example-operator-threshold) — result = true
 - [Predicato passato a un selettore](examples.md#example-operator-as-argument) — result = true
+
+<a id="feature-field-get"></a>
+## Accesso diretto ai campi `~`
+
+**Disponibile dalla versione 0.6**
+
+`record ~ field` legge un campo senza dichiarare accessor.
+
+Il nome dopo `~` è un campo letterale (Word o stringa), non una variabile; gli accessi si concatenano. La lettura controlla la presenza del campo su JS/PHP. `(_ ~ field)` è una sezione unaria; le sezioni complesse attendono i blocchi.
+
+API collegata: [`mira.syntax.Expr.FieldGet`](api.md#api-mira-syntax-expr-fieldget)
+
+- [Navigazione di record annidati](examples.md#example-record-field-path) — result = "Padova"
+- [Campo con spazi](examples.md#example-record-field-quoted) — result = 3
 
