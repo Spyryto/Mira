@@ -1,4 +1,4 @@
-# Guida a Mira 0.6.2
+# Guida a Mira 0.6.3
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -222,12 +222,13 @@ API collegata: [`mira.MiraError`](api.md#api-mira-miraerror)
 
 Liste letterali e trasformazioni funzionali con un host minimo.
 
-Le sequenze `[a, b]` sono valori di Mira. `map:with:` e `fold:with:from:` sono funzioni esplicite dell'host, non keyword del linguaggio; i reducer rimangono funzioni Mira.
+Le sequenze `[a, b]` sono valori di Mira. `map:with:` e `fold:with:from:` sono funzioni esplicite dell'host, non keyword del linguaggio; i reducer rimangono funzioni Mira. `collect:with:` è l'alias di `map:with:` in stile Smalltalk.
 
 API collegata: [`mira.syntax.Expr.Sequence`](api.md#api-mira-syntax-expr-sequence)
 
 - [Registro delle sessioni di studio](examples.md#example-practice-log) — result = {"minutes":70,"seconds":[900,1200,600,1500]}
 - [Scaletta musicale e minutaggio](examples.md#example-setlist-plan) — result = {"minutes":13.5,"items":[{"title":"Opening","seconds":270},{"title":"Midnight","seconds":225},{"title":"Encore","seconds":315}]}
+- [Collect with: trasformare valori](examples.md#example-collect-with-numbers) — result = [2,4,6]
 
 <a id="feature-records"></a>
 ## Record e dati strutturati
@@ -307,12 +308,13 @@ API collegata: [`mira.syntax.Expr.Conditional`](api.md#api-mira-syntax-expr-cond
 
 `filter: list, with: (predicate: _)` filtrando con funzioni Mira.
 
-Il predicato e la selezione delle condizioni sono scritti in Mira; il runtime host mette a disposizione solo l'iterazione limitata delle liste. La lista restituita è indicizzata da zero ed è portabile fra JS e PHP.
+Il predicato è scritto in Mira; l'host esegue solo l'iterazione limitata delle liste. `filter:with:`, `select:with:`, `select:if:` e `collect:if:` sono alias di filtraggio: conservano l'ordine e restituiscono una lista reindicizzata su JS/PHP. `collect:if:` significa «raccogli se», distinto da `collect:with:` che trasforma come il `collect:` di Smalltalk.
 
 API collegata: [`mira.HostEnvironment`](api.md#api-mira-hostenvironment)
 
 - [Numeri sopra soglia](examples.md#example-filter-numbers) — result = [5,9]
 - [Lezioni da fatturare](examples.md#example-filter-lessons) — result = ["Ada","Lia"]
+- [Collect if: selezionare lezioni](examples.md#example-collect-if-lessons) — result = [{"student":"Ada","hours":1.5},{"student":"Lia","hours":2}]
 
 <a id="feature-operator-sections"></a>
 ## Sezioni di operatori

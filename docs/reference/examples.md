@@ -851,7 +851,7 @@ lessons = [
   {student: "Lia", hours: 2}
 ];
 billable: lesson = (lesson ~ hours) >= 1;
-result = map: (filter: lessons, with: (billable: _)),
+result = collect: (collect: lessons, if: (billable: _)),
   with: (_ ~ student);
 ```
 
@@ -939,4 +939,41 @@ result = lesson ~ total hours;
 **Risultato:** result = 3
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/record-field-words)
+
+<a id="example-collect-if-lessons"></a>
+## Collect if: selezionare lezioni
+
+`collect:if:` filtra usando un predicato Mira, senza introdurre un secondo algoritmo.
+
+Feature: [Filtri con predicati Mira](language.md#feature-filtering)
+
+```mira
+lessons = [
+  {student: "Ada", hours: 1.5},
+  {student: "Eva", hours: 0.5},
+  {student: "Lia", hours: 2}
+];
+billable: lesson = (lesson ~ hours) >= 1;
+result = collect: lessons, if: (billable: _);
+```
+
+**Risultato:** result = [{"student":"Ada","hours":1.5},{"student":"Lia","hours":2}]
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/collect-if-lessons)
+
+<a id="example-collect-with-numbers"></a>
+## Collect with: trasformare valori
+
+`collect:with:` è l'alias per la trasformazione `map:with:`.
+
+Feature: [Sequenze e trasformazioni](language.md#feature-sequences)
+
+```mira
+numbers = [1, 2, 3];
+result = collect: numbers, with: (_ * 2);
+```
+
+**Risultato:** result = [2,4,6]
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/collect-with-numbers)
 
