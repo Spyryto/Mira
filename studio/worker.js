@@ -1,6 +1,9 @@
 // Explicit execution, off the UI thread. Not a sandbox for untrusted scripts.
 self.onmessage = event => {
   const {code, invoke} = event.data ?? {};
+  const now = () => typeof performance !== 'undefined' && typeof performance.now === 'function'
+    ? performance.now() : Date.now();
+  let startedAt = null;
   try {
     if (typeof code !== 'string') throw new Error('No JavaScript to execute');
     let expression = 'typeof result === "undefined" ? undefined : result';
@@ -56,17 +59,23 @@ self.onmessage = event => {
     host['collect:if:'] = host['filter:with:'];
     host['collect:with:'] = host['map:with:'];
     Object.freeze(host);
-    const value = new Function('__miraHost',
+    // Parse/prepare the JS before starting the timer; only execute Mira code.
+    const execute = new Function('__miraHost',
       '"use strict";\n' + code + '\nreturn (' + expression + ');'
-    )(host);
+    );
+    startedAt = now();
+    const value = execute(host);
+    const executionMs = Math.max(0, now() - startedAt);
+    startedAt = null;
     const format = item => item && typeof item === "object"
       ? JSON.stringify(item, null, 2) : String(item);
     const output = [
       ...messages,
       ...(value === undefined ? (messages.length ? [] : ['(nessun valore result)']) : [format(value)])
     ].join('\n');
-    self.postMessage({ok: true, output});
+    self.postMessage({ok: true, output, executionMs});
   } catch (error) {
-    self.postMessage({ok: false, message: String(error?.message ?? error)});
+    const executionMs = startedAt === null ? undefined : Math.max(0, now() - startedAt);
+    self.postMessage({ok: false, message: String(error?.message ?? error), executionMs});
   }
 };

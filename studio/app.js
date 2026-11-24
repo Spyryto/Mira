@@ -270,6 +270,11 @@ function stopWorker() {
   state.workerTimeout = 0;
 }
 
+function formatExecutionTime(ms) {
+  if (!Number.isFinite(ms) || ms < 0) return '';
+  return ms < 0.001 ? 'Esec. < 0.001 ms' : 'Esec. ' + ms.toFixed(3) + ' ms';
+}
+
 function runJavaScript() {
   if (state.uiExample) return runUiPreview();
   if (state.target !== 'js') return;
@@ -280,6 +285,7 @@ function runJavaScript() {
 
   stopWorker();
   ui.runOutput.textContent = 'Esecuzione in corso…';
+  setStatus('busy', 'Esecuzione JavaScript…');
   setView('output');
 
   // Isolates accidental infinite loops from the main UI thread.
@@ -290,6 +296,7 @@ function runJavaScript() {
     if (state.worker !== worker) return;
     stopWorker();
     ui.runOutput.textContent = 'Interrotto: tempo massimo di 2 secondi.';
+    setStatus('error', 'Esecuzione interrotta', 'Limite 2 s');
   }, 2000);
 
   worker.onmessage = event => {
@@ -298,11 +305,15 @@ function runJavaScript() {
     ui.runOutput.textContent = event.data?.ok
       ? event.data.output
       : 'Errore: ' + (event.data?.message ?? 'esecuzione fallita');
+    setStatus(event.data?.ok ? 'ready' : 'error',
+      event.data?.ok ? 'Esecuzione riuscita' : 'Esecuzione fallita',
+      formatExecutionTime(event.data?.executionMs));
     stopWorker();
   };
   worker.onerror = event => {
     if (state.worker !== worker) return;
     ui.runOutput.textContent = 'Errore durante l’esecuzione JavaScript.';
+    setStatus('error', 'Errore durante l’esecuzione');
     stopWorker();
   };
   worker.postMessage({ code: state.output, invoke: state.exampleInvocation });
