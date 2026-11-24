@@ -168,7 +168,8 @@ test('all Studio examples match the syntax currently implemented', async () => {
   for (const example of examples) {
     const expectedSuccess = example.id !== 'errors';
     for (const target of ['js', 'php']) {
-      const manifest = example.id === 'host-log' ? read('host.json') : undefined;
+      const manifest = ['host-log','collect-if'].includes(example.id)
+        ? read('host.json') : undefined;
       const result = bridge.compile(example.source, target, manifest);
       assert.equal(result.ok, expectedSuccess,
         example.id + ' (' + target + '): ' + (result.message ?? 'unexpected success'));
