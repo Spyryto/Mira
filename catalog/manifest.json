@@ -1,5 +1,5 @@
 {
-  "version": "0.6.0",
+  "version": "0.6.1",
   "features": [
     {
       "id": "values",
@@ -282,11 +282,12 @@
       "id": "field-get",
       "title": "Accesso diretto ai campi `~`",
       "summary": "`record ~ field` legge un campo senza dichiarare accessor.",
-      "details": "Il nome dopo `~` è un campo letterale (Word o stringa), non una variabile; gli accessi si concatenano. La lettura controlla la presenza del campo su JS/PHP. `(_ ~ field)` è una sezione unaria; le sezioni complesse attendono i blocchi.",
+      "details": "Il nome dopo `~` è un campo letterale: una o più parole consecutive, oppure una stringa tra virgolette. Un operatore o delimitatore termina il nome, che non viene cercato tra le variabili. Gli accessi si concatenano e i campi mancanti producono lo stesso errore su JS/PHP. `(_ ~ total hours)` è una sezione unaria; le espressioni complesse attendono i blocchi.",
       "api": "mira.syntax.Expr.FieldGet",
       "examples": [
         "record-field-path",
-        "record-field-quoted"
+        "record-field-quoted",
+        "record-field-words"
       ],
       "since": "0.6"
     }
@@ -912,6 +913,17 @@
       "title": "Campo con spazi",
       "description": "Una chiave testuale letterale permette campi con nomi non identificatori.",
       "path": "catalog/examples/record-field-quoted.mira",
+      "expect": {
+        "kind": "result",
+        "value": 3
+      }
+    },
+    {
+      "id": "record-field-words",
+      "feature": "field-get",
+      "title": "Campo con nome composto, senza virgolette",
+      "description": "Dopo ~, le parole consecutive sono un solo nome di campo; nessuna dichiarazione di accessor.",
+      "path": "catalog/examples/record-field-words.mira",
       "expect": {
         "kind": "result",
         "value": 3

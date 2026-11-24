@@ -449,3 +449,36 @@ test('0.6 rejects invalid field targets and reserves complex holes for blocks', 
     assert.match(failed.stderr, expected, source);
   }
 });
+
+test('multiword record fields need no quotes after ~ on JS and PHP', () => {
+  const cases = [
+    ['lesson = {"total hours": 3}; result = lesson ~ total hours;', '3'],
+    ['lesson = {"total hours": 3}; result = lesson ~ "total hours";', '3'],
+    ['student = {address: {"postal code": "30032"}}; result = student ~ address ~ postal code;', '"30032"'],
+    ['lesson = {"total hours": 3}; result = lesson ~ total hours + 2;', '5'],
+    ['lesson = {"total hours": 3}; result = (lesson ~ total hours) * 2;', '6'],
+    ['lesson = {"total hours": 3}; result = lesson ~ total hours >> (_ + 1);', '4'],
+    ['lesson = {"total hours": 3}; result = lesson >> (_ ~ total hours);', '3'],
+    ['hourly rate = 30; hours = 2; pay = hourly rate * hours; result = pay;', '60'],
+    ['total hours = 99; lesson = {"total hours": 3}; result = lesson ~ total hours;', '3']
+  ];
+  for (const [source, expected] of cases) {
+    for (const target of ['js', 'php']) {
+      assert.equal(run(source, target), expected, source + ' / ' + target);
+    }
+  }
+});
+
+test('multiword fields keep a checked missing-key error', () => {
+  const source = 'result = {hours: 3} ~ total hours;';
+  withSource(source, (path, directory) => {
+    for (const target of ['js', 'php']) {
+      const generated = execFileSync('node', [compiler, path, target], {encoding: 'utf8'});
+      const output = join(directory, 'missing-field.' + (target === 'js' ? 'mjs' : 'php'));
+      writeFileSync(output, generated);
+      const response = spawnSync(target === 'js' ? 'node' : 'php', [output], {encoding: 'utf8'});
+      assert.notEqual(response.status, 0);
+      assert.match(response.stderr, /Missing record field: total hours/);
+    }
+  });
+});

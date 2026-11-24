@@ -96,15 +96,18 @@ eleven = 5 >> double >> (_ + 1);
 same hours = lesson >> (_ ~ hours);
 ```
 
-`~` prende il campo letterale alla sua destra: un identificatore singolo
-o una stringa tra virgolette (`lesson ~ "total hours"`). Non legge una
-variabile chiamata `hours`. Se manca il campo, JS/PHP generano un errore.
+`~` prende un campo letterale alla sua destra, senza cercarlo fra le
+variabili. Dalla 0.6.1 ammette **identificatori composti** senza virgolette:
+`lesson ~ total hours` è equivalente a `lesson ~ "total hours"`.
+Le parole consecutive terminano al successivo operatore o delimitatore.
+Se manca il campo, JS/PHP generano un errore.
 `>>` applica la funzione a destra al valore a sinistra. Entrambi
 mantengono associatività a sinistra, senza type inference.
 
 `(_ ~ hours)` è una sezione unaria semplice. `(_ ~ hours >= 1)`
 non è implementato: i placeholder nelle espressioni complesse saranno
-progettati insieme ai blocchi. Si può usare una funzione nominata:
+progettati insieme ai blocchi. Anche `(_ ~ total hours)` è un accessor unario.
+Si può usare una funzione nominata:
 `billable: lesson = (lesson ~ hours) >= 1;`.
 
 ## Proposto: closure generali e selettori parziali

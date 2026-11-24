@@ -59,6 +59,13 @@ fee: item = (item ~ hours) * (item ~ rate);
 result = lesson >> (fee: _);`
   },
   {
+    id: 'multiword-fields',
+    name: 'Campi con più parole',
+    source: `# Gli accessi ai campi usano nomi composti senza virgolette.
+lesson = {"total hours": 3};
+result = lesson ~ total hours;`
+  },
+  {
     id: 'host-log',
     name: 'Interoperabilità: log',
     source: `# La funzione log arriva dall'oggetto host di Studio.
