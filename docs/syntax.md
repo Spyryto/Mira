@@ -1,6 +1,6 @@
 # Mira: syntax experiments
 
-**Mira 0.5 implements selectors, selector/operator sections, pipelines, sequence literals and anonymous records.** Typed records and other advanced forms remain under evaluation.
+**Mira 0.6 implements selectors, selector/operator sections, field access, pipelines, sequence literals and anonymous records.** Typed records and other advanced forms remain under evaluation.
 
 ## Implemented: complete selectors
 
@@ -30,7 +30,7 @@ square: x = x * x;
 
 increment = (add: _, and: 1);
 adder = (add: _, and: _);
-result = 2 ~ increment ~ (square: _);
+result = 2 >> increment >> (square: _);
 ```
 
 `_` is a **whole missing selector argument**, not a generic anonymous
@@ -38,10 +38,10 @@ variable inside arbitrary expressions. `increment` is a unary function
 value, and `adder` is a binary function value. Sections preserve captured
 local arguments on JavaScript and PHP.
 
-The pipeline `x ~ f` applies the value on the left to the function on
+The pipeline `x >> f` applies the value on the left to the function on
 the right; it lowers to `Apply(f, x)`. Operators associate left to right
-without mathematical precedence. Both `5 ~ increment` and
-`5 ~ (add: _, and: 1)` are supported. Sections with two or more holes
+without mathematical precedence. Both `5 >> increment` and
+`5 >> (add: _, and: 1)` are supported. Sections with two or more holes
 cannot be used directly as unary pipeline targets.
 
 ## Implementato in Mira 0.4: accessor, confronti e condizioni
@@ -49,7 +49,7 @@ cannot be used directly as unary pipeline targets.
 ```mira
 hours = field "hours";
 lesson = {hours: 1.5};
-result = if: ((lesson ~ hours) >= 1),
+result = if: ((lesson >> hours) >= 1),
   then: ("fatturabile"),
   else: ("non fatturabile");
 ```
@@ -61,7 +61,7 @@ espressioni native. I rami della condizione sono lazy e le tre
 espressioni devono essere parenthesized per delimitare i confini.
 I predicati permettono `filter:with:` tramite una capability host.
 
-[Dettagli e limiti della versione 0.4](mira04.md).
+[Dettagli storici della versione 0.4](mira04.md). Dalla 0.6 la stessa lettura diretta si scrive `lesson ~ hours` senza dichiarare `hours = field "hours"`.
 
 ## Implementato in Mira 0.5: sezioni di operatori
 
@@ -70,17 +70,42 @@ over five = (_ > 5);
 increment = (_ + 1);
 subtract from ten = (10 - _);
 sum = (_ + _);
-result = 7 ~ over five;
+result = 7 >> over five;
 ```
 
 Un operatore binario tra parentesi, con uno o due operandi `_`, produce
 una funzione. Le sezioni accettano `+ - * / % == != < > <= >=` e sono
 emesse come arrow function su JS/PHP. La pipeline `~` richiede sempre una
-funzione unaria: `7 ~ (_ + _)` è rifiutato. Le parentesi sono obbligatorie;
+funzione unaria: `7 >> (_ + _)` è rifiutato. Le parentesi sono obbligatorie;
 `result = _ + 1` resta un errore. Non c'è inferenza dei tipi.
 
-`accept: predicate = 8 ~ predicate; result = accept: (_ > 5);`
+`accept: predicate = 8 >> predicate; result = accept: (_ > 5);`
 dimostra che una sezione può essere passata come argomento di selettore.
+
+## Implementato in Mira 0.6: `~` e `>>`
+
+```mira
+lesson = {hours: 2, rate: 30};
+result = (lesson ~ hours) * (lesson ~ rate);
+
+student = {address: {city: "Padova"}};
+city = student ~ address ~ city;
+
+double = (_ * 2);
+eleven = 5 >> double >> (_ + 1);
+same hours = lesson >> (_ ~ hours);
+```
+
+`~` prende il campo letterale alla sua destra: un identificatore singolo
+o una stringa tra virgolette (`lesson ~ "total hours"`). Non legge una
+variabile chiamata `hours`. Se manca il campo, JS/PHP generano un errore.
+`>>` applica la funzione a destra al valore a sinistra. Entrambi
+mantengono associatività a sinistra, senza type inference.
+
+`(_ ~ hours)` è una sezione unaria semplice. `(_ ~ hours >= 1)`
+non è implementato: i placeholder nelle espressioni complesse saranno
+progettati insieme ai blocchi. Si può usare una funzione nominata:
+`billable: lesson = (lesson ~ hours) >= 1;`.
 
 ## Proposto: closure generali e selettori parziali
 

@@ -1,5 +1,11 @@
 # Mira 0.4 — accessor, booleani e filtri reali
 
+> **Documentazione storica:** gli esempi di questa pagina descrivono la
+> sintassi della 0.4. Dalla 0.6 `~` legge direttamente un campo, mentre
+> l'applicazione funzionale usa `>>`. Per eseguire oggi gli esempi,
+> sostituisci `lesson ~ hours` con `lesson >> hours` quando `hours`
+> è dichiarato con `field "hours"`.
+
 Questa versione nasce dal dogfooding di [Mira Atlas](atlas.md): le
 trasformazioni dei record devono essere leggibili e le condizioni devono
 essere valutate in Mira, non nel JavaScript dell'interfaccia.

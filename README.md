@@ -33,7 +33,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Diagnostica e ambiguità | `0.1` | [Dettagli](docs/reference/language.md#feature-diagnostics) |
 | ✅ | Sezioni unarie | `0.2` | [Dettagli](docs/reference/language.md#feature-sections) |
 | ✅ | Sezioni con più `_` | `0.2` | [Dettagli](docs/reference/language.md#feature-multi-sections) |
-| ✅ | Pipeline `~` | `0.2` | [Dettagli](docs/reference/language.md#feature-pipelines) |
+| ✅ | Pipeline `>>` | `0.2` | [Dettagli](docs/reference/language.md#feature-pipelines) |
 | ✅ | Cattura lessicale | `0.2` | [Dettagli](docs/reference/language.md#feature-captures) |
 | ✅ | Sequenze e trasformazioni | `0.3` | [Dettagli](docs/reference/language.md#feature-sequences) |
 | ✅ | Record e dati strutturati | `0.3` | [Dettagli](docs/reference/language.md#feature-records) |
@@ -46,6 +46,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Espressioni condizionali | `0.4` | [Dettagli](docs/reference/language.md#feature-conditionals) |
 | ✅ | Filtri con predicati Mira | `0.4` | [Dettagli](docs/reference/language.md#feature-filtering) |
 | ✅ | Sezioni di operatori | `0.5` | [Dettagli](docs/reference/language.md#feature-operator-sections) |
+| ✅ | Accesso diretto ai campi `~` | `0.6` | [Dettagli](docs/reference/language.md#feature-field-get) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
@@ -121,13 +122,13 @@ Explicit `:` remains essential when a bare multiword argument has no unambiguous
 
 ## Mira 0.3: functional sections, sequences and records
 
-Mira now supports **first-class selector sections**: a complete keyword call with one or more `_` arguments creates a function value. `x ~ f` applies the value `x` to the unary function `f` and pipelines group left to right.
+Mira now supports **first-class selector sections**: a complete keyword call with one or more `_` arguments creates a function value. `x >> f` applies the value `x` to the unary function `f` and pipelines group left to right.
 
 ```mira
 add: x, and: y = x + y;
 square: value = value * value;
 increment = (add: _, and: 1);
-result = 2 ~ increment ~ (square: _) ~ (add: _, and: 1);
+result = 2 >> increment >> (square: _) >> (add: _, and: 1);
 ```
 
 The resulting value is `10`, for both JS and PHP. See [executable example](examples/sections.mira). Sections can close over surrounding parameters in both backends. The compiler generates fresh placeholder parameter names without shadowing user symbols.
@@ -185,13 +186,29 @@ ogni definizione, trasformando l'AST con Mira. Dettagli e limiti:
 ## Mira 0.4: accessor, condizioni e filtri
 
 Le nuove feature eliminano gran parte del codice host nei modelli di
-Atlas: `field "hours"` crea un accessor nativo, `lesson ~ hours`
-legge il campo, i confronti producono booleani e
+Atlas: `field "hours"` crea un accessor nativo, `lesson >> hours`
+lo applica (sintassi 0.6), i confronti producono booleani e
 `if: (cond), then: (sì), else: (no)` valuta solo il ramo scelto.
 `filter:with:` rimane una piccola primitiva host portabile JS/PHP.
 Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
+
+## Mira 0.6: campi e applicazione hanno sintassi distinte
+
+```mira
+lesson = {hours: 2, rate: 30};
+fee: item = (item ~ hours) * (item ~ rate);
+result = lesson >> (fee: _);
+```
+
+`~` legge un campo letterale, senza risolvere il nome come variabile;
+`>>` applica un valore a una funzione. `(_ ~ hours)` è già un accessor
+anonimo unario; le espressioni con placeholder annidati più complessi
+saranno progettate insieme ai blocchi. `field "hours"` resta disponibile
+come accessor di prima classe. Il controllo di esistenza del campo è
+mantenuto su JS e PHP (nessun type checker richiesto).
+Questa è una modifica incompatibile con la sintassi 0.5.
 
 ## Benchmark interattivi
 

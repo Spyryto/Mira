@@ -1,4 +1,4 @@
-# Mira 0.2: executable subset and grammar boundaries
+# Mira 0.6: executable subset and grammar boundaries
 
 This file documents the parser's **implemented** boundaries. It is a readable
 grammar sketch, not a separate parser generator or a promise of accepted syntax.
@@ -35,7 +35,8 @@ expression bodies are resolved.
 ```ebnf
 expression    = primary, { binary-operator, primary } ;
 primary       = number | string | name | "(", expression, ")" | selector-call ;
-binary-operator = "+" | "-" | "*" | "/" | "%" | "~" ;
+binary-operator = "+" | "-" | "*" | "/" | "%" | ">>" ;
+field-access    = expression, "~", (word | string) ;
 ```
 
 Operators share one precedence level and group left; `1 + 2 * 3` means
@@ -74,23 +75,35 @@ The parser never guesses missing arguments.
 add: left, and: right = left + right;
 increment = (add: _, and: 1);
 adder = (add: _, and: _);
-result = 4 ~ increment;
+result = 4 >> increment;
 ```
 
-`increment` is unary, `adder` is binary. The operator `~` is
+`increment` is unary, `adder` is binary. The operator `>>` is
 left-associative and reduces to `Apply(right, left)`. Its right operand
 must be an expression that can represent a function (a section, a name or
 a call returning a function). A directly supplied section with two holes
 is rejected as a unary pipeline target. Without a type checker, Mira
 cannot yet prove that arbitrary named expressions are callable.
 
-`1 + 2 ~ increment` means `(1 + 2) ~ increment`. Use parentheses for
-other groupings. Non-selector placeholders such as `(_ + 1)` are
-**not implemented**. The variable name `_` is reserved.
+`1 + 2 >> increment` means `(1 + 2) >> increment`. Use parentheses for
+other groupings. Simple operator sections such as `(_ + 1)` are supported
+since 0.5. The variable name `_` is reserved.
 
 `Section`, `Placeholder` and `Apply` are real AST constructors, exposed
 by Mira Studio. Emission uses JavaScript arrow functions or PHP arrow
 functions, both with hygienic generated parameter names.
+
+## Record fields in 0.6
+
+`record ~ field` compiles to a checked literal field lookup in the AST
+(`FieldGet`). Keys are words or quoted string literals; field names do
+not resolve as ordinary variables. `(_ ~ field)` produces `FieldSection`,
+a callable unary accessor usable with `>>`. More complex placeholder
+expressions are deferred until blocks.
+
+`field "name"` from 0.4 remains a first-class accessor. The meaning
+of `~` changed in 0.6; older programs must migrate their pipelines
+to `>>`.
 
 ## Separation of responsibilities
 
