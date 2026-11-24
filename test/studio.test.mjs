@@ -340,3 +340,19 @@ test('browser compiler and AST preserve multiword field keys', () => {
   assert.equal(field.key, 'total hours');
   assert.equal(field.record.kind, 'Name');
 });
+
+test('browser parser supports unquoted multiword record keys', () => {
+  const source = 'lesson = {total hours: 3}; result = lesson ~ total hours;';
+  for (const target of ['js', 'php']) {
+    const compilation = bridge.compile(source, target);
+    assert.equal(compilation.ok, true, compilation.message);
+    if (target === 'js') assert.equal(runInNewContext(compilation.output + '\nresult', {}), 3);
+  }
+  const inspected = bridge.ast(source);
+  assert.equal(inspected.ok, true, inspected.message);
+  const definitions = JSON.parse(inspected.output).definitions;
+  assert.equal(definitions[0].body.kind, 'Record');
+  assert.equal(definitions[0].body.fields[0].key, 'total hours');
+  assert.equal(definitions[1].body.kind, 'FieldGet');
+  assert.equal(definitions[1].body.key, 'total hours');
+});
