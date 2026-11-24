@@ -62,7 +62,7 @@ result = lesson >> (fee: _);`
     id: 'multiword-fields',
     name: 'Campi con più parole',
     source: `# Gli accessi ai campi usano nomi composti senza virgolette.
-lesson = {"total hours": 3};
+lesson = {total hours: 3};
 result = lesson ~ total hours;`
   },
   {

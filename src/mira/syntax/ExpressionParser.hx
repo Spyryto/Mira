@@ -42,23 +42,8 @@ class ExpressionParser {
         while (current().kind == Symbol && isOperator(current().value)) {
             final token = consume();
             if (token.value == "~") {
-                // Like multiword identifiers, consecutive words form one
-                // literal field name. An operator or punctuation ends it.
-                // Quoted keys remain available for non-word characters.
-                final key = current();
-                if (key.kind != Word && key.kind != Text) {
-                    throw new MiraError("Expected a field name after ~", key);
-                }
-                if (key.kind == Text) {
-                    consume();
-                    left = FieldGet(left, key.value);
-                } else {
-                    final words:Array<String> = [];
-                    while (current().kind == Word) {
-                        words.push(consume().value);
-                    }
-                    left = FieldGet(left, words.join(" "));
-                }
+                // A literal field key is one or more words, or quoted text.
+                left = FieldGet(left, literalKey("Expected a field name after ~"));
             } else {
                 final right = application();
                 if (token.value == ">>") {
@@ -259,10 +244,7 @@ class ExpressionParser {
         final values:Array<Expr> = [];
         while (!current().isSymbol("}")) {
             final keyToken = current();
-            if (keyToken.kind != Word && keyToken.kind != Text) {
-                throw new MiraError("Expected record key", keyToken);
-            }
-            final key = consume().value;
+            final key = literalKey("Expected record key");
             if (keys.indexOf(key) >= 0) throw new MiraError("Duplicate record key " + key, keyToken);
             if (!current().isSymbol(":")) throw new MiraError("Expected : after record key", current());
             consume();
@@ -275,6 +257,17 @@ class ExpressionParser {
         }
         consume(); // }
         return Record(keys, values);
+    }
+
+    // Shared grammar for record literals and ~ field access.
+    // Unquoted consecutive words form one literal key, never a variable.
+    function literalKey(diagnostic:String):String {
+        final first = current();
+        if (first.kind == Text) return consume().value;
+        if (first.kind != Word) throw new MiraError(diagnostic, first);
+        final words:Array<String> = [];
+        while (current().kind == Word) words.push(consume().value);
+        return words.join(" ");
     }
 
     function current():Token {

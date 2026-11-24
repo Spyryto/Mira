@@ -1,2 +1,2 @@
-lesson = {"total hours": 3};
+lesson = {total hours: 3};
 result = lesson ~ total hours;
