@@ -133,9 +133,9 @@ class ExpressionParser {
             final key = consume().value;
             return FieldAccessor(key);
         }
-        if (token.value == "if") {
-            if (tokens[position + 1].isSymbol(":")) return conditional();
-            if (tokens[position + 1].isSymbol("(")) return conciseConditional();
+        if (token.value == "if" && (tokens[position + 1].isSymbol(":")
+            || tokens[position + 1].isSymbol("("))) {
+            return conditional();
         }
         if (token.value == "_") {
             if (operatorDepth > 0 || allowOperatorArgument) {
@@ -181,59 +181,53 @@ class ExpressionParser {
         );
     }
 
-    // Fully parenthesized branches make boundaries unambiguous with
-    // multiword names and selectors. Both emitters evaluate only one branch.
+    // Like keyword selectors, ':' and ',' are optional separators.
+    // All forms lower to the same native, lazy Conditional AST:
+    // if: (test), then: (yes), else: (no)
+    // if (test), then: (yes), else: (no)
+    // if (test) then yes else no
+    // Parenthesize nested conditionals to make boundaries unambiguous.
     function conditional():Expr {
         consume(); // if
-        requireSymbol(":");
+        optionalSymbol(":");
         final predicate = parenthesizedBranch("if");
-        if (current().isSymbol(",")) consume();
+        optionalSymbol(",");
         requireWord("then");
-        requireSymbol(":");
-        final whenTrue = parenthesizedBranch("then");
-        if (current().isSymbol(",")) consume();
-        requireWord("else");
-        requireSymbol(":");
-        final whenFalse = parenthesizedBranch("else");
-        return Conditional(predicate, whenTrue, whenFalse);
-    }
-
-    // Friendly spelling of the same native, lazy AST node:
-    //   if (condition) then value else value
-    // The condition has a mandatory delimiter; the then branch ends at
-    // the outermost bare "else". Parentheses delimit nested conditionals.
-    function conciseConditional():Expr {
-        consume(); // if
-        final predicate = parenthesizedBranch("if");
-        requireWord("then");
+        optionalSymbol(":");
 
         final start = position;
-        var nested = 0;
+        var depth = 0;
         while (current().kind != End) {
             final token = current();
-            if (nested == 0 && token.kind == Word && token.value == "else") break;
-            if (nested == 0 && (token.isSymbol(";") || token.isSymbol(",")
-                || token.isSymbol(")") || token.isSymbol("]") || token.isSymbol("}"))) break;
+            if (depth == 0 && token.kind == Word && token.value == "else") break;
+            if (depth == 0 && token.isSymbol(",")
+                && tokens[position + 1].kind == Word && tokens[position + 1].value == "else") break;
+            if (depth == 0 && (token.isSymbol(";") || token.isSymbol(")")
+                || token.isSymbol("]") || token.isSymbol("}"))) break;
             if (token.isSymbol("(") || token.isSymbol("[") || token.isSymbol("{")) {
-                nested++;
+                depth++;
             } else if (token.isSymbol(")") || token.isSymbol("]") || token.isSymbol("}")) {
-                nested--;
+                depth--;
             }
             consume();
         }
         if (start == position) throw new MiraError("Expected then expression", current());
-        if (current().kind != Word || current().value != "else") {
-            throw new MiraError("Expected else branch", current());
-        }
         final whenTrue = new ExpressionParser(tokens.slice(start, position), symbols,
             localNames, allowOperatorArgument).parse();
-        consume(); // else
+
+        optionalSymbol(",");
+        requireWord("else");
+        optionalSymbol(":");
         if (current().kind == End || current().isSymbol(";") || current().isSymbol(",")
             || current().isSymbol(")") || current().isSymbol("]") || current().isSymbol("}")) {
             throw new MiraError("Expected else expression", current());
         }
         final whenFalse = expression();
         return Conditional(predicate, whenTrue, whenFalse);
+    }
+
+    function optionalSymbol(value:String):Void {
+        if (current().isSymbol(value)) consume();
     }
 
     function parenthesizedBranch(label:String):Expr {
