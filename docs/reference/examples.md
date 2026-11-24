@@ -927,12 +927,12 @@ result = lesson ~ "total hours";
 <a id="example-record-field-words"></a>
 ## Campo con nome composto, senza virgolette
 
-Dopo ~, le parole consecutive sono un solo nome di campo; nessuna dichiarazione di accessor.
+La stessa chiave composta si scrive senza virgolette nella dichiarazione del record e dopo ~.
 
 Feature: [Accesso diretto ai campi `~`](language.md#feature-field-get)
 
 ```mira
-lesson = {"total hours": 3};
+lesson = {total hours: 3};
 result = lesson ~ total hours;
 ```
 

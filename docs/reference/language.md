@@ -1,4 +1,4 @@
-# Guida a Mira 0.6.1
+# Guida a Mira 0.6.2
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -236,7 +236,7 @@ API collegata: [`mira.syntax.Expr.Sequence`](api.md#api-mira-syntax-expr-sequenc
 
 Costruzione di record anonimi portabili tra JavaScript e PHP.
 
-I record `{campo: espressione}` diventano oggetti JavaScript e array associativi PHP. Il selettore host `get:from:` legge una chiave; chiavi duplicate e delimitatori errati vengono rifiutati.
+I record `{campo: espressione}` diventano oggetti JavaScript e array associativi PHP. Le chiavi possono essere parole composte senza virgolette, come `{total hours: 3}`, o stringhe esplicite. Il selettore host `get:from:` legge una chiave; chiavi duplicate (anche fra forme con e senza virgolette) e delimitatori errati vengono rifiutati.
 
 API collegata: [`mira.syntax.Expr.Record`](api.md#api-mira-syntax-expr-record)
 
