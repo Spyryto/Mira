@@ -4,6 +4,7 @@ import { createAstInspector } from './ast-inspector.js';
 import { mountAtlas } from './atlas-ui.js';
 import { mountBenchmark } from './benchmark-ui.js';
 import { mountWorkbenchFullscreen } from './workbench-fullscreen.js';
+import { mountMiraHighlight } from './syntax-highlight.js';
 
 // Mira Studio's controller concerns browser UX only.
 // All language semantics are delegated to the Haxe compiler bridge.
@@ -14,6 +15,7 @@ let atlasViewer = null;
 const $ = id => document.getElementById(id);
 $('languageVersion').textContent = 'V ' + compiler.version;
 const astInspector = createAstInspector(compiler);
+const highlighter = mountMiraHighlight($('source'), $('sourceHighlight'));
 
 const ui = {
   source: $('source'),
@@ -204,6 +206,7 @@ function sourceChanged() {
   stopUiPreview();
   ui.runOutput.textContent = 'Non eseguito.';
   updateEditorIndicators();
+  highlighter.update();
   saveLocally();
   scheduleCompile();
 }
@@ -513,6 +516,7 @@ function start() {
   mountWorkbenchFullscreen($('workbench'), $('workbenchFullscreen'), document);
   wireEvents();
   updateEditorIndicators();
+  highlighter.update();
   setTarget(state.target);
   initializeHost();
   initializeReference();
