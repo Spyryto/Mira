@@ -404,3 +404,24 @@ test('Studio natural conditional preset compiles with no host declarations', asy
     assert.equal(built.ok, true, built.message);
   }
 });
+
+test('0.7.1 optional conditional punctuation has the same browser AST', () => {
+  const variants = [
+    'result = if (1 < 2), then: ("valid"), else: ("invalid");',
+    'result = if (1 < 2) then "valid" else "invalid";',
+    'result = if: (1 < 2), then: ("valid"), else: ("invalid");'
+  ];
+  const first = bridge.ast(variants[0]);
+  assert.equal(first.ok, true, first.message);
+  const expected = JSON.parse(first.output).definitions[0].body;
+  assert.equal(expected.kind,'Conditional');
+  for (const source of variants) {
+    const ast = bridge.ast(source);
+    assert.equal(ast.ok,true,ast.message);
+    assert.deepEqual(JSON.parse(ast.output).definitions[0].body,expected);
+    for (const target of ['js','php']) {
+      const build = bridge.compile(source,target);
+      assert.equal(build.ok,true,build.message);
+    }
+  }
+});

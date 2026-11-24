@@ -551,3 +551,49 @@ test('natural conditionals diagnose missing then and else boundaries', () => {
     assert.match(error.stderr, diagnostic, source);
   }
 });
+
+test('conditional separators are optional, matching keyword-selector spelling on JS and PHP', () => {
+  for (const source of [
+    'result = if (1 < 2), then: ("valid"), else: ("invalid");',
+    'result = if (1 < 2) then: ("valid") else: ("invalid");',
+    'result = if (1 < 2), then ("valid"), else ("invalid");',
+    'result = if: (1 < 2) then ("valid") else ("invalid");',
+    'result = if: (1 < 2), then: ("valid"), else: ("invalid");',
+    'result = if (1 < 2) then "valid" else "invalid";',
+    'result = if (1 < 2), then: "valid", else: "invalid";',
+    'result = if (1 < 2) then "valid", else "invalid";',
+    'result = if (1 < 2), then "valid" else "invalid";',
+    'result = if: (1 < 2) then: "valid" else "invalid";'
+  ]) {
+    for (const target of ['js','php']) {
+      assert.equal(run(source, target), '"valid"', source + ' / ' + target);
+    }
+  }
+});
+
+test('conditional comma/colon variants preserve expressions, nesting and laziness', () => {
+  for (const [source, expected] of [
+    ['result = if (false), then: ({x: 1} ~ missing), else: (42);', '42'],
+    ['result = if: (true) then: 42, else: ({x: 1} ~ missing);', '42'],
+    ['result = if (true), then: (if (false), then: 1, else: 2), else: 3;', '2'],
+    ['result = {answer: if (true), then: (1 + 2), else: 0};', '{"answer":3}'],
+    ['result = if (false) then 1 else if (true), then: 5, else: 0;', '5']
+  ]) {
+    for (const target of ['js','php']) {
+      assert.equal(run(source, target), expected, source + ' / ' + target);
+    }
+  }
+});
+
+test('malformed mixed punctuation conditionals keep useful errors', () => {
+  for (const [source, expected] of [
+    ['result = if (true), else: (4);', /Expected then branch/],
+    ['result = if (true), then: (4);', /Expected else branch/],
+    ['result = if (true), then: (), else: 4;', /Expected expression/],
+    ['result = if (true), then: 4, else:;', /Expected else expression/]
+  ]) {
+    const failure = compileError(source);
+    assert.notEqual(failure.status, 0, source);
+    assert.match(failure.stderr, expected, source);
+  }
+});
