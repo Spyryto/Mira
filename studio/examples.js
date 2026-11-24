@@ -80,6 +80,12 @@ result = collect: lessons, if: (billable: _);`
 result = if (1 < 2) then "valid" else "invalid";`
   },
   {
+    id: 'conditional-commas',
+    name: 'If · virgole opzionali',
+    source: `# La punteggiatura tra if, then, else è opzionale.
+result = if (1 < 2), then: ("valid"), else: ("invalid");`
+  },
+  {
     id: 'host-log',
     name: 'Interoperabilità: log',
     source: `# La funzione log arriva dall'oggetto host di Studio.

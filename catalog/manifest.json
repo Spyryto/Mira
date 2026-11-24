@@ -1,5 +1,5 @@
 {
-  "version": "0.7.0",
+  "version": "0.7.1",
   "features": [
     {
       "id": "values",
@@ -247,13 +247,14 @@
       "id": "conditionals",
       "title": "Espressioni condizionali",
       "summary": "`if: (cond), then: (a), else: (b)` e `if (cond) then a else b` valutano un solo ramo.",
-      "details": "Due sintassi per lo stesso nodo AST nativo Conditional: `if: (cond), then: (a), else: (b)` e la forma sintetica `if (cond) then a else b`. La condizione usa parentesi per delimitare i confini; i rami sintetici possono essere letterali, nomi o espressioni e per i condizionali annidati sono necessarie parentesi. JS e PHP emettono un'espressione condizionale lazy: il ramo non selezionato non viene valutato.",
+      "details": "Tutte le forme di `if (condizione) then valore else valore` condividono lo stesso nodo `Conditional` e la valutazione lazy con `if: (condizione), then: (vero), else: (falso)`. Le virgole fra i tre segmenti e i due punti dopo `if`, `then`, `else` sono opzionali e indipendenti: `if (cond), then: (vero), else: (falso)` è valido. La condizione richiede parentesi; per annidare condizionali nel ramo then usare parentesi. Nessuna capacità host aggiuntiva.",
       "api": "mira.syntax.Expr.Conditional",
       "examples": [
         "conditional-label",
         "conditional-fee",
         "conditional-natural-label",
-        "conditional-natural-lazy"
+        "conditional-natural-lazy",
+        "conditional-optional-commas"
       ],
       "since": "0.4"
     },
@@ -990,6 +991,17 @@
       "expect": {
         "kind": "result",
         "value": 42
+      }
+    },
+    {
+      "id": "conditional-optional-commas",
+      "feature": "conditionals",
+      "title": "Virgole e due punti opzionali",
+      "description": "`if (test), then: (a), else: (b)` resta identico alla sintassi sintetica senza punteggiatura.",
+      "path": "catalog/examples/conditional-optional-commas.mira",
+      "expect": {
+        "kind": "result",
+        "value": "valid"
       }
     }
   ],

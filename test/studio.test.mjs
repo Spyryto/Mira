@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.7.0');
+  assert.equal(bridge.version, '0.7.1');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.7.0');
+  assert.equal(bridge.version,'0.7.1');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -402,5 +402,26 @@ test('Studio natural conditional preset compiles with no host declarations', asy
   for (const target of ['js', 'php']) {
     const built = bridge.compile(example.source, target);
     assert.equal(built.ok, true, built.message);
+  }
+});
+
+test('0.7.1 optional conditional punctuation has the same browser AST', () => {
+  const variants = [
+    'result = if (1 < 2), then: ("valid"), else: ("invalid");',
+    'result = if (1 < 2) then "valid" else "invalid";',
+    'result = if: (1 < 2), then: ("valid"), else: ("invalid");'
+  ];
+  const first = bridge.ast(variants[0]);
+  assert.equal(first.ok, true, first.message);
+  const expected = JSON.parse(first.output).definitions[0].body;
+  assert.equal(expected.kind,'Conditional');
+  for (const source of variants) {
+    const ast = bridge.ast(source);
+    assert.equal(ast.ok,true,ast.message);
+    assert.deepEqual(JSON.parse(ast.output).definitions[0].body,expected);
+    for (const target of ['js','php']) {
+      const build = bridge.compile(source,target);
+      assert.equal(build.ok,true,build.message);
+    }
   }
 });

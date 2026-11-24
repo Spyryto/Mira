@@ -201,7 +201,10 @@ result = if (1 < 2) then "valid" else "invalid";
 ```
 
 La sintassi `if (test) then valore else valore` è equivalente alla
-precedente `if: (test), then: (valore), else: (valore)`. Entrambe
+precedente `if: (test), then: (valore), else: (valore)`.
+Dalla 0.7.1 anche `if (test), then: (valore), else: (valore)`
+è valida: virgole e due punti dopo le keyword sono facoltativi.
+Tutte
 generano lo stesso nodo `Conditional`, quindi i rami restano lazy
 su JavaScript e PHP. La condizione richiede parentesi; i condizionali
 annidati si delimitano con parentesi. Non servono macro, runtime
