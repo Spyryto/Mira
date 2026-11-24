@@ -43,7 +43,12 @@ La documentazione, incluso il riferimento API, è inclusa nella cache offline.
   from the Haxe compiler.
 - **Esegui**: explicitly run generated JavaScript in a dedicated Web Worker,
   with a 2-second timeout to prevent ordinary infinite loops from freezing the
-  interface. PHP is **generated, not run** in the browser.
+  interface. After **Compila** the bottom status bar reports compilation time;
+  after **Esegui** it reports JS execution time (measured inside the worker,
+  excluding worker startup, message transport, and dynamic JS function parsing).
+  The timer measures one run, not a statistical benchmark. For values below
+  0.001 ms the bar shows `Esec. < 0.001 ms`. PHP is **generated, not run**
+  in the browser.
 - **Offline installability**: relative GitHub Pages paths, manifest, service
   worker, offline asset cache and an update notification. Source drafts are
   retained locally before app refresh.
