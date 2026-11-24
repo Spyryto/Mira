@@ -1,0 +1,1 @@
+result = if (true) then 42 else ({value: 0} ~ missing);

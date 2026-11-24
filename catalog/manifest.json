@@ -1,5 +1,5 @@
 {
-  "version": "0.6.3",
+  "version": "0.7.0",
   "features": [
     {
       "id": "values",
@@ -246,12 +246,14 @@
     {
       "id": "conditionals",
       "title": "Espressioni condizionali",
-      "summary": "`if: (condizione), then: (vero), else: (falso)` valuta un solo ramo.",
-      "details": "I tre argomenti sono obbligatoriamente tra parentesi per evitare ambiguità; il parser crea il nodo Conditional, e l'emettitore traduce nell'espressione condizionale nativa JS/PHP. Non è una normale funzione host, quindi i rami sono lazy.",
+      "summary": "`if: (cond), then: (a), else: (b)` e `if (cond) then a else b` valutano un solo ramo.",
+      "details": "Due sintassi per lo stesso nodo AST nativo Conditional: `if: (cond), then: (a), else: (b)` e la forma sintetica `if (cond) then a else b`. La condizione usa parentesi per delimitare i confini; i rami sintetici possono essere letterali, nomi o espressioni e per i condizionali annidati sono necessarie parentesi. JS e PHP emettono un'espressione condizionale lazy: il ramo non selezionato non viene valutato.",
       "api": "mira.syntax.Expr.Conditional",
       "examples": [
         "conditional-label",
-        "conditional-fee"
+        "conditional-fee",
+        "conditional-natural-label",
+        "conditional-natural-lazy"
       ],
       "since": "0.4"
     },
@@ -966,6 +968,28 @@
           4,
           6
         ]
+      }
+    },
+    {
+      "id": "conditional-natural-label",
+      "feature": "conditionals",
+      "title": "Selezione discorsiva senza due punti",
+      "description": "`if (test) then value else value` equivale alla forma con `if:then:else:`.",
+      "path": "catalog/examples/conditional-natural-label.mira",
+      "expect": {
+        "kind": "result",
+        "value": "valid"
+      }
+    },
+    {
+      "id": "conditional-natural-lazy",
+      "feature": "conditionals",
+      "title": "Ramo non selezionato mai eseguito",
+      "description": "La forma discorsiva mantiene il ramo falso lazy anche quando contiene un campo inesistente.",
+      "path": "catalog/examples/conditional-natural-lazy.mira",
+      "expect": {
+        "kind": "result",
+        "value": 42
       }
     }
   ],
