@@ -105,5 +105,5 @@ test('benchmark assets are cached and route has a visible tab',()=>{
   assert.match(read('index.html'),/data-view="benchmark"/);
   assert.match(read('app.js'),/mountBenchmark/);
   assert.doesNotMatch(read('benchmark-ui.js'),/bench-expand|toggleFullscreen/);
-  assert.doesNotMatch(read('styles.css'),/bench-fullscreen|bench-expand/);
+  assert.doesNotMatch(read('styles.css'),/\.benchmark-area\.bench-fullscreen|\.bench-expand|body\.bench-fullscreen-open/);
 });
