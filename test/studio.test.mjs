@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.5.0');
+  assert.equal(bridge.version, '0.6.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -115,7 +115,7 @@ test('browser compiler supports section and pipeline with real AST nodes', () =>
   const example = [
     'add: x, and: y = x + y;',
     'increment = (add: _, and: 1);',
-    'result = 5 ~ increment;'
+    'result = 5 >> increment;'
   ].join('\n');
 
   const js = bridge.compile(example, 'js');
@@ -267,9 +267,9 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
   const source = [
     'score = field "score";',
     'student = {score: 8};',
-    'result = if: ((student ~ score) >= 6), then: (true), else: (false);'
+    'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.5.0');
+  assert.equal(bridge.version,'0.6.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -288,7 +288,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
 
 
 test('0.5 operator sections are visible in the Studio canonical AST', () => {
-  const source='result = 7 ~ (_ > 5);';
+  const source='result = 7 >> (_ > 5);';
   for (const target of ['js','php']) {
     const compiled=bridge.compile(source,target);
     assert.equal(compiled.ok,true,compiled.message);
@@ -301,4 +301,27 @@ test('0.5 operator sections are visible in the Studio canonical AST', () => {
   assert.equal(body.callee.symbol,'>');
   assert.equal(body.callee.left.kind,'Placeholder');
   assert.equal(body.callee.right.kind,'Number');
+});
+
+test('0.6 browser AST separates FieldGet, FieldSection and Apply', () => {
+  const src=[
+    'lesson = {hours: 2};',
+    'direct = lesson ~ hours;',
+    'from section = lesson >> (_ ~ hours);',
+    'result = 5 >> (_ + 1);'
+  ].join('\\n');
+  for (const target of ['js','php']) {
+    const compiled=bridge.compile(src,target);
+    assert.equal(compiled.ok,true,compiled.message);
+  }
+  const inspection=bridge.ast(src);
+  assert.equal(inspection.ok,true,inspection.message);
+  const defs=JSON.parse(inspection.output).definitions;
+  assert.equal(defs[1].body.kind,'FieldGet');
+  assert.equal(defs[1].body.key,'hours');
+  assert.equal(defs[1].body.record.value,'lesson');
+  assert.equal(defs[2].body.kind,'Apply');
+  assert.equal(defs[2].body.callee.kind,'FieldSection');
+  assert.equal(defs[2].body.callee.key,'hours');
+  assert.equal(defs[3].body.kind,'Apply');
 });
