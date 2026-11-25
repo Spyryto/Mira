@@ -23,3 +23,7 @@ state: initial, view: factory = {type: "state", initial: initial, view: factory}
 state: initial, key: identity, view: factory = {
   type: "state", initial: initial, key: identity, view: factory
 };
+
+# Style records compose from left to right; decorators do not add DOM nodes.
+styled: view, with: layers = {type: "styled", view: view, styles: layers};
+grid: count, children: items = {type: "grid", columns: count, children: items};

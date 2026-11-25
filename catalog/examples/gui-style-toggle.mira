@@ -1,0 +1,10 @@
+# Cambia i colori senza rimontare il componente.
+base style = {padding: 18, radius: 14, gap: 12};
+theme view: dark = styled: (column: [
+  title: "Tema dinamico",
+  text: "Stessi nodi, colori diversi",
+  button: "Cambia tema", update: {old | if (old) then false else true}
+]), with: [base style, (if (dark)
+  then {background: "#202629", color: "#ffffff", shadow: "soft"}
+  else {background: "#c1f1dc", color: "#202629"})];
+render (state: false, view: (theme view: _));
