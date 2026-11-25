@@ -19,3 +19,7 @@ choose: caption, value: current, options: choices, update: transition = {
   type: "select", label: caption, value: current, options: choices, update: transition
 };
 state: initial, view: factory = {type: "state", initial: initial, view: factory};
+# Explicit identity for resetting a state at the same structural position.
+state: initial, key: identity, view: factory = {
+  type: "state", initial: initial, key: identity, view: factory
+};
