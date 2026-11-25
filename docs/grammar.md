@@ -277,3 +277,19 @@ che mantiene la semantica lessicale ordinaria.
 
 Le definizioni locali non introducono riassegnazione; il modello
 resta identico per i due target JS/PHP. Nessuna nuova forma AST.
+
+
+## Parametri delle funzioni nominate (Mira 0.12.2)
+
+Il controllo delle collisioni dopo il mangling si applica anche ai
+parametri delle funzioni nominate, non soltanto ai blocchi anonimi.
+Due parametri `a b` e `aB` non possono condividere lo stesso simbolo
+generato. Neppure un parametro può collidere con un valore globale
+*diverso* nel nome Mira, a prescindere dall'ordine delle dichiarazioni.
+Il parametro interno `__miraHost` è riservato perché il backend JS
+lo usa per raggiungere le capability dell'host.
+
+Sono preservati lo shadowing esatto (`x = 100; increment: x = x + 1;`)
+e i nomi distinti che restano distinti dopo la generazione.
+Gli errori sui parametri riportano riga e colonna del parametro stesso.
+Nessuna nuova forma AST o regola runtime.
