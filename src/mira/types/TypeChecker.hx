@@ -32,19 +32,36 @@ class TypeChecker {
         this.host = host;
     }
 
-    public function check(program:Array<Definition>):Array<Dynamic> {
+    function prepare(program:Array<Definition>):Void {
         for (d in program) if (!d.isStatement)
             definitions.set(d.isFunction() ? d.selector() : d.name, d);
         final graph = new Dependencies(program);
         for (group in graph.ordered()) checkGroup(group,graph.recursive(group));
+    }
+
+    public function check(program:Array<Definition>):Array<Dynamic> {
+        prepare(program);
         final result:Array<Dynamic> = [];
         for (d in program) {
             origin = d.origin;
             final name = d.isStatement ? "<expression>" : d.isFunction() ? d.selector() : d.name;
             final type = d.isStatement ? infer(d.body, new Map<String, LocalScheme>()) : declaration(name);
-            result.push({name:name, type:show(type), line:d.origin.line, column:d.origin.column, file:d.origin.file});
+            result.push({name:name, type:show(type), schema:describe(type), line:d.origin.line, column:d.origin.column, file:d.origin.file});
         }
         return result;
+    }
+
+    // Specialize a declared function against concrete argument types, using
+    // exactly the same inference and unification as a regular Mira call.
+    public function specialize(program:Array<Definition>,name:String,args:Array<Type>):Dynamic {
+        prepare(program);
+        final d = definitions.get(name);
+        if (d == null || !d.isFunction()) throw new MiraError("Unknown Mira function " + name);
+        origin = d.origin;
+        final type = declaration(name);
+        final result = call(type,args);
+        final signature:Type = FunctionType(args,result);
+        return {name:name,type:show(signature),schema:describe(signature)};
     }
 
     function fresh():Type return Variable(nextId++);
@@ -464,6 +481,36 @@ class TypeChecker {
                 final result = selectorCall(selector,[for (arg in args) operand(arg,scope,holes)]);
                 FunctionType(holes,result);
             case Apply(callee,arg): call(infer(callee,scope),arg == null ? [] : [infer(arg,scope)]);
+        };
+    }
+
+    // Canonical, JSON-compatible representation, independent of pretty printing.
+    // Variable ids are allocated in traversal order, scoped to one signature.
+    function describe(type:Type, ?ids:Map<Int,Int>):Dynamic {
+        final seen = ids == null ? new Map<Int,Int>() : ids;
+        return switch (prune(type)) {
+            case NumberType: {kind:"Number"};
+            case TextType: {kind:"Text"};
+            case BooleanType: {kind:"Boolean"};
+            case Variable(id):
+                if (!seen.exists(id)) {
+                    var n = 0;
+                    for (_ in seen.keys()) n++;
+                    seen.set(id,n);
+                }
+                final missing = lacks.exists(id) ? [for (key in lacks.get(id).keys()) key] : [];
+                missing.sort(Reflect.compare);
+                {kind:"Variable",id:seen.get(id),scalarEq:scalarEq.exists(id),
+                    row:lacks.exists(id),lacks:missing};
+            case ListType(item): {kind:"List",item:describe(item,seen)};
+            case FunctionType(args,result):
+                {kind:"Function",parameters:[for (a in args) describe(a,seen)],result:describe(result,seen)};
+            case RecordType(_,_):
+                final r = row(type);
+                final keys = [for (key in r.fields.keys()) key];
+                keys.sort(Reflect.compare);
+                {kind:"Record",fields:[for (key in keys) {name:key,type:describe(r.fields.get(key),seen)}],
+                    tail:r.tail == null ? null : describe(r.tail,seen)};
         };
     }
 

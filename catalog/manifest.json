@@ -1,5 +1,5 @@
 {
-  "version": "0.44.0",
+  "version": "0.45.0",
   "features": [
     {
       "id": "values",
@@ -1812,6 +1812,12 @@
       "title": "Firme host strutturali e verifica delle chiamate",
       "since": "0.44",
       "doc": "docs/type-checker.md#044-firme-host"
+    },
+    {
+      "id": "type-schema",
+      "title": "Schemi strutturati dei tipi e specializzazione",
+      "since": "0.45",
+      "doc": "docs/type-checker.md#045-esportazione-dei-tipi"
     }
   ]
 }

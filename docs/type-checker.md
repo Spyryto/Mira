@@ -277,3 +277,39 @@ esecuzione su host JS/PHP. Il bridge usa lo stesso checker.
 Prossimo passo: esportare tipi chiusi inferiti in un formato
 riutilizzabile per derivare i contratti RPC e i validatori runtime,
 senza interpretare la stringa diagnostica dei tipi.
+
+## 0.45: esportazione dei tipi
+
+Ogni voce di Compiler.check e --check-json conserva il campo type
+leggibile e aggiunge schema. Il formato descrive direttamente
+l'algebra dei tipi dopo le sostituzioni: Number, Text, Boolean
+({kind}), List ({kind,item}), Function ({kind,parameters,result}),
+Record ({kind,fields:[{name,type}],tail}) e Variable
+({kind,id,scalarEq,row,lacks}). La coda null indica record chiuso.
+I campi e i vincoli lacks sono ordinati per nome; gli id delle
+variabili sono numerati in ordine di visita e locali a uno schema.
+row distingue una variabile di riga da una variabile ordinaria.
+Non si interpreta la stringa di pretty printing.
+
+Il bridge espone specialize(source, selector, argsJson, hostJson?,
+modulesJson?): inferisce il programma, istanzia la funzione
+e unifica i tipi degli argomenti forniti (formato chiuso del
+manifest host). Restituisce name, type, schema per la firma
+specializzata; non esegue il programma. Il type checker non
+promette che il risultato sia chiuso: una lista vuota non
+vincolata, ad esempio, conserva una variabile libera.
+
+Il generatore RPC usa specialize sulle funzioni Mira esposte,
+con i campi Number derivati dall'attuale policy integer.
+Verifica la compatibilità del contratto con la funzione reale e
+rifiuta firme di rete non concrete, funzioni, record aperti o
+vuoti e chiavi numeriche. Produce rpc-types.json nella directory
+private del bundle: version 1, methods, parameters, result,
+integerPolicy. Le capability host restano fuori da questo export.
+I vincoli min/max e interi restano una policy di confine distinta
+da Number. Il runtime PHP non cambia: continua a controllare
+gli interi con i limiti dichiarati; non valida ancora il risultato
+rispetto allo schema inferito. La metadata non è ancora consumata
+dal client. Non si elimina services.mira in questa versione:
+la scelta dei servizi esposti rimane esplicita.
+Il laboratorio permette di visualizzare gli schemi JSON.

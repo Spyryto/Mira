@@ -39,6 +39,13 @@ class Compiler {
         return new mira.types.TypeChecker(origins,host == null ? HostEnvironment.empty() : host).check(parse(source,host,readModule,entry,origins));
     }
 
+    public static function specialize(source:String,name:String,args:Array<mira.types.Type>,?host:HostEnvironment,
+        ?readModule:String->Null<String>,?entry:String):Dynamic {
+        final origins = new ExpressionOrigins();
+        return new mira.types.TypeChecker(origins,host == null ? HostEnvironment.empty() : host)
+            .specialize(parse(source,host,readModule,entry,origins),name,args);
+    }
+
     public static function inspectTokens(source:String):String {
         final tokens = new Lexer(source).tokenize();
         final items:Array<Dynamic> = [];

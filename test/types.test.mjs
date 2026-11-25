@@ -247,3 +247,19 @@ test('types: same host contract checks and executes with actual JavaScript and P
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('types: structured schemas preserve variables, constraints and open rows',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-schema-'));
+  try{
+    const input=join(dir,'program.mira');
+    const source='same: a, as: b = a == b; name of: r = r ~ name; a = {z: true, a: [1]};';
+    writeFileSync(input,source);
+    const read=()=>JSON.parse(spawnSync('node',['dist/mira.cjs',input,'--check'],{encoding:'utf8'}).stdout);
+    const report=read();
+    assert.deepEqual(read(),report);
+    const v=(id,scalarEq=false,row=false,lacks=[])=>({kind:'Variable',id,scalarEq,row,lacks});
+    assert.deepEqual(report[0].schema,{kind:'Function',parameters:[v(0,true),v(0,true)],result:{kind:'Boolean'}});
+    assert.deepEqual(report[1].schema,{kind:'Function',parameters:[{kind:'Record',fields:[{name:'name',type:v(0)}],tail:v(1,false,true,['name'])}],result:v(0)});
+    assert.deepEqual(report[2].schema,{kind:'Record',fields:[{name:'a',type:{kind:'List',item:{kind:'Number'}}},{name:'z',type:{kind:'Boolean'}}],tail:null});
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

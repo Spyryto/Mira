@@ -15,10 +15,11 @@ class Bridge {
         Reflect.setField(global, "MiraStudioCompiler", {
             compile: compile,
             check: check,
+            specialize: specialize,
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.44.0"
+            version: "0.45.0"
         });
     }
 
@@ -62,6 +63,17 @@ class Bridge {
         return safely(function() {
             final host = hostJson == null ? HostEnvironment.empty() : HostEnvironment.fromJson(hostJson);
             return haxe.Json.stringify(Compiler.check(source,host,resolver(modulesJson)), null, "  ");
+        });
+    }
+
+    public static function specialize(source:String,name:String,argsJson:String,?hostJson:String,?modulesJson:String):Dynamic {
+        return safely(function() {
+            final host = hostJson == null ? HostEnvironment.empty() : HostEnvironment.fromJson(hostJson);
+            final input:Dynamic = haxe.Json.parse(argsJson);
+            if (!Std.isOfType(input,Array)) throw new MiraError("Expected specialization argument types");
+            final args:Array<Dynamic> = cast input;
+            final types = [for (i in 0...args.length) mira.types.HostTypeCodec.decode(args[i],"argument "+i)];
+            return haxe.Json.stringify(Compiler.specialize(source,name,types,host,resolver(modulesJson)),null,"  ");
         });
     }
 

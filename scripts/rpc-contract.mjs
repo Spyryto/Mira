@@ -36,13 +36,30 @@ const phpArray=value=>{
   if(value&&typeof value==='object')return '['+Object.entries(value).map(([k,v])=>phpString(k)+' => '+phpArray(v)).join(', ')+']';
   return typeof value==='string'?phpString(value):String(value);
 };
+// RPC wire subset: closed, first-order data only. The checker, not this
+// generator, specializes and unifies the actual function signature.
+function requirePortable(schema,depth=0){
+  if(!schema||depth>30)fail('RPC type exceeds wire depth');
+  switch(schema.kind){
+    case 'Number': case 'Text': case 'Boolean': return;
+    case 'List': return requirePortable(schema.item,depth+1);
+    case 'Record':
+      if(schema.tail!==null||!schema.fields.length)fail('RPC requires nonempty closed records');
+      for(const field of schema.fields){
+        if(/^-?\\d+$/.test(field.name))fail('nonportable RPC record key '+field.name);
+        requirePortable(field.type,depth+1);
+      }
+      return;
+    default: fail('RPC requires concrete data types, got '+schema.kind);
+  }
+}
 export function generateRpcContract(compiler,source,serverSource){
   const defs=ast(compiler,source);
   if(defs.length!==1||defs[0].kind!=='Value'||defs[0].name!=='services')fail('expected only services = [...]');
   const services=literal(defs[0].body);
   if(!Array.isArray(services)||!services.length||services.length>64)fail('expected 1–64 services');
   const functions=ast(compiler,serverSource).filter(d=>d.kind==='Function'&&d.labels.length===1);
-  const capabilities=new Set(),methods=new Set(),bindings=Object.create(null),php=[];
+  const capabilities=new Set(),methods=new Set(),bindings=Object.create(null),schemas=Object.create(null),php=[];
   for(const entry of services){
     const common=['capability','method','kind','handler'];
     if(!shape(entry,entry?.kind==='mira'?[...common,'parameters']:common))fail('invalid service fields');
@@ -63,11 +80,21 @@ export function generateRpcContract(compiler,source,serverSource){
           !Number.isSafeInteger(p.min)||!Number.isSafeInteger(p.max)||p.min>p.max||seen.has(p.name))fail('invalid integer parameter');
         seen.add(p.name);
       }
+      // Existing integer policies specialize Number, not the reverse:
+      // integer/range validation remains a separate boundary policy.
+      const argument={record:Object.fromEntries(params.map(p=>[p.name,'Number']))};
+      const checked=compiler.specialize(serverSource,handler+':',JSON.stringify([argument]));
+      if(!checked.ok)fail(checked.message);
+      const signature=JSON.parse(checked.output).schema;
+      requirePortable(signature.parameters[0]);
+      requirePortable(signature.result);
+      schemas[method]={parameters:signature.parameters[0],result:signature.result,integerPolicy:params};
       const callable=handler.replaceAll(' ','_');
       php.push(phpString(method)+' => static fn($params) => '+callable+'(\\Mira\\Rpc\\checkParams($params, '+phpArray(params)+'))');
     }else fail('unknown service kind');
   }
   return {
+    schemas:JSON.stringify({version:1,methods:schemas},null,2)+'\n',
     client:'globalThis.MiraRpcBindings = Object.freeze('+JSON.stringify(bindings,null,2)+');\n',
     server:'<?php\ndeclare(strict_types=1);\n// Generated from Mira service declarations.\nreturn [\n  '+php.join(',\n  ')+'\n];\n'
   };
