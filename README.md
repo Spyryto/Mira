@@ -81,6 +81,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Inferenza strutturale sperimentale, opt-in | `0.39` | [Dettagli](docs/type-checker.md) |
 | ✅ | Inferenza ricorsiva per componenti e vincoli sulle righe | `0.40` | [Dettagli](docs/type-checker.md#040-gruppi-ricorsivi-e-vincoli-sulle-righe) |
 | ✅ | Polimorfismo locale e aggiornamento strutturale dei record | `0.41` | [Dettagli](docs/type-checker.md#041-polimorfismo-locale-e-aggiornamenti) |
+| ✅ | Inferenza vincolata ScalarEq per uguaglianza generica | `0.42` | [Dettagli](docs/type-checker.md#042-vincoli-di-tipo) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

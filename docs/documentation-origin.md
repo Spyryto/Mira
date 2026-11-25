@@ -7,11 +7,11 @@
 
 | Categoria | Parole | Quota | Documenti coinvolti |
 | --- | ---: | ---: | ---: |
-| Generata automaticamente dal tooling | 18.249 | 41,7% | 4 |
-| Redatta con assistenza IA (dichiarata) | 20.689 | 47,3% | 11 |
+| Generata automaticamente dal tooling | 18.262 | 41,4% | 4 |
+| Redatta con assistenza IA (dichiarata) | 20.987 | 47,6% | 11 |
 | Redazione umana dichiarata | 0 | 0,0% | 0 |
 | Provenienza non verificata | 4834 | 11,0% | 3 |
-| **Totale** | **43.772** | **100%** | **17** |
+| **Totale** | **44.083** | **100%** | **17** |
 
 I documenti coinvolti **non sono sommabili**: per esempio il README contiene
 una sezione generata dal tooling e altre sezioni editoriali. Le percentuali
@@ -37,9 +37,9 @@ arrotondamenti).
 | [`docs/structured-data.md`](../docs/structured-data.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 1617 | — |
 | [`docs/studio.md`](../docs/studio.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 3819 | — |
 | [`docs/syntax.md`](../docs/syntax.md) | Intero documento | Provenienza non verificata | 1838 | — |
-| [`docs/type-checker.md`](../docs/type-checker.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 911 | — |
-| [`README.md`](../README.md) | Resto del documento | Redatta con assistenza IA (dichiarata) | 3762 | — |
-| [`README.md`](../README.md) | Sezione generata | Generata automaticamente dal tooling | 730 | `scripts/generate-reference.mjs` |
+| [`docs/type-checker.md`](../docs/type-checker.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 1184 | — |
+| [`README.md`](../README.md) | Resto del documento | Redatta con assistenza IA (dichiarata) | 3787 | — |
+| [`README.md`](../README.md) | Sezione generata | Generata automaticamente dal tooling | 743 | `scripts/generate-reference.mjs` |
 
 ## Come interpretare le cifre
 
@@ -80,5 +80,5 @@ npm run docs
 node scripts/generate-documentation-origin.mjs --check
 ```
 
-Dimensione totale classificata: **327.926 byte UTF-8**,
+Dimensione totale classificata: **330.184 byte UTF-8**,
 in **17 documenti** e **18 sezioni attribuite**.
