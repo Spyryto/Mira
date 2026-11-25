@@ -347,3 +347,44 @@ offline e simulata. Non si presume che ogni record Mira sia serializzabile:
 funzioni e altri valori host non sono ammessi nei payload; PHP distingue
 con difficoltà record vuoti e sequenze vuote, quindi il protocollo generale
 deve ancora definirne la rappresentazione.
+
+## Mira 0.37: RPC JSON
+
+Il runtime browser espone `MiraEffects.rpcService(url, method)`, una
+capability che lega URL e nome del metodo nell'host. Il codice Mira continua
+a produrre gli stessi descrittori degli effetti 0.35: non conosce HTTP,
+Promise o indirizzi di rete. L'adapter PHP riutilizzabile
+`runtime/php/Rpc.php` registra esplicitamente una mappa di callable.
+
+```php
+use function Mira\Rpc\serve;
+serve(['ledger.command' => 'ledgerCommand', 'ledger.quote' => 'ledgerQuote']);
+```
+
+Il protocollo POST JSON usa richiesta `{"method":"ledger.quote","params":{"hours":2}}`
+e risposta HTTP 200 `{"ok":true,"value":{"hours":2,"total":60}}`.
+Un errore applicativo è HTTP 4xx con `{"ok":false,"error":{"code":"invalid_hours"}}`;
+il runtime lo converte in un messaggio di errore del normale ciclo effetti.
+Il codice è conservato nella stringa (es. HTTP 409: revision_conflict), non
+ancora in un tipo Mira dedicato. Errori imprevisti diventano HTTP 500 senza
+divulgare dettagli interni. I callable non registrati ricevono 404.
+
+Valori portabili: booleani, stringhe, null a livello di trasporto, numeri
+finiti (interi sicuri JS), sequenze e record non vuoti con chiavi non
+numeriche (anche stringhe di cifre con zeri iniziali sono escluse).
+PHP usa array associativi per i record e non distingue record vuoti da
+sequenze vuote; il record vuoto in ingresso è quindi rifiutato, l'array
+vuoto rappresenta una sequenza. Nessun supporto a funzioni o oggetti host.
+Profondità limitata, richieste fino a 16 KiB, risposte fino a 256 KiB;
+il browser verifica la dimensione dopo la lettura, non è un limite streaming.
+La validazione dei parametri applicativi rimane compito del servizio.
+
+Il registro full-stack passa al nuovo protocollo e aggiunge un secondo
+metodo puro di calcolo del compenso, compilato da Mira a PHP, sulla stessa
+route. La CI verifica il browser reale, entrambi i metodi, rifiuto di
+metodi non autorizzati, parametri invalidi e regressioni del registro.
+La capability JSON semplice della 0.35 resta disponibile; il registro
+0.36 cambia invece formato HTTP (pilota non pubblico).
+Nessuna sintassi nuova, reflection, generazione automatica di stub,
+autenticazione, autorizzazione per utente, retry o CORS. Usare solo
+in locale o dietro una futura infrastruttura di sicurezza.

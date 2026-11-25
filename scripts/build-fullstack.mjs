@@ -24,6 +24,7 @@ compile(client,'php',manifest);
 compile(server,'js');
 writeFileSync(resolve(pub,'ledger-client-program.js'),'globalThis.MiraFullstackLedgerProgram = function(__miraHost) {\n'+output+'\n};\n');
 writeFileSync(resolve(priv,'ledger-program.php'),compile(server,'php'));
+copyFileSync(resolve(root,'runtime/php/Rpc.php'),resolve(priv,'Rpc.php'));
 for(const file of ['ui-host.js','effects.js','styles.css','persistent-ledger.css'])copyFileSync(resolve(root,'studio',file),resolve(pub,file));
 for(const file of ['index.html','ledger.php','ledger-client.js'])copyFileSync(resolve(root,'examples/fullstack',file),resolve(pub,file));
 console.log('Full-stack bundle ready in '+target+' (serve public only)');

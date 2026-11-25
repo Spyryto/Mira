@@ -107,5 +107,48 @@
     };
   }
 
-  global.MiraEffects = Object.freeze({createApp, jsonService});
+
+  // One host capability binds an endpoint and a method. Mira controls only
+  // the parameters, not the URL or server-side callable name.
+  function portable(value, depth = 0) {
+    if (depth > 30) throw Error('RPC value too deep');
+    if (value === null || typeof value === 'boolean' || typeof value === 'string') return value;
+    if (typeof value === 'number' && Number.isFinite(value) &&
+        (!Number.isInteger(value) || Number.isSafeInteger(value))) return value;
+    if (Array.isArray(value)) return Array.from(value, item => portable(item, depth + 1));
+    if (value && typeof value === 'object') {
+      const proto = Object.getPrototypeOf(value);
+      if (proto !== null && Object.getPrototypeOf(proto) !== null) throw Error('Expected RPC record');
+      const entries = Object.entries(value);
+      if (!entries.length || entries.some(([key]) => /^-?\d+$/.test(key))) throw Error('Nonportable RPC record');
+      return Object.fromEntries(entries.map(([key, item]) => [key, portable(item, depth + 1)]));
+    }
+    throw Error('Nonportable RPC value');
+  }
+
+  function rpcService(url, method, fetcher = global.fetch.bind(global)) {
+    if (typeof method !== 'string' || !method) throw Error('Expected RPC method');
+    return async (params, signal) => {
+      const body = JSON.stringify({method, params: portable(params)});
+      if (new TextEncoder().encode(body).length > 16384) throw Error('RPC request too large');
+      const response = await fetcher(url, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        credentials: 'omit', redirect: 'error', body, signal
+      });
+      const raw = await response.text();
+      if (new TextEncoder().encode(raw).length > 262144) throw Error('RPC response too large');
+      let envelope;
+      try { envelope = JSON.parse(raw); }
+      catch { throw Error('HTTP ' + response.status + ': invalid RPC response'); }
+      if (!response.ok) {
+        const code = envelope?.error?.code;
+        throw Error('HTTP ' + response.status +
+          (envelope?.ok === false && typeof code === 'string' && /^[a-z][a-z0-9_]{0,63}$/.test(code) ? ': ' + code : ''));
+      }
+      if (envelope?.ok !== true || !Object.hasOwn(envelope, 'value')) throw Error('Invalid RPC response');
+      return portable(envelope.value);
+    };
+  }
+
+  global.MiraEffects = Object.freeze({createApp, jsonService, rpcService});
 })(globalThis);

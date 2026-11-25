@@ -1,0 +1,79 @@
+<?php
+declare(strict_types=1);
+namespace Mira\Rpc;
+
+final class Fault extends \RuntimeException {
+    public function __construct(public readonly int $status, public readonly string $kind) {
+        if ($status < 400 || $status > 499 || !preg_match('/^[a-z][a-z0-9_]{0,63}$/D', $kind)) {
+            throw new \InvalidArgumentException('Invalid RPC fault');
+        }
+        parent::__construct($kind);
+    }
+}
+
+// PHP represents Mira records as associative arrays. Empty records and numeric
+// keys cannot round-trip faithfully, so the portable wire subset rejects them.
+function fromWire(mixed $value): mixed {
+    if ($value instanceof \stdClass) {
+        $fields = get_object_vars($value);
+        if (!$fields) throw new Fault(400, 'empty_record');
+        foreach ($fields as $key => $item) {
+            if (!is_string($key) || preg_match('/^-?\d+$/D', $key)) throw new Fault(400, 'numeric_key');
+            $fields[$key] = fromWire($item);
+        }
+        return $fields;
+    }
+    if (is_array($value)) return array_map(__NAMESPACE__ . '\\fromWire', $value);
+    if (is_int($value) && abs($value) > 9007199254740991) throw new Fault(400, 'unsafe_number');
+    if (is_float($value) && (!is_finite($value) || (floor($value) === $value && abs($value) > 9007199254740991))) throw new Fault(400, 'unsafe_number');
+    return $value;
+}
+function toWire(mixed $value, int $depth = 0): mixed {
+    if ($depth > 32) throw new \RuntimeException('RPC response depth');
+    if (is_array($value)) {
+        if (array_is_list($value)) return array_map(fn($item) => toWire($item, $depth + 1), $value);
+        $record = [];
+        foreach ($value as $key => $item) {
+            if (!is_string($key) || preg_match('/^-?\d+$/D', $key)) throw new \RuntimeException('Nonportable response key');
+            $record[$key] = toWire($item, $depth + 1);
+        }
+        return (object)$record;
+    }
+    if (is_null($value) || is_string($value) || is_bool($value)) return $value;
+    if (is_int($value) && abs($value) <= 9007199254740991) return $value;
+    if (is_float($value) && is_finite($value) && (floor($value) !== $value || abs($value) <= 9007199254740991)) return $value;
+    throw new \RuntimeException('Nonportable RPC result');
+}
+
+// No lookup of arbitrary PHP functions. The host explicitly registers names.
+function serve(array $methods): never {
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
+    try {
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+            header('Allow: POST');
+            throw new Fault(405, 'method_not_allowed');
+        }
+        if (strtolower(trim(explode(';', $_SERVER['CONTENT_TYPE'] ?? '')[0])) !== 'application/json') throw new Fault(415, 'expected_json');
+        $raw = file_get_contents('php://input', false, null, 0, 16385);
+        if ($raw === false || strlen($raw) > 16384) throw new Fault(413, 'request_too_large');
+        try { $request = json_decode($raw, false, 32, JSON_THROW_ON_ERROR); }
+        catch (\JsonException $e) { throw new Fault(400, 'invalid_json'); }
+        if (!$request instanceof \stdClass || !is_string($request->method ?? null) ||
+            !property_exists($request, 'params') || count(get_object_vars($request)) !== 2) throw new Fault(400, 'invalid_request');
+        if (!array_key_exists($request->method, $methods)) throw new Fault(404, 'unknown_method');
+        $result = $methods[$request->method](fromWire($request->params));
+        $body = json_encode(['ok'=>true, 'value'=>toWire($result)], JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE);
+        if (strlen($body) > 262144) throw new \RuntimeException('RPC response too large');
+        http_response_code(200);
+    } catch (Fault $error) {
+        http_response_code($error->status);
+        $body = json_encode(['ok'=>false, 'error'=>['code'=>$error->kind]], JSON_THROW_ON_ERROR);
+    } catch (\Throwable $error) {
+        error_log((string)$error);
+        http_response_code(500);
+        $body = '{"ok":false,"error":{"code":"internal_error"}}';
+    }
+    echo $body;
+    exit;
+}
