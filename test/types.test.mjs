@@ -17,7 +17,7 @@ function check(source,host){
   } finally {rmSync(dir,{recursive:true,force:true});}
 }
 test('types: literals, records, homogeneous lists, conditionals',()=>{
-  assert.deepEqual(check('n = 42; s = "hello"; b = true; xs = [1, 2]; r = {name: s, age: n}; result = if b then n else 0;'),
+  assert.deepEqual(check('n = 42; s = "hello"; b = true; xs = [1, 2]; r = {name: s, age: n}; result = if (b) then n else 0;'),
     {n:'Number',s:'Text',b:'Boolean',xs:'[Number]',r:'{age: Number, name: Text}',result:'Number'});
 });
 test('types: top-level polymorphism and open structural field access',()=>{
@@ -38,8 +38,8 @@ test('types: sections, collection map and fold, immutable closed update',()=>{
 test('types: invalid programs are rejected, not coerced',()=>{
   for(const [source,pattern] of [
     ['n = 1 + "x";',/expected Number, got Text/],
-    ['x = if 1 then 2 else 3;',/expected Boolean, got Number/],
-    ['x = if true then 2 else "no";',/expected Number, got Text/],
+    ['x = if (1) then 2 else 3;',/expected Boolean, got Number/],
+    ['x = if (true) then 2 else "no";',/expected Number, got Text/],
     ['xs = [1, "x"];',/expected Number, got Text/],
     ['f: x = x ~ name; result = f: {age: 2};',/missing record field name/],
     ['xs = select: [1, 2], with: {x | x + 1};',/expected Boolean, got Number/],
