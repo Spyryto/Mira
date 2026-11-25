@@ -129,3 +129,32 @@ renderer DOM richiedono JS browser. Niente CSS arbitrario, component
 lifecycle, moduli, validazione statica delle view o binding mutabile.
 La Scheda lezione è un esempio reale nel catalogo; non sostituisce
 ancora il controller di Studio.
+
+## Mira 0.16: DOM incrementale
+
+La view è ancora un record Mira. L'host conserva istanze con il nodo DOM
+nativo, le callback correnti e, per state, il valore locale. Valida la
+nuova descrizione (incluse le view annidate) prima di applicare modifiche.
+Il confronto avviene per posizione fra fratelli e tipo: mantiene nodi
+compatibili, aggiorna testo e proprietà se diversi, sostituisce i nodi
+incompatibili e rimuove quelli in eccesso. Gli input compatibili non
+vengono scollegati dal DOM: non serve ripristinare artificialmente focus
+e selezione. Non scrive value se è già corretto; protegge la composizione
+IME e ignora il secondo evento con un valore identico. Le callback
+leggono la descrizione corrente, non quella della creazione.
+
+Lo state figlio conserva il proprio valore durante gli aggiornamenti
+del genitore. La sua funzione view viene aggiornata, quindi può catturare
+i nuovi valori del genitore. initial vale solo al primo montaggio.
+Per forzare un reset si può usare `state: initial, key: identity, view: factory`:
+identity è una stringa, e una chiave diversa nella stessa posizione
+rimonta quel sottoalbero. Le callback dei nodi rimossi vengono disattivate.
+Una chiamata esplicita a render rimonta l'intera view.
+
+Limiti: niente riordino per chiavi, niente lifecycle, niente ottimizzazione
+della valutazione delle view Mira. L'identità è posizionale, quindi un
+inserimento di fratelli dello stesso tipo può riutilizzare lo stato nella
+stessa posizione; usare una chiave per forzare il reset. La validazione
+precede le scritture DOM ma non annulla eventuali effetti host durante
+la valutazione di view. I test verificano identità, eventi, IME e stato su
+DOM simulato; il comportamento della tastiera iPhone resta da verificare.

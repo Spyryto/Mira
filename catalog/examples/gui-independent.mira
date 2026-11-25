@@ -1,0 +1,13 @@
+# Il genitore cambia il passo, non lo stato dei contatori figli.
+counter: caption, step: amount = state: 0, view: {n | row: [
+  button: caption, update: {old | old + amount},
+  text: n
+]};
+parent view: amount = column: [
+  title: "Due contatori indipendenti",
+  text: amount,
+  button: "Cambia passo", update: {old | old + 1},
+  counter: "A +1", step: amount,
+  counter: "B +1", step: amount
+];
+render (state: 1, view: (parent view: _));

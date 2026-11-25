@@ -283,3 +283,9 @@ esempi interattivi, Salutami e Scheda lezione. Il codice completo include
 i costruttori di lib/gui.mira, ed è modificabile offline. Seleziona JS
 e premi Anteprima UI. I controlli usano stato immutabile e transizioni
 Mira; il renderer browser non implementa la logica dell'applicazione.
+
+## GUI incrementali (Mira 0.16)
+
+La Guida presenta due esempi di stato indipendente e reset con chiave.
+L'anteprima aggiorna il DOM compatibile in place; i form non perdono il nodo
+input a ogni carattere. I test simulano il DOM, non una tastiera mobile reale.

@@ -19,166 +19,226 @@
       return node;
     }
 
-    // Preserve focus/caret on a structurally stable control across a state
-    // refresh. No general DOM diffing or mutable Mira bindings are needed.
-    function focusedControl(slot) {
-      const node = doc.activeElement;
-      if (!node || !['INPUT', 'SELECT', 'BUTTON'].includes(String(node.tagName).toUpperCase())) return null;
-      const path = [];
-      let cursor = node;
-      while (cursor !== slot) {
-        const parent = cursor.parentNode;
-        if (!parent) return null;
-        const index = Array.from(parent.children).indexOf(cursor);
-        if (index < 0) return null;
-        path.unshift(index);
-        cursor = parent;
-      }
-      return {path, tag: node.tagName, type: node.type, value: node.value,
-        label: node.getAttribute?.('aria-label') ?? node.textContent,
-        start: node.selectionStart, end: node.selectionEnd, direction: node.selectionDirection};
-    }
-
-    function restoreFocus(slot, saved) {
-      if (!saved) return;
-      let node = slot;
-      for (const index of saved.path) {
-        node = node.children[index];
-        if (!node) return;
-      }
-      if (node.tagName !== saved.tag || node.type !== saved.type ||
-          (node.getAttribute?.('aria-label') ?? node.textContent) !== saved.label) return;
-      node.focus?.({preventScroll: true});
-      if (node.value === saved.value && Number.isInteger(saved.start) &&
-          Number.isInteger(saved.end) && typeof node.setSelectionRange === 'function') {
-        node.setSelectionRange(saved.start, saved.end, saved.direction ?? 'none');
-      }
-    }
-
-    function boundControl(spec, updateState) {
-      if (typeof spec.update !== 'function') throw new Error(spec.type + '.update must be a Mira function');
-      if (!updateState) throw new Error(spec.type + '.update requires a state parent');
-      const wrapper = doc.createElement('label');
-      wrapper.className = 'mira-ui-control' + (spec.type === 'checkbox' ? ' mira-ui-check' : '');
-      wrapper.append(addText('span', spec.label, 'mira-ui-label'));
-      const control = doc.createElement(spec.type === 'select' ? 'select' : 'input');
-      control.className = 'mira-ui-input';
-      control.setAttribute('aria-label', String(spec.label ?? ''));
-      if (spec.type === 'checkbox') {
-        if (typeof spec.checked !== 'boolean') throw new Error('checkbox.checked must be boolean');
-        control.type = 'checkbox';
-        control.checked = spec.checked;
-      } else if (spec.type === 'select') {
-        if (!Array.isArray(spec.options) || !spec.options.every(option => typeof option === 'string') ||
-            new Set(spec.options).size !== spec.options.length || spec.options.length > MAX_NODES ||
-            typeof spec.value !== 'string' || !spec.options.includes(spec.value)) {
-          throw new Error('select requires unique string options and a matching string value');
-        }
-        for (const choice of spec.options) {
-          const option = addText('option', choice);
-          option.value = choice;
-          control.append(option);
-        }
-        control.value = spec.value;
-      } else {
-        if (typeof spec.value !== 'string') throw new Error('input.value must be a string');
-        control.type = 'text';
-        control.value = spec.value;
-      }
-      function commit(event) {
-        if (event?.isComposing) return;
-        try {
-          const value = spec.type === 'checkbox' ? control.checked : control.value;
-          updateState(old => spec.update(old, value));
-        } catch (error) { report(error); }
-      }
-      control.addEventListener(spec.type === 'input' ? 'input' : 'change', commit);
-      if (spec.type === 'input') control.addEventListener('compositionend', commit);
-      wrapper.append(control);
-      return wrapper;
-    }
-
-    function createNode(spec, updateState, budget, depth) {
+    // Prepare a validated view before touching the mounted DOM. Instances
+    // retain native nodes and the current callbacks, not copies of Mira state.
+    function prepare(spec, previous, parentState, budget, depth, nextState) {
       if (!spec || typeof spec !== 'object' || Array.isArray(spec)) {
         throw new Error('A view must be a Mira record');
       }
       if (++budget.nodes > MAX_NODES || depth > MAX_DEPTH) {
         throw new Error('The view exceeds its size/depth limit');
       }
+      const type = spec.type;
+      if (type === 'state' && spec.key !== undefined && typeof spec.key !== 'string') {
+        throw new Error('state.key must be a string');
+      }
+      const same = previous && previous.spec.type === type &&
+        (type !== 'state' || previous.spec.key === spec.key);
+      const instance = same ? previous : {active: false, children: [], node: null};
+      const plan = {instance, spec, parentState, depth, children: []};
+      const oldChildren = same ? instance.children : [];
+      const child = (value, index, owner = parentState) =>
+        prepare(value, oldChildren[index], owner, budget, depth + 1);
 
-      switch (spec.type) {
+      switch (type) {
         case 'title':
-          return addText('h2', spec.text, 'mira-ui-title');
         case 'text':
-          return addText('p', spec.text, 'mira-ui-text');
+          plan.text = String(spec.text ?? '');
+          break;
         case 'column':
-        case 'row': {
-          if (!Array.isArray(spec.children)) {
-            throw new Error(spec.type + '.children must be a sequence');
-          }
-          const col = doc.createElement('div');
-          col.className = 'mira-ui-' + spec.type;
-          for (const child of spec.children) {
-            col.append(createNode(child, updateState, budget, depth + 1));
-          }
-          return col;
-        }
-        case 'input':
-        case 'checkbox':
-        case 'select':
-          return boundControl(spec, updateState);
-        case 'button': {
-          const button = addText('button', spec.label, 'mira-ui-button');
-          button.type = 'button';
+        case 'row':
+          if (!Array.isArray(spec.children)) throw new Error(type + '.children must be a sequence');
+          plan.children = spec.children.map((value, index) => child(value, index));
+          break;
+        case 'button':
           if (spec.update !== undefined && typeof spec.update !== 'function') {
             throw new Error('button.update must be a Mira function');
           }
           if (spec.onClick !== undefined && typeof spec.onClick !== 'function') {
             throw new Error('button.onClick must be a Mira function');
           }
-          button.addEventListener('click', () => {
-            try {
-              if (spec.update) {
-                if (!updateState) throw new Error('button.update requires a state parent');
-                updateState(spec.update);
-              }
-              if (spec.onClick) spec.onClick(null);
-            } catch (error) {
-              report(error);
+          plan.text = String(spec.label ?? '');
+          break;
+        case 'input':
+        case 'checkbox':
+        case 'select':
+          if (typeof spec.update !== 'function') throw new Error(type + '.update must be a Mira function');
+          if (!parentState) throw new Error(type + '.update requires a state parent');
+          plan.text = String(spec.label ?? '');
+          if (type === 'checkbox') {
+            if (typeof spec.checked !== 'boolean') throw new Error('checkbox.checked must be boolean');
+          } else if (type === 'select') {
+            if (!Array.isArray(spec.options) || !spec.options.every(option => typeof option === 'string') ||
+                new Set(spec.options).size !== spec.options.length ||
+                typeof spec.value !== 'string' || !spec.options.includes(spec.value)) {
+              throw new Error('select requires unique string options and a matching string value');
             }
-          });
-          return button;
-        }
-        case 'state': {
-          if (typeof spec.view !== 'function') {
-            throw new Error('state.view must be a Mira function');
+            budget.nodes += spec.options.length;
+            if (budget.nodes > MAX_NODES) throw new Error('The view exceeds its size/depth limit');
+          } else if (typeof spec.value !== 'string') {
+            throw new Error('input.value must be a string');
           }
-          const slot = doc.createElement('section');
-          slot.className = 'mira-ui-state';
-          let state = spec.initial;
-          function refreshState(next) {
-            const saved = focusedControl(slot);
-            const child = createNode(spec.view(next), update, {nodes: 0}, depth + 1);
-            state = next;
-            slot.replaceChildren(child);
-            restoreFocus(slot, saved);
-          }
-          function update(transition) {
-            // Commit state only after a new view has been constructed successfully.
-            refreshState(transition(state));
-          }
-          refreshState(state);
-          return slot;
-        }
+          break;
+        case 'state':
+          if (typeof spec.view !== 'function') throw new Error('state.view must be a Mira function');
+          plan.state = nextState ? nextState.value : same ? instance.state : spec.initial;
+          plan.children = [child(spec.view(plan.state), 0, instance)];
+          break;
         default:
-          throw new Error('Unsupported view type: ' + String(spec.type));
+          throw new Error('Unsupported view type: ' + String(type));
+      }
+      return plan;
+    }
+
+    function deactivate(instance) {
+      instance.active = false;
+      for (const child of instance.children) deactivate(child);
+    }
+
+    function update(instance, transition) {
+      if (!instance?.active) return;
+      const next = transition(instance.state);
+      const plan = prepare(instance.spec, instance, instance.parentState,
+        {nodes: 0}, instance.depth, {value: next});
+      commit(plan);
+    }
+
+    function syncControl(instance) {
+      const {spec, control} = instance;
+      if (spec.type === 'checkbox') {
+        if (control.checked !== spec.checked) control.checked = spec.checked;
+      } else if (!instance.composing && control.value !== spec.value) {
+        control.value = spec.value;
       }
     }
 
+    function buildControl(instance, type) {
+      const wrapper = doc.createElement('label');
+      wrapper.className = 'mira-ui-control' + (type === 'checkbox' ? ' mira-ui-check' : '');
+      instance.label = addText('span', '', 'mira-ui-label');
+      const control = instance.control = doc.createElement(type === 'select' ? 'select' : 'input');
+      control.className = 'mira-ui-input';
+      if (type !== 'select') control.type = type === 'checkbox' ? 'checkbox' : 'text';
+      function change(event) {
+        if (!instance.active) return;
+        if (event?.isComposing) { instance.composing = true; return; }
+        if (instance.composing) return;
+        const {spec, parentState} = instance;
+        const value = type === 'checkbox' ? control.checked : control.value;
+        if (value === (type === 'checkbox' ? spec.checked : spec.value)) return;
+        try {
+          update(parentState, old => spec.update(old, value));
+        } catch (error) {
+          syncControl(instance);
+          report(error);
+        }
+      }
+      control.addEventListener(type === 'input' ? 'input' : 'change', change);
+      if (type === 'input') {
+        control.addEventListener('compositionstart', () => { instance.composing = true; });
+        control.addEventListener('compositionend', () => {
+          instance.composing = false;
+          change();
+        });
+      }
+      wrapper.append(instance.label, control);
+      return wrapper;
+    }
+
+    function setText(node, value) {
+      if (node.textContent !== value) node.textContent = value;
+    }
+
+    function build(instance, type) {
+      switch (type) {
+        case 'title': return addText('h2', '', 'mira-ui-title');
+        case 'text': return addText('p', '', 'mira-ui-text');
+        case 'column':
+        case 'row':
+        case 'state': {
+          const node = doc.createElement(type === 'state' ? 'section' : 'div');
+          node.className = 'mira-ui-' + type;
+          return node;
+        }
+        case 'input':
+        case 'checkbox':
+        case 'select':
+          return buildControl(instance, type);
+        case 'button': {
+          const node = addText('button', '', 'mira-ui-button');
+          node.type = 'button';
+          node.addEventListener('click', () => {
+            if (!instance.active) return;
+            const {spec, parentState} = instance;
+            try {
+              if (spec.update) {
+                if (!parentState) throw new Error('button.update requires a state parent');
+                update(parentState, spec.update);
+              }
+              if (spec.onClick) spec.onClick(null);
+            } catch (error) { report(error); }
+          });
+          return node;
+        }
+      }
+    }
+
+    function commit(plan) {
+      const {instance, spec} = plan;
+      const previous = instance.spec;
+      const type = spec.type;
+      if (!instance.node) instance.node = build(instance, type);
+      const node = instance.node;
+      instance.spec = spec;
+      instance.parentState = plan.parentState;
+      instance.depth = plan.depth;
+      instance.active = true;
+      if (type === 'state') instance.state = plan.state;
+      if (type === 'title' || type === 'text' || type === 'button') {
+        setText(node, plan.text);
+      } else if (type === 'input' || type === 'checkbox' || type === 'select') {
+        setText(instance.label, plan.text);
+        const control = instance.control;
+        if (control.getAttribute('aria-label') !== plan.text) control.setAttribute('aria-label', plan.text);
+        if (type === 'select' && (!previous || previous.options.length !== spec.options.length ||
+            spec.options.some((value, i) => value !== previous.options[i]))) {
+          control.replaceChildren(...spec.options.map(choice => {
+            const option = addText('option', choice);
+            option.value = choice;
+            return option;
+          }));
+        }
+        syncControl(instance);
+      }
+      // Positional reconciliation: stable type/position keeps native identity.
+      // No keyed list reordering; state keys only opt into a local reset.
+      const old = instance.children;
+      const children = plan.children.map((child, index) => {
+        const next = commit(child);
+        const before = old[index];
+        if (!before) node.append(next.node);
+        else if (before !== next) {
+          deactivate(before);
+          node.replaceChild(next.node, before.node);
+        }
+        return next;
+      });
+      for (let i = children.length; i < old.length; i++) {
+        deactivate(old[i]);
+        old[i].node.remove();
+      }
+      instance.children = children;
+      return instance;
+    }
+
+    let mounted = null;
     uiHost.render = spec => {
-      // A failed render must not expose raw HTML or modify Studio's DOM.
-      const node = createNode(spec, null, {nodes: 0}, 0);
-      mount.replaceChildren(node);
+      // Explicit render starts a new tree; state updates reconcile in place.
+      const plan = prepare(spec, null, null, {nodes: 0}, 0);
+      const next = commit(plan);
+      if (mounted) deactivate(mounted);
+      mount.replaceChildren(next.node);
+      mounted = next;
       return spec;
     };
 
