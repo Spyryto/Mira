@@ -1,0 +1,5 @@
+result = 20 >> {x |
+  subtotal = x + 1;
+  action = {| subtotal * 2};
+  () >> action
+};
