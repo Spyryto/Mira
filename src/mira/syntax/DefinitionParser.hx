@@ -111,7 +111,7 @@ class DefinitionParser {
 
     // A binding has the same grammar in both value and parameter headers:
     // multiword name, optionally followed by a single parenthesized type.
-    static function annotatedName(tokens:Array<Token>):{name:String,type:Null<Type>,typeOrigin:Null<Token>} {
+    public static function annotatedName(tokens:Array<Token>):{name:String,type:Null<Type>,typeOrigin:Null<Token>} {
         final opening = topLevel(tokens,"(");
         if (opening < 0) return {name:readWords(tokens),type:null,typeOrigin:null};
         if (opening == 0) throw new MiraError("Expected name before type annotation",tokens[0]);
