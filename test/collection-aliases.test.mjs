@@ -83,20 +83,22 @@ test('two-parameter reducer blocks execute identically on JavaScript and PHP',()
 });
 
 test('unwrapped reducer blocks preserve nested punctuation and selector boundaries on JS/PHP',()=>{
-  const exact = \`lessons = [
-  {hours: 2, rate: 30},
-  {hours: 1.5, rate: 40}
-];
-
-result = fold: lessons,
-  with: {total, lesson |
-    total + (lesson ~ hours * lesson ~ rate)
-  },
-  from: 0;\`;
+  const exact = [
+    'lessons = [',
+    '  {hours: 2, rate: 30},',
+    '  {hours: 1.5, rate: 40}',
+    '];',
+    '',
+    'result = fold: lessons,',
+    '  with: {total, lesson |',
+    '    total + (lesson ~ hours * lesson ~ rate)',
+    '  },',
+    '  from: 0;'
+  ].join('\\n');
   const cases=[
     [exact,120],
     ['numbers = [1,2,3,4]; result = fold: numbers, with: {total, item | total + item}, from: 0;',10],
-    ['numbers = [1,2,3]; result = fold: numbers with {total, item | total + item} from 0;',6],
+    ['numbers = [1,2,3]; result = fold: numbers, with {total, item | total + item}, from: 0;',6],
     ['numbers = [1,2,3]; result = fold: numbers, with: ({total, item | total + item}), from: 0;',6],
     ['numbers = [1,2,3]; result = collect: numbers, with: {_ | _ * 2};', [2,4,6]],
     ['numbers = [1,2,3]; result = select: numbers, if: {_ | _ >= 2};', [2,3]],
@@ -107,7 +109,7 @@ result = fold: lessons,
     const php=compiler.compile(source,'php',hostJson);
     assert.equal(js.ok,true,js.message+' / JS '+source);
     assert.equal(php.ok,true,php.message+' / PHP '+source);
-    const actualJs=new Function('__miraHost',js.output+'\nreturn result;')(collectionHost());
+    const actualJs=new Function('__miraHost',js.output+'\\nreturn result;')(collectionHost());
     assert.deepEqual(actualJs,expected,'JS '+source);
     assert.deepEqual(runPhp(php.output),expected,'PHP '+source);
   }

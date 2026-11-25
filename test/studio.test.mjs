@@ -473,7 +473,7 @@ test('0.10 precedence and bare block selector arguments preserve canonical AST',
     'result = fold: lessons,',
     '  with: {total, lesson | total + (lesson ~ hours * lesson ~ rate)},',
     '  from: 0;'
-  ].join('\\n');
+  ].join('\n');
   const manifest=read('host.json');
   const ast=bridge.ast(source,manifest);
   assert.equal(ast.ok,true,ast.message);
