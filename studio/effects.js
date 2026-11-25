@@ -120,7 +120,7 @@
       const proto = Object.getPrototypeOf(value);
       if (proto !== null && Object.getPrototypeOf(proto) !== null) throw Error('Expected RPC record');
       const entries = Object.entries(value);
-      if (!entries.length || entries.some(([key]) => /^-?\\d+$/.test(key))) throw Error('Nonportable RPC record');
+      if (!entries.length || entries.some(([key]) => /^-?\d+$/.test(key))) throw Error('Nonportable RPC record');
       return Object.fromEntries(entries.map(([key, item]) => [key, portable(item, depth + 1)]));
     }
     throw Error('Nonportable RPC value');
