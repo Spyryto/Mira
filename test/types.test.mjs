@@ -45,7 +45,7 @@ test('types: invalid programs are rejected, not coerced',()=>{
     ['xs = select: [1, 2], with: {x | x + 1};',/expected Boolean, got Number/],
     ['f: x = f: x;',/recursive dependency not supported/],
     ['f: x = x >> x;',/infinite type/],
-    ['x = 2;\ny = x + "a";',/at program.mira:2:1/]
+    ['x = 2;\ny = x + "a";',/at 2:1/]
   ])assert.throws(()=>check(source),pattern,source);
   assert.throws(()=>check('log 1;',{callables:['log']}),/host type signature required/);
 });
