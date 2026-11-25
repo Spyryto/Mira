@@ -208,6 +208,59 @@
     return results;
   }
 
+
+  function hybridSource(size=100){
+    if(!Number.isInteger(size)||size<2||size>100)throw new Error('Invalid hybrid size');
+    return guiLibrary+'\n'+
+      'fixed panel: n = column: [text: n, '+Array.from({length:size-1},(_,i)=>'text: '+(i+1)).join(', ')+'];\n'+
+      'changing panel: n = column: [button: "Avanti", update: {old | old + 1}, (if (n % 2 == 0) then (title: "Pari") else (text: "Dispari"))];\n'+
+      'hybrid view: n = column: [fixed panel: n, changing panel: n];';
+  }
+  function hybridSetup(compiler,mount,hybrid,size=100){
+    const source=hybridSource(size);
+    if(hybrid){
+      const compiled=global.MiraGuiSpecialize.compileHybrid(compiler,source,['fixed panel:','changing panel:']);
+      if(!compiled.regions[0].specialized||compiled.regions[1].specialized)throw new Error('Hybrid region classification');
+      return ()=>global.MiraGuiSpecialize.mountHybrid(compiled,mount,0);
+    }
+    const code=compiler.compile(source,'js');
+    if(!code.ok)throw new Error(code.message);
+    const view=new Function(code.output+'\nreturn hybrid_view;')();
+    return ()=>global.MiraUiHost.createUiHost(mount.ownerDocument,mount,error=>{throw new Error(error);})
+      .render({type:'state',initial:0,view});
+  }
+  function runHybrid(compiler,mount){
+    const setups={incremental:hybridSetup(compiler,mount,false),hybrid:hybridSetup(compiler,mount,true)};
+    const results=[];
+    for(const flush of [false,true]){
+      const samples={incremental:[],hybrid:[]};
+      for(let round=0;round<rounds;round++){
+        for(const strategy of round%2?['hybrid','incremental']:['incremental','hybrid']){
+          setups[strategy]();
+          const label=mount.querySelector('p'),button=mount.querySelector('button');
+          for(let i=0;i<warmup;i++)button.click();
+          layout(mount);
+          const start=performance.now();
+          for(let i=0;i<updates;i++){
+            button.click();
+            if(flush)layout(mount);
+          }
+          samples[strategy].push((performance.now()-start)/updates);
+          const n=warmup+updates;
+          const changing=mount.children[0].children[0].children[1];
+          if(label.textContent!==String(n)||label!==mount.querySelector('p')||
+             changing.children[1].textContent!==(n%2?'Dispari':'Pari')||
+             changing.children[1].tagName!==(n%2?'P':'H2')||button!==mount.querySelector('button'))
+            throw new Error('Hybrid DOM checksum');
+          layout(mount);
+        }
+      }
+      results.push({flush,incremental:stats(samples.incremental),hybrid:stats(samples.hybrid)});
+    }
+    mount.replaceChildren();
+    return results;
+  }
+
   function run(compiler,mount) {
     if (!mount.isConnected) throw new Error('Benchmark requires connected DOM');
     const results=[];
@@ -229,9 +282,10 @@
     }
     mount.replaceChildren();
     const form=runForm(compiler,mount);
-    return {ok:true,rows,updates,rounds,warmup,form,version:compiler.version,
+    const hybrid=runHybrid(compiler,mount);
+    return {ok:true,rows,updates,rounds,warmup,form,hybrid,version:compiler.version,
       userAgent:navigator.userAgent,results};
   }
 
-  global.MiraGuiBench=Object.freeze({source,run,formSource,formSetup});
+  global.MiraGuiBench=Object.freeze({source,run,formSource,formSetup,hybridSource,hybridSetup});
 })(globalThis);

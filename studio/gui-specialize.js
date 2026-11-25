@@ -289,5 +289,41 @@
     });
     return {dynamicSlots:bindings.length,getState:()=>state};
   }
-  global.MiraGuiSpecialize=Object.freeze({analyze,compile,mount});
+  function compileHybrid(compiler,source,selectors){
+    if(!Array.isArray(selectors)||!selectors.length||selectors.length>100)
+      fail('bounded nonempty region list');
+    const astResult=compiler.ast(source);
+    if(!astResult.ok)throw new Error(astResult.message);
+    const ast=JSON.parse(astResult.output);
+    if(ast.definitions.some(d=>!['Function','Value'].includes(d.kind)))fail('no top-level statements');
+    const names=selectors.map(selector=>{
+      const def=ast.definitions.find(d=>d.selector===selector);
+      if(!def||def.parameters.length!==1||!def.labels.every(identifier))fail('unary region selector');
+      return def.labels.map(label=>label.replaceAll(' ','_')).join('__');
+    });
+    const code=compiler.compile(source,'js');
+    if(!code.ok)throw new Error(code.message);
+    const views=new Function(code.output+'\nreturn ['+names.join(',')+'];')();
+    const cache=new Map();
+    const regions=selectors.map((selector,index)=>{
+      if(!cache.has(selector)){
+        try{
+          const result=compile(compiler,source,selector);
+          cache.set(selector,{specialized:{slots:result.plan.slots,values:result.program.values},reason:null});
+        }catch(error){
+          if(!String(error.message).startsWith('Unsupported specialized view: '))throw error;
+          cache.set(selector,{specialized:null,reason:String(error.message)});
+        }
+      }
+      return {selector,view:views[index],...cache.get(selector)};
+    });
+    return {regions};
+  }
+  function mountHybrid(compiled,target,initial,onError=error=>{throw new Error(error);}){
+    const host=global.MiraUiHost.createUiHost(target.ownerDocument,target,onError);
+    return host.renderHybrid(compiled.regions,initial,value=>{
+      if(!data(value))fail('data state');
+    },slotValue);
+  }
+  global.MiraGuiSpecialize=Object.freeze({analyze,compile,mount,compileHybrid,mountHybrid});
 })(globalThis);

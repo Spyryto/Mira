@@ -661,3 +661,63 @@ test('0.22 canonical dashboard and lesson specialize without rewriting their vie
     assert.deepEqual(errors,[]);
   }
 });
+
+
+test('0.23 hybrid regions share root state, preserve nested state and replace generic shape',()=>{
+  const {root,errors}=setup(),sandbox={};
+  runInNewContext(read('ui-host.js'),sandbox);
+  runInNewContext(read('gui-specialize.js'),sandbox);
+  const library=readFileSync(resolve(fileURLToPath(new URL('../',import.meta.url)),'lib/gui.mira'),'utf8');
+  const source=library+'\n'+
+    'fixed: n = column: [text: n, button: "Fixed", update: {old | old + 1}];\n'+
+    'variable: n = column: [button: "Generic", update: {old | old + 1}, (if (n % 2 == 0) then (title: "Even") else (text: "Odd")), state: 0, view: {child | row: [text: child, button: "Local", update: {old | old + 1}]}];';
+  const compiled=sandbox.MiraGuiSpecialize.compileHybrid(compiler,source,['fixed:','variable:']);
+  assert.ok(compiled.regions[0].specialized);assert.equal(compiled.regions[1].specialized,null);
+  let visits=0;const view=compiled.regions[0].view;
+  compiled.regions[0].view=n=>{visits++;return view(n);};
+  const app=sandbox.MiraGuiSpecialize.mountHybrid(compiled,root,0,msg=>errors.push(msg));
+  const label=findAll(root,'p')[0],fixed=findButtons(root)[0];
+  const local=findButtons(root).find(n=>n.textContent==='Local');
+  local.click();local.click();fixed.click();
+  assert.equal(app.getState(),1);assert.equal(label.textContent,'1');
+  assert.equal(findAll(root,'p')[0],label);
+  assert.equal(findAll(root,'p').at(-1).textContent,'2');
+  assert.equal(findButtons(root).find(n=>n.textContent==='Local'),local);
+  assert.ok(findAll(root,'p').some(p=>p.textContent==='Odd'));
+  findButtons(root).find(n=>n.textContent==='Generic').click();
+  assert.equal(app.getState(),2);assert.equal(label.textContent,'2');
+  assert.equal(findAll(root,'h2')[0].textContent,'Even');
+  assert.equal(findAll(root,'p').at(-1).textContent,'2');
+  assert.equal(visits,1,'specialized view evaluated only at mount');
+  assert.deepEqual(errors,[]);
+});
+
+test('0.23 invalid generic or specialized region rolls back all regions and model',()=>{
+  const {root,errors}=setup(),sandbox={};
+  runInNewContext(read('ui-host.js'),sandbox);runInNewContext(read('gui-specialize.js'),sandbox);
+  const source='fixed: n = {type: "styled", view: {type: "text", text: n}, styles: [{padding: (if (n == 2) then (0 - 1) else 4)}]};\n'+
+    'other: n = {type: "column", children: [{type: "button", label: "Bad generic", update: {old | 1}}, {type: "button", label: "Bad fixed", update: {old | 2}}, {type: "button", label: "Good", update: {old | 3}}, (if (n == 1) then {type: "unknown"} else {type: "text", text: n})]};';
+  const compiled=sandbox.MiraGuiSpecialize.compileHybrid(compiler,source,['fixed:','other:']);
+  const app=sandbox.MiraGuiSpecialize.mountHybrid(compiled,root,0,msg=>errors.push(msg));
+  const [fixed,other]=findAll(root,'p');
+  findButtons(root)[0].click();findButtons(root)[1].click();
+  assert.equal(app.getState(),0);assert.equal(fixed.textContent,'0');assert.equal(other.textContent,'0');
+  assert.match(errors[0],/Unsupported view type/);assert.match(errors[1],/Invalid style value/);
+  findButtons(root)[2].click();
+  assert.equal(app.getState(),3);assert.equal(fixed.textContent,'3');assert.equal(other.textContent,'3');
+});
+
+test('0.23 hybrid controlled input uses the same state and survives generic updates',()=>{
+  const {root,errors,document}=setup(),sandbox={};
+  runInNewContext(read('ui-host.js'),sandbox);runInNewContext(read('gui-specialize.js'),sandbox);
+  const source='fixed: model = {type: "input", label: "Name", value: (model ~ name), update: {old, entered | {name: entered, count: (old ~ count)}}};\n'+
+    'other: model = {type: "column", children: [{type: "button", label: "Next", update: {old | {name: (old ~ name), count: (old ~ count + 1)}}}, (if (model ~ count == 0) then {type: "title", text: (model ~ name)} else {type: "text", text: (model ~ name)})]};';
+  const compiled=sandbox.MiraGuiSpecialize.compileHybrid(compiler,source,['fixed:','other:']);
+  const app=sandbox.MiraGuiSpecialize.mountHybrid(compiled,root,{name:'Ada',count:0},msg=>errors.push(msg));
+  const input=findAll(root,'input')[0];input.focus();input.value='Mira';input.setSelectionRange(2,2);input.dispatch('input');
+  assert.equal(findAll(root,'h2')[0].textContent,'Mira');
+  findButtons(root)[0].click();
+  assert.equal(app.getState().count,1);assert.equal(findAll(root,'p')[0].textContent,'Mira');
+  assert.equal(findAll(root,'input')[0],input);assert.equal(document.activeElement,input);assert.equal(input.selectionStart,2);
+  assert.deepEqual(errors,[]);
+});

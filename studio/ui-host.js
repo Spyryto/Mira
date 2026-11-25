@@ -208,8 +208,12 @@
     }
 
     function update(instance, transition) {
-      if (!instance?.active) return;
+      if (!instance?.active || !mounted || mount.children[0] !== mounted.node) return;
       const next = transition(instance.state);
+      if (instance.hybrid) {
+        updateHybrid(instance, next);
+        return;
+      }
       const plan = prepare(instance.source, instance, instance.parentState,
         {nodes: 0}, instance.depth, {value: next});
       commit(plan);
@@ -334,6 +338,84 @@
       mount.replaceChildren(next.node);
       mounted = next;
       return spec;
+    };
+
+    // Hybrid roots use the ordinary state owner and reconciliation for
+    // generic regions. Specialized regions retain instance references.
+    function regionSize(instance) {
+      return 1 + (instance.spec.type === 'select' ? instance.spec.options.length : 0)
+        + instance.children.reduce((sum, child) => sum + regionSize(child), 0);
+    }
+
+    function updateHybrid(owner, next) {
+      const hybrid = owner.hybrid;
+      hybrid.validateState(next);
+      // Account for the root, fixed column and all specialized regions.
+      // Generic regions charge the very same budget as normal prepare().
+      const budget = {nodes: 2 + hybrid.fixedSize};
+      const plans = hybrid.regions.map(region => {
+        if (!region.specialized) {
+          return {region, plan: prepare(region.view(next), region.instance, owner, budget, 2)};
+        }
+        const values = region.specialized.values(next);
+        if (values.length !== region.slots.length) throw new Error('Invalid specialized slot count');
+        return {region, values: values.map((value, i) => hybrid.slotValue(region.slots[i].slot, value))};
+      });
+      // All regions validated before any commit. One owner, one state value.
+      const column = owner.children[0];
+      for (const item of plans) {
+        const region = item.region;
+        if (item.plan) {
+          const previous = region.instance;
+          const updated = commit(item.plan);
+          if (updated !== previous) {
+            deactivate(previous);
+            column.node.replaceChild(updated.node, previous.node);
+          }
+          region.instance = updated;
+          column.children[region.index] = updated;
+        } else {
+          region.slots.forEach(({slot, instance}, i) => {
+            const value = item.values[i];
+            if (slot.kind === 'text') setText(instance.node, value);
+            else if (slot.kind === 'style') patchStyles(instance, {...instance.css, ...value});
+            else if (slot.kind === 'control') {
+              const key = slot.type === 'checkbox' ? 'checked' : 'value';
+              instance.spec = {...instance.spec, [key]: value};
+              syncControl(instance);
+            }
+          });
+        }
+      }
+      owner.state = next;
+    }
+
+    // Internal browser API, deliberately not exposed as a Mira host selector.
+    // Regions are explicit fixed siblings, each compiled or generic.
+    uiHost.renderHybrid = (regions, initial, validateState, slotValue) => {
+      validateState(initial);
+      uiHost.render({type: 'state', initial, view: value => ({
+        type: 'column', children: regions.map(region => region.view(value))
+      })});
+      const owner = mounted;
+      const children = owner.children[0].children;
+      let fixedSize = 0;
+      const installed = regions.map((region, index) => {
+        const instance = children[index];
+        let slots = [];
+        if (region.specialized) {
+          fixedSize += regionSize(instance);
+          slots = region.specialized.slots.map(slot => {
+            let node = instance;
+            for (const part of slot.path) node = node.children[part];
+            if (!node) throw new Error('Invalid specialized slot path');
+            return {slot, instance: node};
+          });
+        }
+        return {...region, index, instance, slots};
+      });
+      owner.hybrid = {regions: installed, fixedSize, validateState, slotValue};
+      return {getState: () => owner.state};
     };
 
     uiHost.alert = message => {

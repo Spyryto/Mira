@@ -34,7 +34,7 @@ small{display:block;line-height:1.5}
 <p>La stessa scheda ora usa i selettori della libreria GUI e componenti riutilizzabili. Modifica allievo, pagamento e modalità; Reset aggiorna tutti i controlli. <button id="form-start" type="button">Monta form</button></p>
 <div id="form-demo"></div>
 <details><summary>Sorgente Mira del form (con libreria)</summary><pre id="form-source" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></details>
-<h2>Area DOM reale</h2>
+<h2>Rendering ibrido</h2><p>Una regione specializzata e una generica condividono il contatore. Avanti cambia anche la struttura del secondo componente. <button id="hybrid-start" type="button">Monta demo ibrida</button></p><div id="hybrid-demo"></div><details><summary>Sorgente Mira</summary><pre id="hybrid-source" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></details><h2>Area DOM reale</h2>
 <div id="mount" aria-label="Area di misura collegata al documento"></div>
 <pre id="machine" hidden></pre>
 <script src="./compiler.js"></script>
@@ -79,6 +79,19 @@ small{display:block;line-height:1.5}
         }
         card.append(table);results.append(card);
       }
+      for(const row of data.hybrid){
+        const card=document.createElement('section');card.className='result';
+        card.append(element('h2','Ibrido · '+(row.flush?'layout forzato':'scritture sincrone')));
+        const table=document.createElement('table'),head=document.createElement('tr');
+        for(const title of ['Metodo','Mediana ms','P95 ms'])head.append(element('th',title));
+        table.append(head);
+        for(const [key,name] of [['incremental','Mira incrementale'],['hybrid','Mira ibrido']]){
+          const tr=document.createElement('tr');
+          tr.append(element('td',name),element('td',row[key].medianMs.toFixed(3)),element('td',row[key].p95Ms.toFixed(3)));
+          table.append(tr);
+        }
+        card.append(table);results.append(card);
+      }
       status.textContent='Completato · Mira '+data.version+' · '+data.rounds+' campioni per caso';
     }catch(error){
       byId('machine').textContent=JSON.stringify({ok:false,message:String(error.message??error)});
@@ -95,6 +108,11 @@ small{display:block;line-height:1.5}
   byId('form-source').textContent=MiraGuiBench.formSource(1);
   byId('form-start').addEventListener('click',()=>{
     try { MiraGuiBench.formSetup(MiraStudioCompiler,byId('form-demo'),true,1)(); }
+    catch(error){status.textContent=String(error.message??error);}
+  });
+  byId('hybrid-source').textContent=MiraGuiBench.hybridSource(2);
+  byId('hybrid-start').addEventListener('click',()=>{
+    try{MiraGuiBench.hybridSetup(MiraStudioCompiler,byId('hybrid-demo'),true,2)();}
     catch(error){status.textContent=String(error.message??error);}
   });
   button.addEventListener('click',()=>{

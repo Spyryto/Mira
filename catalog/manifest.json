@@ -1,5 +1,5 @@
 {
-  "version": "0.22.0",
+  "version": "0.23.0",
   "features": [
     {
       "id": "values",
@@ -1497,6 +1497,12 @@
       "title": "Specializzazione di componenti GUI componibili",
       "since": "0.22",
       "doc": "docs/browser-interop.md#mira-022-componenti-componibili"
+    },
+    {
+      "id": "gui-hybrid-rendering",
+      "title": "Rendering ibrido a regioni con stato condiviso",
+      "since": "0.23",
+      "doc": "docs/browser-interop.md#mira-023-rendering-ibrido"
     }
   ]
 }
