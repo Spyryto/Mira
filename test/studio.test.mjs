@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.40.0');
+  assert.equal(bridge.version, '0.41.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.40.0');
+  assert.equal(bridge.version,'0.41.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -878,4 +878,10 @@ test('browser checker infers mutually recursive functions',()=>{
   const checked=bridge.check('even: n = if (n <= 0) then true else (odd: (n - 1)); odd: n = if (n <= 0) then false else (even: (n - 1));');
   assert.equal(checked.ok,true,checked.message);
   assert.deepEqual(JSON.parse(checked.output).map(x=>x.type),['(Number) -> Boolean','(Number) -> Boolean']);
+});
+
+test('browser checker supports local polymorphism and open record updates',()=>{
+  const result=bridge.check('rename: r = update: r, with: {name: "Ada"}; result = () >> {| id = {x | x}; {n: (1 >> id), s: ("x" >> id), r: (rename: {name: true, age: 20})}};');
+  assert.equal(result.ok,true,result.message);
+  assert.equal(JSON.parse(result.output).at(-1).type,'{n: Number, r: {age: Number, name: Text}, s: Text}');
 });
