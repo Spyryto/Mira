@@ -308,6 +308,60 @@
     return {samples:samplesPerCase,steps,results};
   }
 
+
+  // Real event-loop experiment, intentionally separate from the synchronous
+  // benchmark. Each burst is one JS task; no layout read in the burst.
+  async function runBatchExperiment(compiler,mount){
+    if(!mount.isConnected||document.visibilityState==='hidden')throw new Error('Serve una pagina visibile e collegata');
+    const bursts=7,modes=['immediate','microtask','frame'],results=[];
+    for(const density of ['sparse','dense']){
+      const compiled=global.MiraGuiSpecialize.compile(compiler,source(density),'bench view:');
+      for(const events of [1,10]){
+        const samples=Object.fromEntries(modes.map(mode=>[mode,{submit:[],first:[],last:[],total:[],commits:0,writes:0}]));
+        for(let round=0;round<bursts;round++){
+          for(let j=0;j<modes.length;j++){
+            const mode=modes[(j+round)%modes.length],sample=samples[mode];
+            let committedAt=0,commits=0,writes=0;
+            const app=global.MiraGuiSpecialize.mount(compiled,mount,0,
+              error=>{throw new Error(error);},'content',{mode,onCommit:n=>{
+                committedAt=performance.now();commits++;writes+=n;
+              }});
+            const button=mount.querySelector('button'),label=mount.querySelector('p');
+            // Warm up with one burst, then allow layout to settle outside timer.
+            button.click();await app.whenIdle();layout(mount);
+            commits=0;writes=0;
+            // Separate bursts from the previous microtask/frame.
+            await new Promise(resolve=>setTimeout(resolve,0));
+            if(document.visibilityState==='hidden')throw new Error('Pagina non visibile durante la misura');
+            const start=performance.now();
+            let last=start;
+            for(let i=0;i<events;i++){last=performance.now();button.click();}
+            const submitted=performance.now();
+            if(app.getState()!==events+1)throw new Error('Lost transition');
+            if(mode!=='immediate'&&label.textContent!=='1')throw new Error('Unexpected early DOM commit');
+            await app.whenIdle();
+            const end=performance.now();
+            verify(mount,density,events+1);
+            if(label!==mount.querySelector('p')||commits!==(mode==='immediate'?events:1)||
+               writes!==commits*(density==='dense'?rows:1))throw new Error('Batch commit checksum');
+            sample.submit.push(submitted-start);
+            sample.first.push(Math.max(0,committedAt-start));
+            sample.last.push(Math.max(0,committedAt-last));
+            sample.total.push(end-start);
+            sample.commits+=commits;sample.writes+=writes;
+            layout(mount);
+          }
+        }
+        results.push({density,events,modes:Object.fromEntries(modes.map(mode=>{
+          const s=samples[mode];return [mode,{submit:stats(s.submit),first:stats(s.first),last:stats(s.last),
+            total:stats(s.total),commits:s.commits,writes:s.writes}];
+        }))});
+      }
+    }
+    mount.replaceChildren();
+    return {ok:true,version:compiler.version,bursts,results};
+  }
+
   function run(compiler,mount) {
     if (!mount.isConnected) throw new Error('Benchmark requires connected DOM');
     const results=[];
@@ -335,5 +389,5 @@
       userAgent:navigator.userAgent,results};
   }
 
-  global.MiraGuiBench=Object.freeze({source,run,formSource,formSetup,hybridSource,hybridSetup});
+  global.MiraGuiBench=Object.freeze({source,run,formSource,formSetup,hybridSource,hybridSetup,runBatchExperiment});
 })(globalThis);

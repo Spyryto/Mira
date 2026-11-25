@@ -143,3 +143,7 @@ Il confronto è interno a ciascun run, non una regressione controllata tra versi
 ## Aggiornamento 0.26: Text node persistenti
 
 Esperimento isolato: confronto textContent / Text.data per gli stessi slot del renderer specializzato. La variante persistente è opt-in nel benchmark, non adottata nella preview. Si verifica identità, valori vuoti e sicurezza del testo. Vedi [interop browser](browser-interop.md#mira-026-text-node-persistenti).
+
+## Aggiornamento 0.27: raggruppamento dei commit
+
+Esperimento opt-in per soli slot testuali. Transizioni e validazione immediate, commit eventualmente differito; confronta microtask e rAF sul vero event loop, conteggi di commit/scritture e latenza. Nessuna adozione predefinita. Vedi [interop](browser-interop.md#mira-027-raggruppamento-dei-commit).

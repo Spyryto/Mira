@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync,existsSync} from 'node:fs';
+import {readFileSync,existsSync,mkdtempSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {setTimeout as delay} from 'node:timers/promises';
 import {resolve} from 'node:path';
-import {spawnSync} from 'node:child_process';
+import {spawnSync,spawn} from 'node:child_process';
 import {runInNewContext} from 'node:vm';
 import {performance} from 'node:perf_hooks';
 import {fileURLToPath,pathToFileURL} from 'node:url';
@@ -322,4 +324,83 @@ test('0.24 automatic partition is conservative and has no privileged constructor
     parts+'view: n = {type: "column", children: [fixed: n, (if (n == 0) then {type: "text", text: n} else {type: "title", text: n})]};'
   ])assert.equal(auto(source).mode,'generic');
   assert.throws(()=>auto('view: n = missing: n;'));
+});
+
+
+test('0.27 batching workload remains ordinary Mira on JS and PHP',()=>{
+  const sandbox={};runInNewContext(read('gui-specialize.js'),sandbox);runInNewContext(read('gui-benchmark.js'),sandbox);
+  for(const density of ['sparse','dense']){
+    const source=sandbox.MiraGuiBench.source(density);
+    for(const target of ['js','php'])assert.equal(bridge.compile(source,target).ok,true);
+    assert.ok(sandbox.MiraGuiSpecialize.compile(bridge,source,'bench view:').plan.slots.every(s=>s.kind==='text'));
+  }
+  assert.match(read('gui-benchmark.html'),/id="batch-run"/);
+});
+
+test('0.27 real Chromium event loop compares immediate, microtask and frame commits',{timeout:60000},async t=>{
+  const executable=[process.env.CHROME_BIN,'google-chrome','chromium','chromium-browser'].filter(Boolean)
+    .find(cmd=>spawnSync(cmd,['--version'],{encoding:'utf8'}).status===0);
+  if(!executable){
+    if(process.env.GITHUB_ACTIONS==='true')assert.fail('Chromium required');
+    return t.skip('Chromium not installed');
+  }
+  const profile=mkdtempSync(resolve(tmpdir(),'mira-batch-'));
+  const url=pathToFileURL(resolve(site,'gui-benchmark.html')).href;
+  const child=spawn(executable,['--headless','--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
+    '--no-first-run','--remote-debugging-port=0','--user-data-dir='+profile,url],{stdio:'ignore'});
+  let ws;
+  try{
+    const portFile=resolve(profile,'DevToolsActivePort');
+    for(let i=0;i<100&&!existsSync(portFile);i++)await delay(100);
+    assert.ok(existsSync(portFile),'Chromium debugging port missing');
+    const port=readFileSync(portFile,'utf8').split('\n')[0];
+    let page;
+    for(let i=0;i<100&&!page;i++){
+      const list=await fetch('http://127.0.0.1:'+port+'/json/list',{signal:AbortSignal.timeout(2000)}).then(r=>r.json());
+      page=list.find(p=>p.type==='page'&&p.url===url);
+      if(!page)await delay(100);
+    }
+    assert.ok(page,'benchmark page missing');
+    ws=new WebSocket(page.webSocketDebuggerUrl);
+    await new Promise((ok,fail)=>{
+      const timeout=setTimeout(()=>fail(new Error('CDP socket timeout')),5000);
+      ws.addEventListener('open',()=>{clearTimeout(timeout);ok();},{once:true});
+      ws.addEventListener('error',()=>{clearTimeout(timeout);fail(new Error('CDP socket error'));},{once:true});
+    });
+    const result=await new Promise((ok,fail)=>{
+      const timeout=setTimeout(()=>fail(new Error('Batch evaluation timeout')),30000);
+      ws.addEventListener('message',event=>{
+        const message=JSON.parse(event.data);
+        if(message.id!==1)return;
+        clearTimeout(timeout);
+        if(message.error||message.result.exceptionDetails)fail(new Error(JSON.stringify(message.error??message.result.exceptionDetails)));
+        else ok(message.result.result.value);
+      });
+      ws.send(JSON.stringify({id:1,method:'Runtime.evaluate',params:{
+        expression:'(async()=>{if(document.readyState!=="complete")await new Promise(r=>window.addEventListener("load",r,{once:true}));return await MiraGuiBench.runBatchExperiment(MiraStudioCompiler,document.getElementById("mount"));})()',
+        awaitPromise:true,returnByValue:true
+      }}));
+    });
+    assert.equal(result.ok,true);
+    assert.equal(result.version,bridge.version);
+    assert.equal(result.bursts,7);
+    assert.equal(result.results.length,4);
+    for(const row of result.results)for(const mode of ['immediate','microtask','frame']){
+      const m=row.modes[mode],commits=result.bursts*(mode==='immediate'?row.events:1);
+      assert.equal(m.commits,commits);
+      assert.equal(m.writes,commits*(row.density==='dense'?100:1));
+      for(const key of ['submit','first','last','total']){
+        assert.ok(Number.isFinite(m[key].medianMs)&&m[key].medianMs>=0);
+        assert.ok(m[key].p95Ms>=m[key].medianMs);
+      }
+    }
+    t.diagnostic('GUI_BATCH_BENCHMARK '+JSON.stringify(result));
+  }finally{
+    if(ws)ws.close();
+    if(child.exitCode===null&&child.signalCode===null){
+      const exited=new Promise(resolve=>child.once('exit',resolve));child.kill();
+      await Promise.race([exited,delay(2000)]);
+    }
+    rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:100});
+  }
 });

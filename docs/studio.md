@@ -335,3 +335,7 @@ L'archivio Laboratory ora comprende anche 0.23–0.25, inclusi tutti i casi ibri
 ## Esperimento Text.data (0.26)
 
 Nel DOM Performance Lab, quattro nuove tabelle Text node confrontano textContent e Text.data sullo stesso renderer specializzato. 9 campioni da 120 aggiornamenti; il renderer predefinito resta invariato. Nessuna modifica al sorgente Mira necessaria.
+
+## Raggruppamento dei commit (0.27)
+
+DOM Performance Lab → Benchmark aggiornamenti raggruppati. Confronta immediato, microtask e requestAnimationFrame con raffiche di 1 o 10 eventi e carichi sparsi/densi. Mantieni la pagina visibile; non è un test FPS. Preview predefinita invariata.

@@ -218,6 +218,10 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Laboratory in Mira Studio](https://spyryto.github.io/Mira/laboratory.html) raccoglie l'evoluzione 0.15–0.25, i benchmark CI e le misure dell'autore su iPhone e smart TV. [Rapporto tecnico](docs/gui-rendering.md) · [Archivio JSON](catalog/laboratory/gui-rendering.json). Il rapporto storico è statico e separato dal benchmark eseguibile.
 
+## Mira 0.27: raggruppamento dei commit DOM
+
+Esperimento opt-in nel Performance Lab: immediato, microtask e rAF, con transizioni validate sincronicamente e misure di latenza. [Metodo e limiti](docs/browser-interop.md#mira-027-raggruppamento-dei-commit).
+
 ## Mira 0.26: esperimento Text node persistenti
 
 Confronto isolato textContent / Text.data nel Performance Lab; renderer predefinito invariato. [Metodo e limiti](docs/browser-interop.md#mira-026-text-node-persistenti).

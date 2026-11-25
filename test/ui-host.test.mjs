@@ -836,3 +836,31 @@ test('0.25 iframe protocol executes actual generated program and reports strateg
   assert.ok(messages.some(m=>m.type==='mira-ui:ready'));
   assert.equal(messages.filter(m=>m.type==='mira-ui:error').length,0);
 });
+
+
+test('0.27 deferred commits preserve every transition, validation, and mount ownership',async()=>{
+  const {root,errors}=setup(),sandbox={};
+  runInNewContext(read('ui-host.js'),sandbox);runInNewContext(read('gui-specialize.js'),sandbox);
+  const source='bad: n = {x: {| n}}; view: n = {type: "column", children: [{type: "text", text: n}, {type: "button", label: "Next", update: {old | old + 1}}, {type: "button", label: "Bad", update: (bad: _)}]};';
+  const compiled=sandbox.MiraGuiSpecialize.compile(compiler,source,'view:');
+  for(const mode of ['microtask','frame']){
+    const scheduled=[],writes=[];
+    const app=sandbox.MiraGuiSpecialize.mount(compiled,root,0,msg=>errors.push(msg),'content',
+      {mode,schedule:fn=>scheduled.push(fn),onCommit:n=>writes.push(n)});
+    const [button,bad]=findButtons(root),label=findAll(root,'p')[0];
+    button.click();button.click();bad.click();button.click();
+    assert.equal(app.getState(),3);
+    assert.equal(label.textContent,'0');
+    assert.equal(scheduled.length,1);
+    const done=app.whenIdle();scheduled.shift()();await done;
+    assert.equal(label.textContent,'3');assert.deepEqual(writes,[1]);
+    button.click();
+    const stale=app.whenIdle();
+    sandbox.MiraGuiSpecialize.mount(compiled,root,42,msg=>errors.push(msg));
+    scheduled.shift()();await stale;
+    assert.equal(findAll(root,'p')[0].textContent,'42');
+    assert.deepEqual(writes,[1]);
+  }
+  assert.equal(errors.length,2);
+  assert.ok(errors.every(msg=>/data next state/.test(msg)));
+});

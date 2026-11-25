@@ -227,18 +227,40 @@
   const slotValue=(slot,value)=>slot.kind==='style'
     ? global.MiraUiHost.resolveStyles(value) : slot.kind==='control'
       ? global.MiraUiHost.controlValue(slot.type,value,slot.options) : String(value??'');
-  function mount(compiled,target,initial,onError=error=>{throw new Error(error);},textMode='content'){
+
+  // Only commits are coalesced; every transition is still evaluated and
+  // validated synchronously. A queue belongs to one mounted application.
+  function commitQueue(mode,apply,active,schedule){
+    let pending=null,scheduled=false,waiters=[];
+    const finish=()=>{const ready=waiters;waiters=[];ready.forEach(resolve=>resolve());};
+    function drain(){
+      scheduled=false;
+      const item=pending;pending=null;
+      try{if(item!==null&&active())apply(item);}
+      finally{finish();}
+    }
+    return {
+      push(item){
+        pending=item;
+        if(mode==='immediate'){drain();return;}
+        if(!scheduled){scheduled=true;schedule(drain);}
+      },
+      idle(){return scheduled?new Promise(resolve=>waiters.push(resolve)):Promise.resolve();}
+    };
+  }
+  function mount(compiled,target,initial,onError=error=>{throw new Error(error);},textMode='content',batch={}){
     if(!['content','data'].includes(textMode))fail('text mode');
     if(!data(initial))fail('data state');
     const {plan,program}=compiled;
+    const mode=batch.mode??'immediate';
+    if(!['immediate','microtask','frame'].includes(mode))fail('commit mode');
+    if(mode!=='immediate'&&plan.slots.some(slot=>slot.kind!=='text'))
+      fail('deferred commits currently require text-only slots');
     let state=initial,bindings=[],mountedRoot=null;
     const controls=new Map();
     const active=()=>mountedRoot!==null&&target.children[0]===mountedRoot;
-    function update(transition){
-      if(!active())return;
-      const next=transition(state);
-      if(!data(next))fail('data next state');
-      const values=program.values(next).map((value,i)=>slotValue(plan.slots[i],value));
+    function apply(values){
+      let writes=0;
       for(let i=0;i<bindings.length;i++){
         const binding=bindings[i],value=values[i];
         if(plan.slots[i].kind==='style'){
@@ -248,12 +270,24 @@
         }else if(plan.slots[i].kind==='control'){
           binding.control.sync(value);
         }else if(binding.value!==value){
+          writes++;
           if(binding.textNode)binding.textNode.data=value;
           else binding.node.textContent=value;
         }
         binding.value=value;
       }
-      state=next;
+      if(batch.onCommit)batch.onCommit(writes);
+    }
+    const schedule=batch.schedule??(mode==='microtask'?fn=>queueMicrotask(fn):fn=>requestAnimationFrame(fn));
+    const queue=commitQueue(mode,apply,active,schedule);
+    function update(transition){
+      if(!active())return;
+      const next=transition(state);
+      if(!data(next))fail('data next state');
+      const values=program.values(next).map((value,i)=>slotValue(plan.slots[i],value));
+      // Invalid transitions never replace an already pending valid commit.
+      if(mode==='immediate'){queue.push(values);state=next;}
+      else{state=next;queue.push(values);}
     }
     function staticTree(spec){
       switch(spec.type){
@@ -296,7 +330,7 @@
       }
       return binding;
     });
-    return {dynamicSlots:bindings.length,getState:()=>state};
+    return {dynamicSlots:bindings.length,getState:()=>state,whenIdle:()=>queue.idle()};
   }
   function compileHybrid(compiler,source,selectors){
     if(!Array.isArray(selectors)||!selectors.length||selectors.length>100)
