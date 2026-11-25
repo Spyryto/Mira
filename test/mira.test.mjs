@@ -789,3 +789,20 @@ test('0.12 generated JS uses const and PHP captures only referenced external val
   assert.equal(run(source,'js'),'19');
   assert.equal(run(source,'php'),'19');
 });
+
+test('0.12 top-level definition scanner ignores = inside nested blocks', () => {
+  const cases = [
+    ['result = 2 >> {x | doubled = x * 2; doubled};', '4'],
+    ['result = (2 >> {x | doubled = x * 2; doubled}) + 1;', '5'],
+    ['result = [2, 3] ~ missing;', null]
+  ];
+  for (const [source,expected] of cases.slice(0,2))
+    for (const target of ['js','php'])
+      assert.equal(run(source,target),expected,source+' / '+target);
+  const expressionStatement = '1 >> {value | doubled = value * 2; doubled}; result = 3;';
+  for (const target of ['js','php'])
+    assert.equal(run(expressionStatement,target),'3');
+  const multipleTopLevel = compileError('result = 1 = 2;');
+  assert.notEqual(multipleTopLevel.status,0);
+  assert.match(multipleTopLevel.stderr,/Unexpected second =/);
+});
