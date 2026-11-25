@@ -454,7 +454,7 @@ class ExpressionParser {
         for (_ in pending) pendingLocals.pop();
         requireSymbol("}");
         final body:Expr = expressions.length == 1 ? expressions[0] : Expr.Steps(expressions);
-        final block = Block(parameters,body);
+        final block:Expr = Expr.Block(parameters,body);
         if (origins != null) origins.annotate(block,annotations);
         return block;
     }
