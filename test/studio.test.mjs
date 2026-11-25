@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.13.0');
+  assert.equal(bridge.version, '0.14.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -168,7 +168,7 @@ test('all Studio examples match the syntax currently implemented', async () => {
   for (const example of examples) {
     const expectedSuccess = example.id !== 'errors';
     for (const target of ['js', 'php']) {
-      const manifest = ['host-log','collect-if','fold-blocks','fold-fees','block-steps'].includes(example.id)
+      const manifest = ['host-log','collect-if','fold-blocks','fold-fees','block-steps','nullary-block'].includes(example.id)
         ? read('host.json') : undefined;
       const result = bridge.compile(example.source, target, manifest);
       assert.equal(result.ok, expectedSuccess,
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.13.0');
+  assert.equal(bridge.version,'0.14.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -642,4 +642,38 @@ test('0.13 Studio worker reports Mira definition on runtime failure and retains 
   assert.equal(success.output, '42');
   assert.equal(success.location, undefined);
   assert.match(read('app.js'), /Mira: riga/);
+});
+
+
+test('0.14 Studio executes nullary blocks, preserves closure capture and exposes AST', async () => {
+  const source = 'result = 20 >> {x | y = x + 1; action = {| y * 2}; () >> action};';
+  const js = bridge.compile(source, 'js');
+  assert.equal(js.ok,true,js.message);
+  assert.equal(runInNewContext(js.output + '\nresult', {}),42);
+  const php = bridge.compile(source,'php');
+  assert.equal(php.ok,true,php.message);
+  const executed = spawnSync('php', ['-r', php.output.replace(/^<\?php/, '') + '\necho $result;'],
+    {encoding:'utf8'});
+  assert.equal(executed.status,0,executed.stderr);
+  assert.equal(executed.stdout,'42');
+
+  const ast = JSON.parse(bridge.ast('action = {| 42}; result = () >> action;').output);
+  assert.equal(ast.definitions[0].body.kind,'Block');
+  assert.deepEqual(ast.definitions[0].body.parameters,[]);
+  assert.equal(ast.definitions[1].body.kind,'Apply');
+  assert.equal(ast.definitions[1].body.argument,null);
+  const {childrenOf} = await import(pathToFileURL(resolve(site,'inspector-host.js')).href);
+  assert.deepEqual(childrenOf(ast.definitions[1].body),[ast.definitions[1].body.callee]);
+  assert.match(read('ast-inspector.js'), /Apply · 0 argomenti/);
+
+  const logSource = '() >> {| log "hey"}; result = () >> {| 42};';
+  const compiled = bridge.compile(logSource,'js',read('host.json'));
+  assert.equal(compiled.ok,true,compiled.message);
+  let response;
+  const worker = {self:{postMessage(message){response=message;}}};
+  runInNewContext(read('worker.js'),worker);
+  worker.self.onmessage({data:{code:compiled.output}});
+  assert.equal(response.ok,true,response.message);
+  assert.equal(response.output,'hey\n42');
+  assert.match(bridge.compile('result = ();','js').message,/Empty \(\) is only allowed before >>/);
 });
