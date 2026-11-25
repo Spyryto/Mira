@@ -1,4 +1,4 @@
-# Mira 0.8: executable subset and grammar boundaries
+# Mira 0.10: executable subset and grammar boundaries
 
 This file documents the parser's **implemented** boundaries. It is a readable
 grammar sketch, not a separate parser generator or a promise of accepted syntax.
@@ -33,15 +33,21 @@ expression bodies are resolved.
 ## Expression layer (simplified)
 
 ```ebnf
-expression    = primary, { binary-operator, primary } ;
-primary       = number | string | name | "(", expression, ")" | selector-call ;
-binary-operator = "+" | "-" | "*" | "/" | "%" | ">>" ;
-field-access    = expression, "~", (name | string) ;
+expression      = field-access, { binary-operator, field-access } ;
+field-access    = application, { "~", (name | string) } ;
+application     = primary, { primary } ; (* when callable *)
+primary         = number | string | name | "(", expression, ")"
+                | selector-call | record | block | sequence ;
+binary-operator = "+" | "-" | "*" | "/" | "%" | ">>"
+                | "==" | "!=" | "<" | ">" | "<=" | ">=" ;
 record-key      = name | string ;
 ```
 
-Operators share one precedence level and group left; `1 + 2 * 3` means
-`(1 + 2) * 3`, not `1 + (2 * 3)`.
+From 0.10, field access `~` binds more tightly than arithmetic,
+and chains from left to right. `lesson ~ hours * lesson ~ rate`
+means `(lesson ~ hours) * (lesson ~ rate)`. The remaining binary
+operators still share one precedence level and group left:
+`1 + 2 * 3` means `(1 + 2) * 3`, not `1 + (2 * 3)`.
 
 A selector call is recognized by comparing the word labels and argument
 boundaries against a declared selector signature:
@@ -61,6 +67,11 @@ add a number and another number
 
 It provides no lexical boundary between a multiword argument and the next
 selector label. Parentheses or the labeled/commas form must be used.
+
+Braced expressions are self-delimited selector arguments, without
+an extra grouping `( )`: `fold: xs, with: {total, item | total + item},
+from: 0`. The same is true for record and list literals.
+Parenthesized block arguments remain supported.
 
 A well-formed partial prefix of a selector is not automatically a function
 value: `add` is *not* an alias for `add:and:`.

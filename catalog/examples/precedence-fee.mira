@@ -1,0 +1,2 @@
+lesson = {hours: 2, rate: 30};
+result = lesson ~ hours * lesson ~ rate;

@@ -1,0 +1,10 @@
+lessons = [
+  {hours: 2, rate: 30},
+  {hours: 1.5, rate: 40}
+];
+
+result = fold: lessons,
+  with: {total, lesson |
+    total + (lesson ~ hours * lesson ~ rate)
+  },
+  from: 0;

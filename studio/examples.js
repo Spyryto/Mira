@@ -103,6 +103,21 @@ result = fold: numbers,
   from: 0;`
   },
   {
+    id: 'fold-fees',
+    name: 'Fold · compensi 0.10',
+    source: `# L'accesso ~ precede l'aritmetica.
+# with: accetta il blocco direttamente, senza parentesi.
+lessons = [
+  {hours: 2, rate: 30},
+  {hours: 1.5, rate: 40}
+];
+result = fold: lessons,
+  with: {total, lesson |
+    total + (lesson ~ hours * lesson ~ rate)
+  },
+  from: 0;`
+  },
+  {
     id: 'host-log',
     name: 'Interoperabilità: log',
     source: `# La funzione log arriva dall'oggetto host di Studio.

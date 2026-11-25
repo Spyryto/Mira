@@ -1,0 +1,2 @@
+numbers = [1, 2, 3];
+result = collect: numbers, with: {_ | _ * 2};

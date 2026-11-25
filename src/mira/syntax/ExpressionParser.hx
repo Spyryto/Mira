@@ -36,18 +36,14 @@ class ExpressionParser {
     }
 
     function expression():Expr {
-        var left = application();
+        var left = fieldAccess();
 
-        // Fields (~), function application (>>) and binary operators group
-        // left to right. Unary juxtaposition binds before them.
+        // Arithmetic, comparisons, and >> keep their existing
+        // left-to-right grouping. Only ~ binds more tightly.
         while (current().kind == Symbol && isOperator(current().value)) {
             final token = consume();
-            if (token.value == "~") {
-                // A literal field key is one or more words, or quoted text.
-                left = FieldGet(left, literalKey("Expected a field name after ~"));
-            } else {
-                final right = application();
-                if (token.value == ">>") {
+            final right = fieldAccess();
+            if (token.value == ">>") {
                 switch (right) {
                     case Section(_, args) | HostSection(_, args):
                         var holes = 0;
@@ -73,11 +69,21 @@ class ExpressionParser {
                         throw new MiraError("Pipeline target must be a function", token);
                     default:
                 }
-                    left = Apply(right, left);
-                } else {
-                    left = Binary(token.value, left, right);
-                }
+                left = Apply(right, left);
+            } else {
+                left = Binary(token.value, left, right);
             }
+        }
+        return left;
+    }
+
+    // A field lookup is a postfix operator: a ~ b ~ c means
+    // (a ~ b) ~ c, and it binds before all arithmetic operators.
+    function fieldAccess():Expr {
+        var left = application();
+        while (current().isSymbol("~")) {
+            consume();
+            left = FieldGet(left, literalKey("Expected a field name after ~"));
         }
         return left;
     }
@@ -401,6 +407,6 @@ class ExpressionParser {
     }
 
     static function isOperator(value:String):Bool {
-        return ["+", "-", "*", "/", "%", "~", ">>", "==", "!=", "<", ">", "<=", ">="].indexOf(value) >= 0;
+        return ["+", "-", "*", "/", "%", ">>", "==", "!=", "<", ">", "<=", ">="].indexOf(value) >= 0;
     }
 }

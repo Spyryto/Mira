@@ -146,3 +146,26 @@ emessa dal compilatore come closure nativa. I dati sono limitati a
 I blocchi multi-parametro non sono applicabili con `>>`, che resta
 riservato alle funzioni unarie. Questo evita di introdurre currying
 implicito prima di averne progettato semantica e limiti.
+
+## Accesso prioritario e blocchi diretti (Mira 0.10)
+
+Con `~` associativo a sinistra e prioritario sull'aritmetica, il
+programma seguente non necessita parentesi attorno a ogni campo.
+`with:` accetta il blocco senza un involucro `( )`.
+
+```mira
+lessons = [
+  {hours: 2, rate: 30},
+  {hours: 1.5, rate: 40}
+];
+result = fold: lessons,
+  with: {total, lesson |
+    total + (lesson ~ hours * lesson ~ rate)
+  },
+  from: 0;
+```
+
+Risultato: `120`, con semantica identica in JS e PHP.
+Le parentesi attorno alla moltiplicazione sono ancora necessarie
+per separarla dalla somma: gli operatori aritmetici mantengono
+la stessa precedenza reciproca.

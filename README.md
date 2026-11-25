@@ -49,6 +49,8 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Accesso diretto ai campi `~` | `0.6` | [Dettagli](docs/reference/language.md#feature-field-get) |
 | ✅ | Blocchi funzione con parametro | `0.8` | [Dettagli](docs/reference/language.md#feature-blocks) |
 | ✅ | Blocchi con più parametri | `0.9` | [Dettagli](docs/reference/language.md#feature-block-parameters) |
+| ✅ | Accesso `~` prima dell'aritmetica | `0.10` | [Dettagli](docs/reference/language.md#feature-field-precedence) |
+| ✅ | Blocchi diretti negli argomenti dei selettori | `0.10` | [Dettagli](docs/reference/language.md#feature-bare-block-arguments) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
@@ -195,6 +197,31 @@ lo applica (sintassi 0.6), i confronti producono booleani e
 Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
+
+## Mira 0.10: campi e blocchi con meno parentesi
+
+La catena `a ~ b ~ c` è associativa a sinistra e l'accesso `~`
+precede gli operatori aritmetici. Quindi
+`lesson ~ hours * lesson ~ rate` equivale a
+`(lesson ~ hours) * (lesson ~ rate)`.
+
+```mira
+lessons = [
+  {hours: 2, rate: 30},
+  {hours: 1.5, rate: 40}
+];
+
+result = fold: lessons,
+  with: {total, lesson |
+    total + (lesson ~ hours * lesson ~ rate)
+  },
+  from: 0;
+```
+
+Risultato: **120** in JS e PHP. Il blocco `with: {…}`
+è già delimitato dalle graffe; `with: ({…})` rimane valido.
+`+`, `-`, `*`, `/` e `%` mantengono tra loro il
+raggruppamento sinistra-destra di Mira.
 
 ## Mira 0.9: blocchi con più parametri
 

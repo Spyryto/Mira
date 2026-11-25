@@ -68,17 +68,24 @@ class SelectorResolver {
             final token = tokens[cursor];
             var argument:Array<Token> = [];
 
-            if (token.isSymbol("(")) {
-                final begin = ++cursor;
+            if (token.isSymbol("(") || token.isSymbol("{") || token.isSymbol("[")) {
+                // A braced block or record is already a self-delimited expression.
+                // Preserve its delimiters for ExpressionParser; only parentheses
+                // are grouping syntax and must be removed here.
+                final isGrouping = token.isSymbol("(");
+                final open = token.value;
+                final close = open == "(" ? ")" : open == "{" ? "}" : "]";
+                final begin = isGrouping ? cursor + 1 : cursor;
+                cursor++;
                 var depth = 1;
                 while (cursor < tokens.length && depth > 0) {
-                    if (tokens[cursor].isSymbol("(")) depth++;
-                    if (tokens[cursor].isSymbol(")")) depth--;
+                    if (tokens[cursor].isSymbol(open)) depth++;
+                    if (tokens[cursor].isSymbol(close)) depth--;
                     if (depth > 0) cursor++;
                 }
-                if (depth != 0 || cursor == begin) return null;
-                argument = tokens.slice(begin, cursor);
-                cursor++; // consume closing )
+                if (depth != 0 || (isGrouping && cursor == begin)) return null;
+                argument = tokens.slice(begin, isGrouping ? cursor : cursor + 1);
+                cursor++; // after the matching delimiter
             } else if (token.kind == Number || token.kind == Text) {
                 argument = [token];
                 cursor++;

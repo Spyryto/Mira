@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.9.0');
+  assert.equal(bridge.version, '0.10.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -168,7 +168,7 @@ test('all Studio examples match the syntax currently implemented', async () => {
   for (const example of examples) {
     const expectedSuccess = example.id !== 'errors';
     for (const target of ['js', 'php']) {
-      const manifest = ['host-log','collect-if','fold-blocks'].includes(example.id)
+      const manifest = ['host-log','collect-if','fold-blocks','fold-fees'].includes(example.id)
         ? read('host.json') : undefined;
       const result = bridge.compile(example.source, target, manifest);
       assert.equal(result.ok, expectedSuccess,
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.9.0');
+  assert.equal(bridge.version,'0.10.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -463,6 +463,38 @@ test('0.9 AST exposes multiple block parameters and preserves prior unary blocks
   assert.equal(block.body.right.kind,'Name');
   for (const target of ['js','php']) {
     const compiled=bridge.compile(source,target);
+    assert.equal(compiled.ok,true,compiled.message);
+  }
+});
+
+test('0.10 precedence and bare block selector arguments preserve canonical AST', () => {
+  const source = [
+    'lessons = [{hours: 2, rate: 30}, {hours: 1.5, rate: 40}];',
+    'result = fold: lessons,',
+    '  with: {total, lesson | total + (lesson ~ hours * lesson ~ rate)},',
+    '  from: 0;'
+  ].join('\n');
+  const manifest=read('host.json');
+  const ast=bridge.ast(source,manifest);
+  assert.equal(ast.ok,true,ast.message);
+  const body=JSON.parse(ast.output).definitions[1].body;
+  assert.equal(body.kind,'HostCall');
+  assert.equal(body.selector,'fold:with:from:');
+  const reducer=body.arguments[1];
+  assert.equal(reducer.kind,'Block');
+  assert.deepEqual(reducer.parameters,['total','lesson']);
+  const expression=reducer.body;
+  assert.equal(expression.kind,'Binary');
+  assert.equal(expression.symbol,'+');
+  const multiply=expression.right;
+  assert.equal(multiply.kind,'Binary');
+  assert.equal(multiply.symbol,'*');
+  assert.equal(multiply.left.kind,'FieldGet');
+  assert.equal(multiply.left.key,'hours');
+  assert.equal(multiply.right.kind,'FieldGet');
+  assert.equal(multiply.right.key,'rate');
+  for (const target of ['js','php']) {
+    const compiled=bridge.compile(source,target,manifest);
     assert.equal(compiled.ok,true,compiled.message);
   }
 });
