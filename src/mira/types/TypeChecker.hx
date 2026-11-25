@@ -278,18 +278,25 @@ class TypeChecker {
             final d = definitions.get(name);
             origin = d.origin;
             if (recursive && !d.isFunction()) fail("recursive value dependency not supported: " + name);
+            final result = d.resultAnnotation == null ? fresh() : d.resultAnnotation;
             final placeholder:Type = d.isFunction()
-                ? FunctionType([for (p in d.parameters) fresh()],fresh()) : fresh();
+                ? FunctionType([for (i in 0...d.parameters.length)
+                    i < d.parameterAnnotations.length && d.parameterAnnotations[i] != null
+                        ? d.parameterAnnotations[i] : fresh()],result) : result;
             active.set(name,placeholder);
         }
         for (name in group) {
             final d = definitions.get(name);
             origin = d.origin;
             final scope = new Map<String,LocalScheme>();
-            final params = [for (p in d.parameters) fresh()];
+            final params:Array<Type> = switch (active.get(name)) {
+                case FunctionType(args,_) if (d.isFunction()): args;
+                default: [];
+            };
             for (i in 0...params.length) scope.set(d.parameters[i],mono(params[i]));
             final body = infer(d.body,scope);
             final type:Type = d.isFunction() ? FunctionType(params,body) : body;
+            if (d.resultAnnotationOrigin != null) origin = d.resultAnnotationOrigin;
             unify(active.get(name),type);
         }
         for (name in group) {
