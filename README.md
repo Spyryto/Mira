@@ -207,6 +207,10 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
 
 
+## Mira 0.20: record e stili dinamici specializzati
+
+Il laboratorio estende il pass a campi di record, condizioni e valori di stile dinamici, con validazione CSS condivisa e un caso benchmark dedicato.
+
 ## Mira 0.19: specializzazione sperimentale GUI
 
 Il Performance Lab confronta anche un pass su AST risolto che compila soltanto gli slot testuali dinamici di una view fissa. Nessuna modifica alla grammatica, renderer generale invariato. [Metodo e limiti](docs/browser-interop.md#mira-019-specializzazione-sperimentale-di-view-fisse).

@@ -1,5 +1,5 @@
 {
-  "version": "0.19.0",
+  "version": "0.20.0",
   "features": [
     {
       "id": "values",
@@ -1479,6 +1479,12 @@
       "title": "Specializzazione sperimentale GUI su AST",
       "since": "0.19",
       "doc": "docs/browser-interop.md#mira-019-specializzazione-sperimentale-di-view-fisse"
+    },
+    {
+      "id": "gui-dynamic-specialization",
+      "title": "Specializzazione GUI con record e stili dinamici",
+      "since": "0.20",
+      "doc": "docs/browser-interop.md#mira-020-record-e-stili-dinamici"
     }
   ]
 }

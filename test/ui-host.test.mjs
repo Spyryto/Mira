@@ -535,3 +535,35 @@ test('0.17 synthetic GUI benchmark counts actual element allocations and style w
   assert.deepEqual(errors,[]);
   t.diagnostic(JSON.stringify({updates:100,viewNodes:103,incremental,full,incrementalStyleWrites,fullStyleWrites,incrementalMs,fullMs,environment:'simulated DOM'}));
 });
+
+
+test('0.20 specialized styles preserve native nodes and reject invalid changes atomically',()=>{
+  const {host,root,errors,document}=setup();
+  const sandbox={};
+  runInNewContext(read('ui-host.js'),sandbox);
+  runInNewContext(read('gui-specialize.js'),sandbox);
+  const source='advance: model = {count: (model ~ count + 1)}; view: model = {type: "column", children: [{type: "text", text: (model ~ count)}, {type: "styled", view: {type: "styled", view: {type: "title", text: "Color"}, styles: [{padding: (if (model ~ count == 2) then 0 - 1 else 4)}]}, styles: [{padding: 8, background: (if (model ~ count == 0) then "#fff" else "#000")}]}, {type: "button", label: "Next", update: (advance: _)}]};';
+  const compiled=sandbox.MiraGuiSpecialize.compile(compiler,source,'view:');
+  const app=sandbox.MiraGuiSpecialize.mount(compiled,root,{count:0},message=>errors.push(message));
+  const text=findAll(root,'p')[0], title=findAll(root,'h2')[0],button=findButtons(root)[0];
+  assert.equal(title.style.getPropertyValue('padding'),'8px');
+  assert.equal(title.style.getPropertyValue('background-color'),'#fff');
+  const initial=document.created;
+  button.click();
+  assert.equal(text.textContent,'1');
+  assert.equal(title.style.getPropertyValue('background-color'),'#000');
+  assert.equal(title.style.getPropertyValue('padding'),'8px');
+  assert.equal(findAll(root,'h2')[0],title);
+  assert.equal(document.created,initial);
+  const writes=title.styleWrites;
+  button.click();
+  assert.equal(app.getState().count,1);
+  assert.equal(text.textContent,'1');
+  assert.equal(title.styleWrites,writes);
+  assert.match(errors[0],/Invalid style value/);
+  host.render({type:'state',initial:{count:0},view:compiled.program.view});
+  const normalButton=findButtons(root)[0];
+  normalButton.click();normalButton.click();
+  assert.equal(findAll(root,'p')[0].textContent,'1');
+  assert.match(errors[1],/Invalid style value/);
+});

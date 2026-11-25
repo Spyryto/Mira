@@ -22,11 +22,14 @@ small{display:block;line-height:1.5}
 <body>
 <a href="./#/benchmark">← Mira Studio · Bench</a>
 <h1>DOM Performance Lab</h1>
-<p>100 elementi di testo, aggiornamenti sparsi (1 su 100) e densi (100 su 100). La view e la transizione vengono compilate da Mira.</p>
+<p>100 elementi di testo, aggiornamenti sparsi (1 su 100) e densi (100 su 100), più un record di stato con stile dinamico. La view e la transizione vengono compilate da Mira.</p>
 <button id="run" type="button">Avvia benchmark GUI</button>
 <p id="status" role="status">Pronto. Misurazioni locali, nessun invio di dati.</p>
 <div id="results"></div>
-<small>5 campioni da 30 aggiornamenti, 5 warmup per campione. Mediana e P95 del tempo medio per aggiornamento nel campione, in ms. Compilazione esclusa. Layout forzato: lettura della geometria a ogni aggiornamento; senza layout forzato: scritture sincrone, layout finale fuori dal timer. Non misura paint, frame rate o memoria. Incrementale, specializzato e diretto passano da click(); ricostruzione invoca direttamente render. Il pass specializzato accetta solo view di struttura fissa e testi dinamici. DOM diretto è un riferimento scritto a mano.</small>
+<small>5 campioni da 30 aggiornamenti, 5 warmup per campione. Mediana e P95 del tempo medio per aggiornamento nel campione, in ms. Compilazione esclusa. Layout forzato: lettura della geometria a ogni aggiornamento; senza layout forzato: scritture sincrone, layout finale fuori dal timer. Non misura paint, frame rate o memoria. Incrementale, specializzato e diretto passano da click(); ricostruzione invoca direttamente render. Il pass specializzato accetta view di struttura fissa, testi e valori degli stili dinamici. DOM diretto è un riferimento scritto a mano.</small>
+<h2>Demo specializzata</h2>
+<p>Un record Mira controlla il contatore, il colore e il padding. <button id="demo-start" type="button">Monta demo</button></p>
+<div id="demo"></div>
 <h2>Area DOM reale</h2>
 <div id="mount" aria-label="Area di misura collegata al documento"></div>
 <pre id="machine" hidden></pre>
@@ -47,7 +50,7 @@ small{display:block;line-height:1.5}
       byId('machine').textContent=JSON.stringify(data);
       for(const row of data.results){
         const card=document.createElement('section');card.className='result';
-        card.append(element('h2',(row.density==='sparse'?'1 su 100':'100 su 100')+' · '+(row.flush?'layout forzato':'scritture sincrone')));
+        card.append(element('h2',(row.density==='styled'?'Record e stile dinamico':row.density==='sparse'?'1 su 100':'100 su 100')+' · '+(row.flush?'layout forzato':'scritture sincrone')));
         const table=document.createElement('table');
         const head=document.createElement('tr');
         for(const title of ['Metodo','Mediana ms','P95 ms'])head.append(element('th',title));
@@ -65,6 +68,13 @@ small{display:block;line-height:1.5}
       status.textContent='Errore: '+String(error.message??error);
     }finally{button.disabled=false;}
   }
+  byId('demo-start').addEventListener('click',()=>{
+    try{
+      const source='advance: model = {count: (model ~ count + 1)};\n'+
+        'demo view: model = {type: "styled", view: {type: "column", children: [{type: "title", text: "Mira specializzato"}, {type: "text", text: (model ~ count)}, {type: "button", label: "Incrementa", update: (advance: _)}]}, styles: [{padding: (if ((model ~ count) % 2 == 0) then 12 else 24), background: (if ((model ~ count) % 2 == 0) then "#c1f1dc" else "#ffdbab"), radius: 12}]};';
+      MiraGuiSpecialize.mount(MiraGuiSpecialize.compile(MiraStudioCompiler,source,'demo view:'),byId('demo'),{count:0},message=>{status.textContent=message;});
+    }catch(error){status.textContent=String(error.message??error);}
+  });
   button.addEventListener('click',()=>{
     button.disabled=true;status.textContent='Preparazione…';
     setTimeout(execute,20);
