@@ -625,7 +625,7 @@ test('block parameters are locally bound, while unbound variables remain errors'
     ['result = {_ | missing};', /Unknown identifier|Unbound/],
     ['result = {value | value + unknown};', /Unknown identifier|Unbound/],
     ['result = {value | };', /A block needs at least one expression/],
-    ['result = {value | value + 1; };', /Expected }/],
+    ['result = {value | value + 1;; };', /Expected expression/],
     ['result = {__miraHost | 1};', /Reserved block parameter/]
   ]) {
     const error = compileError(source);
