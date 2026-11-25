@@ -1,4 +1,4 @@
-# Guida a Mira 0.12.2
+# Guida a Mira 0.13.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -208,7 +208,7 @@ API collegata: [`mira.Compiler.parse`](api.md#api-mira-compiler-parse)
 
 Esempi di errori intenzionali.
 
-Sono esercizi negativi: fallire con una diagnostica precisa è il comportamento corretto. Dalla 0.12.1 i valori locali usati prima della dichiarazione mostrano il nome e la posizione del riferimento; i parametri di blocchi annidati che colliderebbero dopo mangling con un nome esterno diverso vengono rifiutati. Lo shadowing con lo stesso identico nome resta consentito. Dalla 0.12.2 la verifica copre anche i parametri delle funzioni nominate, con posizione del parametro e controllo indipendente dall'ordine di dichiarazione dei globali.
+Sono esercizi negativi: fallire con una diagnostica precisa è il comportamento corretto. Dalla 0.12.1 i valori locali usati prima della dichiarazione mostrano il nome e la posizione del riferimento; i parametri di blocchi annidati che colliderebbero dopo mangling con un nome esterno diverso vengono rifiutati. Lo shadowing con lo stesso identico nome resta consentito. Dalla 0.12.2 la verifica copre anche i parametri delle funzioni nominate, con posizione del parametro e controllo indipendente dall'ordine di dichiarazione dei globali. Dalla 0.13 il compilatore può restituire una mappa delle righe generate verso le definizioni Mira. Studio la usa per identificare la definizione coinvolta in un errore runtime JS quando lo stack del browser lo consente; il CLI espone la mappa opzionale anche per PHP.
 
 API collegata: [`mira.MiraError`](api.md#api-mira-miraerror)
 
