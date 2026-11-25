@@ -223,3 +223,19 @@ Il selettore intrinseco `update:with:` restituisce un record nuovo, copiando sup
 Limiti: operandi record (in JS oggetti record ordinari), chiavi intere canoniche escluse dalla forma portabile per evitare la conversione di chiavi PHP; anche una sequenza vuota è ammessa, perché PHP non distingue [] e {}. Le sequenze non vuote, numeri e altri valori non record sono rifiutati. L'immutabilità è superficiale, non deep freeze; non è ancora tipizzazione statica. La chiave __proto__ è emessa come proprietà propria in JS. Un selettore utente o host con la stessa firma è un conflitto. Il renderer specializzato riconosce la primitiva nelle transizioni chiuse; nessuna nuova strategia DOM.
 
 I tre esempi del catalogo mostrano aggiornamento, sezioni e form con binding. 
+
+## Sequenze native e immutabili (0.32)
+
+| Selettore | Operazione |
+| --- | --- |
+| `append: item, to: items` | Nuova lista con l'elemento aggiunto in coda, anche se è una lista |
+| `remove: items, if: predicate` | Rimuove tutti gli elementi per cui il predicato restituisce true |
+| `collect: items, with: f` / `map:with:` | Trasforma ogni elemento |
+| `collect:if:` / `filter:with:` / `select:if:` / `select:with:` | Seleziona gli elementi per cui il predicato è true |
+| `fold: items, with: reducer, from: seed` | Riduzione da sinistra, callback binaria (accumulatore, elemento) |
+
+Gli operandi non vengono mutati, le copie sono superficiali e l'ordine degli elementi è preservato. Liste vuote: trasformazione e filtro restituiscono una lista vuota, fold restituisce il seed. Predicati nativi devono restituire Boolean, non valori truthy: JS/PHP hanno regole diverse. Gli operandi devono essere liste (Array JS, array_is_list PHP); il record PHP vuoto resta indistinguibile da una lista vuota. Le callback sono funzioni Mira (closure su PHP). Nessuna dipendenza host e nessun nuovo nodo AST. Il codice usa le operazioni native di JS e PHP con controlli runtime; richiede PHP 8.1+ per array_is_list. Non introduce un limite numerico arbitrario per le liste native; valgono i limiti di memoria/tempo dell'host.
+
+Compatibilità: i selettori di collezione già esistenti come capability possono ancora essere registrati esplicitamente nel manifest host, e in tal caso mantengono il comportamento precedente (es. fold dell'ispettore AST su alberi). Il manifest Studio ordinario ora usa le operazioni native; get:from: resta host. I nuovi append/remove e update:with: non sono sovrascrivibili. Le definizioni utente con le stesse firme sono conflitti.
+
+La lista GUI dinamica del nuovo esempio usa il renderer generico: i figli sono ancora riconciliati per posizione. Identità stabile, riordinamento e conservazione dello stato locale dei figli saranno il prossimo passo.

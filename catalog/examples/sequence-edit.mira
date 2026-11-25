@@ -1,0 +1,4 @@
+lessons = [{id: 1, hours: 2}, {id: 2, hours: 1}];
+added = append: {id: 3, hours: 4}, to: lessons;
+remaining = remove: added, if: {item | item ~ id == 2};
+result = {original: lessons, remaining: remaining};

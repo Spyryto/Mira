@@ -8,6 +8,17 @@ import mira.syntax.Definition;
 
 class Symbols {
     public static inline final RECORD_UPDATE = "update:with:";
+
+    // Legacy collection capabilities may be explicitly supplied by a host
+    // (the AST inspector folds trees). Ordinary programs use native lists.
+    public static function collectionSelectors():Array<String> {
+        return ["append:to:", "remove:if:", "map:with:", "collect:with:",
+            "filter:with:", "select:with:", "select:if:", "collect:if:", "fold:with:from:"];
+    }
+
+    public static function nativeSelectors():Array<String> {
+        return [RECORD_UPDATE].concat(collectionSelectors());
+    }
     public final functions:Array<Definition> = [];
     public final globals:Array<String> = [];
     public final hostNames:Array<String> = [];
@@ -20,9 +31,15 @@ class Symbols {
         final mangled = new Map<String, String>();
 
         // Native selector participates in the ordinary selector resolver.
-        seenSelectors.set(RECORD_UPDATE, true);
-        functions.push(new Definition("", ["update", "with"], ["record", "patch"], [],
-            new Token(Word, "update", 1, 1)));
+        for (selector in nativeSelectors()) {
+            // Only pre-existing host collection signatures can override.
+            if (selector != RECORD_UPDATE && selector != "append:to:" && selector != "remove:if:"
+                && this.environment.selectors.indexOf(selector) >= 0) continue;
+            seenSelectors.set(selector, true);
+            final labels = selector.substr(0, selector.length - 1).split(":");
+            functions.push(new Definition("", labels, [for (i in 0...labels.length) "nativeArg" + i],
+                [], new Token(Word, labels[0], 1, 1)));
+        }
         for (name in this.environment.values.concat(this.environment.callables)) {
             seenGlobals.set(name, true);
             hostNames.push(Mangle.name(name));

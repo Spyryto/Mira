@@ -902,3 +902,20 @@ test('0.31 record patches preserve controlled form state and specialized renderi
     assert.deepEqual(errors,[]);
   }
 });
+
+
+test('0.32 native collections render a variable list without host collection callbacks',()=>{
+  const {root,errors,host}=setup(),sandbox={};
+  runInNewContext(read('gui-specialize.js'),sandbox);
+  const source=demo('sequence-gui-list').source;
+  const compiled=compiler.compile(source,'js',manifest);
+  assert.equal(compiled.ok,true,compiled.message);
+  assert.equal(sandbox.MiraGuiSpecialize.previewPlan(compiler,source,manifest).mode,'generic');
+  new Function('__miraHost',compiled.output)(host);
+  assert.deepEqual(findAll(root,'p').map(n=>n.textContent),['Ada','Lia']);
+  findButtons(root)[0].click();
+  assert.deepEqual(findAll(root,'p').map(n=>n.textContent),['Ada','Lia','Nuova lezione']);
+  findButtons(root)[1].click();
+  assert.deepEqual(findAll(root,'p').map(n=>n.textContent),['Lia','Nuova lezione']);
+  assert.deepEqual(errors,[]);
+});

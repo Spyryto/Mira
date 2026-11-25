@@ -1004,3 +1004,34 @@ test('0.31 record update in a multi-step block captures lexical values on PHP to
   const source='patch = {hours: 4}; result = {hours: 2} >> {old | next = update: old, with: patch; next};';
   for(const target of ['js','php'])assert.deepEqual(JSON.parse(run(source,target)),{hours:4});
 });
+
+
+test('0.32 native lists preserve originals, order, duplicates and callback captures',()=>{
+  const source='base = [1, 2, 3, 2]; added = append: 4, to: base; remaining = remove: added, if: (_ == 2); mapped = collect: remaining, with: (_ * 2); total = fold: mapped, with: {sum, item | sum + item}, from: 0; result = {base: base, added: added, remaining: remaining, mapped: mapped, total: total};';
+  for(const target of ['js','php'])assert.deepEqual(JSON.parse(run(source,target)),{base:[1,2,3,2],added:[1,2,3,2,4],remaining:[1,3,4],mapped:[2,6,8],total:16});
+});
+test('0.32 aliases and empty lists are portable',()=>{
+  for(const target of ['js','php']){
+    for(const selector of ['filter:with:','select:with:','select:if:','collect:if:']){
+      const [first,second]=selector.split(':');
+      assert.deepEqual(JSON.parse(run('result = '+first+': [1, 2, 3], '+second+': (_ > 1);',target)),[2,3]);
+    }
+    assert.deepEqual(JSON.parse(run('result = map: [], with: (_ + 1);',target)),[]);
+    assert.equal(run('result = fold: [], with: {sum, item | sum + item}, from: 7;',target),'7');
+    assert.deepEqual(JSON.parse(run('result = append: [1, 2], to: [];',target)),[[1,2]]);
+  }
+});
+test('0.32 list runtime diagnostics and native selector conflicts',()=>{
+  for(const target of ['js','php']){
+    for(const [source,pattern] of [
+      ['result = append: 1, to: {a: 2};',/expects a list/],
+      ['result = collect: [1], with: 5;',/Expected collection callback/],
+      ['result = remove: [1], if: {x | 1};',/Expected Boolean predicate/]
+    ]){
+      const code=compile(source,target);
+      const p=target==='js'?spawnSync('node',['-e',code],{encoding:'utf8'}):spawnSync('php',['-r',code.replace(/^<\?php/,'')],{encoding:'utf8'});
+      assert.notEqual(p.status,0);assert.match(p.stderr,pattern);
+    }
+    assert.match(compileError('append: item, to: items = items;',target).stderr,/Duplicate or conflicting selector/);
+  }
+});

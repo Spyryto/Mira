@@ -1,0 +1,16 @@
+lesson row: item = text: (item ~ name);
+view: model = column: [
+  title: "Registro lezioni",
+  column: (collect: (model ~ lessons), with: (lesson row: _)),
+  button: "Aggiungi", update: {old |
+    next = old ~ next id;
+    update: old, with: {
+      lessons: (append: {id: next, name: "Nuova lezione"}, to: (old ~ lessons)),
+      next id: (next + 1)
+    }
+  },
+  button: "Rimuovi Ada", update: {old |
+    update: old, with: {lessons: (remove: (old ~ lessons), if: {item | item ~ id == 1})}
+  }
+];
+render (state: {lessons: [{id: 1, name: "Ada"}, {id: 2, name: "Lia"}], next id: 3}, view: (view: _));

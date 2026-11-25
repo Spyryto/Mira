@@ -334,3 +334,7 @@ Scelta deliberatamente incrementale: separazione fisica e risoluzione determinis
 ## Mira 0.31: aggiornamento di record
 
 `update: record, with: patch` è un selettore intrinseco risolto normalmente, con sezioni e forme delimitate ordinarie. Nessuna nuova forma AST; semantica e limiti portabili in [dati strutturati](structured-data.md#aggiornamento-immutabile-dei-record-031).
+
+## Mira 0.32: sequenze native
+
+I selettori append:to:, remove:if:, map/collect, filter/select e fold sono disponibili senza host. [Semantica, alias e compatibilità](structured-data.md#sequenze-native-e-immutabili-032).
