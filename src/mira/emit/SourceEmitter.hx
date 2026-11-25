@@ -72,12 +72,50 @@ class SourceEmitter {
                 final names = [for (parameter in parameters) Mangle.name(parameter)];
                 final formals = [for (name in names)
                     target == Php ? "$" + name : name];
-                final value = expression(body, target, parameters.concat(scope),
-                    reservedHostNames);
-                switch (target) {
-                    case JavaScript: "((" + formals.join(", ") + ") => " + value + ")";
-                    case Php: "(fn(" + formals.join(", ") + ") => " + value + ")";
+                final innerScope = parameters.concat(scope);
+                switch (body) {
+                    case Steps(items):
+                        final statements:Array<String> = [];
+                        for (index in 0...items.length - 1) {
+                            statements.push(expression(items[index], target,
+                                innerScope, reservedHostNames) + ";");
+                        }
+                        final last = expression(items[items.length - 1], target,
+                            innerScope, reservedHostNames);
+                        final contents = statements.join(" ") + " return " + last + ";";
+                        switch (target) {
+                            case JavaScript:
+                                "((" + formals.join(", ") + ") => { "
+                                    + contents + " })";
+                            case Php:
+                                // PHP anonymous functions need explicit lexical captures.
+                                // Remove shadowed and duplicate names before using use(...).
+                                final seen = names.copy();
+                                final captures:Array<String> = [];
+                                for (outer in scope) {
+                                    final name = Mangle.name(outer);
+                                    if (seen.indexOf(name) == -1) {
+                                        seen.push(name);
+                                        captures.push("$" + name);
+                                    }
+                                }
+                                final use = captures.length == 0
+                                    ? "" : " use (" + captures.join(", ") + ")";
+                                "(function(" + formals.join(", ") + ")" + use
+                                    + " { " + contents + " })";
+                        }
+                    default:
+                        // Preserve compact native arrows for single-expression blocks.
+                        final value = expression(body, target, innerScope,
+                            reservedHostNames);
+                        switch (target) {
+                            case JavaScript: "((" + formals.join(", ") + ") => " + value + ")";
+                            case Php: "(fn(" + formals.join(", ") + ") => " + value + ")";
+                        }
                 }
+
+            case Steps(_):
+                throw new MiraError("Steps can only occur inside a block");
 
             case Record(keys, values):
                 final entries:Array<String> = [];

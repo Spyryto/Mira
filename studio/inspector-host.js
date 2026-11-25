@@ -18,6 +18,7 @@ export function childrenOf(node) {
     case 'Binary': return [node.left, node.right].filter(Boolean);
     case 'FieldGet': return node.record ? [node.record] : [];
     case 'Block': return node.body ? [node.body] : [];
+    case 'Steps': return Array.isArray(node.expressions) ? node.expressions : [];
     case 'Conditional': return [node.condition, node.whenTrue, node.whenFalse].filter(Boolean);
     case 'Call':
     case 'Section':

@@ -138,6 +138,8 @@ class Bridge {
                 {kind: "Sequence", items: [for (item in items) expression(item)]};
             case Block(parameters, body):
                 {kind: "Block", parameters: parameters, body: expression(body)};
+            case Steps(expressions):
+                {kind: "Steps", expressions: [for (item in expressions) expression(item)]};
             case Record(keys, values):
                 {kind: "Record", fields: [for (index in 0...keys.length)
                     {key: keys[index], value: expression(values[index])}]};
