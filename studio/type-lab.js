@@ -8,7 +8,7 @@
   }
   function check(highlight=false){
     const response=MiraStudioCompiler.check(source.value,host.value.trim()||null);
-    result.textContent=response.ok?JSON.parse(response.output).map(x=>x.name+'  :  '+x.type).join('\n'):response.message;
+    result.textContent=response.ok?(document.getElementById('structured').checked?response.output:JSON.parse(response.output).map(x=>x.name+'  :  '+x.type).join('\n')):response.message;
     const d=response.diagnostic;
     if(highlight && !response.ok && d && !d.file && d.line!=null && d.column!=null){
       source.focus();
@@ -25,5 +25,6 @@
     source.value='quote: hours = format (hours * rate);\nresult = quote: 2;';
     check();
   });
+  document.getElementById('structured').addEventListener('change',()=>check());
   source.value=valid;check();
 })();
