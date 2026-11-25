@@ -83,6 +83,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Polimorfismo locale e aggiornamento strutturale dei record | `0.41` | [Dettagli](docs/type-checker.md#041-polimorfismo-locale-e-aggiornamenti) |
 | ✅ | Inferenza vincolata ScalarEq per uguaglianza generica | `0.42` | [Dettagli](docs/type-checker.md#042-vincoli-di-tipo) |
 | ✅ | Diagnostica dei tipi con ancore sorgente e JSON | `0.43` | [Dettagli](docs/type-checker.md#043-diagnostica-delle-espressioni) |
+| ✅ | Firme host strutturali e verifica delle chiamate | `0.44` | [Dettagli](docs/type-checker.md#044-firme-host) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

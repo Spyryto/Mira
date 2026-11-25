@@ -201,7 +201,7 @@ public static function append(locations:Array<GeneratedLocation>, definition:Def
 class HostEnvironment
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L6)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L8)
 
 Feature: [UI web e interoperabilità](language.md#feature-browser-ui), [Filtri con predicati Mira](language.md#feature-filtering), [Libreria GUI Mira e binding](language.md#feature-gui-library), [DOM incrementale e stato indipendente](language.md#feature-incremental-gui), [Stili GUI componibili e griglia](language.md#feature-styled-gui), [Identità stabile delle liste GUI](language.md#feature-gui-keyed)
 
@@ -214,7 +214,7 @@ Feature: [UI web e interoperabilità](language.md#feature-browser-ui), [Filtri c
 public final callables:Array<String>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L9)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L11)
 
 <a id="api-mira-hostenvironment-empty"></a>
 ### `mira.HostEnvironment.empty`
@@ -225,7 +225,7 @@ public final callables:Array<String>
 public static function empty():HostEnvironment
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L38)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L43)
 
 <a id="api-mira-hostenvironment-fromjson"></a>
 ### `mira.HostEnvironment.fromJson`
@@ -236,7 +236,7 @@ public static function empty():HostEnvironment
 public static function fromJson(source:String):HostEnvironment
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L42)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L47)
 
 <a id="api-mira-hostenvironment-new"></a>
 ### `mira.HostEnvironment.new`
@@ -244,10 +244,10 @@ public static function fromJson(source:String):HostEnvironment
 **constructor** · Membro pubblico di mira.HostEnvironment.
 
 ```haxe
-public function new(?values:Array<String>, ?callables:Array<String>, ?selectors:Array<String>)
+public function new(?values:Array<String>, ?callables:Array<String>, ?selectors:Array<String>, ?typeManifest:Dynamic)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L12)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L15)
 
 <a id="api-mira-hostenvironment-selectors"></a>
 ### `mira.HostEnvironment.selectors`
@@ -258,7 +258,18 @@ public function new(?values:Array<String>, ?callables:Array<String>, ?selectors:
 public final selectors:Array<String>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L10)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L12)
+
+<a id="api-mira-hostenvironment-types"></a>
+### `mira.HostEnvironment.types`
+
+**field** · Membro pubblico di mira.HostEnvironment.
+
+```haxe
+public final types:Map<String,Type>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L13)
 
 <a id="api-mira-hostenvironment-values"></a>
 ### `mira.HostEnvironment.values`
@@ -269,7 +280,7 @@ public final selectors:Array<String>
 public final values:Array<String>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L8)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L10)
 
 <a id="api-mira-lex-lexer"></a>
 ### `mira.lex.Lexer`
@@ -1471,6 +1482,39 @@ public function ordered():Array<Array<String>> return groups; public function re
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Dependencies.hx#L35)
 
+<a id="api-mira-types-hosttypecodec"></a>
+### `mira.types.HostTypeCodec`
+
+**class** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+class HostTypeCodec
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/HostTypeCodec.hx#L6)
+
+<a id="api-mira-types-hosttypecodec-decode"></a>
+### `mira.types.HostTypeCodec.decode`
+
+**method** · Membro pubblico di mira.types.HostTypeCodec.
+
+```haxe
+public static function decode(value:Dynamic,path:String,depth:Int = 0):Type
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/HostTypeCodec.hx#L12)
+
+<a id="api-mira-types-hosttypecodec-read"></a>
+### `mira.types.HostTypeCodec.read`
+
+**method** · Membro pubblico di mira.types.HostTypeCodec.
+
+```haxe
+public static function read(input:Dynamic,values:Array<String>,callables:Array<String>,selectors:Array<String>):Map<String,Type>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/HostTypeCodec.hx#L46)
+
 <a id="api-mira-types-type"></a>
 ### `mira.types.Type`
 
@@ -1568,7 +1612,18 @@ Variable(id:Int)
 class TypeChecker
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L14)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L15)
+
+<a id="api-mira-types-typechecker-check"></a>
+### `mira.types.TypeChecker.check`
+
+**method** · Membro pubblico di mira.types.TypeChecker.
+
+```haxe
+public function check(program:Array<Definition>):Array<Dynamic>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L35)
 
 <a id="api-mira-types-typechecker-new"></a>
 ### `mira.types.TypeChecker.new`
@@ -1576,8 +1631,8 @@ class TypeChecker
 **constructor** · Membro pubblico di mira.types.TypeChecker.
 
 ```haxe
-public function new(origins:ExpressionOrigins) this.origins = origins; public function check(program:Array<Definition>):Array<Dynamic>
+public function new(origins:ExpressionOrigins,host:HostEnvironment)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L27)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L30)
 
