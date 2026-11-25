@@ -298,3 +298,29 @@ Il renderer generico accetta un callback host opzionale onRootCommit, invocato d
 L'adapter browser MiraPersistentState.open(storage,key,version,initial,validate) legge/scrive un envelope JSON {version,data} e distingue assenza da errore. Max 262144 unità UTF-16 per envelope; formato/versione sconosciuti o errore di lettura bloccano le scritture, senza sovrascrivere il dato esistente. Errori di scrittura sono mostrati senza annullare il commit GUI; un nuovo aggiornamento può riprovare. Reset esplicito, nessuna migrazione automatica. Nessuna capability storage nell'editor o nell'iframe arbitrario.
 
 Il programma pilota è compilato durante la build da studio/persistent-ledger.mira, con un solo host callable render. L'adapter è JS browser, non una primitiva Mira o PHP. Il codice della view e le transizioni sono Mira, e il sorgente viene anche compilato su PHP per verifica; la persistenza server non è implementata.
+
+## Mira 0.35: effetti asincroni (pilota)
+
+Una transizione riceve modello e messaggio e restituisce un record
+`{model, effects}`. Un effetto è un record JSON con `service` (nome di
+una capability registrata dall'host), `id` (stringa o intero sicuro),
+`reply` (tipo del messaggio di risposta) e `payload`. Il runtime
+`MiraEffects.createApp` valida tutti gli effetti prima del commit e
+li avvia solo dopo un commit riuscito del renderer generico. Le operazioni
+partono in concorrenza; non si garantisce ordine di completamento.
+Un completamento genera `{type,id,ok:true,value}` oppure
+`{type,id,ok:false,error}`, applicato al modello corrente. Il pilota
+confronta l'id con quello atteso per ignorare risposte obsolete.
+Il runtime non impone tale politica: applicazioni con richieste indipendenti
+possono invece elaborare tutte le risposte.
+
+Il modello è separato dai valori JSON inviati e ricevuti, copiati alla
+frontiera. Nessuna keyword, Promise esposta a Mira o modifica al compilatore.
+La purezza resta una convenzione, non un controllo statico. Massimo 32 effetti
+per transizione, 64 pendenti; stop annulla i segnali e ignora le risposte.
+Un mount sostituito ignora i completamenti, ma l'host deve chiamare stop
+per interrompere le operazioni pendenti. Nessun retry, timeout o rollback
+dell'operazione remota automatico. La libreria JSON POST si lega a un URL
+scelto dall'host, senza credenziali e senza redirect. Non è ancora un
+protocollo RPC tipizzato né una capability di rete dell'editor sandboxed.
+La demo usa un servizio simulato, non un backend PHP pubblico.
