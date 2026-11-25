@@ -49,11 +49,11 @@ async function connect(url){
     });
   }};
 }
-test('full-stack ledger: actual Chromium, compiled Mira JS/PHP and SQLite', {timeout:90000},async()=>{
+test('full-stack ledger: actual Chromium, compiled Mira JS/PHP and SQLite', {timeout:120000},async()=>{
   const dir=mkdtempSync(join(tmpdir(),'mira-fullstack-'));
   const report=resolve('dist/fullstack-report');
   mkdirSync(report,{recursive:true});
-  let php,chrome,cdp;
+  let php,chrome,cdp,profile;
   try {
     execFileSync('node',['scripts/build-fullstack.mjs',dir],{stdio:'inherit'});
     const serverPort=await port();
@@ -70,16 +70,33 @@ test('full-stack ledger: actual Chromium, compiled Mira JS/PHP and SQLite', {tim
     await server();
     const exe=[process.env.CHROME_BIN,'google-chrome','chromium','chromium-browser'].filter(Boolean).find(cmd=>spawnSync(cmd,['--version'],{encoding:'utf8'}).status===0);
     assert.ok(exe,'Chromium required');
-    const profile=join(dir,'chrome');
-    chrome=startProcess(exe,['--headless','--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--no-first-run','--remote-debugging-port=0','--user-data-dir='+profile,'--window-size=440,900',origin+'/']);
-    const portFile=join(profile,'DevToolsActivePort');
-    await until(()=>existsSync(portFile),'Chromium debugging port');
-    const chromePort=readFileSync(portFile,'utf8').split('\n')[0];
-    const target=await until(async()=>{
-      const r=await fetch('http://127.0.0.1:'+chromePort+'/json/list',{signal:AbortSignal.timeout(500)});
-      return (await r.json()).find(x=>x.type==='page');
-    },'Chromium CDP');
-    cdp=await connect(target.webSocketDebuggerUrl);
+    // Only browser startup is retried, never application assertions.
+    for(let attempt=0;attempt<3;attempt++){
+      profile=mkdtempSync(join(tmpdir(),'mira-browser-'));
+      let diagnostics='';
+      chrome=spawn(exe,['--headless','--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--no-first-run','--remote-debugging-port=0','--user-data-dir='+profile,'--window-size=440,900',origin+'/'],{stdio:['ignore','ignore','pipe']});
+      chrome.on('error',error=>{diagnostics+=error.message;});
+      chrome.stderr.on('data',chunk=>{diagnostics=(diagnostics+chunk).slice(-8000);});
+      try{
+        const portFile=join(profile,'DevToolsActivePort');
+        const deadline=Date.now()+15000;
+        while(!existsSync(portFile)&&Date.now()<deadline&&chrome.exitCode===null)await pause(100);
+        assert.ok(existsSync(portFile),'Chromium debugging port missing');
+        const chromePort=readFileSync(portFile,'utf8').split('\n')[0];
+        const target=await until(async()=>{
+          const r=await fetch('http://127.0.0.1:'+chromePort+'/json/list',{signal:AbortSignal.timeout(500)});
+          return (await r.json()).find(x=>x.type==='page');
+        },'Chromium CDP');
+        cdp=await connect(target.webSocketDebuggerUrl);
+        break;
+      }catch(error){
+        console.log('Chromium startup attempt '+(attempt+1)+': '+error.message+'\n'+diagnostics);
+        await stop(chrome);
+        rmSync(profile,{recursive:true,force:true,maxRetries:10,retryDelay:150});
+        profile=null;
+        if(attempt===2)throw error;
+      }
+    }
     async function js(expression){
       const r=await cdp.call('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});
       if(r.exceptionDetails)throw Error(r.exceptionDetails.exception?.description||r.exceptionDetails.text);
@@ -135,6 +152,9 @@ test('full-stack ledger: actual Chromium, compiled Mira JS/PHP and SQLite', {tim
     writeFileSync(join(report,'latency.json'),JSON.stringify(metrics,null,2));
     console.log('FULLSTACK_LEDGER '+JSON.stringify(metrics));
   } finally {
-    cdp?.close();await stop(chrome);await stop(php);rmSync(dir,{recursive:true,force:true,maxRetries:10,retryDelay:150});
+    if(cdp){try{await cdp.call('Browser.close');}catch{} cdp.close();}
+    await stop(chrome);await stop(php);
+    if(profile)rmSync(profile,{recursive:true,force:true,maxRetries:10,retryDelay:150});
+    rmSync(dir,{recursive:true,force:true,maxRetries:10,retryDelay:150});
   }
 });
