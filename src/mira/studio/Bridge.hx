@@ -9,6 +9,7 @@ import mira.syntax.Definition;
 import mira.syntax.DefinitionParser;
 import mira.lex.Lexer;
 import mira.resolve.Symbols;
+import mira.emit.SourceLocations.GeneratedLocation;
 
 class Bridge {
     public static function main():Void {
@@ -18,12 +19,14 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.12.2"
+            version: "0.13.0"
         });
     }
 
-    public static function compile(source:String, targetName:String, ?hostJson:String):Dynamic {
-        return safely(function() {
+    public static function compile(source:String, targetName:String, ?hostJson:String,
+        ?withLocations:Bool = false):Dynamic {
+        final locations:Array<GeneratedLocation> = withLocations ? [] : null;
+        final result = safely(function() {
             final target = switch (targetName) {
                 case "js": JavaScript;
                 case "php": Php;
@@ -31,8 +34,10 @@ class Bridge {
             };
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
-            return Compiler.transpile(source, target, host);
+            return Compiler.transpile(source, target, host, locations);
         });
+        if (withLocations && result.ok) Reflect.setField(result, "locations", locations);
+        return result;
     }
 
     public static function tokens(source:String):Dynamic {
