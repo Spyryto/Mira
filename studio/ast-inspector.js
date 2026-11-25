@@ -37,6 +37,7 @@ function labelOf(node) {
     case 'Placeholder': return 'Placeholder · _';
     case 'Sequence': return 'Sequence · ' + (node.items?.length ?? 0) + ' elementi';
     case 'Record': return 'Record · ' + (node.fields?.length ?? 0) + ' campi';
+    case 'Block': return 'Blocco · ' + node.parameter;
     default: return String(node.kind ?? '?');
   }
 }

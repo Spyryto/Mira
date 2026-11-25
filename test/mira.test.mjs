@@ -597,3 +597,39 @@ test('malformed mixed punctuation conditionals keep useful errors', () => {
     assert.match(failure.stderr, expected, source);
   }
 });
+
+test('expression blocks support one parameter, multiword names, records and repeated _ on JS/PHP', () => {
+  for (const [source, expected] of [
+    ['result = 5 >> {_ | _ * 2};', '10'],
+    ['result = 5 >> {value | value * 2};', '10'],
+    ['result = 5 >> {_ | _ + _};', '10'],
+    ['result = 4 >> {a number | a number + 1};', '5'],
+    ['lesson = {hours: 2, rate: 30}; fee = {lesson | (lesson ~ hours) * (lesson ~ rate)}; result = lesson >> fee;', '60'],
+    ['lesson = {hours: 2, rate: 30}; fee = {_ | (_ ~ hours) * (_ ~ rate)}; result = lesson >> fee;', '60'],
+    ['result = {hours: 2, rate: 30} >> {_ | (_ ~ hours) * (_ ~ rate)};', '60'],
+    ['rate = 30; result = 2 >> {hours | hours * rate};', '60'],
+    ['hours = 100; result = 2 >> {hours | hours + 1};', '3'],
+    ['result = 4 >> {_ | if (_ > 3) then "yes" else "no"};', '"yes"'],
+    ['make multiplier: factor = {_ | _ * factor}; result = 5 >> (make multiplier: 3);', '15'],
+    ['result = 5 >> {outer | (outer + 1) >> {inner | inner * outer}};', '30'],
+    ['result = {key: "value", count: 2} ~ count;', '2']
+  ]) {
+    for (const target of ['js','php']) {
+      assert.equal(run(source,target),expected,source+' / '+target);
+    }
+  }
+});
+
+test('block parameters are locally bound, while unbound variables remain errors', () => {
+  for (const [source, expected] of [
+    ['result = {_ | missing};', /Unknown identifier|Unbound/],
+    ['result = {value | value + unknown};', /Unknown identifier|Unbound/],
+    ['result = {value | };', /Expected expression/],
+    ['result = {value | value + 1; };', /Expected }/],
+    ['result = {__miraHost | 1};', /Reserved block parameter/]
+  ]) {
+    const error = compileError(source);
+    assert.notEqual(error.status,0,source);
+    assert.match(error.stderr, expected,source);
+  }
+});

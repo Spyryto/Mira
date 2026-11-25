@@ -1,4 +1,4 @@
-# Mira 0.6: executable subset and grammar boundaries
+# Mira 0.8: executable subset and grammar boundaries
 
 This file documents the parser's **implemented** boundaries. It is a readable
 grammar sketch, not a separate parser generator or a promise of accepted syntax.
@@ -121,6 +121,25 @@ since 0.5. The variable name `_` is reserved.
 by Mira Studio. Emission uses JavaScript arrow functions or PHP arrow
 functions, both with hygienic generated parameter names.
 
+## Blocchi di espressione (0.8)
+
+`{parametro | espressione}` è una funzione unaria con cattura lessicale.
+La distinzione dal record è lessicale, senza inferenza dei tipi:
+
+```mira
+lesson = {hours: 2, rate: 30};
+fee = {item | (item ~ hours) * (item ~ rate)};
+result = lesson >> fee;
+```
+
+Il parametro può essere un identificatore composto. Con `{_ | ...}`,
+tutte le occorrenze di `_` dentro il blocco sono riferimenti allo stesso
+argomento. Fuori dai blocchi le sezioni mantengono i propri placeholder
+indipendenti. I blocchi annidati catturano variabili esterne in JS/PHP.
+I blocchi con istruzioni o parametri multipli rimangono in progetto.
+
+`{hours: 2}` è un record; `{item | item + 1}` è un blocco.
+
 ## Record fields in 0.6
 
 `record ~ field` compiles to a checked literal field lookup in the AST
@@ -132,7 +151,8 @@ literals use the same rule: `{total hours: 3}` and
 `{"total hours": 3}` are equivalent. Field keys do
 not resolve as ordinary variables. `(_ ~ total hours)` produces
 `FieldSection`, a callable unary accessor with `>>`. More complex
-placeholder expressions are deferred until blocks.
+complex repeated placeholders can now be expressed through an
+explicit block `{_ | (_ ~ hours) >= 1}`.
 
 `field "name"` from 0.4 remains a first-class accessor. The meaning
 of `~` changed in 0.6; older programs must migrate their pipelines
@@ -153,9 +173,8 @@ No type inference or backtracking exception handler is involved in selector
 matching. SelectorResolver evaluates all candidate signatures structurally
 and rejects equal-length competing matches instead of guessing.
 
-The syntax of `type`, records `{}`, general closures, lists `[]`,
-implicit partial selector calls and operator declarations remains under
-consideration; these are **not** implemented.
+Typed records, multi-statement/multi-parameter blocks, implicit partial
+selector calls, and operator declarations remain future work.
 
 ## Sequenze e record (esperimento dopo 0.2)
 

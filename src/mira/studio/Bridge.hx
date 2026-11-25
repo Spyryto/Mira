@@ -18,7 +18,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.7.1"
+            version: "0.8.0"
         });
     }
 
@@ -136,6 +136,8 @@ class Bridge {
                     whenTrue: expression(whenTrue), whenFalse: expression(whenFalse)};
             case Sequence(items):
                 {kind: "Sequence", items: [for (item in items) expression(item)]};
+            case Block(parameter, body):
+                {kind: "Block", parameter: parameter, body: expression(body)};
             case Record(keys, values):
                 {kind: "Record", fields: [for (index in 0...keys.length)
                     {key: keys[index], value: expression(values[index])}]};

@@ -86,6 +86,14 @@ result = if (1 < 2) then "valid" else "invalid";`
 result = if (1 < 2), then: ("valid"), else: ("invalid");`
   },
   {
+    id: 'blocks',
+    name: 'Blocchi · 0.8',
+    source: `# Nei blocchi, ogni _ indica lo stesso parametro.
+lesson = {hours: 2, rate: 30};
+fee = {_ | (_ ~ hours) * (_ ~ rate)};
+result = lesson >> fee;`
+  },
+  {
     id: 'host-log',
     name: 'Interoperabilità: log',
     source: `# La funzione log arriva dall'oggetto host di Studio.

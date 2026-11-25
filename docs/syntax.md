@@ -148,10 +148,35 @@ Se manca il campo, JS/PHP generano un errore.
 mantengono associatività a sinistra, senza type inference.
 
 `(_ ~ hours)` è una sezione unaria semplice. `(_ ~ hours >= 1)`
-non è implementato: i placeholder nelle espressioni complesse saranno
-progettati insieme ai blocchi. Anche `(_ ~ total hours)` è un accessor unario.
+non è implementato come sezione implicita: dalla 0.8 si può usare
+`{_ | (_ ~ hours) >= 1}`, dove tutte le occorrenze di `_` sono lo
+stesso parametro. Anche `(_ ~ total hours)` è un accessor unario.
 Si può usare una funzione nominata:
 `billable: lesson = (lesson ~ hours) >= 1;`.
+
+## Implementato in Mira 0.8: blocchi di espressione
+
+```mira
+lesson = {hours: 2, rate: 30};
+fee = {lesson | (lesson ~ hours) * (lesson ~ rate)};
+result = lesson >> fee;
+
+# Ripetere _ significa riferirsi allo stesso parametro
+fee = {_ | (_ ~ hours) * (_ ~ rate)};
+result = lesson >> fee;
+
+# Passare un blocco come predicato
+result = collect: lessons, if: ({_ | (_ ~ hours) >= 1});
+```
+
+`{parametro | espressione}` costruisce una funzione con un parametro.
+Sono ammessi nomi composti, cattura lessicale e blocchi annidati.
+Dentro `{_ | ...}` ogni `_` indica il medesimo parametro; fuori
+dai blocchi i placeholder delle sezioni restano indipendenti.
+
+La presenza di `|` distingue un blocco da un record:
+`{hours: 2}` resta un record. Solo un'espressione per blocco;
+istruzioni multiple, parametri multipli e tipi sono lavoro futuro.
 
 ## Proposto: closure generali e selettori parziali
 
@@ -160,7 +185,7 @@ greater than: limit = {x | x > limit};
 join, with " "
 ```
 
-**Non implementati**: closure esplicite con parametri arbitrari,
+**Non implementati**: blocchi con parametri multipli o più istruzioni,
 selector parziali con argomenti impliciti e type checker.
 
 ## Proposed: type declarations and MVU records

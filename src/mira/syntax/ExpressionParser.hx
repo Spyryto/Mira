@@ -96,7 +96,7 @@ class ExpressionParser {
         return switch (expr) {
             case Name(_) | HostRef(_) | Call(_, _) | HostCall(_, _) | Section(_, _)
                 | HostSection(_, _) | OperatorSection(_, _, _) | FieldSection(_)
-                | Apply(_, _): true;
+                | Block(_, _) | Apply(_, _): true;
             default: false;
         };
     }
@@ -104,7 +104,7 @@ class ExpressionParser {
     function primary():Expr {
         final token = current();
         if (token.isSymbol("[")) return sequence();
-        if (token.isSymbol("{")) return record();
+        if (token.isSymbol("{")) return isBlockStart() ? block() : record();
         if (token.isSymbol("(")) {
             consume();
             operatorDepth++;
@@ -138,6 +138,12 @@ class ExpressionParser {
             return conditional();
         }
         if (token.value == "_") {
+            // Inside an explicit {_ | body} block, every _ is the SAME
+            // lexical variable, not a new implicit section parameter.
+            if (localNames.indexOf("_") >= 0) {
+                consume();
+                return Name("_");
+            }
             if (operatorDepth > 0 || allowOperatorArgument) {
                 consume();
                 return Placeholder;
@@ -269,6 +275,34 @@ class ExpressionParser {
         }
         consume(); // ]
         return Sequence(items);
+    }
+
+    // A leading parameter name followed by | selects a function block.
+    // {name: value} stays a record, with no backtracking or type inference.
+    function isBlockStart():Bool {
+        var cursor = position + 1;
+        if (tokens[cursor].kind != Word) return false;
+        while (tokens[cursor].kind == Word) cursor++;
+        return tokens[cursor].isSymbol("|");
+    }
+
+    // Minimal expression block: exactly one named parameter and one body
+    // expression. Supports multiword names and the explicit _ parameter.
+    function block():Expr {
+        consume(); // {
+        final parameterToken = current();
+        final words:Array<String> = [];
+        while (current().kind == Word) words.push(consume().value);
+        final parameter = words.join(" ");
+        requireSymbol("|");
+        if (parameter == "__miraHost") {
+            throw new MiraError("Reserved block parameter __miraHost", parameterToken);
+        }
+        localNames.unshift(parameter);
+        final body = expression();
+        localNames.shift();
+        requireSymbol("}");
+        return Block(parameter, body);
     }
 
     function record():Expr {

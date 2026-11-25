@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.7.1');
+  assert.equal(bridge.version, '0.8.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.7.1');
+  assert.equal(bridge.version,'0.8.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -424,4 +424,29 @@ test('0.7.1 optional conditional punctuation has the same browser AST', () => {
       assert.equal(build.ok,true,build.message);
     }
   }
+});
+
+test('0.8 Studio AST exposes Block and resolves repeated _ as one lexical name', () => {
+  const source = [
+    'lesson = {hours: 2, rate: 30};',
+    'fee = {_ | (_ ~ hours) * (_ ~ rate)};',
+    'result = lesson >> fee;'
+  ].join('\n');
+  const ast = bridge.ast(source);
+  assert.equal(ast.ok,true,ast.message);
+  const parsed = JSON.parse(ast.output).definitions;
+  const block = parsed[1].body;
+  assert.equal(block.kind,'Block');
+  assert.equal(block.parameter,'_');
+  assert.equal(block.body.kind,'Binary');
+  assert.equal(block.body.left.kind,'FieldGet');
+  assert.equal(block.body.left.record.kind,'Name');
+  assert.equal(block.body.left.record.value,'_');
+  assert.equal(block.body.right.kind,'FieldGet');
+  assert.equal(block.body.right.record.value,'_');
+  const js=bridge.compile(source,'js');
+  const php=bridge.compile(source,'php');
+  assert.equal(js.ok,true,js.message);
+  assert.equal(php.ok,true,php.message);
+  assert.equal(runInNewContext(js.output+'\nresult',{}),60);
 });
