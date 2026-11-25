@@ -43,9 +43,36 @@ test('types: invalid programs are rejected, not coerced',()=>{
     ['xs = [1, "x"];',/expected Number, got Text/],
     ['f: x = x ~ name; result = f: {age: 2};',/missing record field name/],
     ['xs = select: [1, 2], with: {x | x + 1};',/expected Boolean, got Number/],
-    ['f: x = f: x;',/recursive dependency not supported/],
+    ['x = x;',/recursive value dependency not supported/],
     ['f: x = x >> x;',/infinite type/],
     ['x = 2;\ny = x + "a";',/at 2:1/]
   ])assert.throws(()=>check(source),pattern,source);
   assert.throws(()=>check('log 1;',{callables:['log']}),/host type signature required/);
+});
+
+test('types: direct and mutual recursion are inferred before generalization',()=>{
+  const result=check('factorial: n = if (n <= 1) then 1 else (n * (factorial: (n - 1))); even: n = if (n <= 0) then true else (odd: (n - 1)); odd: n = if (n <= 0) then false else (even: (n - 1)); x = factorial: 5; y = even: 6;');
+  assert.equal(result['factorial:'],'(Number) -> Number');
+  assert.equal(result['even:'],'(Number) -> Boolean');
+  assert.equal(result['odd:'],'(Number) -> Boolean');
+  assert.equal(result.x,'Number');assert.equal(result.y,'Boolean');
+  assert.throws(()=>check('bad: x = if (true) then (bad: 1) else (bad: "x");'),/expected Number, got Text|expected Text, got Number/);
+  assert.throws(()=>check('a = b; b = a;'),/recursive value dependency not supported/);
+});
+test('types: dependencies respect lexical shadowing and source order',()=>{
+  const result=check('a = identity: "hello"; identity: x = x; f: a = a; n = f: 42;');
+  assert.equal(result.a,'Text');assert.equal(result.n,'Number');
+  assert.equal(result['f:'],"('a) -> 'a");
+});
+test('types: structural projections are stable under deterministic field permutations',()=>{
+  const pairs=['a: 1','b: 2','extra: true'];
+  const orders=[[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]];
+  for(const order of orders){
+    const record=order.map(i=>pairs[i]).join(', ');
+    const result=check('sum fields: r = r ~ a + r ~ b; result = sum fields: {'+record+'};');
+    assert.equal(result['sum fields:'],"({a: Number, b: Number | 'a}) -> Number");
+    assert.equal(result.result,'Number');
+  }
+  assert.throws(()=>check('sum fields: r = r ~ a + r ~ b; result = sum fields: {a: 1, extra: true};'),/missing record field b/);
+  assert.throws(()=>check('sum fields: r = r ~ a + r ~ b; result = sum fields: {a: 1, b: "x"};'),/expected Number, got Text|expected Text, got Number/);
 });
