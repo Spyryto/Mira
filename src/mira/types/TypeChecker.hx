@@ -278,7 +278,7 @@ class TypeChecker {
             final d = definitions.get(name);
             origin = d.origin;
             if (recursive && !d.isFunction()) fail("recursive value dependency not supported: " + name);
-            final result = d.resultAnnotation == null ? fresh() : d.resultAnnotation;
+            final result:Type = d.resultAnnotation == null ? fresh() : d.resultAnnotation;
             final placeholder:Type = d.isFunction()
                 ? FunctionType([for (i in 0...d.parameters.length)
                     i < d.parameterAnnotations.length && d.parameterAnnotations[i] != null
