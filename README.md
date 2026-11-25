@@ -199,6 +199,27 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
 
+## Mira 0.11: più espressioni nello stesso blocco
+
+```mira
+result = 4 >> {value |
+  value + 1;
+  value * 3
+};
+```
+
+Il risultato è **12**: tutte le espressioni vengono valutate
+in ordine, e l'ultima è il valore restituito. Il separatore
+è `;`, facoltativo anche dopo l'ultima espressione.
+
+La sintassi dei blocchi a un'espressione rimane invariata.
+Un nuovo nodo AST `Steps` rappresenta **soltanto** le sequenze
+con più espressioni. JavaScript e PHP generano funzioni native,
+senza introdurre una VM o una sintassi speciale per il ritorno.
+
+Non ci sono ancora assegnazioni o definizioni locali dentro
+i blocchi: ne progetteremo la semantica separatamente.
+
 ## Mira 0.10: campi e blocchi con meno parentesi
 
 La catena `a ~ b ~ c` è associativa a sinistra e l'accesso `~`
