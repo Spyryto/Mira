@@ -677,3 +677,18 @@ test('0.14 Studio executes nullary blocks, preserves closure capture and exposes
   assert.equal(response.output,'hey\n42');
   assert.match(bridge.compile('result = ();','js').message,/Empty \(\) is only allowed before >>/);
 });
+
+test('Laboratory publishes historical data and precomputed accessible charts offline', () => {
+  const source = JSON.parse(readFileSync(resolve(root,'catalog/laboratory/gui-rendering.json'),'utf8'));
+  assert.deepEqual(JSON.parse(read('lab-gui-rendering.json')),source);
+  const html = read('laboratory.html');
+  assert.match(read('index.html'), /href="\.\/laboratory\.html"/);
+  assert.match(html, /href="\.\/gui-benchmark\.html"/);
+  assert.doesNotMatch(html, /<script\b/);
+  assert.equal((html.match(/class="lab-track"/g) ?? []).length,8);
+  assert.match(html, /3,3 µs/);
+  assert.match(html, /910 µs/);
+  assert.match(html, /non sono stati rieseguiti/);
+  for(const file of ['laboratory.html','lab-gui-rendering.json']) assert.ok(read('sw.js').includes('./'+file));
+  assert.match(read('sw.js'), /url\.pathname\.endsWith\('\/laboratory\.html'\)/);
+});
