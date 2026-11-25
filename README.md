@@ -200,6 +200,16 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
 
+## Mira 0.12.2: parametri delle funzioni senza collisioni
+
+Anche nelle funzioni nominate, i parametri distinti devono generare
+**identificatori JS/PHP distinti**. Per esempio, `a b` e `aB`
+non possono essere parametri della stessa funzione, perché diventano
+entrambi `aB`. Il controllo include i valori globali (anche dichiarati
+dopo la funzione) e il nome riservato `__miraHost`. La diagnostica
+punta al parametro responsabile. Un parametro `x` può invece
+ombreggiare intenzionalmente un valore globale `x`.
+
 ## Mira 0.12.1: diagnostica dello scoping lessicale
 
 Quando una definizione locale usa un nome che verrà introdotto
