@@ -949,3 +949,12 @@ test('Studio infers with annotations and specializes closed annotated signatures
   assert.equal(bad.ok,false);assert.equal(bad.diagnostic.column,4);
   for(const target of ['js','php'])assert.equal(bridge.compile(source,target).ok,true);
 });
+
+test('Studio checks annotated block parameters and anchors errors at local type tokens',()=>{
+  const source='result = 2 >> {hours (Number) | rate (Number) = 30; hours * rate};';
+  const checked=bridge.check(source);
+  assert.equal(checked.ok,true,checked.message);assert.equal(JSON.parse(checked.output)[0].type,'Number');
+  const bad=bridge.check('r = () >> {|\n  a (Text) = 1;\n  a\n};');
+  assert.equal(bad.ok,false);assert.equal(bad.diagnostic.line,2);assert.equal(bad.diagnostic.column,6);
+  for(const target of ['js','php'])assert.equal(bridge.compile(source,target).ok,true);
+});
