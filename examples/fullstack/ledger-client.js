@@ -3,10 +3,9 @@
   const report = error => { document.getElementById('error').textContent = String(error?.message ?? error); };
   const renderer = MiraUiHost.createUiHost(document, document.getElementById('mount'), report);
   let app;
-  const transport = MiraEffects.rpcService('./ledger.php', 'ledger.command');
-  const ledger = (payload, signal) => transport(payload, AbortSignal.any([signal, AbortSignal.timeout(10000)]));
+  const services = MiraEffects.rpcServices('./ledger.php', MiraRpcBindings);
   const host = Object.freeze({
-    start(spec) { app = MiraEffects.createApp(renderer, spec, {ledger}, report); },
+    start(spec) { app = MiraEffects.createApp(renderer, spec, services, report); },
     send(message) { return app.dispatch(message); }
   });
   try { MiraFullstackLedgerProgram(host); app.dispatch({type:'load'}); }
