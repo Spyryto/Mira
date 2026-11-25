@@ -325,5 +325,75 @@
       if(!data(value))fail('data state');
     },slotValue);
   }
-  global.MiraGuiSpecialize=Object.freeze({analyze,compile,mount,compileHybrid,mountHybrid});
+
+  // The first automatic partition is intentionally structural and narrow.
+  // A root column must be a literal record or a proven transparent constructor.
+  // Never infer a constructor's meaning from its name.
+  function discoverRegions(ast,definition){
+    const parameter=definition.parameters[0];
+    let root=definition.body;
+    if(root?.kind==='Call'){
+      const constructor=ast.definitions.find(d=>d.kind==='Function'&&d.selector===root.selector);
+      if(!constructor||constructor.parameters.length!==1||root.arguments.length!==1)return null;
+      const body=constructor.body;
+      if(body?.kind!=='Record'||body.fields.length!==2)return null;
+      const type=body.fields.find(f=>f.key==='type')?.value;
+      const children=body.fields.find(f=>f.key==='children')?.value;
+      if(type?.kind!=='Text'||type.value!=='column'||children?.kind!=='Name'||
+         children.value!==constructor.parameters[0])return null;
+      root={kind:'Record',fields:[{key:'type',value:type},{key:'children',value:root.arguments[0]}]};
+    }
+    if(root?.kind!=='Record'||root.fields.length!==2)return null;
+    const type=root.fields.find(f=>f.key==='type')?.value;
+    const children=root.fields.find(f=>f.key==='children')?.value;
+    if(type?.kind!=='Text'||type.value!=='column'||children?.kind!=='Sequence'||
+       !children.items.length||children.items.length>100)return null;
+    const selectors=[];
+    for(const child of children.items){
+      if(child?.kind!=='Call'||child.arguments.length!==1||
+         child.arguments[0]?.kind!=='Name'||child.arguments[0].value!==parameter)return null;
+      const target=ast.definitions.find(d=>d.kind==='Function'&&d.selector===child.selector);
+      if(!target||target.parameters.length!==1||!target.labels.every(identifier))return null;
+      selectors.push(child.selector);
+    }
+    return selectors;
+  }
+
+  function compileAuto(compiler,source,selector){
+    const parsed=compiler.ast(source);
+    if(!parsed.ok)throw new Error(parsed.message);
+    const ast=JSON.parse(parsed.output);
+    if(ast.definitions.some(d=>!['Function','Value'].includes(d.kind)))fail('no top-level statements');
+    const definition=ast.definitions.find(d=>d.kind==='Function'&&d.selector===selector);
+    if(!definition||definition.parameters.length!==1||!definition.labels.every(identifier))fail('unary root selector');
+    const code=compiler.compile(source,'js');
+    if(!code.ok)throw new Error(code.message);
+    const name=definition.labels.map(label=>label.replaceAll(' ','_')).join('__');
+    const view=new Function(code.output+'\nreturn '+name+';')();
+    let reason;
+    try{
+      const specialized=compile(compiler,source,selector);
+      return {mode:'specialized',specialized,view,regions:[],reason:null};
+    }catch(error){
+      if(!String(error.message).startsWith('Unsupported specialized view: '))throw error;
+      reason=String(error.message);
+    }
+    const selectors=discoverRegions(ast,definition);
+    if(selectors){
+      const hybrid=compileHybrid(compiler,source,selectors);
+      if(hybrid.regions.some(region=>region.specialized)){
+        return {mode:'hybrid',view,regions:hybrid.regions,reason};
+      }
+    }
+    return {mode:'generic',view,regions:[],reason};
+  }
+
+  function mountAuto(compiled,target,initial,onError=error=>{throw new Error(error);}){
+    if(compiled.mode==='specialized')return mount(compiled.specialized,target,initial,onError);
+    if(compiled.mode==='hybrid')return mountHybrid(compiled,target,initial,onError);
+    if(compiled.mode!=='generic')throw new Error('Unknown automatic rendering mode');
+    const host=global.MiraUiHost.createUiHost(target.ownerDocument,target,onError);
+    return host.renderState(compiled.view,initial);
+  }
+  global.MiraGuiSpecialize=Object.freeze({analyze,compile,mount,compileHybrid,mountHybrid,compileAuto,mountAuto});
 })(globalThis);

@@ -721,3 +721,56 @@ test('0.23 hybrid controlled input uses the same state and survives generic upda
   assert.equal(findAll(root,'input')[0],input);assert.equal(document.activeElement,input);assert.equal(input.selectionStart,2);
   assert.deepEqual(errors,[]);
 });
+
+
+test('0.24 automatic partition matches original view through root updates and preserves identity',()=>{
+  const {root,errors}=setup(), normal=setup(),sandbox={};
+  runInNewContext(read('ui-host.js'),sandbox);runInNewContext(read('gui-specialize.js'),sandbox);
+  runInNewContext(read('gui-benchmark.js'),sandbox);
+  const source=sandbox.MiraGuiBench.hybridSource(5);
+  const compiled=sandbox.MiraGuiSpecialize.compileAuto(compiler,source,'hybrid view:');
+  assert.equal(compiled.mode,'hybrid');
+  assert.deepEqual(Array.from(compiled.regions,r=>r.selector),['fixed panel:','changing panel:']);
+  const app=sandbox.MiraGuiSpecialize.mountAuto(compiled,root,0,msg=>errors.push(msg));
+  normal.host.render({type:'state',initial:0,view:compiled.view});
+  const snapshot=node=>({tag:node.tagName,cls:node.className,text:node.textContent,children:node.children.map(snapshot)});
+  const label=findAll(root,'p')[0],button=findButtons(root)[0];
+  for(let n=0;n<6;n++){
+    assert.deepEqual(snapshot(root),snapshot(normal.root));
+    assert.equal(app.getState(),n);
+    assert.equal(findAll(root,'p')[0],label);
+    assert.equal(findButtons(root)[0],button);
+    button.click();findButtons(normal.root)[0].click();
+  }
+  assert.deepEqual(errors,[]);
+  assert.deepEqual(normal.errors,[]);
+});
+
+test('0.24 automatic generic fallback preserves actual constructor semantics and state',()=>{
+  const {root,errors}=setup(),sandbox={};
+  runInNewContext(read('ui-host.js'),sandbox);runInNewContext(read('gui-specialize.js'),sandbox);
+  const source='column: items = {type: "row", children: items};\n'+
+    'fixed: n = {type: "text", text: n};\n'+
+    'changing: n = {type: "column", children: [{type: "button", label: "Next", update: {old | old + 1}}, (if (n == 0) then {type: "title", text: n} else {type: "text", text: n})]};\n'+
+    'view: n = column: [fixed: n, changing: n];';
+  const compiled=sandbox.MiraGuiSpecialize.compileAuto(compiler,source,'view:');
+  assert.equal(compiled.mode,'generic');
+  const app=sandbox.MiraGuiSpecialize.mountAuto(compiled,root,0,msg=>errors.push(msg));
+  assert.equal(root.children[0].children[0].className,'mira-ui-row');
+  findButtons(root)[0].click();assert.equal(app.getState(),1);
+  assert.equal(findAll(root,'p')[0].textContent,'1');
+  assert.deepEqual(errors,[]);
+});
+
+test('0.24 automatic fully specialized mode preserves root shape',()=>{
+  const {root,errors}=setup(),sandbox={};
+  runInNewContext(read('ui-host.js'),sandbox);runInNewContext(read('gui-specialize.js'),sandbox);
+  const source='view: n = {type: "row", children: [{type: "text", text: n}, {type: "button", label: "Next", update: {old | old + 1}}]};';
+  const compiled=sandbox.MiraGuiSpecialize.compileAuto(compiler,source,'view:');
+  assert.equal(compiled.mode,'specialized');
+  const app=sandbox.MiraGuiSpecialize.mountAuto(compiled,root,0,msg=>errors.push(msg));
+  assert.equal(root.children[0].children[0].className,'mira-ui-row');
+  findButtons(root)[0].click();
+  assert.equal(app.getState(),1);assert.equal(findAll(root,'p')[0].textContent,'1');
+  assert.deepEqual(errors,[]);
+});

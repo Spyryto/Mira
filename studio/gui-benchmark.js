@@ -219,9 +219,9 @@
   function hybridSetup(compiler,mount,hybrid,size=100){
     const source=hybridSource(size);
     if(hybrid){
-      const compiled=global.MiraGuiSpecialize.compileHybrid(compiler,source,['fixed panel:','changing panel:']);
-      if(!compiled.regions[0].specialized||compiled.regions[1].specialized)throw new Error('Hybrid region classification');
-      return ()=>global.MiraGuiSpecialize.mountHybrid(compiled,mount,0);
+      const compiled=global.MiraGuiSpecialize.compileAuto(compiler,source,'hybrid view:');
+      if(compiled.mode!=='hybrid'||!compiled.regions[0].specialized||compiled.regions[1].specialized)throw new Error('Hybrid region classification');
+      return ()=>global.MiraGuiSpecialize.mountAuto(compiled,mount,0);
     }
     const code=compiler.compile(source,'js');
     if(!code.ok)throw new Error(code.message);

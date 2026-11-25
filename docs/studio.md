@@ -321,3 +321,7 @@ La pagina Laboratory è un rapporto statico offline, generato al build da catalo
 ## Rendering ibrido (0.23)
 
 Bench → DOM Performance Lab → Monta demo ibrida. Due regioni condividono il modello; Avanti modifica un testo specializzato e cambia la struttura di una regione generica. La pagina include sorgente e confronto incrementale/ibrido. I confini sono espliciti nell'API browser, non una partizione automatica. Vedi browser-interop.md.
+
+## Selezione automatica (0.24)
+
+Bench → DOM Performance Lab → Monta demo ibrida automatica. Il laboratorio passa un singolo selettore e il pass riconosce le regioni della colonna radice. Se la view non è riconoscibile usa il renderer generico senza cambiarne la struttura. Nessuna modifica all'anteprima ordinaria.

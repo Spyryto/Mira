@@ -119,3 +119,7 @@ Bench → DOM Performance Lab esegue la versione corrente sul dispositivo. Labor
 ## Aggiornamento 0.23: primo esperimento ibrido
 
 La roadmap sopra documenta lo stato storico della 0.22. La 0.23 introduce un esperimento a confini espliciti: selettori unari sorelli, classificazione per regione, owner dello stato condiviso, preparazione di tutte le regioni prima del commit, riconciliazione ordinaria del fallback. La partizione automatica e la specializzazione dello stato annidato restano da fare. Vedi [interop browser](browser-interop.md#mira-023-rendering-ibrido). Il dataset storico 0.15–0.22 resta immutato.
+
+## Aggiornamento 0.24: riconoscimento automatico
+
+La selezione avviene da un unico selettore unario. Specializzazione completa se possibile, partizione conservativa di una colonna radice con figli chiamati sullo stesso modello, altrimenti fallback generico. Il benchmark ibrido ora usa questa API. La partizione ricorsiva e l'integrazione nell'anteprima generale restano da progettare. Vedi [interop browser](browser-interop.md#mira-024-selezione-automatica-del-renderer).
