@@ -1,7 +1,7 @@
 (function(){
   'use strict';
   const source=document.getElementById('source'),result=document.getElementById('result'),host=document.getElementById('host');
-  const valid='same: a, as: b = a == b;\nsame number = same: 2, as: 2;\nsame text = same: "Ada", as: "Mira";\nrename: r = update: r, with: {name: "Ada"};\nupdated = rename: {name: 42, age: 37};\nlocal = () >> {| id = {x | x}; {number: (1 >> id), text: ("ok" >> id)}};\neven: n = if (n <= 0) then true else (odd: (n - 1));\nodd: n = if (n <= 0) then false else (even: (n - 1));\nname of: person = person ~ name;\nidentity: x = x;\na = name of: {name: "Ada", age: 37};\nb = name of: {name: 42};\nc = identity: true;';
+  const valid='rate -> Number = 30;\nquote: (p: {hours: Number}) -> {total: Number} = {total: (p ~ hours * rate)};\nquoted = quote: {hours: 2};\nempty -> [Text] = [];\nsame: a, as: b = a == b;\nsame number = same: 2, as: 2;\nsame text = same: "Ada", as: "Mira";\nrename: r = update: r, with: {name: "Ada"};\nupdated = rename: {name: 42, age: 37};\nlocal = () >> {| id = {x | x}; {number: (1 >> id), text: ("ok" >> id)}};\neven: n = if (n <= 0) then true else (odd: (n - 1));\nodd: n = if (n <= 0) then false else (even: (n - 1));\nname of: person = person ~ name;\nidentity: x = x;\na = name of: {name: "Ada", age: 37};\nb = name of: {name: 42};\nc = identity: true;';
   function offset(line,column){
     const lines=source.value.split('\n');
     return lines.slice(0,line-1).reduce((n,text)=>n+text.length+1,0)+column-1;
