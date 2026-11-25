@@ -377,3 +377,14 @@ Gli asset sono nel cache PWA e la navigazione offline ha la propria chiave. Per 
 ## Consultare la storia fino alla 0.34
 
 Il [Laboratory](https://spyryto.github.io/Mira/laboratory.html) espone 20 tappe, 18 report CI, 244 scenari e le misure su dispositivi già fornite. Le ripetizioni dei test prestazionali in versioni successive sono nell'archivio espandibile. [Decisioni e roadmap applicativa](decisions.md#stato-e-direzione-034). La documentazione non certifica il deploy pubblico né il comportamento su browser non verificati.
+
+## Laboratorio effetti asincroni (0.35)
+
+Dalla home apri Laboratorio effetti. Invia una richiesta, incrementa il
+contatore mentre attendi, oppure invia subito una seconda richiesta.
+Le richieste dispari richiedono 1500 ms e le pari 300 ms: il caso di risposta
+fuori ordine è riproducibile. Una richiesta può fallire e il suo errore
+diventa un normale messaggio. Il programma è compilato in build su JS e PHP;
+solo JS monta la pagina. Sorgente Mira consultabile dalla pagina, asset
+offline. Il servizio è simulato e non utilizza la rete. L'editor non
+riceve nuove capability. Vedi [semantica](browser-interop.md#mira-035-effetti-asincroni-pilota).
