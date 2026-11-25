@@ -1846,3 +1846,99 @@ render (state: {student: "Ada", hours: 2, paid: false}, view: (view: _));
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/record-update-form)
 
+<a id="example-sequence-edit"></a>
+## Aggiungere e rimuovere lezioni
+
+Lista originale invariata; append e remove mantengono l'ordine.
+
+Feature: [Operazioni native sulle sequenze](language.md#feature-native-sequences)
+
+```mira
+lessons = [{id: 1, hours: 2}, {id: 2, hours: 1}];
+added = append: {id: 3, hours: 4}, to: lessons;
+remaining = remove: added, if: {item | item ~ id == 2};
+result = {original: lessons, remaining: remaining};
+```
+
+**Risultato:** result = {"original":[{"id":1,"hours":2},{"id":2,"hours":1}],"remaining":[{"id":1,"hours":2},{"id":3,"hours":4}]}
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/sequence-edit)
+
+<a id="example-sequence-native-fold"></a>
+## Registro lezioni · trasformazione e totale
+
+Trasforma i record e calcola un totale senza host.
+
+Feature: [Operazioni native sulle sequenze](language.md#feature-native-sequences)
+
+```mira
+lessons = [{hours: 2, paid: false}, {hours: 3, paid: false}];
+paid lessons = collect: lessons, with: (update: _, with: {paid: true});
+total = fold: paid lessons, with: {sum, item | sum + (item ~ hours * 30)}, from: 0;
+result = {lessons: paid lessons, total: total};
+```
+
+**Risultato:** result = {"lessons":[{"hours":2,"paid":true},{"hours":3,"paid":true}],"total":150}
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/sequence-native-fold)
+
+<a id="example-sequence-gui-list"></a>
+## Registro lezioni · lista dinamica
+
+Aggiunge e rimuove elementi, e costruisce la GUI da una sequenza; identità posizionale provvisoria.
+
+Feature: [Operazioni native sulle sequenze](language.md#feature-native-sequences)
+
+```mira
+# Mira GUI: ordinary functions; no compiler or DOM dependencies.
+column: items = {type: "column", children: items};
+row: items = {type: "row", children: items};
+title: caption = {type: "title", text: caption};
+text: content = {type: "text", text: content};
+button: caption, on click: action = {
+  type: "button", label: caption, onClick: action
+};
+button: caption, update: transition = {
+  type: "button", label: caption, update: transition
+};
+text input: caption, value: current, update: transition = {
+  type: "input", label: caption, value: current, update: transition
+};
+checkbox: caption, checked: current, update: transition = {
+  type: "checkbox", label: caption, checked: current, update: transition
+};
+choose: caption, value: current, options: choices, update: transition = {
+  type: "select", label: caption, value: current, options: choices, update: transition
+};
+state: initial, view: factory = {type: "state", initial: initial, view: factory};
+# Explicit identity for resetting a state at the same structural position.
+state: initial, key: identity, view: factory = {
+  type: "state", initial: initial, key: identity, view: factory
+};
+
+# Style records compose from left to right; decorators do not add DOM nodes.
+styled: view, with: layers = {type: "styled", view: view, styles: layers};
+grid: count, children: items = {type: "grid", columns: count, children: items};
+
+lesson row: item = text: (item ~ name);
+view: model = column: [
+  title: "Registro lezioni",
+  column: (collect: (model ~ lessons), with: (lesson row: _)),
+  button: "Aggiungi", update: {old |
+    next = old ~ next id;
+    update: old, with: {
+      lessons: (append: {id: next, name: "Nuova lezione"}, to: (old ~ lessons)),
+      next id: (next + 1)
+    }
+  },
+  button: "Rimuovi Ada", update: {old |
+    update: old, with: {lessons: (remove: (old ~ lessons), if: {item | item ~ id == 1})}
+  }
+];
+render (state: {lessons: [{id: 1, name: "Ada"}, {id: 2, name: "Lia"}], next id: 3}, view: (view: _));
+```
+
+**Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/sequence-gui-list)
+

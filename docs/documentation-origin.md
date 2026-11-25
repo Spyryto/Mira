@@ -7,11 +7,11 @@
 
 | Categoria | Parole | Quota | Documenti coinvolti |
 | --- | ---: | ---: | ---: |
-| Generata automaticamente dal tooling | 15.679 | 43,3% | 4 |
-| Redatta con assistenza IA (dichiarata) | 16.285 | 44,9% | 10 |
+| Generata automaticamente dal tooling | 16.411 | 43,9% | 4 |
+| Redatta con assistenza IA (dichiarata) | 16.644 | 44,5% | 10 |
 | Redazione umana dichiarata | 0 | 0,0% | 0 |
-| Provenienza non verificata | 4280 | 11,8% | 3 |
-| **Totale** | **36.244** | **100%** | **16** |
+| Provenienza non verificata | 4308 | 11,5% | 3 |
+| **Totale** | **37.363** | **100%** | **16** |
 
 I documenti coinvolti **non sono sommabili**: per esempio il README contiene
 una sezione generata dal tooling e altre sezioni editoriali. Le percentuali
@@ -26,19 +26,19 @@ arrotondamenti).
 | [`docs/browser-interop.md`](../docs/browser-interop.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 3790 | — |
 | [`docs/decisions.md`](../docs/decisions.md) | Intero documento | Provenienza non verificata | 331 | — |
 | [`docs/dogfooding.md`](../docs/dogfooding.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 652 | — |
-| [`docs/grammar.md`](../docs/grammar.md) | Intero documento | Provenienza non verificata | 2111 | — |
+| [`docs/grammar.md`](../docs/grammar.md) | Intero documento | Provenienza non verificata | 2139 | — |
 | [`docs/gui-rendering.md`](../docs/gui-rendering.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 1810 | — |
 | [`docs/mira04.md`](../docs/mira04.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 699 | — |
 | [`docs/performance.md`](../docs/performance.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 698 | — |
-| [`docs/reference/api.md`](../docs/reference/api.md) | Intero documento | Generata automaticamente dal tooling | 4817 | `scripts/generate-reference.mjs` |
-| [`docs/reference/examples.md`](../docs/reference/examples.md) | Intero documento | Generata automaticamente dal tooling | 6716 | `scripts/generate-reference.mjs` |
-| [`docs/reference/language.md`](../docs/reference/language.md) | Intero documento | Generata automaticamente dal tooling | 3548 | `scripts/generate-reference.mjs` |
+| [`docs/reference/api.md`](../docs/reference/api.md) | Intero documento | Generata automaticamente dal tooling | 4904 | `scripts/generate-reference.mjs` |
+| [`docs/reference/examples.md`](../docs/reference/examples.md) | Intero documento | Generata automaticamente dal tooling | 7186 | `scripts/generate-reference.mjs` |
+| [`docs/reference/language.md`](../docs/reference/language.md) | Intero documento | Generata automaticamente dal tooling | 3711 | `scripts/generate-reference.mjs` |
 | [`docs/reference/README.md`](../docs/reference/README.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 161 | — |
-| [`docs/structured-data.md`](../docs/structured-data.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 1239 | — |
-| [`docs/studio.md`](../docs/studio.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 2892 | — |
+| [`docs/structured-data.md`](../docs/structured-data.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 1523 | — |
+| [`docs/studio.md`](../docs/studio.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 2941 | — |
 | [`docs/syntax.md`](../docs/syntax.md) | Intero documento | Provenienza non verificata | 1838 | — |
-| [`README.md`](../README.md) | Resto del documento | Redatta con assistenza IA (dichiarata) | 3423 | — |
-| [`README.md`](../README.md) | Sezione generata | Generata automaticamente dal tooling | 598 | `scripts/generate-reference.mjs` |
+| [`README.md`](../README.md) | Resto del documento | Redatta con assistenza IA (dichiarata) | 3449 | — |
+| [`README.md`](../README.md) | Sezione generata | Generata automaticamente dal tooling | 610 | `scripts/generate-reference.mjs` |
 
 ## Come interpretare le cifre
 
@@ -79,5 +79,5 @@ npm run docs
 node scripts/generate-documentation-origin.mjs --check
 ```
 
-Dimensione totale classificata: **272.805 byte UTF-8**,
+Dimensione totale classificata: **281.471 byte UTF-8**,
 in **16 documenti** e **17 sezioni attribuite**.

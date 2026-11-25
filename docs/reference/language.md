@@ -1,4 +1,4 @@
-# Guida a Mira 0.31.0
+# Guida a Mira 0.32.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -508,4 +508,19 @@ API collegata: [`mira.resolve.Symbols`](api.md#api-mira-resolve-symbols)
 - [Aggiorna una lezione](examples.md#example-record-update-basic) — result = {"original":{"student":"Ada","hours":2,"paid":false},"changed":{"student":"Mira","hours":2,"paid":true}}
 - [Aggiornamento riutilizzabile](examples.md#example-record-update-section) — result = {"student":"Ada","hours":3,"details":{"rate":30},"paid":true}
 - [Registro lezioni · modifica immutabile](examples.md#example-record-update-form) — Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+<a id="feature-native-sequences"></a>
+## Operazioni native sulle sequenze
+
+**Disponibile dalla versione 0.32**
+
+Append, rimozione, trasformazione, filtro e riduzione immutabili senza host.
+
+append:to: aggiunge un elemento; remove:if: elimina tutti quelli per cui il predicato è true. collect:with:/map:with:, collect:if:/filter:with:/select:if:/select:with: e fold:with:from: sono native per default. Le vecchie capability possono essere ancora dichiarate esplicitamente per compatibilità (es. fold dell'AST). Ordine stabile, liste dense, predicato Boolean, nessuna mutazione degli operandi; PHP usa array_is_list. Il renderer generico supporta le liste variabili, ancora con identità posizionale.
+
+API collegata: [`mira.resolve.Symbols`](api.md#api-mira-resolve-symbols)
+
+- [Aggiungere e rimuovere lezioni](examples.md#example-sequence-edit) — result = {"original":[{"id":1,"hours":2},{"id":2,"hours":1}],"remaining":[{"id":1,"hours":2},{"id":3,"hours":4}]}
+- [Registro lezioni · trasformazione e totale](examples.md#example-sequence-native-fold) — result = {"lessons":[{"hours":2,"paid":true},{"hours":3,"paid":true}],"total":150}
+- [Registro lezioni · lista dinamica](examples.md#example-sequence-gui-list) — Anteprima interattiva (browser JS; PHP compilato soltanto)
 

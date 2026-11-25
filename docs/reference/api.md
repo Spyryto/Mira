@@ -640,7 +640,18 @@ class Symbols
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L7)
 
-Feature: [Aggiornamento immutabile dei record](language.md#feature-record-update)
+Feature: [Aggiornamento immutabile dei record](language.md#feature-record-update), [Operazioni native sulle sequenze](language.md#feature-native-sequences)
+
+<a id="api-mira-resolve-symbols-collectionselectors"></a>
+### `mira.resolve.Symbols.collectionSelectors`
+
+**method** · Indice delle definizioni, firme dei selettori e simboli generati.
+
+```haxe
+public static function collectionSelectors():Array<String>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L14)
 
 <a id="api-mira-resolve-symbols-environment"></a>
 ### `mira.resolve.Symbols.environment`
@@ -651,7 +662,7 @@ Feature: [Aggiornamento immutabile dei record](language.md#feature-record-update
 public final environment:HostEnvironment
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L14)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L25)
 
 <a id="api-mira-resolve-symbols-functions"></a>
 ### `mira.resolve.Symbols.functions`
@@ -662,7 +673,7 @@ public final environment:HostEnvironment
 public final functions:Array<Definition>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L11)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L22)
 
 <a id="api-mira-resolve-symbols-globals"></a>
 ### `mira.resolve.Symbols.globals`
@@ -673,7 +684,7 @@ public final functions:Array<Definition>
 public final globals:Array<String>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L12)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L23)
 
 <a id="api-mira-resolve-symbols-hostnames"></a>
 ### `mira.resolve.Symbols.hostNames`
@@ -684,7 +695,7 @@ public final globals:Array<String>
 public final hostNames:Array<String>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L13)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L24)
 
 <a id="api-mira-resolve-symbols-ishostname"></a>
 ### `mira.resolve.Symbols.isHostName`
@@ -695,7 +706,7 @@ public final hostNames:Array<String>
 public function isHostName(name:String):Bool
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L118)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L135)
 
 <a id="api-mira-resolve-symbols-ishostselector"></a>
 ### `mira.resolve.Symbols.isHostSelector`
@@ -706,7 +717,7 @@ public function isHostName(name:String):Bool
 public function isHostSelector(selector:String):Bool
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L123)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L140)
 
 <a id="api-mira-resolve-symbols-matcheswords"></a>
 ### `mira.resolve.Symbols.matchesWords`
@@ -717,7 +728,7 @@ public function isHostSelector(selector:String):Bool
 public static function matchesWords(tokens:Array<Token>, start:Int, name:String):Bool
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L144)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L161)
 
 <a id="api-mira-resolve-symbols-matchingfunctions"></a>
 ### `mira.resolve.Symbols.matchingFunctions`
@@ -728,7 +739,18 @@ public static function matchesWords(tokens:Array<Token>, start:Int, name:String)
 public function matchingFunctions(tokens:Array<Token>, start:Int):Array<Definition>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L127)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L144)
+
+<a id="api-mira-resolve-symbols-nativeselectors"></a>
+### `mira.resolve.Symbols.nativeSelectors`
+
+**method** · Indice delle definizioni, firme dei selettori e simboli generati.
+
+```haxe
+public static function nativeSelectors():Array<String>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L19)
 
 <a id="api-mira-resolve-symbols-new"></a>
 ### `mira.resolve.Symbols.new`
@@ -739,7 +761,7 @@ public function matchingFunctions(tokens:Array<Token>, start:Int):Array<Definiti
 public function new(definitions:Array<Definition>, ?environment:HostEnvironment)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L16)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L27)
 
 <a id="api-mira-resolve-symbols-resolvename"></a>
 ### `mira.resolve.Symbols.resolveName`
@@ -750,7 +772,7 @@ public function new(definitions:Array<Definition>, ?environment:HostEnvironment)
 public function resolveName(tokens:Array<Token>, start:Int, locals:Array<String>):Null<String>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L135)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L152)
 
 Feature: [Identificatori composti](language.md#feature-names)
 

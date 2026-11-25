@@ -71,6 +71,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Layout differito delle schede Laboratory | `0.29` | [Dettagli](docs/studio.md#laboratory-layout-differito-029) |
 | ✅ | Import statici di file Mira | `0.30` | [Dettagli](docs/grammar.md#mira-030-import-statici) |
 | ✅ | Aggiornamento immutabile dei record | `0.31` | [Dettagli](docs/reference/language.md#feature-record-update) |
+| ✅ | Operazioni native sulle sequenze | `0.32` | [Dettagli](docs/reference/language.md#feature-native-sequences) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
