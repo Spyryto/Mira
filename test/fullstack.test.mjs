@@ -72,6 +72,7 @@ test('full-stack ledger: actual Chromium, compiled Mira JS/PHP and SQLite', {tim
     const post=body=>rpc('ledger.command',body);
     await server();
     assert.deepEqual(await rpc('ledger.quote',{hours:2}),{status:200,body:{hours:2,total:60}});
+    assert.deepEqual(await rpc('ledger.quote',{hours:2,extra:true}),{status:400,body:{code:'invalid_parameters'}});
     assert.deepEqual(await rpc('ledger.quote',{hours:-1}),{status:400,body:{code:'invalid_hours'}});
     assert.deepEqual(await rpc('phpinfo',[]),{status:404,body:{code:'unknown_method'}});
     assert.deepEqual(await rpc('ledger.quote',{}),{status:400,body:{code:'empty_record'}});
@@ -118,6 +119,9 @@ test('full-stack ledger: actual Chromium, compiled Mira JS/PHP and SQLite', {tim
     await cdp.call('Page.enable');
     await cdp.call('Page.navigate',{url:origin+'/'});
     await waitText('Sincronizzato');
+    await click('Calcola preventivo');await waitText('Preventivo pronto');
+    assert.match(await text(),/60/);
+    assert.deepEqual((await post({action:'load'})).body,{revision:0,'next id':1,lessons:[]});
     assert.equal(await fill('Ada'), 'Ada');
     await click('Aggiungi lezione');await waitText('Ada');await waitText('Sincronizzato');
     assert.equal((await post({action:'load'})).body.lessons[0].hours,1);
