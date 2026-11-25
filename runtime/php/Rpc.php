@@ -59,6 +59,41 @@ function checkParams(mixed $params, array $schema): array {
     return $params;
 }
 
+// Interpret the compiler's closed data schema. No coercion, no evaluation.
+function matchesType(mixed $value, array $type, int $depth = 0): bool {
+    if ($depth > 30) return false;
+    switch ($type['kind'] ?? null) {
+        case 'Number':
+            return (is_int($value) || is_float($value)) && is_finite((float)$value)
+                && (floor((float)$value) !== (float)$value || abs($value) <= 9007199254740991);
+        case 'Text': return is_string($value);
+        case 'Boolean': return is_bool($value);
+        case 'List':
+            if (!is_array($value) || !array_is_list($value)) return false;
+            foreach ($value as $item) if (!matchesType($item, $type['item'], $depth + 1)) return false;
+            return true;
+        case 'Record':
+            if (!is_array($value) || array_is_list($value) || $type['tail'] !== null
+                || count($value) !== count($type['fields'])) return false;
+            foreach ($type['fields'] as $field) {
+                $name = $field['name'];
+                if (!array_key_exists($name, $value) || !matchesType($value[$name], $field['type'], $depth + 1)) return false;
+            }
+            return true;
+        default: return false;
+    }
+}
+
+// Policy is checked first to preserve the existing specific 400 error codes.
+// A bad return is an internal server error, never a successful reply.
+function invokeTyped(callable $handler, mixed $params, array $contract): mixed {
+    $params = checkParams($params, $contract['integerPolicy']);
+    if (!matchesType($params, $contract['parameters'])) throw new Fault(400, 'invalid_parameters');
+    $result = $handler($params);
+    if (!matchesType($result, $contract['result'])) throw new \RuntimeException('RPC result violates inferred type');
+    return $result;
+}
+
 // No lookup of arbitrary PHP functions. The host explicitly registers names.
 function serve(array $methods): never {
     header('Content-Type: application/json; charset=utf-8');

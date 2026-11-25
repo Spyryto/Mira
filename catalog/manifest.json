@@ -1,5 +1,5 @@
 {
-  "version": "0.45.0",
+  "version": "0.46.0",
   "features": [
     {
       "id": "values",
@@ -1818,6 +1818,12 @@
       "title": "Schemi strutturati dei tipi e specializzazione",
       "since": "0.45",
       "doc": "docs/type-checker.md#045-esportazione-dei-tipi"
+    },
+    {
+      "id": "rpc-runtime-types",
+      "title": "Validazione runtime dei contratti inferiti JS/PHP",
+      "since": "0.46",
+      "doc": "docs/type-checker.md#046-validazione-runtime-rpc"
     }
   ]
 }

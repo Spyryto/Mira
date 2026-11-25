@@ -313,3 +313,40 @@ rispetto allo schema inferito. La metadata non è ancora consumata
 dal client. Non si elimina services.mira in questa versione:
 la scelta dei servizi esposti rimane esplicita.
 Il laboratorio permette di visualizzare gli schemi JSON.
+
+## 0.46: validazione runtime RPC
+
+Il generatore usa gli stessi schemi della 0.45 per produrre
+MiraRpcTypes nel binding JavaScript e inserire i contratti nelle
+closure PHP generate. I validatori sono due piccoli interpreti
+dello schema, uno per runtime; nessuna duplicazione manuale
+della firma e nessun secondo checker statico. Il contratto JSON
+privato resta disponibile per tooling e documentazione.
+
+Il client verifica la portabilità del payload, il tipo chiuso
+e la policy integer prima della fetch. Dopo la risposta verifica
+la portabilità e il tipo del risultato prima di consegnarlo
+all'applicazione. L'adattatore PHP invokeTyped conserva prima
+checkParams per gli errori 400 già pubblicati, verifica lo schema,
+chiama l'handler e verifica il risultato. Un risultato incompatibile
+provoca un errore interno (HTTP 500, internal_error), non un 400
+e non una risposta di successo. Nessuna coercizione.
+
+I tipi ammessi sono Number finito (interi sicuri), Text, Boolean,
+liste e record chiusi non vuoti. Il controllo dei record richiede
+esattamente i campi dichiarati; i campi extra sono rifiutati.
+Corretto anche il controllo a build time delle chiavi numeriche.
+La policy integer rimane distinta: PHP continua a richiedere
+is_int, mentre JS usa Number.isSafeInteger; JSON.stringify
+serializza un numero JS intero senza suffisso decimale.
+Una richiesta esterna con 2.0 può quindi essere rifiutata da PHP.
+
+Le capability host come ledger.command restano non tipizzate
+da questo generatore e conservano la validazione applicativa.
+I contratti generati sono metadata fidate di build, non input
+di rete. Nessuna garanzia di autenticazione, autorizzazione,
+version negotiation, assenza di overflow o correttezza totale
+del programma. I controlli riguardano il confine RPC, non ogni
+operazione Mira. services.mira conserva la scelta esplicita
+dei servizi e la policy numerica. Test negativi sui due runtime,
+payload non inviati, risultati malformati e integrazione reale.

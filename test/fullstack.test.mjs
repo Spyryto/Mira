@@ -25,6 +25,8 @@ test('Mira RPC declaration generates both registries without evaluating source',
   assert.deepEqual(generateRpcContract(compiler,source,server),contract);
   const schemas=JSON.parse(contract.schemas);
   assert.equal(schemas.version,1);
+  assert.deepEqual(JSON.parse(JSON.stringify(client.MiraRpcTypes)),schemas.methods);
+  assert.match(contract.server,/invokeTyped/);
   assert.deepEqual(Object.keys(schemas.methods),['ledger.quote']);
   assert.deepEqual(schemas.methods['ledger.quote'].parameters,{kind:'Record',fields:[{name:'hours',type:{kind:'Number'}}],tail:null});
   assert.deepEqual(schemas.methods['ledger.quote'].result,{kind:'Record',fields:[{name:'hours',type:{kind:'Number'}},{name:'total',type:{kind:'Number'}}],tail:null});
@@ -37,7 +39,7 @@ test('Mira RPC declaration generates both registries without evaluating source',
   assert.throws(()=>generateRpcContract(compiler,source.replace('min: 1','min: 20000'),server),/invalid integer parameter/);
   assert.throws(()=>generateRpcContract(compiler,'services = 1 + 2;',server),/only literal data/);
   const multi=generateRpcContract(compiler,source.replace('handler: "quote"','handler: "quote request"'),server.replace('quote: params','quote request: params'));
-  assert.match(multi.server, /quote_request\(/);
+  assert.match(multi.server, /'quote_request'/);
 });
 
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
@@ -107,6 +109,8 @@ test('full-stack ledger: actual Chromium, compiled Mira JS/PHP and SQLite', {tim
     assert.deepEqual(await rpc('ledger.quote',{hours:2}),{status:200,body:{hours:2,total:60}});
     assert.deepEqual(await rpc('ledger.quote',{hours:2,extra:true}),{status:400,body:{code:'invalid_parameters'}});
     assert.deepEqual(await rpc('ledger.quote',{hours:-1}),{status:400,body:{code:'invalid_hours'}});
+    assert.deepEqual(await rpc('ledger.quote',{hours:'2'}),{status:400,body:{code:'invalid_hours'}});
+    assert.deepEqual(await rpc('ledger.quote',{hours:1.5}),{status:400,body:{code:'invalid_hours'}});
     assert.deepEqual(await rpc('phpinfo',[]),{status:404,body:{code:'unknown_method'}});
     assert.deepEqual(await rpc('ledger.quote',{}),{status:400,body:{code:'empty_record'}});
     assert.deepEqual(await rpc('ledger.quote',{hours:2,'1':3}),{status:400,body:{code:'numeric_key'}});
