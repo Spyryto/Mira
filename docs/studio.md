@@ -201,7 +201,11 @@ applicata con `>>` o passata come callback a `collect:if:`.
 L'Inspector mostra il nodo AST `Block` con parametro e corpo.
 
 Dalla versione 0.9 i blocchi possono avere più parametri, pur mantenendo
-una sola espressione come corpo. Il preset **Fold · blocchi 0.9**
+la semantica di blocco espressione. Dalla 0.11
+è possibile separare più espressioni con `;` e osservare
+il nodo `Steps` nell'Inspector. Il preset **Blocchi · più espressioni 0.11**
+mostra anche una chiamata host di log prima del valore finale.
+Il preset **Fold · blocchi 0.9**
 mostra un riduttore con due argomenti e il relativo risultato. L'AST
 espone `parameters` come lista. Dalla 0.10, `with: {total, item | ...}`
 funziona senza parentesi tonde aggiuntive. L'esempio

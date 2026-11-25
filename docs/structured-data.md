@@ -169,3 +169,24 @@ Risultato: `120`, con semantica identica in JS e PHP.
 Le parentesi attorno alla moltiplicazione sono ancora necessarie
 per separarla dalla somma: gli operatori aritmetici mantengono
 la stessa precedenza reciproca.
+
+## Blocchi con più espressioni (Mira 0.11)
+
+Un blocco di `fold:with:from:` può eseguire più espressioni
+prima di restituire il risultato dell'accumulo:
+
+```mira
+numbers = [1, 2, 3];
+result = fold: numbers,
+  with: {sum, item |
+    item + 10;
+    sum + (item * 2)
+  },
+  from: 0;
+```
+
+Il risultato è `12`, identico su JS e PHP. La prima espressione
+viene comunque valutata, ma solo l'ultima diventa il nuovo
+accumulatore. Per il momento i blocchi non possono definire
+variabili locali né modificare parametri: l'estensione
+alla sequenza di espressioni è indipendente da quella scelta.

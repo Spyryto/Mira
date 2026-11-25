@@ -175,9 +175,10 @@ Dentro `{_ | ...}` ogni `_` indica il medesimo parametro; fuori
 dai blocchi i placeholder delle sezioni restano indipendenti.
 
 La presenza di `|` distingue un blocco da un record:
-`{hours: 2}` resta un record. Solo un'espressione per blocco;
-istruzioni multiple e tipi sono lavoro futuro. Dalla 0.9 sono supportati
-anche più parametri, separati da virgole.
+`{hours: 2}` resta un record. Dalla 0.9 sono supportati
+anche più parametri, separati da virgole. Dalla 0.11 le espressioni
+possono essere multiple, separate da `;`. Restano fuori dalle
+possibilità attuali le definizioni locali, le assegnazioni e i tipi.
 
 ## Implementato in Mira 0.9: più parametri nei blocchi
 
@@ -200,7 +201,7 @@ I selettori che ricevono callback di più argomenti, per esempio
 `fold:with:from:`, possono invece invocarlo direttamente. Fino alla 0.9 occorrevano parentesi tonde attorno al blocco
 nell'argomento `with:`. Dalla 0.10 le graffe delimitano già
 l'espressione: `with: {…}` funziona senza parentesi aggiuntive.
-Resta il limite di una sola espressione come corpo.
+Dalla 0.11 si possono anche separare più espressioni con il punto e virgola.
 
 ## Implementato in Mira 0.10: accessi prioritari e blocchi diretti
 
@@ -221,6 +222,30 @@ Ora i selettori possono ricevere direttamente espressioni tra graffe,
 come `with: {total, lesson | ...}`. Non è necessaria un'ulteriore
 parentesi tonda, anche con record o espressioni annidati.
 La forma `with: ({...})` resta supportata.
+
+## Implementato in Mira 0.11: blocchi con più espressioni
+
+```mira
+result = 4 >> {value |
+  value + 1;
+  value * 3
+};
+```
+
+Le espressioni vengono valutate **nell'ordine scritto**:
+l'ultima è il valore restituito (nell'esempio: `12`). Il punto
+e virgola finale prima della graffa è facoltativo.
+
+Non viene aggiunto un `return` esplicito. All'interno dei blocchi
+con una sola espressione non cambia né la sintassi né l'AST
+già esistente. I blocchi con più espressioni espongono invece
+un nodo `Steps` con i figli nell'ordine d'esecuzione, ispezionabile
+in Mira Studio. Le closure su JavaScript/PHP mantengono la
+cattura lessicale; PHP usa `function (...) use (...)` quando
+occorre un corpo con istruzioni.
+
+Il nucleo resta deliberatamente limitato alle **espressioni**:
+nessuna variabile locale o modifica di stato introdotta in questa fase.
 
 ## Proposto: closure generali e selettori parziali
 

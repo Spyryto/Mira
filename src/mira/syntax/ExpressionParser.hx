@@ -304,7 +304,7 @@ class ExpressionParser {
         return false;
     }
 
-    // A block is one expression with one or more explicit parameters.
+    // A block has one or more parameters and expressions separated by ';'.
     // Names can have spaces. Repeated _ refers to a single bound parameter.
     function block():Expr {
         consume(); // {
@@ -333,9 +333,20 @@ class ExpressionParser {
         }
         requireSymbol("|");
         for (parameter in parameters) localNames.unshift(parameter);
-        final body = expression();
+        final expressions:Array<Expr> = [];
+        if (current().isSymbol("}")) {
+            throw new MiraError("A block needs at least one expression", current());
+        }
+        expressions.push(expression());
+        while (current().isSymbol(";")) {
+            consume();
+            // A single trailing ';' is allowed after the final expression.
+            if (current().isSymbol("}")) break;
+            expressions.push(expression());
+        }
         for (_ in parameters) localNames.shift();
         requireSymbol("}");
+        final body:Expr = expressions.length == 1 ? expressions[0] : Expr.Steps(expressions);
         return Block(parameters, body);
     }
 

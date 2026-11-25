@@ -624,8 +624,8 @@ test('block parameters are locally bound, while unbound variables remain errors'
   for (const [source, expected] of [
     ['result = {_ | missing};', /Unknown identifier|Unbound/],
     ['result = {value | value + unknown};', /Unknown identifier|Unbound/],
-    ['result = {value | };', /Expected expression/],
-    ['result = {value | value + 1; };', /Expected }/],
+    ['result = {value | };', /A block needs at least one expression/],
+    ['result = {value | value + 1;; };', /Expected expression/],
     ['result = {__miraHost | 1};', /Reserved block parameter/]
   ]) {
     const error = compileError(source);
@@ -653,7 +653,7 @@ test('multi-parameter blocks remain distinct from records, preserve closure capt
     ['result = {__, __ | __};', /Duplicate or conflicting block parameter/],
     ['result = {__miraHost, value | value};', /Reserved block parameter/],
     ['result = {a, b | a + unknown};', /Unknown identifier|Unbound/],
-    ['result = {a, b | a + b; };', /Expected }/]
+    ['result = {a, b | a + b;; };', /Expected expression/]
   ];
   for (const [source, diagnostic] of errors) {
     const failure = compileError(source);
@@ -688,5 +688,48 @@ test('missing field after ~ reports a diagnostic and bare blocks remain records 
   assert.match(error.stderr, /Expected a field name after ~/);
   for (const target of ['js','php']) {
     assert.equal(run('result = {hours: 2, rate: 30} ~ rate;',target),'30');
+  }
+});
+
+test('0.11 blocks evaluate multiple expressions in order and return the last', () => {
+  const cases = [
+    ['result = 3 >> {x | x + 1; x * 2};', '6'],
+    ['result = 3 >> {x | x + 1; x * 2;};', '6'],
+    ['result = 5 >> {_ | _ + 1; _ * 2};', '10'],
+    ['result = 5 >> {_ | _ + 1;};', '6'],
+    ['result = 3 >> {x | x + 1; x * 2; x + 10};', '13'],
+    ['rate = 4; result = 3 >> {x | x + rate; x * rate};', '12'],
+    ['result = 2 >> {outer | outer + 1; (outer + 1) >> {inner | inner * outer; inner + outer}};', '5'],
+    ['factor = 3; make: rate = {value | value + factor; value * rate}; result = 2 >> (make: 4);', '8'],
+    ['result = 3 >> {n | if (n > 2) then "ok" else "bad"; n + 1};', '4'],
+    ['result = 5 >> {x | x + 1};', '6'],
+    ['result = 5 >> {x | x + 1;};', '6']
+  ];
+  for (const [source, expected] of cases) {
+    for (const target of ['js','php'])
+      assert.equal(run(source,target),expected,source+' / '+target);
+  }
+});
+
+test('0.11 block expressions diagnose empty bodies and consecutive delimiters', () => {
+  const cases = [
+    ['result = {x | };', /A block needs at least one expression/],
+    ['result = {x | x + 1;; x * 2};', /Expected expression/],
+    ['result = {x | ; x + 1};', /Expected expression/],
+    ['result = {x | x + 1; missing};', /Unknown identifier|Unbound/]
+  ];
+  for (const [source, diagnostic] of cases) {
+    const failure = compileError(source);
+    assert.notEqual(failure.status,0,source);
+    assert.match(failure.stderr,diagnostic,source);
+  }
+});
+
+test('0.11 evaluates earlier expressions even when their result is discarded', () => {
+  const source = 'result = 1 >> {n | {field: 2} ~ missing; n + 1};';
+  for (const target of ['js','php']) {
+    const generated=compile(source,target);
+    assert.ok(generated.includes('Missing record field:'));
+    assert.throws(() => run(source,target),/Missing record field/);
   }
 });

@@ -14,6 +14,7 @@ enum Expr {
     Sequence(items:Array<Expr>);
     Record(keys:Array<String>, values:Array<Expr>);
     Block(parameters:Array<String>, body:Expr);
+    Steps(expressions:Array<Expr>);
     Binary(symbol:String, left:Expr, right:Expr);
     OperatorSection(symbol:String, left:Expr, right:Expr);
     Call(selector:String, arguments:Array<Expr>);

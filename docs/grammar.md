@@ -1,4 +1,4 @@
-# Mira 0.10: executable subset and grammar boundaries
+# Mira 0.11: executable subset and grammar boundaries
 
 This file documents the parser's **implemented** boundaries. It is a readable
 grammar sketch, not a separate parser generator or a promise of accepted syntax.
@@ -153,7 +153,15 @@ da virgole: `{total, item | total + item}`. Il nodo canonico
 record e blocco resta deterministica: prima di `|` devono esserci
 solo nomi e virgole. Parametri duplicati o in collisione dopo
 la trasformazione del nome sono errori di compilazione.
-I blocchi con più istruzioni restano in progetto.
+Dalla versione 0.11, il corpo ammette più espressioni separate
+da `;`. Un `;` finale prima di `}` è consentito.
+Con una sola espressione l'AST resta invariato; con due o
+più espressioni compare `Steps(expressions)` sotto `Block`.
+Le espressioni precedenti vengono valutate e scartate:
+il valore dell'ultima è il risultato del blocco.
+Il codice generato usa funzioni native JS/PHP e mantiene
+la cattura lessicale. Definizioni locali, assegnazioni e
+`return` esplicito non sono ancora previsti.
 
 `{hours: 2}` è un record; `{item | item + 1}` è un blocco.
 

@@ -72,12 +72,53 @@ class SourceEmitter {
                 final names = [for (parameter in parameters) Mangle.name(parameter)];
                 final formals = [for (name in names)
                     target == Php ? "$" + name : name];
-                final value = expression(body, target, parameters.concat(scope),
-                    reservedHostNames);
-                switch (target) {
-                    case JavaScript: "((" + formals.join(", ") + ") => " + value + ")";
-                    case Php: "(fn(" + formals.join(", ") + ") => " + value + ")";
+                final innerScope = parameters.concat(scope);
+                switch (body) {
+                    case Steps(items):
+                        final statements:Array<String> = [];
+                        for (index in 0...(items.length - 1)) {
+                            statements.push(expression(items[index], target,
+                                innerScope, reservedHostNames) + ";");
+                        }
+                        final last = expression(items[items.length - 1], target,
+                            innerScope, reservedHostNames);
+                        final contents = statements.join(" ") + " return " + last + ";";
+                        switch (target) {
+                            case JavaScript:
+                                "((" + formals.join(", ") + ") => { "
+                                    + contents + " })";
+                            case Php:
+                                // PHP anonymous functions need explicit lexical captures.
+                                // Remove shadowed and duplicate names before using use(...).
+                                final referenced:Array<String> = [];
+                                referencedNames(body, parameters, referenced);
+                                final seen = names.copy();
+                                final captures:Array<String> = [];
+                                for (outer in scope) {
+                                    final name = Mangle.name(outer);
+                                    if (referenced.indexOf(outer) >= 0
+                                        && seen.indexOf(name) == -1) {
+                                        seen.push(name);
+                                        captures.push("$" + name);
+                                    }
+                                }
+                                final use = captures.length == 0
+                                    ? "" : " use (" + captures.join(", ") + ")";
+                                "(function(" + formals.join(", ") + ")" + use
+                                    + " { " + contents + " })";
+                        }
+                    default:
+                        // Preserve compact native arrows for single-expression blocks.
+                        final value = expression(body, target, innerScope,
+                            reservedHostNames);
+                        switch (target) {
+                            case JavaScript: "((" + formals.join(", ") + ") => " + value + ")";
+                            case Php: "(fn(" + formals.join(", ") + ") => " + value + ")";
+                        }
                 }
+
+            case Steps(_):
+                throw new MiraError("Steps can only occur inside a block");
 
             case Record(keys, values):
                 final entries:Array<String> = [];
@@ -131,6 +172,36 @@ class SourceEmitter {
             case Placeholder:
                 throw new MiraError("A placeholder cannot be emitted outside a selector section");
         };
+    }
+
+    // Collect only lexical names actually referenced by a block body.
+    // Nested blocks introduce their own parameters, but references to
+    // enclosing parameters remain captures for their ancestors.
+    static function referencedNames(value:Expr, bound:Array<String>,
+        names:Array<String>):Void {
+        switch (value) {
+            case Name(name):
+                if (bound.indexOf(name) == -1 && names.indexOf(name) == -1)
+                    names.push(name);
+            case FieldGet(receiver, _):
+                referencedNames(receiver, bound, names);
+            case Conditional(test, whenTrue, whenFalse):
+                referencedNames(test, bound, names);
+                referencedNames(whenTrue, bound, names);
+                referencedNames(whenFalse, bound, names);
+            case Sequence(items) | Steps(items) | Call(_, items) | HostCall(_, items)
+                | Section(_, items) | HostSection(_, items):
+                for (item in items) referencedNames(item, bound, names);
+            case Record(_, values):
+                for (item in values) referencedNames(item, bound, names);
+            case Binary(_, left, right) | OperatorSection(_, left, right)
+                | Apply(left, right):
+                referencedNames(left, bound, names);
+                referencedNames(right, bound, names);
+            case Block(parameters, body):
+                referencedNames(body, parameters.concat(bound), names);
+            default:
+        }
     }
 
     public static function hostAccess(name:String, target:Target):String {
