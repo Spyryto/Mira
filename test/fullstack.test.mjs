@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {spawn,execFileSync} from 'node:child_process';
+import {spawn,execFileSync,spawnSync} from 'node:child_process';
 import {mkdtempSync,mkdirSync,readFileSync,writeFileSync,rmSync,existsSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
@@ -56,7 +56,7 @@ test('full-stack ledger: actual Chromium, compiled Mira JS/PHP and SQLite', {tim
   let php,chrome,cdp;
   try {
     execFileSync('node',['scripts/build-fullstack.mjs',dir],{stdio:'inherit'});
-    const serverPort=await port(), chromePort=await port();
+    const serverPort=await port();
     const origin='http://127.0.0.1:'+serverPort;
     const endpoint=origin+'/ledger.php';
     async function server(){
@@ -68,8 +68,13 @@ test('full-stack ledger: actual Chromium, compiled Mira JS/PHP and SQLite', {tim
       return {status:r.status,body:await r.json()};
     }
     await server();
-    const exe=process.env.CHROME_BIN||['/usr/bin/google-chrome','/usr/bin/chromium','/usr/bin/chromium-browser'].find(existsSync)||'google-chrome';
-    chrome=startProcess(exe,['--headless','--no-sandbox','--disable-dev-shm-usage','--remote-debugging-port='+chromePort,'--user-data-dir='+join(dir,'chrome'),'--window-size=440,900','about:blank']);
+    const exe=[process.env.CHROME_BIN,'google-chrome','chromium','chromium-browser'].filter(Boolean).find(cmd=>spawnSync(cmd,['--version'],{encoding:'utf8'}).status===0);
+    assert.ok(exe,'Chromium required');
+    const profile=join(dir,'chrome');
+    chrome=startProcess(exe,['--headless','--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--no-first-run','--remote-debugging-port=0','--user-data-dir='+profile,'--window-size=440,900',origin+'/']);
+    const portFile=join(profile,'DevToolsActivePort');
+    await until(()=>existsSync(portFile),'Chromium debugging port');
+    const chromePort=readFileSync(portFile,'utf8').split('\n')[0];
     const target=await until(async()=>{
       const r=await fetch('http://127.0.0.1:'+chromePort+'/json/list',{signal:AbortSignal.timeout(500)});
       return (await r.json()).find(x=>x.type==='page');
