@@ -118,6 +118,16 @@ result = fold: lessons,
   from: 0;`
   },
   {
+    id: 'block-steps',
+    name: 'Blocchi · più espressioni 0.11',
+    source: `# Ogni espressione viene eseguita; l'ultima è il valore restituito.
+# La funzione log è fornita dall'host Studio.
+result = 4 >> {value |
+  log value;
+  value * 3
+};`
+  },
+  {
     id: 'host-log',
     name: 'Interoperabilità: log',
     source: `# La funzione log arriva dall'oggetto host di Studio.

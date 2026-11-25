@@ -1,0 +1,7 @@
+numbers = [1, 2, 3];
+result = fold: numbers,
+  with: {sum, item |
+    item + 10;
+    sum + (item * 2)
+  },
+  from: 0;

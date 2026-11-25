@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.10.0');
+  assert.equal(bridge.version, '0.11.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -168,7 +168,7 @@ test('all Studio examples match the syntax currently implemented', async () => {
   for (const example of examples) {
     const expectedSuccess = example.id !== 'errors';
     for (const target of ['js', 'php']) {
-      const manifest = ['host-log','collect-if','fold-blocks','fold-fees'].includes(example.id)
+      const manifest = ['host-log','collect-if','fold-blocks','fold-fees','block-steps'].includes(example.id)
         ? read('host.json') : undefined;
       const result = bridge.compile(example.source, target, manifest);
       assert.equal(result.ok, expectedSuccess,
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.10.0');
+  assert.equal(bridge.version,'0.11.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;

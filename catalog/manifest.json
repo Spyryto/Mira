@@ -1,5 +1,5 @@
 {
-  "version": "0.10.0",
+  "version": "0.11.0",
   "features": [
     {
       "id": "values",
@@ -300,7 +300,7 @@
       "id": "blocks",
       "title": "Blocchi funzione con parametro",
       "summary": "`{ value | expression }` crea una funzione lessicale applicabile con `>>`.",
-      "details": "Un blocco è `{parametro | espressione}` con cattura lessicale, distinto dal record `{campo: valore}`. Il parametro può essere un nome composto o `_`; tutte le occorrenze di `_` nel blocco si riferiscono allo stesso argomento. Dalla 0.9 la stessa grammatica ammette anche più parametri separati da virgole (`{total, item | total + item}`), utili come callback di `fold:with:from:`. I blocchi sono closure native JS/PHP. Per ora una sola espressione per corpo.",
+      "details": "Un blocco è `{parametro | espressione}` con cattura lessicale, distinto dal record `{campo: valore}`. Il parametro può essere un nome composto o `_`; tutte le occorrenze di `_` nel blocco si riferiscono allo stesso argomento. Dalla 0.9 la stessa grammatica ammette anche più parametri separati da virgole (`{total, item | total + item}`), utili come callback di `fold:with:from:`. I blocchi sono closure native JS/PHP. Dalla 0.11 il corpo ammette più espressioni separate da `;`, con il valore dell'ultima come risultato.",
       "api": "mira.syntax.Expr.Block",
       "examples": [
         "block-fee",
@@ -343,6 +343,18 @@
         "bare-collect-map"
       ],
       "since": "0.10"
+    },
+    {
+      "id": "block-steps",
+      "title": "Blocchi con espressioni in sequenza",
+      "summary": "`{item | step1; step2}` esegue in ordine e restituisce il valore finale.",
+      "details": "In Mira 0.11 un blocco può contenere più espressioni separate da punto e virgola. Il risultato è il valore dell'ultima; un `;` finale è facoltativo. Per un solo corpo l'AST resta `Block(parameters, body)` con il nodo originale; per più corpi un nuovo nodo `Steps` mantiene l'ordine. Il compilatore genera closure JS/PHP native e conserva scoping e cattura. Non sono ancora implementate dichiarazioni locali, assegnazioni o return espliciti nei blocchi.",
+      "api": "mira.syntax.Expr.Steps",
+      "examples": [
+        "block-steps-last",
+        "block-steps-fold"
+      ],
+      "since": "0.11"
     }
   ],
   "examples": [
@@ -1156,6 +1168,29 @@
           4,
           6
         ]
+      }
+    },
+    {
+      "id": "block-steps-last",
+      "feature": "block-steps",
+      "title": "Il blocco restituisce l'ultima espressione",
+      "description": "Due espressioni separate da `;`; il risultato della prima viene valutato ma non restituito.",
+      "path": "catalog/examples/block-steps-last.mira",
+      "expect": {
+        "kind": "result",
+        "value": 12
+      }
+    },
+    {
+      "id": "block-steps-fold",
+      "feature": "block-steps",
+      "title": "Più espressioni nel riduttore",
+      "description": "Un blocco binario con due espressioni viene invocato da `fold` senza parentesi aggiuntive.",
+      "path": "catalog/examples/block-steps-fold.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "result",
+        "value": 12
       }
     }
   ],
