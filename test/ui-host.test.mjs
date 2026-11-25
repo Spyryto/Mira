@@ -55,6 +55,14 @@ class FakeElement {
     this._text = '';
     this.append(...nodes);
   }
+  replaceChild(next, previous) {
+    const index = this.children.indexOf(previous);
+    assert.ok(index >= 0);
+    previous.parentNode = null;
+    next.parentNode = this;
+    this.children[index] = next;
+    return previous;
+  }
   addEventListener(event, fn) { this.listeners.set(event, fn); }
   click() { this.dispatch('click'); }
   dispatch(event, data = {}) { this.listeners.get(event)?.(data); }
@@ -107,7 +115,7 @@ function compileAndRun(example, host) {
 }
 
 test('all UI examples are advertised in the canonical documentation and compile on JS and PHP', () => {
-  for (const name of ['browser-alert', 'browser-view', 'browser-counter', 'gui-greeting', 'gui-lesson']) {
+  for (const name of ['browser-alert', 'browser-view', 'browser-counter', 'gui-greeting', 'gui-lesson', 'gui-independent', 'gui-reset']) {
     const sample = demo(name);
     assert.equal(sample.expect.kind, 'ui');
     assert.equal(sample.host, 'studio/host.json');
@@ -207,6 +215,7 @@ test('0.15 greeting uses actual Mira constructors, input binding and nullary clo
   compileAndRun(example,host);
   let input = findAll(root,'input')[0];
   assert.equal(input.value,'Mira');
+  const originalInput = input;
   input.focus();
   input.value = 'Ada';
   input.setSelectionRange(2,2,'none');
@@ -214,12 +223,14 @@ test('0.15 greeting uses actual Mira constructors, input binding and nullary clo
   assert.equal(findAll(root,'p')[0].textContent,'Mira');
   input.dispatch('compositionend');
   input = findAll(root,'input')[0];
+  assert.equal(input,originalInput);
   assert.equal(input.value,'Ada');
   assert.equal(findAll(root,'p')[0].textContent,'Ada');
   assert.equal(document.activeElement,input);
   assert.equal(input.selectionStart,2);
   input.value = 'Ada Lovelace';
   input.dispatch('input');
+  assert.equal(findAll(root,'input')[0],originalInput);
   assert.equal(findAll(root,'p')[0].textContent,'Ada Lovelace');
   findButtons(root)[0].click();
   assert.match(findAll(root,'dialog')[0].textContent,/Ada Lovelace/);
@@ -285,4 +296,107 @@ test('0.15 GUI constructors have equivalent native JS and PHP output as ordinary
   assert.equal(result.status,0,result.stderr);
   assert.deepEqual(JSON.parse(result.stdout),JSON.parse(actual));
   assert.deepEqual(JSON.parse(actual),{type:'row',children:[{type:'title',text:'Mira'},{type:'text',text:42}]});
+});
+
+
+test('0.16 stable input and button identity, no redundant writes, current callback after refresh', () => {
+  const {host, root, errors} = setup();
+  compileAndRun(demo('gui-greeting'),host);
+  const input = findAll(root,'input')[0];
+  const button = findButtons(root)[0];
+  const text = findAll(root,'p')[0];
+  let writes = 0;
+  let value = input.value;
+  Object.defineProperty(input,'value',{get:()=>value,set:v=>{writes++;value=v;}});
+  input.value='new';
+  input.dispatch('input');
+  assert.equal(writes,1,'only user write, no redundant DOM assignment');
+  assert.equal(findAll(root,'input')[0],input);
+  assert.equal(findButtons(root)[0],button);
+  assert.equal(findAll(root,'p')[0],text);
+  button.click();
+  assert.match(findAll(root,'dialog')[0].textContent,/new/);
+  assert.deepEqual(errors,[]);
+});
+
+test('0.16 independent child states survive parent refresh, with fresh outer closures', () => {
+  const {host,root,errors}=setup();
+  compileAndRun(demo('gui-independent'),host);
+  const buttons=()=>findButtons(root);
+  const press=label=>buttons().find(n=>n.textContent===label).click();
+  const values=()=>findAll(root,'p').map(n=>n.textContent);
+  const child=buttons().find(n=>n.textContent==='A +1');
+  press('A +1'); press('A +1'); press('B +1');
+  assert.deepEqual(values(),['1','2','1']);
+  press('Cambia passo');
+  assert.deepEqual(values(),['2','2','1']);
+  assert.equal(buttons().find(n=>n.textContent==='A +1'),child);
+  press('A +1');
+  assert.deepEqual(values(),['2','4','1']);
+  assert.deepEqual(errors,[]);
+});
+
+test('0.16 changing a state key resets just that subtree and deactivates removed callbacks', () => {
+  const {host,root,errors}=setup();
+  compileAndRun(demo('gui-reset'),host);
+  const buttons=()=>findButtons(root);
+  const press=label=>buttons().find(n=>n.textContent===label).click();
+  const values=()=>findAll(root,'p').map(n=>n.textContent);
+  const child=buttons().find(n=>n.textContent==='Incrementa');
+  press('Incrementa'); press('Incrementa');
+  assert.deepEqual(values(),['A','2']);
+  press('Nuova sessione');
+  assert.deepEqual(values(),['B','0']);
+  assert.notEqual(buttons().find(n=>n.textContent==='Incrementa'),child);
+  child.click();
+  assert.deepEqual(values(),['B','0']);
+  press('Incrementa');
+  assert.deepEqual(values(),['B','1']);
+  assert.deepEqual(errors,[]);
+});
+
+test('0.16 validation of nested updates is atomic and structural replacement works', () => {
+  const {host,root,errors}=setup();
+  host.render({type:'state',initial:0,view:n=>({type:'column',children:[
+    {type:'text',text:n},
+    {type:'button',label:'next',update:old=>old+1},
+    n===1?{type:'title',text:'changed'}:n===2?{type:'unknown'}:{type:'text',text:'start'}
+  ]})});
+  const button=findButtons(root)[0];
+  const stable=findAll(root,'p')[0];
+  button.click();
+  assert.equal(findAll(root,'p')[0],stable);
+  assert.equal(stable.textContent,'1');
+  assert.equal(findAll(root,'h2')[0].textContent,'changed');
+  button.click();
+  assert.equal(stable.textContent,'1');
+  assert.match(errors[0],/Unsupported view type/);
+  button.click();
+  assert.equal(errors.length,2,'failed transition did not commit state');
+});
+
+test('0.16 select options and IME composition keep native controls and dispatch once', () => {
+  const {host,root,errors}=setup();
+  let transitions=0;
+  host.render({type:'state',initial:{text:'',extra:false,choice:'A'},view:s=>({type:'column',children:[
+    {type:'input',label:'Input',value:s.text,update:(old,text)=>{transitions++;return {...old,text};}},
+    {type:'select',label:'Choose',value:s.choice,options:s.extra?['A','B']:['A'],update:(old,choice)=>({...old,choice})},
+    {type:'button',label:'more',update:old=>({...old,extra:true})}
+  ]})});
+  const input=findAll(root,'input')[0];
+  const select=findAll(root,'select')[0];
+  input.dispatch('compositionstart');
+  input.value='é';
+  input.dispatch('input',{isComposing:true});
+  findButtons(root)[0].click();
+  assert.equal(input.value,'é');
+  assert.equal(findAll(root,'select')[0],select);
+  assert.equal(findAll(select,'option').length,2);
+  input.dispatch('compositionend');
+  input.dispatch('input');
+  assert.equal(transitions,1);
+  select.value='B';select.dispatch('change');
+  assert.equal(select.value,'B');
+  assert.equal(findAll(root,'input')[0],input);
+  assert.deepEqual(errors,[]);
 });
