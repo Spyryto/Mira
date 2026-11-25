@@ -1,5 +1,5 @@
 {
-  "version": "0.43.0",
+  "version": "0.44.0",
   "features": [
     {
       "id": "values",
@@ -1806,6 +1806,12 @@
       "title": "Diagnostica dei tipi con ancore sorgente e JSON",
       "since": "0.43",
       "doc": "docs/type-checker.md#043-diagnostica-delle-espressioni"
+    },
+    {
+      "id": "typed-host",
+      "title": "Firme host strutturali e verifica delle chiamate",
+      "since": "0.44",
+      "doc": "docs/type-checker.md#044-firme-host"
     }
   ]
 }
