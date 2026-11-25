@@ -128,6 +128,18 @@ result = 4 >> {value |
 };`
   },
   {
+    id: 'local-values',
+    name: 'Valori locali · 0.12',
+    source: `# I nomi locali sono immutabili, e visibili solo nel blocco.
+# Il blocco interno cattura il valore doubled.
+result = 4 >> {value |
+  doubled = value * 2;
+  doubled >> {inner |
+    inner + doubled
+  }
+};`
+  },
+  {
     id: 'host-log',
     name: 'Interoperabilità: log',
     source: `# La funzione log arriva dall'oggetto host di Studio.
