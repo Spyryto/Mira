@@ -135,3 +135,43 @@ La CI verifica generalizzazione, catture monomorfe, value restriction,
 sostituzioni multiple, campi mancanti e conservazione di campi extra;
 anche il bridge browser esegue il checker. Restano da progettare
 vincoli degli operatori, firme host, diagnostica precisa ed effetti.
+
+## 0.42: vincoli di tipo
+
+L'uguaglianza e la disuguaglianza (==, !=) unificano i tipi degli
+operandi e richiedono il predicato statico ScalarEq. Sono ammessi
+Number, Text e Boolean; liste, record e funzioni sono esclusi.
+Il predicato può essere risolto immediatamente oppure associato a
+una variabile ancora libera. Si propaga durante il binding, anche
+attraverso alias; l'istanziazione degli schemi copia il vincolo
+soltanto per le variabili quantificate. Le variabili catturate e
+le componenti ricorsive attive conservano i vincoli condivisi.
+I vincoli di riga e ScalarEq sono incompatibili.
+
+```mira
+same: a, as: b = a == b;
+n = same: 2, as: 2;
+t = same: "Ada", as: "Mira";
+```
+
+Tipo inferito: ('a, 'a) -> Boolean where 'a: ScalarEq.
+La clausola where e ScalarEq sono soltanto notazione diagnostica,
+non nuova sintassi Mira. Il predicato è una famiglia chiusa di tipi,
+non un sistema generale di typeclass, overload o dizionari runtime.
+L'inferenza risolve il vincolo in Number se altri operatori lo
+richiedono. L'ordinamento e l'aritmetica rimangono numerici.
+I tipi sono stampati con predicati sulle variabili che compaiono
+nel tipo esposto; non si espongono vincoli interni non osservabili.
+
+Gli emitter non sono stati modificati: == e != usano gli operatori
+stretti dei target. ScalarEq garantisce l'ammissibilità dei tipi
+nel sottoinsieme controllato, non l'identità semantica di tutte
+le rappresentazioni numeriche. Per esempio JS considera 1 e 1.0
+lo stesso Number, mentre PHP distingue int e float nell'uguaglianza
+stretta. La normalizzazione numerica richiede una decisione separata.
+Nessuna uguaglianza strutturale implicita per liste o record.
+
+La suite verifica istanziazioni indipendenti, funzioni di ordine
+superiore, campi strutturali, closure, ricorsione e rifiuto di tipi
+incompatibili. Il checker resta opt-in. Non sono ancora disponibili
+firme host, annotazioni o generazione dei validatori RPC.
