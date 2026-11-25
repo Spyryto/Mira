@@ -67,6 +67,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Anteprima GUI automatica e ispettore di specializzazione | `0.25` | [Dettagli](docs/browser-interop.md#mira-025-anteprima-e-ispettore) |
 | ✅ | Benchmark dei nodi testuali persistenti | `0.26` | [Dettagli](docs/browser-interop.md#mira-026-text-node-persistenti) |
 | ✅ | Benchmark del raggruppamento dei commit DOM | `0.27` | [Dettagli](docs/browser-interop.md#mira-027-raggruppamento-dei-commit) |
+| ✅ | Benchmark CSS containment e content-visibility | `0.28` | [Dettagli](docs/browser-interop.md#mira-028-css-containment) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
