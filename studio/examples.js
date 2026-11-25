@@ -94,6 +94,15 @@ fee = {_ | (_ ~ hours) * (_ ~ rate)};
 result = lesson >> fee;`
   },
   {
+    id: 'fold-blocks',
+    name: 'Fold · blocchi 0.9',
+    source: `# Callback binaria: due parametri, un'espressione.
+numbers = [1, 2, 3, 4];
+result = fold: numbers,
+  with: ({total, item | total + item}),
+  from: 0;`
+  },
+  {
     id: 'host-log',
     name: 'Interoperabilità: log',
     source: `# La funzione log arriva dall'oggetto host di Studio.

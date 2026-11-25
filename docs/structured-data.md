@@ -127,3 +127,22 @@ ogni elemento (come `collect:` in Smalltalk), mentre la forma discorsiva
 `collect:if:` seleziona gli elementi per cui il predicato è vero.
 Gli alias riutilizzano le implementazioni esistenti: niente duplicazione
 dei cicli di iterazione e nessuna modifica al parser di Mira.
+
+## Fold con blocchi multi-parametro (Mira 0.9)
+
+I blocchi della 0.9 permettono di definire il riduttore direttamente
+nell'argomento `with:`, senza introdurre una nuova funzione di nome:
+
+```mira
+numbers = [1, 2, 3, 4];
+result = fold: numbers, with: ({total, item | total + item}), from: 0;
+```
+
+L'accumulatore iniziale è `0`, e il risultato è `10`. L'host JS
+esegue `Array.reduce`, l'host PHP `array_reduce`; la callback è
+emessa dal compilatore come closure nativa. I dati sono limitati a
+10.000 elementi, come già avveniva per `fold`.
+
+I blocchi multi-parametro non sono applicabili con `>>`, che resta
+riservato alle funzioni unarie. Questo evita di introdurre currying
+implicito prima di averne progettato semantica e limiti.

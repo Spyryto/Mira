@@ -13,7 +13,7 @@ enum Expr {
     Conditional(condition:Expr, whenTrue:Expr, whenFalse:Expr);
     Sequence(items:Array<Expr>);
     Record(keys:Array<String>, values:Array<Expr>);
-    Block(parameter:String, body:Expr);
+    Block(parameters:Array<String>, body:Expr);
     Binary(symbol:String, left:Expr, right:Expr);
     OperatorSection(symbol:String, left:Expr, right:Expr);
     Call(selector:String, arguments:Array<Expr>);

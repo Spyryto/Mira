@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.8.0');
+  assert.equal(bridge.version, '0.9.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -168,7 +168,7 @@ test('all Studio examples match the syntax currently implemented', async () => {
   for (const example of examples) {
     const expectedSuccess = example.id !== 'errors';
     for (const target of ['js', 'php']) {
-      const manifest = ['host-log','collect-if'].includes(example.id)
+      const manifest = ['host-log','collect-if','fold-blocks'].includes(example.id)
         ? read('host.json') : undefined;
       const result = bridge.compile(example.source, target, manifest);
       assert.equal(result.ok, expectedSuccess,
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.8.0');
+  assert.equal(bridge.version,'0.9.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -437,7 +437,7 @@ test('0.8 Studio AST exposes Block and resolves repeated _ as one lexical name',
   const parsed = JSON.parse(ast.output).definitions;
   const block = parsed[1].body;
   assert.equal(block.kind,'Block');
-  assert.equal(block.parameter,'_');
+  assert.deepEqual(block.parameters,['_']);
   assert.equal(block.body.kind,'Binary');
   assert.equal(block.body.left.kind,'FieldGet');
   assert.equal(block.body.left.record.kind,'Name');
@@ -449,4 +449,20 @@ test('0.8 Studio AST exposes Block and resolves repeated _ as one lexical name',
   assert.equal(js.ok,true,js.message);
   assert.equal(php.ok,true,php.message);
   assert.equal(runInNewContext(js.output+'\nresult',{}),60);
+});
+
+test('0.9 AST exposes multiple block parameters and preserves prior unary blocks', () => {
+  const source='numbers = [1,2,3]; reducer = {total, item | total + item}; result = 0;';
+  const ast=bridge.ast(source);
+  assert.equal(ast.ok,true,ast.message);
+  const block=JSON.parse(ast.output).definitions[1].body;
+  assert.equal(block.kind,'Block');
+  assert.deepEqual(block.parameters,['total','item']);
+  assert.equal(block.body.kind,'Binary');
+  assert.equal(block.body.left.kind,'Name');
+  assert.equal(block.body.right.kind,'Name');
+  for (const target of ['js','php']) {
+    const compiled=bridge.compile(source,target);
+    assert.equal(compiled.ok,true,compiled.message);
+  }
 });

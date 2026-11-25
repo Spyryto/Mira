@@ -136,7 +136,13 @@ Il parametro può essere un identificatore composto. Con `{_ | ...}`,
 tutte le occorrenze di `_` dentro il blocco sono riferimenti allo stesso
 argomento. Fuori dai blocchi le sezioni mantengono i propri placeholder
 indipendenti. I blocchi annidati catturano variabili esterne in JS/PHP.
-I blocchi con istruzioni o parametri multipli rimangono in progetto.
+Dalla versione 0.9 i parametri possono essere multipli, separati
+da virgole: `{total, item | total + item}`. Il nodo canonico
+`Block` conserva l'elenco dei parametri. La distinzione fra
+record e blocco resta deterministica: prima di `|` devono esserci
+solo nomi e virgole. Parametri duplicati o in collisione dopo
+la trasformazione del nome sono errori di compilazione.
+I blocchi con più istruzioni restano in progetto.
 
 `{hours: 2}` è un record; `{item | item + 1}` è un blocco.
 
