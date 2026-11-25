@@ -204,6 +204,21 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
 
 
+## Mira 0.18: DOM Performance Lab
+
+Da Studio → Bench → DOM Performance Lab: confronto sul DOM reale
+tra renderer Mira incrementale, ricostruzione completa e aggiornamento
+diretto; casi sparsi e densi, con e senza layout forzato. Test Chrome in CI.
+[Metodo e limiti](docs/browser-interop.md#mira-018-misure-sul-dom-reale).
+
+## Mira 0.17: stili GUI componibili
+
+`styled: view, with: [base, override]` applica stili validati senza
+wrapper DOM; `grid: 2, children: items` compone schede a due colonne.
+La Guida contiene Dashboard musicale e Tema dinamico. Il test sintetico
+del renderer è eseguibile con `npm run benchmark:gui`.
+Vedi [interoperabilità browser](docs/browser-interop.md#mira-017-stili-componibili-e-griglia).
+
 ## Mira 0.16: GUI incrementali
 
 I nodi DOM compatibili conservano la loro identità durante gli aggiornamenti

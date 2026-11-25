@@ -289,3 +289,11 @@ Mira; il renderer browser non implementa la logica dell'applicazione.
 La Guida presenta due esempi di stato indipendente e reset con chiave.
 L'anteprima aggiorna il DOM compatibile in place; i form non perdono il nodo
 input a ogni carattere. I test simulano il DOM, non una tastiera mobile reale.
+
+## Stili GUI (Mira 0.17)
+
+Guida → Stili GUI componibili e griglia: Dashboard musicale e Tema dinamico. Le view usano record di stile validati e aggiornamenti incrementali. Il benchmark GUI usa un DOM simulato, non un browser reale.
+
+## DOM Performance Lab (Mira 0.18)
+
+Da Bench apri **DOM Performance Lab**. Il benchmark gira sul DOM reale del dispositivo, non nel Worker: 100 testi, aggiornamenti sparsi/densi, confronto incrementale, render completo e DOM diretto. Il test headless Chrome/Chromium esegue lo stesso file in CI. Nessuna soglia prestazionale assoluta; si verificano checksum e tempi finiti. La navigazione offline conserva la pagina separata.

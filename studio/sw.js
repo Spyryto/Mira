@@ -12,6 +12,8 @@ const ASSETS = [
   './benchmark-ui.js',
   './benchmark-cases.js',
   './benchmark-worker.js',
+  './gui-benchmark.js',
+  './gui-benchmark.html',
   './atlas-program.js',
   './atlas-data.json',
   './ast-inspector.js',
@@ -65,15 +67,17 @@ self.addEventListener('fetch', event => {
   if (url.origin !== scope.origin || !url.pathname.startsWith(scope.pathname)) return;
 
   if (request.mode === 'navigate') {
-    // Prefer the newest HTML online, but keep the editor available offline.
+    // Cache known standalone pages under their own keys, not index.html.
+    const page = url.pathname.endsWith('/gui-benchmark.html') ? './gui-benchmark.html'
+      : url.pathname.endsWith('/ui-preview.html') ? './ui-preview.html' : './index.html';
     event.respondWith(
       fetch(request).then(response => {
         if (response.ok) {
           const copy = response.clone();
-          caches.open(CACHE).then(cache => cache.put('./index.html', copy));
+          caches.open(CACHE).then(cache => cache.put(page, copy));
         }
         return response;
-      }).catch(() => caches.match('./index.html'))
+      }).catch(() => caches.match(page))
     );
     return;
   }

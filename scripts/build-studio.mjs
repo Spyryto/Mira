@@ -18,6 +18,8 @@ const assets = [
   'benchmark-ui.js',
   'benchmark-cases.js',
   'benchmark-worker.js',
+  'gui-benchmark.js',
+  'gui-benchmark.html',
   'ast-inspector.js',
   'inspector-host.js',
   'collection-host.js',

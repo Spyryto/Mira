@@ -158,3 +158,51 @@ stessa posizione; usare una chiave per forzare il reset. La validazione
 precede le scritture DOM ma non annulla eventuali effetti host durante
 la valutazione di view. I test verificano identità, eventi, IME e stato su
 DOM simulato; il comportamento della tastiera iPhone resta da verificare.
+
+## Mira 0.17: stili componibili e griglia
+
+`styled: view, with: [base, override]` applica record di stile senza
+aggiungere nodi DOM. I record successivi prevalgono; nelle decorazioni
+annidate prevale quella esterna. Una decorazione non cambia l'identità
+del nodo sottostante. Le proprietà assenti vengono rimosse e quelle
+invariate non vengono riscritte.
+
+```mira
+panel style = {padding: 16, gap: 8, radius: 14,
+  borderWidth: 2, borderColor: "#202629", borderStyle: "solid"};
+render (styled: (column: [title: "Mira", text: "Benvenuto"]),
+  with: [panel style, {background: "#c1f1dc"}]);
+```
+
+| Proprietà | Valori |
+| --- | --- |
+| background, color, borderColor | esadecimale CSS, transparent, currentColor |
+| padding, margin, gap, radius, borderWidth, fontSize | numero non negativo, px |
+| width, minWidth, maxWidth | numero in px, fill, auto |
+| fontWeight | intero 100–900 |
+| borderStyle | solid, none, dashed |
+| flex | numero 0–100 (flex-grow) |
+| align | start, center, end, stretch, baseline |
+| justify | start, center, end, space-between, space-around |
+| wrap | wrap, nowrap |
+| textAlign | left, center, right |
+| shadow | none, hard, soft |
+
+Gli stili si applicano al nodo esterno di un controllo (label per input,
+checkbox e select); non sono CSS arbitrario. Gli errori sono rilevati
+prima delle modifiche DOM. `grid: count, children: items` accetta
+da 1 a 6 colonne uguali. I costruttori sono normali selettori Mira,
+eseguibili anche su PHP; il renderer è browser-only.
+
+Il benchmark in test/ui-host.test.mjs usa un DOM simulato e confronta
+100 aggiornamenti della stessa view da 103 elementi con 100 render
+espliciti completi, registrando allocazioni di elementi e scritture
+di stili, più tempi indicativi Node. Non misura layout, paint, latenza
+o memoria in un browser reale. Avvio: npm run benchmark:gui
+(dopo build di Studio, inclusa nello script).
+
+## Mira 0.18: misure sul DOM reale
+
+Il laboratorio separa la sola costruzione della view Mira dal tempo di aggiornamento. Il codice Mira genera 100 elementi di testo con padding, un pulsante e una transizione numerica; il caso sparso cambia un testo, quello denso tutti. Incrementale usa il normale evento del renderer; ricostruzione usa render esplicito della stessa view; DOM diretto costruisce la stessa struttura e aggiorna solo i testi noti, usando la transizione compilata. Il DOM diretto è un riferimento specializzato, non un'implementazione equivalente del renderer generico.
+
+Cinque campioni di 30 aggiornamenti, cinque warmup per campione; ordine delle strategie ruotato, mediana e P95 della media per aggiornamento. Si misura con e senza lettura forzata della geometria a ogni passo. Compilazione esclusa, checksum su ogni campione. La misura con layout forzato non misura paint o frame rate; quella sincrona può differire il layout. Il test CI usa Chrome headless, non Safari/iPhone. Da Studio: Bench → DOM Performance Lab. In locale: npm run build:studio, poi aprire dist/studio/gui-benchmark.html o eseguire il test con CHROME_BIN.
