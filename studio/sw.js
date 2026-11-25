@@ -15,6 +15,8 @@ const ASSETS = [
   './gui-benchmark.js',
   './gui-specialize.js',
   './gui-benchmark.html',
+  './laboratory.html',
+  './lab-gui-rendering.json',
   './atlas-program.js',
   './atlas-data.json',
   './ast-inspector.js',
@@ -69,6 +71,13 @@ self.addEventListener('fetch', event => {
 
   if (request.mode === 'navigate') {
     // Cache known standalone pages under their own keys, not index.html.
+    if (url.pathname.endsWith('/laboratory.html') || url.pathname.endsWith('/lab-gui-rendering.json')) {
+      // The report and its data belong to the same installed build.
+      event.respondWith(caches.open(CACHE).then(cache =>
+        cache.match(url.pathname.endsWith('/lab-gui-rendering.json') ? './lab-gui-rendering.json' : './laboratory.html')
+          .then(hit => hit || fetch(request))));
+      return;
+    }
     const page = url.pathname.endsWith('/gui-benchmark.html') ? './gui-benchmark.html'
       : url.pathname.endsWith('/ui-preview.html') ? './ui-preview.html' : './index.html';
     event.respondWith(

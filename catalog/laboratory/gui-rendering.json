@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "id": "gui-rendering",
+  "title": "Quanto costa aggiornare una GUI?",
+  "source": "Trascrizione del rapporto Chromium in CI condiviso nella conversazione Mira il 25 novembre 2026. Commit, versione esatta e campioni originali non disponibili.",
+  "environment": "Chromium in CI",
+  "rows": 100,
+  "workload": "Aggiornamento sparso",
+  "unit": "µs",
+  "cases": [
+    {
+      "label": "Senza layout forzato",
+      "flush": false,
+      "values": {
+        "rebuild": 310,
+        "incremental": 140,
+        "specialized": 3.3,
+        "direct": 3.3
+      }
+    },
+    {
+      "label": "Con layout forzato",
+      "flush": true,
+      "values": {
+        "rebuild": 910,
+        "incremental": 317,
+        "specialized": 150,
+        "direct": 150
+      }
+    }
+  ]
+}

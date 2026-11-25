@@ -86,4 +86,9 @@ if (documentation.error || documentation.status !== 0) {
   console.error(documentation.error?.message ?? 'Documentation provenance/reference generation failed');
   process.exit(documentation.status ?? 1);
 }
+const lab = spawnSync('node', ['scripts/generate-laboratory.mjs'], { cwd: root, stdio: 'inherit' });
+if (lab.error || lab.status !== 0) {
+  console.error(lab.error?.message ?? 'Laboratory generation failed');
+  process.exit(lab.status ?? 1);
+}
 console.log('Mira Studio static assets ready in dist/studio (cache ' + buildId + ')');
