@@ -51,7 +51,7 @@ try {
     }
     if ($status === 200 && $action !== 'load') {
         // All business transformations are in the compiled Mira function.
-        $result = applyCommand__command($model, $cmd);
+        $result = apply_command__command($model, $cmd);
         $db->prepare('UPDATE ledger SET snapshot = ? WHERE id = 1')->execute([json_encode($result, JSON_THROW_ON_ERROR)]);
     }
     $db->exec('COMMIT'); $transaction = false;
