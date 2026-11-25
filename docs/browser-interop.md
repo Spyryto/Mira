@@ -278,3 +278,15 @@ Due carichi: tutti i 256 testi dinamici, oppure solo i 16 dell'ultimo pannello l
 ## Mira 0.29: applicazione al Laboratory
 
 Il primo utilizzo reale di content-visibility riguarda soltanto il Laboratory statico, non il runtime GUI Mira. Vedi [Studio](studio.md#laboratory-layout-differito-029). I dati 0.28 sono archiviati, compresi update, reveal, supporto e skip. Le ottimizzazioni Text.data e batching restano opt-in nei benchmark.
+
+## Mira 0.33: identità delle liste GUI
+
+```mira
+column: (each: students, identified by: (_ ~ id), view: (student row: _))
+```
+
+La libreria implementa each:identified by:view: con collect:with: e un decoratore trasparente keyed:view:. Quest'ultimo è un record {type: "keyed", key: identity, view: content}, non un nodo DOM. Nessuna nuova sintassi, ID DOM o contatore globale. La chiave è scelta dall'applicazione, dichiarata una volta per collezione; il renderer non presume un campo id. Identità locale ai fratelli di column/row/grid, stringhe non vuote o interi sicuri (numero 1 distinto da stringa "1"). Più decoratori keyed sullo stesso nodo o duplicati tra fratelli sono errori. Si possono combinare styled e keyed. Unkeyed resta per posizione assoluta, non può riutilizzare un precedente nodo keyed; evitare di mescolare elementi posizionali variabili e keyed nella stessa lista.
+
+Prepare valida l'albero prima di qualsiasi commit, confrontando chiave e tipo; la state.key precedente rimane un token di reset distinto (stringa). Si preservano istanze, stato locale, callback aggiornate, nodi e controlli; rimozione disattiva i callback e una reinserzione crea un'istanza nuova. Cambi di tipo ricreano il nodo. La chiave non sposta uno stato tra genitori diversi. Commit usa map/set e inserisce/sposta solo quando l'ordine lo richiede, senza un algoritmo di minimizzazione dei movimenti. moveBefore quando disponibile, altrimenti insertBefore e tentativo di ripristinare focus e selezione se persi. Non si garantisce il mantenimento di IME/composizione durante uno spostamento sui browser senza moveBefore. Nessun rollback per errori DOM imprevisti. La specializzazione di alberi keyed resta fuori dal pass; il renderer generico (anche dentro regioni generiche ibride) li gestisce. La compatibilità PHP riguarda la costruzione dei descrittori.
+
+Test con DOM simulato e Chromium reale, inclusi riordino, rimozione, reinserimento, focus e caret, stato locale, decoratori, chiavi duplicate, tipo diverso e scope dei fratelli.

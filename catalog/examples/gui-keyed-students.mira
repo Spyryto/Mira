@@ -1,0 +1,32 @@
+ada = {id: 1, name: "Ada"};
+lia = {id: 2, name: "Lia"};
+
+local editor: model = column: [
+  text input: "Note", value: (model ~ note),
+    update: {old, entered | update: old, with: {note: entered}},
+  text: (model ~ count),
+  button: "+1", update: {old | update: old, with: {count: (old ~ count + 1)}}
+];
+
+student row: item = column: [
+  title: (item ~ name),
+  state: {note: "", count: 0}, view: (local editor: _)
+];
+
+visible students: model = select: (
+  if (model ~ reversed) then [lia, ada] else [ada, lia]
+), if: {item |
+  if (item ~ id == 1) then (model ~ show ada) else true
+};
+
+view: model = column: [
+  column: (each: (visible students: model),
+    identified by: (_ ~ id), view: (student row: _)),
+  button: "Inverti", update: {old |
+    update: old, with: {reversed: (if (old ~ reversed) then false else true)}
+  },
+  button: "Mostra/nascondi Ada", update: {old |
+    update: old, with: {show ada: (if (old ~ show ada) then false else true)}
+  }
+];
+render (state: {reversed: false, show ada: true}, view: (view: _));

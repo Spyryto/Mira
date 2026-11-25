@@ -27,3 +27,9 @@ state: initial, key: identity, view: factory = {
 # Style records compose from left to right; decorators do not add DOM nodes.
 styled: view, with: layers = {type: "styled", view: view, styles: layers};
 grid: count, children: items = {type: "grid", columns: count, children: items};
+
+# Identity belongs to the represented data, not its current position.
+keyed: identity, view: content = {type: "keyed", key: identity, view: content};
+each: items, identified by: identity, view: factory = collect: items, with: {item |
+  keyed: (item >> identity), view: (item >> factory)
+};

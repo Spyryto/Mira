@@ -56,6 +56,16 @@ class FakeElement {
       this.children.push(node);
     }
   }
+  contains(node) { return this === node || this.children.some(child => child.contains(node)); }
+  insertBefore(next, before) {
+    if (next === before) return next;
+    if (next.parentNode) next.remove();
+    const index = before === null ? this.children.length : this.children.indexOf(before);
+    assert.ok(index >= 0);
+    this.children.splice(index, 0, next);
+    next.parentNode = this;
+    return next;
+  }
   replaceChildren(...nodes) {
     for (const child of this.children) child.parentNode = null;
     this.children = [];
@@ -918,4 +928,71 @@ test('0.32 native collections render a variable list without host collection cal
   findButtons(root)[1].click();
   assert.deepEqual(findAll(root,'p').map(n=>n.textContent),['Lia','Nuova lezione']);
   assert.deepEqual(errors,[]);
+});
+
+
+test('0.33 each preserves DOM, independent child state, selection and callbacks on reorder',()=>{
+  const {root,errors,host,document}=setup(),sandbox={};
+  runInNewContext(read('gui-specialize.js'),sandbox);
+  const sample=demo('gui-keyed-students');
+  assert.equal(sandbox.MiraGuiSpecialize.previewPlan(compiler,sample.source,manifest).mode,'generic');
+  compileAndRun(sample,host);
+  const [ada,lia]=findAll(root,'input');
+  const [adaCount,liaCount]=findButtons(root).filter(b=>b.textContent==='+1');
+  const action=name=>findButtons(root).find(b=>b.textContent===name).click();
+  ada.value='A';ada.dispatch('input');adaCount.click();
+  lia.value='Lia note';lia.dispatch('input');liaCount.click();liaCount.click();
+  lia.focus();lia.setSelectionRange(2,4,'forward');
+  const created=document.created;
+  action('Inverti');
+  assert.deepEqual(findAll(root,'h2').map(n=>n.textContent),['Lia','Ada']);
+  assert.deepEqual(findAll(root,'input'),[lia,ada]);
+  assert.deepEqual(findAll(root,'p').map(n=>n.textContent),['2','1']);
+  assert.equal(lia.value,'Lia note');assert.equal(ada.value,'A');
+  assert.equal(document.activeElement,lia);assert.equal(lia.selectionStart,2);
+  assert.equal(document.created,created);
+  action('Mostra/nascondi Ada');
+  assert.deepEqual(findAll(root,'input'),[lia]);
+  adaCount.click();ada.value='stale';ada.dispatch('input');
+  assert.deepEqual(findAll(root,'p').map(n=>n.textContent),['2']);
+  action('Mostra/nascondi Ada');
+  const inputs=findAll(root,'input');
+  assert.equal(inputs[0],lia);assert.notEqual(inputs[1],ada);assert.equal(inputs[1].value,'');
+  assert.deepEqual(findAll(root,'p').map(n=>n.textContent),['2','0']);
+  assert.deepEqual(errors,[]);
+});
+
+test('0.33 identity keys are sibling-scoped, typed, transparent and validated atomically',()=>{
+  const {host,root,errors}=setup();
+  const key=(k,view)=>({type:'keyed',key:k,view});
+  const text=value=>({type:'text',text:value});
+  const column=children=>({type:'column',children});
+  const styled=view=>({type:'styled',view,styles:[{color:'#123456'}]});
+  const app=host.renderState(n=>column([
+    column(n===0?[styled(key(1,text('numeric'))),key('1',text('string')),text('static')]:
+      n===1?[key('1',text('string2')),key(1,{type:'title',text:'new type'}),text('static')]:
+      [key('1',text('invalid')),key('1',text('duplicate'))]),
+    column([key(1,text('other parent'))]),
+    {type:'button',label:'Next',update:n=>n+1}
+  ]),0);
+  const [numeric,string,staticNode,other]=findAll(root,'p');
+  assert.equal(numeric.style.getPropertyValue('color'),'#123456');
+  findButtons(root)[0].click();
+  assert.equal(app.getState(),1);
+  assert.equal(findAll(root,'p')[0],string);
+  assert.equal(string.textContent,'string2');
+  assert.equal(findAll(root,'p')[1],staticNode);
+  assert.equal(findAll(root,'p')[2],other);
+  assert.equal(numeric.parentNode,null);
+  const title=findAll(root,'h2')[0];
+  findButtons(root)[0].click();
+  assert.equal(app.getState(),1);
+  assert.equal(findAll(root,'h2')[0],title);
+  assert.equal(string.textContent,'string2');
+  assert.match(errors[0],/Duplicate sibling identity/);
+  for(const invalid of [null,'',1.5,Infinity,{},true]){
+    assert.throws(()=>host.render(column([key(invalid,text('bad'))])),/Identity key must/);
+  }
+  assert.throws(()=>host.render(key(1,styled(key(2,text('bad'))))),/Multiple identity keys/);
+  assert.equal(findAll(root,'h2')[0],title);
 });

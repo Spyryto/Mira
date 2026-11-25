@@ -1,5 +1,5 @@
 {
-  "version": "0.32.0",
+  "version": "0.33.0",
   "features": [
     {
       "id": "values",
@@ -447,6 +447,18 @@
         "sequence-gui-list"
       ],
       "since": "0.32"
+    },
+    {
+      "id": "gui-keyed",
+      "title": "Identità stabile delle liste GUI",
+      "summary": "Riconciliazione per chiave dei widget dinamici, senza wrapper DOM.",
+      "details": "each:identified by:view: è una normale funzione di lib/gui.mira che costruisce descrittori keyed:key/view. Il renderer generico mantiene le istanze per chiave fra fratelli, rimuove quelle non presenti e sposta i nodi esistenti. Stringhe non vuote e interi sicuri; duplicati e chiavi invalide sono errori prima del commit. Stato locale preservato per chiave e tipo, reinizializzato dopo rimozione e reinserimento. I widget senza chiave rimangono posizionali. Nessuna nuova sintassi; PHP costruisce i record ma non il DOM.",
+      "api": "mira.HostEnvironment",
+      "examples": [
+        "gui-keyed-descriptors",
+        "gui-keyed-students"
+      ],
+      "since": "0.33"
     }
   ],
   "examples": [
@@ -1594,6 +1606,48 @@
       "host": "studio/host.json",
       "feature": "native-sequences",
       "path": "catalog/examples/sequence-gui-list.mira"
+    },
+    {
+      "id": "gui-keyed-descriptors",
+      "title": "Identità delle righe · record GUI",
+      "description": "each calcola una chiave per ogni dato, indipendentemente dalla sua posizione.",
+      "expect": {
+        "kind": "result",
+        "value": [
+          {
+            "type": "keyed",
+            "key": 7,
+            "view": {
+              "type": "text",
+              "text": "Ada"
+            }
+          },
+          {
+            "type": "keyed",
+            "key": 9,
+            "view": {
+              "type": "text",
+              "text": "Lia"
+            }
+          }
+        ]
+      },
+      "feature": "gui-keyed",
+      "library": "lib/gui.mira",
+      "path": "catalog/examples/gui-keyed-descriptors.mira"
+    },
+    {
+      "id": "gui-keyed-students",
+      "title": "Registro allievi · identità stabile",
+      "description": "Inverti l'ordine o rimuovi Ada: note e contatori locali seguono l'allievo, non la posizione.",
+      "expect": {
+        "kind": "ui",
+        "description": "Anteprima interattiva nel browser"
+      },
+      "host": "studio/host.json",
+      "feature": "gui-keyed",
+      "library": "lib/gui.mira",
+      "path": "catalog/examples/gui-keyed-students.mira"
     }
   ],
   "additionalCapabilities": [

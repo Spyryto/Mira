@@ -1,0 +1,3 @@
+students = [{id: 7, name: "Ada"}, {id: 9, name: "Lia"}];
+student row: item = text: (item ~ name);
+result = each: students, identified by: (_ ~ id), view: (student row: _);
