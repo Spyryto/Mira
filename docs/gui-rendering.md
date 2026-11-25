@@ -159,3 +159,25 @@ Confronto isolato su 256 testi e pannelli a dimensione fissa: normale, contain l
 ## Archivio 0.28 e aggiornamento 0.29
 
 Il log CI 139433834245 aggiunge i risultati completi di containment. Mediane update/layout visibile: tutti i testi 1,340 / 1,180 / 0,165 ms (normale/contain/auto); solo lontani 0,115 / 0,120 / 0,005 ms. Reveal auto 0,2 e 0,4 ms. Il 0,29 applica sperimentalmente content-visibility alle sole schede statiche del Laboratory ad altezza variabile, con fallback CSS e checkbox di confronto. Vedi [Studio](studio.md#laboratory-layout-differito-029).
+
+## Archivio aggiornato fino alla 0.34
+
+Recuperati i rapporti strutturati dei sei job PWA integrati (0.29–0.34), con tutti i casi browser, form, ibridi, Text.data, batching, containment e Laboratory reale. L'archivio contiene 18 rapporti CI e 244 scenari (uno scenario è una combinazione di carico/modalità di prova con più strategie confrontate, oppure un viewport del Laboratory), più quattro scenari su due dispositivi dell'autore. I report ripetuti nelle release di linguaggio non rappresentano una serie di regressioni controllate. Link a job e commit in JSON e Laboratory. Nessun risultato ricalcolato.
+
+### Laboratory reale: primo esperimento 0.29
+
+7 campioni da 10 variazioni di larghezza. Schede statiche reali (51) e dettagli (14). Mediana e P95, ms:
+
+| Viewport | Layout normale | Layout differito | Reveal normale | Reveal differito |
+| --- | ---: | ---: | ---: | ---: |
+| 390 px | 1,440 / 1,750 | 0,480 / 0,520 | 0,100 / 0,200 | 0,200 / 0,300 |
+| 800 px | 1,550 / 2,010 | 0,450 / 0,470 | 0,100 / 0,200 | 0,200 / 0,200 |
+
+| Viewport | Stima iniziale | Dopo visita | Normale | Dopo toggle | Dopo nuova visita |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 390 px | 19906 | 21294 | 21294 | 19883 | 21294 |
+| 800 px | 18515 | 17797 | 17797 | 18515 | 17797 |
+
+L'altezza è in px; in entrambi i casi il contenuto lontano risulta saltato. Il layout differito riduce il costo misurato di circa 3× / 3,44×, non il tempo complessivo di paint; il reveal ha un costo aggiuntivo. Le due CI fallite prima del merge hanno evidenziato perdita della stima al toggle e problemi del runner Chromium (chiusura profilo e attesa documento). La versione integrata verifica la riacquisizione delle dimensioni. [Job 139440393387](https://github.com/Spyryto/Mira/actions/runs/45680764254/job/139440393387).
+
+La 0.30–0.34 sposta la priorità dalle prestazioni alle applicazioni. La 0.33 aggiunge identità per chiave nel renderer generico, con focus/caret verificati in Chromium su percorso nativo e fallback; la 0.34 usa il renderer generico nel registro persistente. Nessun benchmark mirato alla performance delle collezioni o delle liste keyed, nessuna misura nuova su iPhone/TV. Punto di pareggio, paint, memoria e specializzazione più ampia sono rinviati. Vedi [decisioni](decisions.md#stato-e-direzione-034).

@@ -224,7 +224,7 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 ## Laboratorio GUI: storia, risultati e roadmap
 
-[Laboratory in Mira Studio](https://spyryto.github.io/Mira/laboratory.html) raccoglie l'evoluzione 0.15–0.25, i benchmark CI e le misure dell'autore su iPhone e smart TV. [Rapporto tecnico](docs/gui-rendering.md) · [Archivio JSON](catalog/laboratory/gui-rendering.json). Il rapporto storico è statico e separato dal benchmark eseguibile.
+[Laboratory in Mira Studio](https://spyryto.github.io/Mira/laboratory.html) raccoglie l'evoluzione 0.15–0.34, i benchmark CI e le misure dell'autore su iPhone e smart TV. [Rapporto tecnico](docs/gui-rendering.md) · [Archivio JSON](catalog/laboratory/gui-rendering.json). Il rapporto storico è statico e separato dal benchmark eseguibile.
 
 ## Mira 0.34: select/collect e registro persistente
 
@@ -615,3 +615,5 @@ installation, limitations and local preview.
 - [PHX-VM](https://github.com/Spyryto/PHX-VM) — separate PHP-focused VM
 
 Mira may eventually become a frontend for Nail, a reboot, or an independent language. That choice is intentionally open.
+
+Per la direzione applicativa, le scelte adottate e quelle rinviate: [decisioni fino alla 0.34](docs/decisions.md#stato-e-direzione-034).

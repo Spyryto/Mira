@@ -238,10 +238,12 @@ Gli operandi non vengono mutati, le copie sono superficiali e l'ordine degli ele
 
 Compatibilità: i selettori di collezione già esistenti come capability possono ancora essere registrati esplicitamente nel manifest host, e in tal caso mantengono il comportamento precedente (es. fold dell'ispettore AST su alberi). Il manifest Studio ordinario ora usa le operazioni native; get:from: resta host. I nuovi append/remove e update:with: non sono sovrascrivibili. Le definizioni utente con le stesse firme sono conflitti.
 
-La lista GUI dinamica del nuovo esempio usa il renderer generico: i figli sono ancora riconciliati per posizione. Identità stabile, riordinamento e conservazione dello stato locale dei figli saranno il prossimo passo.
+L'esempio dinamico della 0.32 usa il renderer generico con figli posizionali. Dalla 0.33 le liste possono invece dichiarare identità stabile; l'esempio storico resta posizionale.
 
 Dalla 0.33, la libreria GUI aggiunge `each:identified by:view:` per produrre liste con identità stabile. `collect` rimane un'operazione di trasformazione generica. Vedi [interop GUI](browser-interop.md#mira-033-identità-delle-liste-gui).
 
 ## Coerenza Smalltalk (0.34)
 
 Rimosso il selettore nativo e la capability standard `collect:if:`. Usare `select:if:` per filtrare, `collect:with:` per trasformare. Gli alias map/filter/select già coerenti rimangono. Le applicazioni che dichiarano esplicitamente un proprio selettore host o utente sono libere di definirlo; non è più fornito dalla libreria standard.
+
+Il modello teorico dei costi e le ottimizzazioni rinviate sono nelle [decisioni](decisions.md#prestazioni-delle-collezioni). Non abbiamo benchmark mirati delle collezioni native.
