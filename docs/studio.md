@@ -289,3 +289,7 @@ Mira; il renderer browser non implementa la logica dell'applicazione.
 La Guida presenta due esempi di stato indipendente e reset con chiave.
 L'anteprima aggiorna il DOM compatibile in place; i form non perdono il nodo
 input a ogni carattere. I test simulano il DOM, non una tastiera mobile reale.
+
+## Stili GUI (Mira 0.17)
+
+Guida → Stili GUI componibili e griglia: Dashboard musicale e Tema dinamico. Le view usano record di stile validati e aggiornamenti incrementali. Il benchmark GUI usa un DOM simulato, non un browser reale.

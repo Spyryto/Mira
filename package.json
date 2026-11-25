@@ -1,7 +1,7 @@
 {
   "name": "mira-discursive",
   "private": true,
-  "version": "0.16.0",
+  "version": "0.17.0",
   "type": "module",
   "description": "Mira discursive syntax frontend: Haxe source, JS/PHP emitters",
   "scripts": {
@@ -12,7 +12,8 @@
     "test:studio": "npm run build:studio && node --test test/studio.test.mjs",
     "docs": "node scripts/generate-reference.mjs && node scripts/generate-documentation-origin.mjs",
     "docs:check": "node scripts/generate-documentation-origin.mjs --check",
-    "benchmark:atlas": "npm run build:studio && node scripts/benchmark-atlas.mjs"
+    "benchmark:atlas": "npm run build:studio && node scripts/benchmark-atlas.mjs",
+    "benchmark:gui": "npm run build:studio && node --test --test-name-pattern='synthetic GUI benchmark' test/ui-host.test.mjs"
   },
   "engines": {
     "node": ">=22"

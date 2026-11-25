@@ -31,6 +31,13 @@ class FakeElement {
     this.className = '';
     this.open = false;
     this.attributes = new Map();
+    const properties = new Map();
+    this.styleWrites = 0;
+    this.style = {
+      setProperty: (name, value) => { this.styleWrites++; properties.set(name, value); },
+      removeProperty: name => { this.styleWrites++; properties.delete(name); },
+      getPropertyValue: name => properties.get(name) ?? ''
+    };
     this.value = '';
     this.selectionStart = null;
     this.selectionEnd = null;
@@ -97,7 +104,8 @@ function setup() {
   const context = {};
   runInNewContext(read('ui-host.js'), context);
   const root = new FakeElement('root');
-  const document = {activeElement: null, createElement(tag) {
+  const document = {activeElement: null, created: 0, createElement(tag) {
+    this.created++;
     const node = new FakeElement(tag);
     node.ownerDocument = this;
     return node;
@@ -115,7 +123,7 @@ function compileAndRun(example, host) {
 }
 
 test('all UI examples are advertised in the canonical documentation and compile on JS and PHP', () => {
-  for (const name of ['browser-alert', 'browser-view', 'browser-counter', 'gui-greeting', 'gui-lesson', 'gui-independent', 'gui-reset']) {
+  for (const name of ['browser-alert', 'browser-view', 'browser-counter', 'gui-greeting', 'gui-lesson', 'gui-independent', 'gui-reset', 'gui-dashboard', 'gui-style-toggle']) {
     const sample = demo(name);
     assert.equal(sample.expect.kind, 'ui');
     assert.equal(sample.host, 'studio/host.json');
@@ -399,4 +407,131 @@ test('0.16 select options and IME composition keep native controls and dispatch 
   assert.equal(select.value,'B');
   assert.equal(findAll(root,'input')[0],input);
   assert.deepEqual(errors,[]);
+});
+
+
+test('0.17 style composition, removal, validation and native identity', () => {
+  const {host,root,errors}=setup();
+  const decorate=(view,styles)=>({type:'styled',view,styles});
+  host.render(decorate({type:'state',initial:0,view:n=>({
+    type:'column',children:[
+      decorate(decorate({type:'text',text:n},[{padding:6,color:'#000'}]),
+        n===0?[{padding:12,background:'#fff',shadow:'hard'}]:[{padding:8}]),
+      {type:'button',label:'next',update:old=>old+1}
+    ]
+  })},[{margin:10}]));
+  const label=findAll(root,'p')[0];
+  const slot=findAll(root,'section')[0];
+  assert.equal(label.style.getPropertyValue('padding'),'12px');
+  assert.equal(label.style.getPropertyValue('color'),'#000');
+  assert.equal(label.style.getPropertyValue('background-color'),'#fff');
+  findButtons(root)[0].click();
+  assert.equal(findAll(root,'p')[0],label);
+  assert.equal(label.style.getPropertyValue('padding'),'8px');
+  assert.equal(label.style.getPropertyValue('background-color'),'');
+  assert.equal(label.style.getPropertyValue('box-shadow'),'');
+  assert.equal(slot.style.getPropertyValue('margin'),'10px');
+  assert.equal(label.textContent,'1');
+  const writes=label.styleWrites;
+  findButtons(root)[0].click();
+  assert.equal(label.styleWrites,writes,'identical style is not written again');
+  for (const style of [{background:'url(https://example.com)'},{position:'fixed'},{padding:-1},{shadow:'toString'}]) {
+    assert.throws(()=>host.render(decorate({type:'text',text:'bad'},[style])),/Invalid style value|Unsupported style property/);
+  }
+  assert.equal(findAll(root,'p')[0],label);
+  assert.deepEqual(errors,[]);
+});
+
+test('0.17 invalid reactive style does not commit the view or state',()=>{
+  const {host,root,errors}=setup();
+  host.render({type:'state',initial:0,view:n=>({type:'column',children:[
+    {type:'text',text:n},
+    {type:'styled',view:{type:'text',text:'styled'},styles:[{padding:n===1?-1:5}]},
+    {type:'button',label:'next',update:old=>old+1},
+    {type:'button',label:'skip',update:old=>old+2}
+  ]})});
+  const value=findAll(root,'p')[0];
+  findButtons(root)[0].click();
+  assert.equal(value.textContent,'0');
+  assert.match(errors[0],/Invalid style value/);
+  findButtons(root)[1].click();
+  assert.equal(value.textContent,'2');
+});
+
+test('0.17 grid and dashboard execute compiled Mira and preserve native identity',()=>{
+  const {host,root,errors}=setup();
+  compileAndRun(demo('gui-dashboard'),host);
+  const grid=findAll(root,'div').find(n=>n.className==='mira-ui-grid');
+  assert.equal(grid.style.getPropertyValue('grid-template-columns'),'repeat(2, minmax(0, 1fr))');
+  const titles=findAll(root,'h2');
+  assert.deepEqual(titles.map(n=>n.textContent),['Studio musicale','2','60']);
+  findButtons(root)[0].click();
+  assert.deepEqual(titles.map(n=>n.textContent),['Studio musicale','3','90']);
+  assert.equal(findAll(root,'h2')[1],titles[1]);
+  assert.deepEqual(errors,[]);
+});
+
+test('0.17 dynamic theme uses the same native view and removes unused style',()=>{
+  const {host,root,errors}=setup();
+  compileAndRun(demo('gui-style-toggle'),host);
+  const panel=findAll(root,'div').find(n=>n.className==='mira-ui-column');
+  const button=findButtons(root)[0];
+  assert.equal(panel.style.getPropertyValue('background-color'),'#c1f1dc');
+  button.click();
+  assert.equal(panel.style.getPropertyValue('background-color'),'#202629');
+  assert.notEqual(panel.style.getPropertyValue('box-shadow'),'');
+  assert.equal(findButtons(root)[0],button);
+  button.click();
+  assert.equal(panel.style.getPropertyValue('background-color'),'#c1f1dc');
+  assert.equal(panel.style.getPropertyValue('box-shadow'),'');
+  assert.deepEqual(errors,[]);
+});
+
+test('0.17 styled grid constructors return identical records on JS and PHP',()=>{
+  const source=readFileSync(resolve(root,'lib/gui.mira'),'utf8')+
+    '\nresult = styled: (grid: 2, children: [title: "Mira"]), with: [{padding: 12}];';
+  const js=compiler.compile(source,'js');
+  const php=compiler.compile(source,'php');
+  assert.equal(js.ok,true,js.message);
+  assert.equal(php.ok,true,php.message);
+  const value=JSON.parse(runInNewContext(js.output+'\nJSON.stringify(result)',{}));
+  const executed=spawnSync('php',['-r',php.output.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'});
+  assert.equal(executed.status,0,executed.stderr);
+  assert.deepEqual(JSON.parse(executed.stdout),value);
+  assert.deepEqual(value,{type:'styled',view:{type:'grid',columns:2,children:[{type:'title',text:'Mira'}]},styles:[{padding:12}]});
+});
+
+test('0.17 synthetic GUI benchmark counts actual element allocations and style writes', t=>{
+  const {host,root,document,errors}=setup();
+  const decorate=(view,styles)=>({type:'styled',view,styles});
+  const view=n=>({type:'column',children:[
+    ...Array.from({length:100},(_,i)=>decorate({type:'text',text:i===0?n:i},[{padding:4}])),
+    {type:'button',label:'next',update:old=>old+1}
+  ]});
+  host.render({type:'state',initial:0,view});
+  const initial=document.created;
+  const labels=findAll(root,'p');
+  const beforeWrites=labels.reduce((n,x)=>n+x.styleWrites,0);
+  const button=findButtons(root)[0];
+  const start=performance.now();
+  for(let i=0;i<100;i++)button.click();
+  const incrementalMs=performance.now()-start;
+  const incremental=document.created-initial;
+  const incrementalStyleWrites=labels.reduce((n,x)=>n+x.styleWrites,0)-beforeWrites;
+  assert.equal(labels[0].textContent,'100');
+  const before=document.created;
+  const fullStart=performance.now();
+  let fullStyleWrites=0;
+  for(let i=1;i<=100;i++){
+    host.render({type:'state',initial:i,view});
+    fullStyleWrites+=findAll(root,'p').reduce((n,x)=>n+x.styleWrites,0);
+  }
+  const fullMs=performance.now()-fullStart;
+  const full=document.created-before;
+  assert.equal(incremental,0);
+  assert.equal(full,10300);
+  assert.equal(incrementalStyleWrites,0);
+  assert.equal(fullStyleWrites,10000);
+  assert.deepEqual(errors,[]);
+  t.diagnostic(JSON.stringify({updates:100,viewNodes:103,incremental,full,incrementalStyleWrites,fullStyleWrites,incrementalMs,fullMs,environment:'simulated DOM'}));
 });
