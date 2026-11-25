@@ -1,4 +1,4 @@
-# Guida a Mira 0.14.0
+# Guida a Mira 0.15.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -451,4 +451,18 @@ API collegata: [`mira.syntax.Expr.Block`](api.md#api-mira-syntax-expr-block)
 
 - [Computazione differita](examples.md#example-nullary-value) — result = 42
 - [Cattura lessicale senza argomenti](examples.md#example-nullary-closure) — result = 42
+
+<a id="feature-gui-library"></a>
+## Libreria GUI Mira e binding
+
+**Disponibile dalla versione 0.15**
+
+Costruttori GUI componibili scritti in Mira, input controllati e stato immutabile.
+
+lib/gui.mira contiene normali selettori che costruiscono record. Row, input testuale, checkbox e select sono interpretati dall'host DOM. Per i campi controllati update riceve lo stato precedente e il nuovo valore; una funzione Mira restituisce lo stato successivo. I cataloghi concatenano esplicitamente la libreria con l'esempio durante la build, senza introdurre import o sintassi nuova. Il renderer ricostruisce il sottoalbero e prova a ripristinare focus e cursore nei controlli strutturalmente stabili. PHP compila le view ma non esegue il DOM.
+
+API collegata: [`mira.HostEnvironment`](api.md#api-mira-hostenvironment)
+
+- [Salutami · input reattivo](examples.md#example-gui-greeting) — Anteprima interattiva (browser JS; PHP compilato soltanto)
+- [Scheda lezione · form reattivo](examples.md#example-gui-lesson) — Anteprima interattiva (browser JS; PHP compilato soltanto)
 

@@ -54,6 +54,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Blocchi con espressioni in sequenza | `0.11` | [Dettagli](docs/reference/language.md#feature-block-steps) |
 | ✅ | Valori locali immutabili nei blocchi | `0.12` | [Dettagli](docs/reference/language.md#feature-local-values) |
 | ✅ | Blocchi senza parametri | `0.14` | [Dettagli](docs/reference/language.md#feature-nullary-blocks) |
+| ✅ | Libreria GUI Mira e binding | `0.15` | [Dettagli](docs/reference/language.md#feature-gui-library) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

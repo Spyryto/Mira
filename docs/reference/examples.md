@@ -1390,3 +1390,122 @@ result = 20 >> {x |
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/nullary-closure)
 
+<a id="example-gui-greeting"></a>
+## Salutami · input reattivo
+
+Un campo di testo aggiorna lo stato e una closure senza argomenti apre un saluto.
+
+Feature: [Libreria GUI Mira e binding](language.md#feature-gui-library)
+
+```mira
+# Mira GUI: ordinary functions; no compiler or DOM dependencies.
+column: items = {type: "column", children: items};
+row: items = {type: "row", children: items};
+title: caption = {type: "title", text: caption};
+text: content = {type: "text", text: content};
+button: caption, on click: action = {
+  type: "button", label: caption, onClick: action
+};
+button: caption, update: transition = {
+  type: "button", label: caption, update: transition
+};
+text input: caption, value: current, update: transition = {
+  type: "input", label: caption, value: current, update: transition
+};
+checkbox: caption, checked: current, update: transition = {
+  type: "checkbox", label: caption, checked: current, update: transition
+};
+choose: caption, value: current, options: choices, update: transition = {
+  type: "select", label: caption, value: current, options: choices, update: transition
+};
+state: initial, view: factory = {type: "state", initial: initial, view: factory};
+
+# Un input con binding e un pulsante che cattura lo stato.
+greeting: name = column: [
+  title: "Salutami",
+  text input: "Il tuo nome", value: name, update: {old, entered | entered},
+  text: name,
+  button: "Mostra saluto", on click: {| alert name}
+];
+
+render (state: "Mira", view: (greeting: _));
+```
+
+**Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/gui-greeting)
+
+<a id="example-gui-lesson"></a>
+## Scheda lezione · form reattivo
+
+Input, layout orizzontale, checkbox e select con calcolo del compenso e stato immutabile.
+
+Feature: [Libreria GUI Mira e binding](language.md#feature-gui-library)
+
+```mira
+# Mira GUI: ordinary functions; no compiler or DOM dependencies.
+column: items = {type: "column", children: items};
+row: items = {type: "row", children: items};
+title: caption = {type: "title", text: caption};
+text: content = {type: "text", text: content};
+button: caption, on click: action = {
+  type: "button", label: caption, onClick: action
+};
+button: caption, update: transition = {
+  type: "button", label: caption, update: transition
+};
+text input: caption, value: current, update: transition = {
+  type: "input", label: caption, value: current, update: transition
+};
+checkbox: caption, checked: current, update: transition = {
+  type: "checkbox", label: caption, checked: current, update: transition
+};
+choose: caption, value: current, options: choices, update: transition = {
+  type: "select", label: caption, value: current, options: choices, update: transition
+};
+state: initial, view: factory = {type: "state", initial: initial, view: factory};
+
+# Una piccola scheda lezione, con stato immutabile e componenti.
+lesson view: model = column: [
+  title: "Scheda lezione",
+  text input: "Allievo", value: (model ~ student),
+    update: {old, entered | {
+      student: entered, hours: (old ~ hours), paid: (old ~ paid), mode: (old ~ mode)
+    }},
+  row: [
+    button: "-1 ora", update: {old | {
+      student: (old ~ student),
+      hours: (if (old ~ hours > 1) then (old ~ hours - 1) else 1),
+      paid: (old ~ paid), mode: (old ~ mode)
+    }},
+    text: (model ~ hours),
+    button: "+1 ora", update: {old | {
+      student: (old ~ student), hours: (old ~ hours + 1),
+      paid: (old ~ paid), mode: (old ~ mode)
+    }}
+  ],
+  choose: "Modalita", value: (model ~ mode), options: ["In presenza", "Online"],
+    update: {old, selected | {
+      student: (old ~ student), hours: (old ~ hours),
+      paid: (old ~ paid), mode: selected
+    }},
+  checkbox: "Pagato", checked: (model ~ paid),
+    update: {old, checked | {
+      student: (old ~ student), hours: (old ~ hours),
+      paid: checked, mode: (old ~ mode)
+    }},
+  text: (model ~ student),
+  text: (model ~ mode),
+  text: "Compenso in euro (30 / ora)",
+  text: (model ~ hours * 30),
+  text: (if (model ~ paid) then "Saldato" else "Da saldare")
+];
+
+render (state: {student: "Ada", hours: 2, paid: false, mode: "In presenza"},
+  view: (lesson view: _));
+```
+
+**Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/gui-lesson)
+

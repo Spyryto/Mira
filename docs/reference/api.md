@@ -192,7 +192,7 @@ class HostEnvironment
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L6)
 
-Feature: [UI web e interoperabilità](language.md#feature-browser-ui), [Filtri con predicati Mira](language.md#feature-filtering)
+Feature: [UI web e interoperabilità](language.md#feature-browser-ui), [Filtri con predicati Mira](language.md#feature-filtering), [Libreria GUI Mira e binding](language.md#feature-gui-library)
 
 <a id="api-mira-hostenvironment-callables"></a>
 ### `mira.HostEnvironment.callables`
