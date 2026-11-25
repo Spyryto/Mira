@@ -71,10 +71,11 @@ self.addEventListener('fetch', event => {
 
   if (request.mode === 'navigate') {
     // Cache known standalone pages under their own keys, not index.html.
-    if (url.pathname.endsWith('/laboratory.html')) {
+    if (url.pathname.endsWith('/laboratory.html') || url.pathname.endsWith('/lab-gui-rendering.json')) {
       // The report and its data belong to the same installed build.
       event.respondWith(caches.open(CACHE).then(cache =>
-        cache.match('./laboratory.html').then(hit => hit || fetch(request))));
+        cache.match(url.pathname.endsWith('/lab-gui-rendering.json') ? './lab-gui-rendering.json' : './laboratory.html')
+          .then(hit => hit || fetch(request))));
       return;
     }
     const page = url.pathname.endsWith('/gui-benchmark.html') ? './gui-benchmark.html'
