@@ -7,11 +7,11 @@
 
 | Categoria | Parole | Quota | Documenti coinvolti |
 | --- | ---: | ---: | ---: |
-| Generata automaticamente dal tooling | 18.902 | 41,0% | 4 |
-| Redatta con assistenza IA (dichiarata) | 22.316 | 48,5% | 11 |
+| Generata automaticamente dal tooling | 19.148 | 41,1% | 4 |
+| Redatta con assistenza IA (dichiarata) | 22.651 | 48,6% | 11 |
 | Redazione umana dichiarata | 0 | 0,0% | 0 |
-| Provenienza non verificata | 4834 | 10,5% | 3 |
-| **Totale** | **46.052** | **100%** | **17** |
+| Provenienza non verificata | 4834 | 10,4% | 3 |
+| **Totale** | **46.633** | **100%** | **17** |
 
 I documenti coinvolti **non sono sommabili**: per esempio il README contiene
 una sezione generata dal tooling e altre sezioni editoriali. Le percentuali
@@ -30,16 +30,16 @@ arrotondamenti).
 | [`docs/gui-rendering.md`](../docs/gui-rendering.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 2154 | — |
 | [`docs/mira04.md`](../docs/mira04.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 699 | — |
 | [`docs/performance.md`](../docs/performance.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 698 | — |
-| [`docs/reference/api.md`](../docs/reference/api.md) | Intero documento | Generata automaticamente dal tooling | 6098 | `scripts/generate-reference.mjs` |
+| [`docs/reference/api.md`](../docs/reference/api.md) | Intero documento | Generata automaticamente dal tooling | 6330 | `scripts/generate-reference.mjs` |
 | [`docs/reference/examples.md`](../docs/reference/examples.md) | Intero documento | Generata automaticamente dal tooling | 8163 | `scripts/generate-reference.mjs` |
 | [`docs/reference/language.md`](../docs/reference/language.md) | Intero documento | Generata automaticamente dal tooling | 3842 | `scripts/generate-reference.mjs` |
 | [`docs/reference/README.md`](../docs/reference/README.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 161 | — |
 | [`docs/structured-data.md`](../docs/structured-data.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 1617 | — |
 | [`docs/studio.md`](../docs/studio.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 3819 | — |
 | [`docs/syntax.md`](../docs/syntax.md) | Intero documento | Provenienza non verificata | 1838 | — |
-| [`docs/type-checker.md`](../docs/type-checker.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 2419 | — |
-| [`README.md`](../README.md) | Resto del documento | Redatta con assistenza IA (dichiarata) | 3881 | — |
-| [`README.md`](../README.md) | Sezione generata | Generata automaticamente dal tooling | 799 | `scripts/generate-reference.mjs` |
+| [`docs/type-checker.md`](../docs/type-checker.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 2723 | — |
+| [`README.md`](../README.md) | Resto del documento | Redatta con assistenza IA (dichiarata) | 3912 | — |
+| [`README.md`](../README.md) | Sezione generata | Generata automaticamente dal tooling | 813 | `scripts/generate-reference.mjs` |
 
 ## Come interpretare le cifre
 
@@ -80,5 +80,5 @@ npm run docs
 node scripts/generate-documentation-origin.mjs --check
 ```
 
-Dimensione totale classificata: **344.599 byte UTF-8**,
+Dimensione totale classificata: **349.005 byte UTF-8**,
 in **17 documenti** e **18 sezioni attribuite**.
