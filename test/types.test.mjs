@@ -183,3 +183,67 @@ test('types: CLI reports expression anchors with machine-readable token ranges',
     assert.deepEqual(JSON.parse(r.stdout).diagnostics,[]);
   } finally {rmSync(dir,{recursive:true,force:true});}
 });
+
+const typedHost={
+  values:['rate','lesson'],
+  callables:['format','apply callback','zero'],
+  selectors:['multiply:by:'],
+  types:{
+    rate:'Number',lesson:{record:{hours:'Number',name:'Text'}},
+    format:{parameters:['Number'],result:'Text'},
+    'apply callback':{parameters:[{parameters:['Number'],result:'Number'}],result:'Number'},
+    zero:{parameters:[],result:'Number'},
+    'multiply:by:':{parameters:['Number','Number'],result:'Number'}
+  }
+};
+test('types: host values, callables, selectors, sections and callbacks reuse normal inference',()=>{
+  const result=check('quote: x = multiply: x, by: rate; amount = quote: (lesson ~ hours); label = format amount; triple = (multiply: _, by: 3); n = 2 >> triple; callback = apply callback {x | x + 1}; z = () >> zero;',typedHost);
+  assert.equal(result['quote:'],'(Number) -> Number');
+  assert.equal(result.amount,'Number');assert.equal(result.label,'Text');
+  assert.equal(result.triple,'(Number) -> Number');assert.equal(result.n,'Number');
+  assert.equal(result.callback,'Number');assert.equal(result.z,'Number');
+});
+test('types: typed host errors are rejected at call sites; untyped hosts remain explicit',()=>{
+  for(const [source,pattern] of [
+    ['x = format "x";',/expected Number, got Text/],
+    ['x = multiply: 2, by: "x";',/expected Number, got Text/],
+    ['x = apply callback {x | "x"};',/expected Number, got Text/],
+    ['x = lesson ~ missing;',/missing record field missing/],
+    ['x = zero 1;',/function arity mismatch/],
+    ['x = format rate; y = format true;',/expected Number, got Boolean/]
+  ])assert.throws(()=>check(source,typedHost),pattern,source);
+  assert.throws(()=>check('x = log 1;',{callables:['log']}),/host type signature required/);
+  assert.throws(()=>check('x = hidden 1;',{types:{hidden:{parameters:['Number'],result:'Number'}}}),/name is not registered/);
+});
+test('types: malformed host manifests are rejected before inference',()=>{
+  const invalid=[
+    {values:['x'],types:{x:'Dynamic'}},
+    {values:['x'],types:{x:{list:'Number',extra:true}}},
+    {values:['x'],types:{x:{record:[]}}},
+    {values:['x'],types:{x:{parameters:'Number',result:'Text'}}},
+    {callables:['x'],types:{x:'Number'}},
+    {selectors:['f:with:'],types:{'f:with:':{parameters:['Number'],result:'Number'}}},
+    {types:[]}
+  ];
+  for(const manifest of invalid)assert.throws(()=>check('x1 = 1;',manifest),/Host type/);
+});
+test('types: same host contract checks and executes with actual JavaScript and PHP hosts',()=>{
+  const source='quote: x = multiply: x, by: rate; result = format (quote: (lesson ~ hours));';
+  assert.equal(check(source,typedHost).result,'Text');
+  const dir=mkdtempSync(join(tmpdir(),'mira-typed-host-'));
+  try{
+    const input=join(dir,'program.mira'),manifest=join(dir,'host.json');
+    writeFileSync(input,source);writeFileSync(manifest,JSON.stringify(typedHost));
+    for(const target of ['js','php']){
+      const r=spawnSync('node',['dist/mira.cjs',input,target,'--host',manifest],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      const program=join(dir,target==='js'?'program.mjs':'program.php');
+      const entry=target==='js'?
+        'const __miraHost = {rate:30,lesson:{hours:2,name:"Ada"}, "multiply:by:":(x,y)=>x*y, format:x=>String(x)};\n'+r.stdout+'\nconsole.log(result);':
+        r.stdout.replace('declare(strict_types=1);','declare(strict_types=1);\n$GLOBALS["__miraHost"] = ["rate"=>30,"lesson"=>["hours"=>2,"name"=>"Ada"],"multiply:by:"=>fn($x,$y)=>$x*$y,"format"=>fn($x)=>(string)$x];')+'\necho $result, "\\n";';
+      writeFileSync(program,entry);
+      const executed=spawnSync(target==='js'?'node':'php',[program],{encoding:'utf8'});
+      assert.equal(executed.status,0,executed.stderr);assert.equal(executed.stdout.trim(),'60');
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

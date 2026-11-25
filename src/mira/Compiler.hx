@@ -36,7 +36,7 @@ class Compiler {
     public static function check(source:String, ?host:HostEnvironment,
         ?readModule:String->Null<String>, ?entry:String):Array<Dynamic> {
         final origins = new ExpressionOrigins();
-        return new mira.types.TypeChecker(origins).check(parse(source,host,readModule,entry,origins));
+        return new mira.types.TypeChecker(origins,host == null ? HostEnvironment.empty() : host).check(parse(source,host,readModule,entry,origins));
     }
 
     public static function inspectTokens(source:String):String {

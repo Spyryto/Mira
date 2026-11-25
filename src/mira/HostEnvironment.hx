@@ -1,6 +1,8 @@
 package mira;
 
 import mira.MiraError;
+import mira.types.Type;
+import mira.types.HostTypeCodec;
 
 // Pure compile-time description of host names. No JavaScript or PHP functions
 // are passed into Haxe; runtime callables remain owned by each host.
@@ -8,11 +10,13 @@ class HostEnvironment {
     public final values:Array<String>;
     public final callables:Array<String>;
     public final selectors:Array<String>;
+    public final types:Map<String,Type>;
 
     public function new(
         ?values:Array<String>,
         ?callables:Array<String>,
-        ?selectors:Array<String>
+        ?selectors:Array<String>,
+        ?typeManifest:Dynamic
     ) {
         this.values = values == null ? [] : values.copy();
         this.callables = callables == null ? [] : callables.copy();
@@ -33,6 +37,7 @@ class HostEnvironment {
             if (seen.exists(selector)) throw new MiraError("Duplicate host selector: " + selector);
             seen.set(selector, true);
         }
+        types = HostTypeCodec.read(typeManifest,this.values,this.callables,this.selectors);
     }
 
     public static function empty():HostEnvironment {
@@ -45,13 +50,14 @@ class HostEnvironment {
         } catch (error:Dynamic) {
             throw new MiraError("Invalid host environment JSON");
         }
-        if (input == null || Std.isOfType(input, Array)) {
+        if (input == null || !Reflect.isObject(input) || Std.isOfType(input, Array) || Std.isOfType(input,String)) {
             throw new MiraError("Host environment must be a JSON object");
         }
         return new HostEnvironment(
             names(input, "values"),
             names(input, "callables"),
-            names(input, "selectors")
+            names(input, "selectors"),
+            Reflect.field(input, "types")
         );
     }
 

@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.43.0');
+  assert.equal(bridge.version, '0.44.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.43.0');
+  assert.equal(bridge.version,'0.44.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -908,4 +908,15 @@ test('browser checker reports structured expression locations and imported files
   const syntax=bridge.check('x = @;');
   assert.equal(syntax.ok,false);
   assert.equal(syntax.diagnostic.code,'source_error');
+});
+
+test('typed host signatures are available in Studio and keep diagnostics',()=>{
+  const manifest=JSON.stringify({values:['rate'],callables:['format'],types:{rate:'Number',format:{parameters:['Number'],result:'Text'}}});
+  const good=bridge.check('quote: hours = format (hours * rate); result = quote: 2;',manifest);
+  assert.equal(good.ok,true,good.message);
+  assert.deepEqual(JSON.parse(good.output).map(x=>x.type),['(Number) -> Text','Text']);
+  const bad=bridge.check('result = format true;',manifest);
+  assert.equal(bad.ok,false);assert.equal(bad.diagnostic.code,'type_error');
+  const invalid=bridge.check('x = 1;',JSON.stringify({types:{fake:'Number'}}));
+  assert.equal(invalid.ok,false);assert.equal(invalid.diagnostic.code,'host_type_error');
 });
