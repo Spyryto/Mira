@@ -68,6 +68,18 @@ class SourceEmitter {
                 "[" + [for (item in items)
                     expression(item, target, scope, reservedHostNames)].join(", ") + "]";
 
+            case Block(parameter, body):
+                final emitted = Mangle.name(parameter);
+                if (emitted == "__miraHost") {
+                    throw new MiraError("Reserved block parameter " + parameter);
+                }
+                final value = expression(body, target, [parameter].concat(scope),
+                    reservedHostNames);
+                switch (target) {
+                    case JavaScript: "((" + emitted + ") => " + value + ")";
+                    case Php: "(fn($" + emitted + ") => " + value + ")";
+                }
+
             case Record(keys, values):
                 final entries:Array<String> = [];
                 for (index in 0...keys.length) {
