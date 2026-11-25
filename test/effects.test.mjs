@@ -197,3 +197,28 @@ test('real HTTP round trip to a Mira service compiled to PHP', {timeout:15000}, 
     rmSync(dir,{recursive:true,force:true});
   }
 });
+
+test('RPC capabilities fix the method and enforce the portable wire subset',async()=>{
+  const calls=[];
+  const context={AbortController,TextEncoder};
+  runInNewContext(read('studio/effects.js'),context);
+  const {rpcService}=context.MiraEffects;
+  const controller=new AbortController();
+  const service=rpcService('/rpc','ledger.quote',async(url,options)=>{
+    calls.push({url,options});
+    return {ok:true,status:200,text:async()=>JSON.stringify({ok:true,value:{hours:2,total:60,items:[]}})};
+  });
+  assert.deepEqual(plain(await service({hours:2},controller.signal)),{hours:2,total:60,items:[]});
+  assert.equal(calls[0].url,'/rpc');
+  assert.deepEqual(JSON.parse(calls[0].options.body),{method:'ledger.quote',params:{hours:2}});
+  assert.equal(calls[0].options.signal,controller.signal);
+  assert.equal(calls[0].options.credentials,'omit');
+  for(const invalid of [{},{'01':2},{x:()=>0},{x:Infinity},{x:9007199254740992}]){
+    await assert.rejects(service(invalid,controller.signal),/Nonportable/);
+  }
+  assert.equal(calls.length,1);
+  const failure=rpcService('/rpc','ledger.quote',async()=>({ok:false,status:409,text:async()=>'{"ok":false,"error":{"code":"revision_conflict"}}'}));
+  await assert.rejects(failure({hours:2},controller.signal),/HTTP 409: revision_conflict/);
+  const broken=rpcService('/rpc','ledger.quote',async()=>({ok:true,status:200,text:async()=>'{"ok":true}'}));
+  await assert.rejects(broken({hours:2},controller.signal),/Invalid RPC response/);
+});
