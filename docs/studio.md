@@ -301,3 +301,7 @@ Da Bench apri **DOM Performance Lab**. Il benchmark gira sul DOM reale del dispo
 ## Specializzazione GUI (Mira 0.19)
 
 DOM Performance Lab include Mira specializzato: pass sperimentale su AST risolto per view fisse. Mostra numero di slot dinamici e tempi insieme agli altri tre renderer. Non cambia il renderer dell'anteprima generale; per limiti e metodo vedi browser-interop.md.
+
+## Record e stili specializzati (0.20)
+
+DOM Performance Lab include una demo da montare e il caso benchmark record/stile dinamico. Il renderer ordinario resta invariato nell'anteprima. Il validatore CSS è condiviso.

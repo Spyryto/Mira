@@ -151,9 +151,9 @@ test('GUI benchmark runs in a real Chromium DOM and checks all strategies',t=>{
   assert.equal(result.ok,true,result.message);
   assert.equal(result.version,bridge.version);
   assert.equal(result.rows,100);
-  assert.equal(result.results.length,4);
+  assert.equal(result.results.length,6);
   for(const row of result.results){
-    assert.equal(row.dynamicSlots,row.density==='sparse'?1:100);
+    assert.equal(row.dynamicSlots,row.density==='styled'?2:row.density==='sparse'?1:100);
     for(const strategy of ['view','incremental','rebuild','specialized','direct']){
       assert.ok(Number.isFinite(row[strategy].medianMs)&&row[strategy].medianMs>=0);
       assert.ok(row[strategy].p95Ms>=row[strategy].medianMs);
@@ -184,9 +184,29 @@ test('specialization uses resolved AST and recompiles only dynamic slot expressi
   assert.equal(result.program.values(5)[0],result.program.view(5).children[1].children[0].text);
   const unsupported=[
     'example: n = if (n > 0) then {type: "text", text: n} else {type: "title", text: n};',
-    'example: n = {type: "styled", view: {type: "text", text: n}, styles: [{padding: n}]};',
     'example: n = {type: "button", label: "Next", update: {old | old + n}};',
-    'example: n = {type: "text", text: (n ~ field)};'
   ];
   for(const source of unsupported)assert.throws(()=>sandbox.MiraGuiSpecialize.compile(bridge,source,'example:'),/Unsupported specialized view/);
+});
+
+
+test('0.20 record state and style slots agree with regular compiled view',()=>{
+  const sandbox={};
+  runInNewContext(read('gui-specialize.js'),sandbox);
+  runInNewContext(read('gui-benchmark.js'),sandbox);
+  const source=sandbox.MiraGuiBench.source('styled');
+  for(const target of ['js','php'])assert.equal(bridge.compile(source,target).ok,true);
+  const result=sandbox.MiraGuiSpecialize.compile(bridge,source,'bench view:');
+  assert.equal(result.plan.slots.length,2);
+  for(const count of [0,1,42,7]){
+    const state={count};
+    const view=result.program.view(state);
+    const values=result.program.values(state);
+    assert.equal(values[0][0][0].padding,view.children[0].styles[0].padding);
+    assert.equal(values[1],view.children[0].view.text);
+  }
+  const php=bridge.compile(source,'php');
+  const p=spawnSync('php',['-r',php.output.replace(/^<\?php\s*/,'')+'\n$v=bench_view(["count"=>7]); echo json_encode([$v["children"][0]["view"]["text"],$v["children"][0]["styles"][0]["padding"]]);'],{encoding:'utf8'});
+  assert.equal(p.status,0,p.stderr);
+  assert.deepEqual(JSON.parse(p.stdout),[7,8]);
 });

@@ -3,6 +3,50 @@
 (function (global) {
   'use strict';
 
+  // A deliberately small typed CSS vocabulary. Numeric lengths are px.
+  const length = value => Number.isFinite(value) && value >= 0 && value <= 4096
+    ? value + 'px' : null;
+  const color = value => typeof value === 'string' &&
+    (/^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value)
+      || ['transparent', 'currentColor'].includes(value)) ? value : null;
+  const choice = (...values) => value => values.includes(value) ? value : null;
+  const size = value => value === 'fill' ? '100%' : value === 'auto' ? 'auto' : length(value);
+  const styles = {
+    background: ['background-color', color], color: ['color', color],
+    padding: ['padding', length], margin: ['margin', length], gap: ['gap', length],
+    radius: ['border-radius', length], borderWidth: ['border-width', length],
+    borderColor: ['border-color', color], borderStyle: ['border-style', choice('solid', 'none', 'dashed')],
+    fontSize: ['font-size', length],
+    fontWeight: ['font-weight', value => Number.isInteger(value) && value >= 100 && value <= 900 ? String(value) : null],
+    width: ['width', size], maxWidth: ['max-width', size], minWidth: ['min-width', size],
+    flex: ['flex-grow', value => Number.isFinite(value) && value >= 0 && value <= 100 ? String(value) : null],
+    align: ['align-items', choice('start', 'center', 'end', 'stretch', 'baseline')],
+    justify: ['justify-content', choice('start', 'center', 'end', 'space-between', 'space-around')],
+    wrap: ['flex-wrap', choice('wrap', 'nowrap')],
+    textAlign: ['text-align', choice('left', 'center', 'right')],
+    shadow: ['box-shadow', value => typeof value === 'string' && Object.hasOwn(shadows, value) ? shadows[value] : null]
+  };
+  const shadows = {none: 'none', hard: '3px 3px 0 #1e2529', soft: '0 4px 16px #1e252926'};
+
+  function styleRecord(record, output) {
+    if (!record || typeof record !== 'object' || Array.isArray(record)) {
+      throw new Error('Each style must be a record');
+    }
+    for (const [key, value] of Object.entries(record)) {
+      if (!Object.hasOwn(styles, key)) throw new Error('Unsupported style property: ' + key);
+      const [property, validate] = styles[key];
+      const css = validate(value);
+      if (css === null) throw new Error('Invalid style value for ' + key);
+      output[property] = css;
+    }
+  }
+
+  function resolveStyles(layers) {
+    const css = Object.create(null);
+    for (const layer of layers) for (const record of layer) styleRecord(record, css);
+    return css;
+  }
+
   function createUiHost(doc, mount, onError = () => {}) {
     const MAX_NODES = 1000;
     const MAX_DEPTH = 24;
@@ -19,44 +63,6 @@
       return node;
     }
 
-    // A deliberately small typed CSS vocabulary. Numeric lengths are px.
-    const length = value => Number.isFinite(value) && value >= 0 && value <= 4096
-      ? value + 'px' : null;
-    const color = value => typeof value === 'string' &&
-      (/^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value)
-        || ['transparent', 'currentColor'].includes(value)) ? value : null;
-    const choice = (...values) => value => values.includes(value) ? value : null;
-    const size = value => value === 'fill' ? '100%' : value === 'auto' ? 'auto' : length(value);
-    const styles = {
-      background: ['background-color', color], color: ['color', color],
-      padding: ['padding', length], margin: ['margin', length], gap: ['gap', length],
-      radius: ['border-radius', length], borderWidth: ['border-width', length],
-      borderColor: ['border-color', color], borderStyle: ['border-style', choice('solid', 'none', 'dashed')],
-      fontSize: ['font-size', length],
-      fontWeight: ['font-weight', value => Number.isInteger(value) && value >= 100 && value <= 900 ? String(value) : null],
-      width: ['width', size], maxWidth: ['max-width', size], minWidth: ['min-width', size],
-      flex: ['flex-grow', value => Number.isFinite(value) && value >= 0 && value <= 100 ? String(value) : null],
-      align: ['align-items', choice('start', 'center', 'end', 'stretch', 'baseline')],
-      justify: ['justify-content', choice('start', 'center', 'end', 'space-between', 'space-around')],
-      wrap: ['flex-wrap', choice('wrap', 'nowrap')],
-      textAlign: ['text-align', choice('left', 'center', 'right')],
-      shadow: ['box-shadow', value => typeof value === 'string' && Object.hasOwn(shadows, value) ? shadows[value] : null]
-    };
-    const shadows = {none: 'none', hard: '3px 3px 0 #1e2529', soft: '0 4px 16px #1e252926'};
-
-    function styleRecord(record, output) {
-      if (!record || typeof record !== 'object' || Array.isArray(record)) {
-        throw new Error('Each style must be a record');
-      }
-      for (const [key, value] of Object.entries(record)) {
-        if (!Object.hasOwn(styles, key)) throw new Error('Unsupported style property: ' + key);
-        const [property, validate] = styles[key];
-        const css = validate(value);
-        if (css === null) throw new Error('Invalid style value for ' + key);
-        output[property] = css;
-      }
-    }
-
     // Decorations are transparent: no wrapper DOM node, and the underlying
     // component keeps its identity. Inner styles first, outer styles last.
     function unwrap(spec) {
@@ -68,9 +74,7 @@
         layers.push(spec.styles);
         spec = spec.view;
       }
-      const css = Object.create(null);
-      for (const layer of layers.reverse()) for (const record of layer) styleRecord(record, css);
-      return {spec, css};
+      return {spec, css: resolveStyles(layers.reverse())};
     }
 
     function patchStyles(instance, css) {
@@ -341,5 +345,5 @@
     return Object.freeze(uiHost);
   }
 
-  global.MiraUiHost = Object.freeze({createUiHost});
+  global.MiraUiHost = Object.freeze({createUiHost, resolveStyles});
 })(globalThis);
