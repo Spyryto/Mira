@@ -144,3 +144,56 @@ test('Mira transition and effect descriptions execute identically on JS and PHP'
     assert.deepEqual(results[0].done,{model:{request:1,count:1,status:'new'},effects:[]});
   } finally {rmSync(dir,{recursive:true,force:true});}
 });
+
+test('real HTTP round trip to a Mira service compiled to PHP', {timeout:15000}, async()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-http-'));
+  let php;
+  try {
+    const source=fileURLToPath(new URL('../examples/greeting-service.mira',import.meta.url));
+    const cli=fileURLToPath(new URL('../dist/mira.cjs',import.meta.url));
+    writeFileSync(join(dir,'greeting-program.php'),execFileSync('node',[cli,source,'php'],{encoding:'utf8'}));
+    writeFileSync(join(dir,'greeting.php'),read('examples/php/greeting.php'));
+    const {createServer}=await import('node:net');
+    const probe=createServer();
+    await new Promise((resolve,reject)=>{probe.once('error',reject);probe.listen(0,'127.0.0.1',resolve);});
+    const port=probe.address().port;
+    await new Promise(resolve=>probe.close(resolve));
+    const {spawn}=await import('node:child_process');
+    php=spawn('php',['-S','127.0.0.1:'+port,'-t',dir],{stdio:'ignore'});
+    let spawnError;
+    php.on('error',error=>{spawnError=error;});
+    const url='http://127.0.0.1:'+port+'/greeting.php';
+    let ready=false;
+    for(let n=0;n<50;n++){
+      if(spawnError)throw spawnError;
+      if(php.exitCode!==null)throw Error('PHP server exited');
+      try {const response=await fetch(url,{signal:AbortSignal.timeout(500)});ready=response.status===405;if(ready)break;}catch{}
+      await new Promise(resolve=>setTimeout(resolve,50));
+    }
+    assert.ok(ready,'PHP server not ready');
+    const handler=jsonService(url);
+    const result=await handler({id:7,name:'Mira'},AbortSignal.timeout(2000));
+    assert.deepEqual(result,{id:7,message:'Mira'});
+    await assert.rejects(handler({id:'bad',name:'Mira'},AbortSignal.timeout(2000)),/HTTP 400/);
+    // The same HTTP capability can be driven by the app runtime.
+    const renderer=fakeRenderer();
+    const done=new Promise((resolve,reject)=>{
+      const app=createApp(renderer,{initial:{status:'ready'},view:()=>{},update(model,msg){
+        if(msg.type==='load')return {model:{status:'loading'},effects:[{
+          service:'php',id:9,reply:'reply',payload:{id:9,name:'Mira via PHP'}
+        }]};
+        if(!msg.ok){reject(Error(msg.error));return {model,effects:[]};}
+        resolve(msg.value);
+        return {model:{status:msg.value.message},effects:[]};
+      }},{php:handler},reject);
+      app.dispatch({type:'load'});
+    });
+    assert.deepEqual(plain(await done),{id:9,message:'Mira via PHP'});
+  } finally {
+    if(php && php.exitCode===null && php.pid){
+      const closed=new Promise(resolve=>php.once('close',resolve));
+      php.kill(); await closed;
+    }
+    rmSync(dir,{recursive:true,force:true});
+  }
+});
