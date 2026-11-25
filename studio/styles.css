@@ -420,3 +420,20 @@ body.mira-highlight-ready #source::selection {
 .lab-bar.direct { fill:#087aa1; }
 .lab-note { color:var(--sub); font-size:12px; }
 .lab-link { display:inline-block; border:2px solid var(--line); border-radius:8px; padding:10px; background:var(--yellow); font-weight:800; }
+
+/* Laboratory only. The report is static and does not need a JS toggle.
+   Use the remembered block size, never an intrinsic inline-width estimate.
+   Keep disclosure widgets and the section containing a fragment target eager. */
+.lab-render-toggle, .lab-render-label { display:none; }
+@supports (content-visibility: auto) and (contain-intrinsic-block-size: auto 240px) {
+  .lab-render-toggle, .lab-render-label { display:revert; }
+  .lab-render-toggle:focus-visible { outline:3px solid #287e78; outline-offset:3px; }
+  .lab-page > #lab-render-normal:not(:checked) ~ section.lab-card:not(.lab-always) {
+    content-visibility:auto;
+    contain-intrinsic-block-size:auto 240px;
+  }
+  /* Keep focused links and controls fully rendered, including focus outlines. */
+  .lab-page > #lab-render-normal:not(:checked) ~ section.lab-card:focus-within {
+    content-visibility:visible;
+  }
+}

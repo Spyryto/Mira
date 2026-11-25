@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.28.0');
+  assert.equal(bridge.version, '0.29.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.28.0');
+  assert.equal(bridge.version,'0.29.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -685,16 +685,16 @@ test('Laboratory publishes historical data and precomputed accessible charts off
   assert.match(read('index.html'), /href="\.\/laboratory\.html"/);
   assert.match(html, /href="\.\/gui-benchmark\.html"/);
   assert.doesNotMatch(html, /<script\b/);
-  assert.equal((html.match(/class="lab-track"/g) ?? []).length,56);
+  assert.equal((html.match(/class="lab-track"/g) ?? []).length,64);
   assert.match(html, /3,3 µs/);
   assert.match(html, /910 µs/);
   assert.match(html, /non sono stati rieseguiti/);
   assert.equal(source.schema,2);
-  assert.equal(source.ci.length,11);
+  assert.equal(source.ci.length,12);
   assert.equal(source.devices.length,2);
-  assert.equal(source.timeline.length,13);
-  assert.equal(source.ci.at(-1).browser.version,'0.27.0');
-  assert.equal(source.ci.reduce((n,r)=>n+(r.browser?.results.length??0)+(r.browser?.form?.length??0)+(r.browser?.hybrid?.length??0)+(r.browser?.textExperiment?.results.length??0)+(r.batch?.results.length??0),0),92);
+  assert.equal(source.timeline.length,14);
+  assert.equal(source.ci.at(-1).browser.version,'0.28.0');
+  assert.equal(source.ci.reduce((n,r)=>n+(r.browser?.results.length??0)+(r.browser?.form?.length??0)+(r.browser?.hybrid?.length??0)+(r.browser?.textExperiment?.results.length??0)+(r.batch?.results.length??0)+(r.containment?.results.length??0),0),112);
   assert.equal(source.devices[0].results[1].specialized.medianMs,1.233);
   assert.equal(source.devices[1].results[1].direct.medianMs,25.967);
   assert.match(html,/26,290 ms/);
@@ -703,6 +703,11 @@ test('Laboratory publishes historical data and precomputed accessible charts off
   assert.match(html,/139377247685/);
   assert.match(html,/139404483141/);
   assert.match(html,/139425561403/);
+  assert.match(html,/139433834245/);
+  assert.match(html,/id="lab-render-normal"/);
+  assert.match(html,/class="lab-card lab-always"><h2 id="architecture"/);
+  assert.match(read('styles.css'),/contain-intrinsic-block-size:auto 240px/);
+  assert.match(html,/CSS containment · 0.28.0/);
   assert.match(html,/Raggruppamento · 0.27.0/);
   assert.match(html,/Anteprima e ispettore/);
   for(const file of ['laboratory.html','lab-gui-rendering.json']) assert.ok(read('sw.js').includes('./'+file));

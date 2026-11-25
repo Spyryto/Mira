@@ -2398,6 +2398,646 @@
           }
         ]
       }
+    },
+    {
+      "version": "0.28.0",
+      "date": "2026-11-25",
+      "pr": 51,
+      "commit": "a63dd066534c5e3b27265cd84789788c014adb9a",
+      "jobId": 139433834245,
+      "source": "https://github.com/Spyryto/Mira/actions/runs/45678905612/job/139433834245",
+      "studioTests": 102,
+      "documentedChecks": 97,
+      "browser": {
+        "ok": true,
+        "rows": 100,
+        "updates": 30,
+        "rounds": 5,
+        "warmup": 5,
+        "form": [
+          {
+            "flush": false,
+            "incremental": {
+              "medianMs": 0.03333333333333333,
+              "p95Ms": 0.060000000000582074
+            },
+            "specialized": {
+              "medianMs": 0.006666666667054718,
+              "p95Ms": 0.013333333333139307
+            }
+          },
+          {
+            "flush": true,
+            "incremental": {
+              "medianMs": 0.15333333333352736,
+              "p95Ms": 0.3066666666660846
+            },
+            "specialized": {
+              "medianMs": 0.11666666666666667,
+              "p95Ms": 0.15999999999961195
+            }
+          }
+        ],
+        "hybrid": [
+          {
+            "flush": false,
+            "incremental": {
+              "medianMs": 0.04000000000038805,
+              "p95Ms": 0.08666666666589057
+            },
+            "hybrid": {
+              "medianMs": 0.006666666667054718,
+              "p95Ms": 0.013333333333139307
+            }
+          },
+          {
+            "flush": true,
+            "incremental": {
+              "medianMs": 0.3133333333331393,
+              "p95Ms": 0.5533333333335274
+            },
+            "hybrid": {
+              "medianMs": 0.2766666666662786,
+              "p95Ms": 0.27999999999980596
+            }
+          }
+        ],
+        "textExperiment": {
+          "samples": 9,
+          "steps": 120,
+          "results": [
+            {
+              "density": "sparse",
+              "flush": false,
+              "content": {
+                "medianMs": 0.0024999999999029874,
+                "p95Ms": 0.005833333333187815
+              },
+              "data": {
+                "medianMs": 0.0016666666667636794,
+                "p95Ms": 0.004166666666666667
+              }
+            },
+            {
+              "density": "sparse",
+              "flush": true,
+              "content": {
+                "medianMs": 0.10750000000019402,
+                "p95Ms": 0.11166666666686069
+              },
+              "data": {
+                "medianMs": 0.10666666666656965,
+                "p95Ms": 0.15666666666656964
+              }
+            },
+            {
+              "density": "dense",
+              "flush": false,
+              "content": {
+                "medianMs": 0.032500000000194026,
+                "p95Ms": 0.03666666666661816
+              },
+              "data": {
+                "medianMs": 0.02416666666661816,
+                "p95Ms": 0.0375
+              }
+            },
+            {
+              "density": "dense",
+              "flush": true,
+              "content": {
+                "medianMs": 0.4091666666667152,
+                "p95Ms": 0.47750000000014553
+              },
+              "data": {
+                "medianMs": 0.339999999999903,
+                "p95Ms": 0.4324999999999515
+              }
+            }
+          ]
+        },
+        "version": "0.28.0",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+        "results": [
+          {
+            "density": "sparse",
+            "flush": false,
+            "view": {
+              "medianMs": 0.003333333333527359,
+              "p95Ms": 0.016666666666666666
+            },
+            "dynamicSlots": 1,
+            "incremental": {
+              "medianMs": 0.0800000000007761,
+              "p95Ms": 0.1433333333329453
+            },
+            "rebuild": {
+              "medianMs": 0.25333333333352737,
+              "p95Ms": 0.2600000000005821
+            },
+            "specialized": {
+              "medianMs": 0.003333333333527359,
+              "p95Ms": 0.010000000000582076
+            },
+            "direct": {
+              "medianMs": 0,
+              "p95Ms": 0.003333333333527359
+            }
+          },
+          {
+            "density": "sparse",
+            "flush": true,
+            "view": {
+              "medianMs": 0.003333333333527359,
+              "p95Ms": 0.016666666666666666
+            },
+            "dynamicSlots": 1,
+            "incremental": {
+              "medianMs": 0.17000000000019402,
+              "p95Ms": 0.2133333333331393
+            },
+            "rebuild": {
+              "medianMs": 0.6866666666668607,
+              "p95Ms": 1.1066666666670548
+            },
+            "specialized": {
+              "medianMs": 0.11333333333410943,
+              "p95Ms": 0.12000000000019402
+            },
+            "direct": {
+              "medianMs": 0.11666666666666667,
+              "p95Ms": 0.12333333333275126
+            }
+          },
+          {
+            "density": "dense",
+            "flush": false,
+            "view": {
+              "medianMs": 0.010000000000582076,
+              "p95Ms": 0.016666666666666666
+            },
+            "dynamicSlots": 100,
+            "incremental": {
+              "medianMs": 0.16333333333410943,
+              "p95Ms": 0.45999999999961194
+            },
+            "rebuild": {
+              "medianMs": 0.15999999999961195,
+              "p95Ms": 0.17333333333275125
+            },
+            "specialized": {
+              "medianMs": 0.03333333333333333,
+              "p95Ms": 0.05
+            },
+            "direct": {
+              "medianMs": 0.026666666667248744,
+              "p95Ms": 0.029999999999805974
+            }
+          },
+          {
+            "density": "dense",
+            "flush": true,
+            "view": {
+              "medianMs": 0.010000000000582076,
+              "p95Ms": 0.016666666666666666
+            },
+            "dynamicSlots": 100,
+            "incremental": {
+              "medianMs": 0.440000000000388,
+              "p95Ms": 0.5066666666660846
+            },
+            "rebuild": {
+              "medianMs": 0.5933333333339154,
+              "p95Ms": 0.7766666666662786
+            },
+            "specialized": {
+              "medianMs": 0.3566666666670547,
+              "p95Ms": 0.4899999999994179
+            },
+            "direct": {
+              "medianMs": 0.3733333333337214,
+              "p95Ms": 0.6599999999996119
+            }
+          },
+          {
+            "density": "styled",
+            "flush": false,
+            "view": {
+              "medianMs": 0.006666666667054718,
+              "p95Ms": 0.016666666666666666
+            },
+            "dynamicSlots": 2,
+            "incremental": {
+              "medianMs": 0.07666666666627861,
+              "p95Ms": 0.1133333333331393
+            },
+            "rebuild": {
+              "medianMs": 0.18333333333333332,
+              "p95Ms": 0.25666666666608456
+            },
+            "specialized": {
+              "medianMs": 0.003333333333527359,
+              "p95Ms": 0.00666666666608459
+            },
+            "direct": {
+              "medianMs": 0.003333333333527359,
+              "p95Ms": 0.003333333333527359
+            }
+          },
+          {
+            "density": "styled",
+            "flush": true,
+            "view": {
+              "medianMs": 0.006666666667054718,
+              "p95Ms": 0.016666666666666666
+            },
+            "dynamicSlots": 2,
+            "incremental": {
+              "medianMs": 0.16333333333410943,
+              "p95Ms": 0.2366666666668607
+            },
+            "rebuild": {
+              "medianMs": 0.6133333333331393,
+              "p95Ms": 0.7133333333341094
+            },
+            "specialized": {
+              "medianMs": 0.12666666666627863,
+              "p95Ms": 0.1366666666668607
+            },
+            "direct": {
+              "medianMs": 0.11000000000058208,
+              "p95Ms": 0.12000000000019402
+            }
+          }
+        ]
+      },
+      "batch": {
+        "ok": true,
+        "version": "0.28.0",
+        "bursts": 7,
+        "results": [
+          {
+            "density": "sparse",
+            "events": 1,
+            "modes": {
+              "immediate": {
+                "submit": {
+                  "medianMs": 0.10000000000582077,
+                  "p95Ms": 0.10000000000582077
+                },
+                "first": {
+                  "medianMs": 0,
+                  "p95Ms": 0.10000000000582077
+                },
+                "last": {
+                  "medianMs": 0,
+                  "p95Ms": 0.10000000000582077
+                },
+                "total": {
+                  "medianMs": 0.10000000000582077,
+                  "p95Ms": 0.1999999999825377
+                },
+                "commits": 7,
+                "writes": 7
+              },
+              "microtask": {
+                "submit": {
+                  "medianMs": 0,
+                  "p95Ms": 0
+                },
+                "first": {
+                  "medianMs": 0,
+                  "p95Ms": 0.10000000000582077
+                },
+                "last": {
+                  "medianMs": 0,
+                  "p95Ms": 0.10000000000582077
+                },
+                "total": {
+                  "medianMs": 0,
+                  "p95Ms": 0.10000000000582077
+                },
+                "commits": 7,
+                "writes": 7
+              },
+              "frame": {
+                "submit": {
+                  "medianMs": 0,
+                  "p95Ms": 0.10000000000582077
+                },
+                "first": {
+                  "medianMs": 15.39999999999418,
+                  "p95Ms": 15.699999999982538
+                },
+                "last": {
+                  "medianMs": 15.39999999999418,
+                  "p95Ms": 15.699999999982538
+                },
+                "total": {
+                  "medianMs": 15.39999999999418,
+                  "p95Ms": 15.699999999982538
+                },
+                "commits": 7,
+                "writes": 7
+              }
+            }
+          },
+          {
+            "density": "sparse",
+            "events": 10,
+            "modes": {
+              "immediate": {
+                "submit": {
+                  "medianMs": 0.10000000000582077,
+                  "p95Ms": 0.10000000000582077
+                },
+                "first": {
+                  "medianMs": 0.10000000000582077,
+                  "p95Ms": 0.10000000000582077
+                },
+                "last": {
+                  "medianMs": 0,
+                  "p95Ms": 0
+                },
+                "total": {
+                  "medianMs": 0.10000000000582077,
+                  "p95Ms": 0.10000000000582077
+                },
+                "commits": 70,
+                "writes": 70
+              },
+              "microtask": {
+                "submit": {
+                  "medianMs": 0,
+                  "p95Ms": 0.10000000000582077
+                },
+                "first": {
+                  "medianMs": 0,
+                  "p95Ms": 0.10000000000582077
+                },
+                "last": {
+                  "medianMs": 0,
+                  "p95Ms": 0.09999999997671694
+                },
+                "total": {
+                  "medianMs": 0,
+                  "p95Ms": 0.10000000000582077
+                },
+                "commits": 7,
+                "writes": 7
+              },
+              "frame": {
+                "submit": {
+                  "medianMs": 0.10000000000582077,
+                  "p95Ms": 0.20000000001164153
+                },
+                "first": {
+                  "medianMs": 15.700000000011642,
+                  "p95Ms": 15.800000000017462
+                },
+                "last": {
+                  "medianMs": 15.60000000000582,
+                  "p95Ms": 15.800000000017462
+                },
+                "total": {
+                  "medianMs": 15.700000000011642,
+                  "p95Ms": 15.800000000017462
+                },
+                "commits": 7,
+                "writes": 7
+              }
+            }
+          },
+          {
+            "density": "dense",
+            "events": 1,
+            "modes": {
+              "immediate": {
+                "submit": {
+                  "medianMs": 0.09999999997671694,
+                  "p95Ms": 0.20000000001164153
+                },
+                "first": {
+                  "medianMs": 0.09999999997671694,
+                  "p95Ms": 0.20000000001164153
+                },
+                "last": {
+                  "medianMs": 0.09999999997671694,
+                  "p95Ms": 0.20000000001164153
+                },
+                "total": {
+                  "medianMs": 0.09999999997671694,
+                  "p95Ms": 0.20000000001164153
+                },
+                "commits": 7,
+                "writes": 700
+              },
+              "microtask": {
+                "submit": {
+                  "medianMs": 0,
+                  "p95Ms": 0
+                },
+                "first": {
+                  "medianMs": 0.10000000000582077,
+                  "p95Ms": 0.10000000000582077
+                },
+                "last": {
+                  "medianMs": 0.10000000000582077,
+                  "p95Ms": 0.10000000000582077
+                },
+                "total": {
+                  "medianMs": 0.10000000000582077,
+                  "p95Ms": 0.10000000000582077
+                },
+                "commits": 7,
+                "writes": 700
+              },
+              "frame": {
+                "submit": {
+                  "medianMs": 0,
+                  "p95Ms": 0.10000000000582077
+                },
+                "first": {
+                  "medianMs": 15.799999999988358,
+                  "p95Ms": 16
+                },
+                "last": {
+                  "medianMs": 15.799999999988358,
+                  "p95Ms": 16
+                },
+                "total": {
+                  "medianMs": 15.799999999988358,
+                  "p95Ms": 16
+                },
+                "commits": 7,
+                "writes": 700
+              }
+            }
+          },
+          {
+            "density": "dense",
+            "events": 10,
+            "modes": {
+              "immediate": {
+                "submit": {
+                  "medianMs": 0.5,
+                  "p95Ms": 0.5
+                },
+                "first": {
+                  "medianMs": 0.5,
+                  "p95Ms": 0.5
+                },
+                "last": {
+                  "medianMs": 0,
+                  "p95Ms": 0.09999999997671694
+                },
+                "total": {
+                  "medianMs": 0.5,
+                  "p95Ms": 0.5
+                },
+                "commits": 70,
+                "writes": 7000
+              },
+              "microtask": {
+                "submit": {
+                  "medianMs": 0,
+                  "p95Ms": 0.1999999999825377
+                },
+                "first": {
+                  "medianMs": 0.10000000000582077,
+                  "p95Ms": 0.1999999999825377
+                },
+                "last": {
+                  "medianMs": 0,
+                  "p95Ms": 0.10000000000582077
+                },
+                "total": {
+                  "medianMs": 0.10000000000582077,
+                  "p95Ms": 0.1999999999825377
+                },
+                "commits": 7,
+                "writes": 700
+              },
+              "frame": {
+                "submit": {
+                  "medianMs": 0.10000000000582077,
+                  "p95Ms": 0.20000000001164153
+                },
+                "first": {
+                  "medianMs": 15.799999999988358,
+                  "p95Ms": 16.10000000000582
+                },
+                "last": {
+                  "medianMs": 15.700000000011642,
+                  "p95Ms": 15.900000000023283
+                },
+                "total": {
+                  "medianMs": 15.799999999988358,
+                  "p95Ms": 16.10000000000582
+                },
+                "commits": 7,
+                "writes": 700
+              }
+            }
+          }
+        ]
+      },
+      "containment": {
+        "ok": true,
+        "version": "0.28.0",
+        "supported": {
+          "contain": true,
+          "auto": true
+        },
+        "samples": 7,
+        "steps": 20,
+        "panels": 16,
+        "rows": 16,
+        "results": [
+          {
+            "workload": "all",
+            "modes": {
+              "normal": {
+                "update": {
+                  "medianMs": 1.3400000000008732,
+                  "p95Ms": 1.75
+                },
+                "reveal": {
+                  "medianMs": 0,
+                  "p95Ms": 0.10000000000582077
+                },
+                "scrollHeight": 15596,
+                "skippedSamples": 0
+              },
+              "contain": {
+                "update": {
+                  "medianMs": 1.180000000000291,
+                  "p95Ms": 1.625
+                },
+                "reveal": {
+                  "medianMs": 0.10000000000582077,
+                  "p95Ms": 0.10000000000582077
+                },
+                "scrollHeight": 15596,
+                "skippedSamples": 0
+              },
+              "auto": {
+                "update": {
+                  "medianMs": 0.16499999999941792,
+                  "p95Ms": 0.23000000000029103
+                },
+                "reveal": {
+                  "medianMs": 0.20000000001164153,
+                  "p95Ms": 0.20000000001164153
+                },
+                "scrollHeight": 15596,
+                "skippedSamples": 7
+              }
+            }
+          },
+          {
+            "workload": "far",
+            "modes": {
+              "normal": {
+                "update": {
+                  "medianMs": 0.11500000000087311,
+                  "p95Ms": 0.12000000000116415
+                },
+                "reveal": {
+                  "medianMs": 0,
+                  "p95Ms": 0.10000000000582077
+                },
+                "scrollHeight": 15596,
+                "skippedSamples": 0
+              },
+              "contain": {
+                "update": {
+                  "medianMs": 0.11999999999970896,
+                  "p95Ms": 0.13000000000029105
+                },
+                "reveal": {
+                  "medianMs": 0,
+                  "p95Ms": 0.10000000000582077
+                },
+                "scrollHeight": 15596,
+                "skippedSamples": 0
+              },
+              "auto": {
+                "update": {
+                  "medianMs": 0.005000000000291038,
+                  "p95Ms": 0.010000000000582076
+                },
+                "reveal": {
+                  "medianMs": 0.39999999999417923,
+                  "p95Ms": 0.39999999999417923
+                },
+                "scrollHeight": 15596,
+                "skippedSamples": 7
+              }
+            }
+          }
+        ]
+      }
     }
   ],
   "devices": [
@@ -2608,6 +3248,12 @@
       "pr": 50,
       "title": "Raggruppamento dei commit",
       "detail": "Transizioni e validazione sincrone, commit immediati o accorpati con microtask/rAF, esperimento limitato ai testi. Event loop reale, raffiche di 1 o 10 eventi, conteggi e latenza. Default invariato."
+    },
+    {
+      "version": "0.28",
+      "pr": 51,
+      "title": "CSS containment",
+      "detail": "256 testi in 16 pannelli a dimensione fissa; layout visibile e costo di reveal misurati separatamente. Content-visibility auto salta il pannello lontano in tutti i campioni Chromium. Nessuna adozione globale."
     }
   ],
   "roadmap": [
@@ -2619,7 +3265,7 @@
     {
       "title": "Costo reale dei frame",
       "status": "esperimenti proposti",
-      "detail": "Text.data e raggruppamento misurati in Chromium, non ancora adottati. CSS containment/content-visibility è il prossimo esperimento; confrontare costo degli aggiornamenti e reveal, poi paint, memoria e dispositivi reali."
+      "detail": "Text.data, raggruppamento e CSS containment misurati in Chromium. Nel Laboratory 0.29 si sperimenta il contenimento di schede statiche ad altezza variabile; verificare dispositivi reali, paint, memoria e stabilità dello scroll."
     },
     {
       "title": "Metodologia e punto di pareggio",

@@ -1,5 +1,5 @@
 {
-  "version": "0.28.0",
+  "version": "0.29.0",
   "features": [
     {
       "id": "values",
@@ -1533,6 +1533,12 @@
       "title": "Benchmark CSS containment e content-visibility",
       "since": "0.28",
       "doc": "docs/browser-interop.md#mira-028-css-containment"
+    },
+    {
+      "id": "laboratory-deferred-layout",
+      "title": "Layout differito delle schede Laboratory",
+      "since": "0.29",
+      "doc": "docs/studio.md#laboratory-layout-differito-029"
     }
   ]
 }

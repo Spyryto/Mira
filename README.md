@@ -220,6 +220,10 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Laboratory in Mira Studio](https://spyryto.github.io/Mira/laboratory.html) raccoglie l'evoluzione 0.15–0.25, i benchmark CI e le misure dell'autore su iPhone e smart TV. [Rapporto tecnico](docs/gui-rendering.md) · [Archivio JSON](catalog/laboratory/gui-rendering.json). Il rapporto storico è statico e separato dal benchmark eseguibile.
 
+## Mira 0.29: layout differito del Laboratory
+
+Schede statiche ad altezza variabile con content-visibility e misura intrinseca ricordata, disattivabili senza JavaScript. [Metodo e limiti](docs/studio.md#laboratory-layout-differito-029).
+
 ## Mira 0.28: CSS containment
 
 Benchmark separato di contain e content-visibility su una view lunga, con costo di reveal. [Metodo e limiti](docs/browser-interop.md#mira-028-css-containment).
