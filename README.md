@@ -65,6 +65,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Rendering ibrido a regioni con stato condiviso | `0.23` | [Dettagli](docs/browser-interop.md#mira-023-rendering-ibrido) |
 | ✅ | Riconoscimento automatico delle regioni GUI | `0.24` | [Dettagli](docs/browser-interop.md#mira-024-selezione-automatica-del-renderer) |
 | ✅ | Anteprima GUI automatica e ispettore di specializzazione | `0.25` | [Dettagli](docs/browser-interop.md#mira-025-anteprima-e-ispettore) |
+| ✅ | Benchmark dei nodi testuali persistenti | `0.26` | [Dettagli](docs/browser-interop.md#mira-026-text-node-persistenti) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
