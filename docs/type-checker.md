@@ -60,3 +60,35 @@ e formalizzazione delle restrizioni sulle righe.
 Prossime tappe: test generativi dell'unificazione, posizioni precise dei
 nodi, gruppi ricorsivi, firme host, update strutturale, annotazioni e
 derivazione dei validatori RPC dai tipi.
+
+## 0.40: gruppi ricorsivi e vincoli sulle righe
+
+Questa evoluzione supera il limite della ricorsione indicato nella
+descrizione storica 0.39. Il passaggio Dependencies raccoglie riferimenti
+globali rispettando gli scope lessicali e identifica le componenti
+fortemente connesse (Tarjan). Le componenti sono elaborate in ordine di
+dipendenza. Ogni componente ottiene tipi provvisori condivisi; tutti i
+membri vengono verificati prima della generalizzazione. I riferimenti
+interni sono monomorfi, quelli a componenti già completate sono
+istanziati. È ammessa ricorsione diretta o mutua tra funzioni, non la
+ricorsione polimorfa o le componenti cicliche contenenti valori globali.
+
+```mira
+even: n = if (n <= 0) then true else (odd: (n - 1));
+odd: n = if (n <= 0) then false else (even: (n - 1));
+```
+
+Entrambe inferiscono (Number) -> Boolean. Nessuna analisi di terminazione.
+
+Le variabili di riga portano un insieme di etichette vietate (lacks).
+Le restrizioni si propagano quando una variabile viene legata a un'altra
+variabile o a un'estensione di record e sono conservate durante
+l'istanziazione. Una coda non può reintrodurre un campo già presente.
+La suite include sei permutazioni deterministiche dei campi, proiezioni
+multiple, errori per campi assenti o incompatibili, shadowing e ricorsione.
+Non è una dimostrazione formale di soundness né un fuzzer completo.
+
+Restano da progettare update di righe aperte (distinguere sostituzione
+da aggiunta senza perdere informazioni), generalizzazione locale,
+diagnostica a livello di espressione e firme host. Il checker rimane
+opt-in; nessuna modifica alla semantica dei backend.

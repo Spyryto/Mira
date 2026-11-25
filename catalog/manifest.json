@@ -1,5 +1,5 @@
 {
-  "version": "0.39.0",
+  "version": "0.40.0",
   "features": [
     {
       "id": "values",
@@ -1782,6 +1782,12 @@
       "title": "Inferenza strutturale sperimentale, opt-in",
       "since": "0.39",
       "doc": "docs/type-checker.md"
+    },
+    {
+      "id": "recursive-type-inference",
+      "title": "Inferenza ricorsiva per componenti e vincoli sulle righe",
+      "since": "0.40",
+      "doc": "docs/type-checker.md#040-gruppi-ricorsivi-e-vincoli-sulle-righe"
     }
   ]
 }
