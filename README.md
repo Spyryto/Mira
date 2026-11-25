@@ -196,6 +196,21 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
 
+## Mira 0.9: blocchi con più parametri
+
+```mira
+numbers = [1, 2, 3, 4];
+result = fold: numbers,
+  with: ({total, item | total + item}),
+  from: 0;
+```
+
+Il risultato è `10`. Il blocco accetta ora una lista di parametri
+espliciti separati da virgole, mantenendo nomi composti, cattura lessicale
+e compatibilità con la sintassi unaria della 0.8. Non è currying:
+`>>` accetta solo funzioni unarie; `fold:with:from:` invoca il blocco
+con due argomenti. Nessun nuovo runtime né type checker.
+
 ## Mira 0.8: blocchi per funzioni ed espressioni complesse
 
 ```mira

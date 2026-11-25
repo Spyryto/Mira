@@ -176,7 +176,31 @@ dai blocchi i placeholder delle sezioni restano indipendenti.
 
 La presenza di `|` distingue un blocco da un record:
 `{hours: 2}` resta un record. Solo un'espressione per blocco;
-istruzioni multiple, parametri multipli e tipi sono lavoro futuro.
+istruzioni multiple e tipi sono lavoro futuro. Dalla 0.9 sono supportati
+anche più parametri, separati da virgole.
+
+## Implementato in Mira 0.9: più parametri nei blocchi
+
+```mira
+numbers = [1, 2, 3, 4];
+result = fold: numbers, with: ({total, item | total + item}), from: 0;
+```
+
+La grammatica del blocco è `{parametro, parametro, ... | espressione}`,
+con almeno un parametro. Sono validi nomi composti e cattura lessicale.
+Il controllo dei parametri duplicati avviene durante il parsing;
+anche collisioni fra identificatori diversi che produrrebbero lo stesso
+nome JavaScript/PHP vengono segnalate.
+
+Un blocco con più parametri è una funzione di arità corrispondente.
+Non è curried: `>>` continua ad applicare un solo argomento e rifiuta
+esplicitamente un blocco con arità diversa da uno.
+
+I selettori che ricevono callback di più argomenti, per esempio
+`fold:with:from:`, possono invece invocarlo direttamente. Il blocco
+va parenthesized nell'argomento `with:`, perché il parser dei
+selettori richiede un confine esplicito per un'espressione complessa.
+Resta il limite di una sola espressione come corpo.
 
 ## Proposto: closure generali e selettori parziali
 
@@ -185,7 +209,7 @@ greater than: limit = {x | x > limit};
 join, with " "
 ```
 
-**Non implementati**: blocchi con parametri multipli o più istruzioni,
+**Non implementati**: blocchi con più istruzioni o definizioni locali,
 selector parziali con argomenti impliciti e type checker.
 
 ## Proposed: type declarations and MVU records
