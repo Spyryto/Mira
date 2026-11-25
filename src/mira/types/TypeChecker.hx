@@ -14,8 +14,8 @@ private typedef LocalScheme = {
 class TypeChecker {
     final bindings = new Map<Int, Type>();
     final definitions = new Map<String, Definition>();
-    final inferred = new Map<String, LocalScheme>();
-    final active = new Map<String, LocalScheme>();
+    final inferred = new Map<String, Type>();
+    final active = new Map<String, Type>();
     final lacks = new Map<Int, Map<String,Bool>>();
     var nextId = 0;
     var origin:Token;
@@ -255,7 +255,7 @@ class TypeChecker {
         for (name in group) {
             final d = definitions.get(name);
             origin = d.origin;
-            final scope = new Map<String,Type>();
+            final scope = new Map<String,LocalScheme>();
             final params = [for (p in d.parameters) fresh()];
             for (i in 0...params.length) scope.set(d.parameters[i],mono(params[i]));
             final body = infer(d.body,scope);
