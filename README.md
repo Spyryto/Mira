@@ -55,6 +55,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Valori locali immutabili nei blocchi | `0.12` | [Dettagli](docs/reference/language.md#feature-local-values) |
 | ✅ | Blocchi senza parametri | `0.14` | [Dettagli](docs/reference/language.md#feature-nullary-blocks) |
 | ✅ | Libreria GUI Mira e binding | `0.15` | [Dettagli](docs/reference/language.md#feature-gui-library) |
+| ✅ | DOM incrementale e stato indipendente | `0.16` | [Dettagli](docs/reference/language.md#feature-incremental-gui) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

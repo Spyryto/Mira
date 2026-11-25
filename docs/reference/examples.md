@@ -1419,6 +1419,10 @@ choose: caption, value: current, options: choices, update: transition = {
   type: "select", label: caption, value: current, options: choices, update: transition
 };
 state: initial, view: factory = {type: "state", initial: initial, view: factory};
+# Explicit identity for resetting a state at the same structural position.
+state: initial, key: identity, view: factory = {
+  type: "state", initial: initial, key: identity, view: factory
+};
 
 # Un input con binding e un pulsante che cattura lo stato.
 greeting: name = column: [
@@ -1464,6 +1468,10 @@ choose: caption, value: current, options: choices, update: transition = {
   type: "select", label: caption, value: current, options: choices, update: transition
 };
 state: initial, view: factory = {type: "state", initial: initial, view: factory};
+# Explicit identity for resetting a state at the same structural position.
+state: initial, key: identity, view: factory = {
+  type: "state", initial: initial, key: identity, view: factory
+};
 
 # Una piccola scheda lezione, con stato immutabile e componenti.
 lesson view: model = column: [
@@ -1508,4 +1516,109 @@ render (state: {student: "Ada", hours: 2, paid: false, mode: "In presenza"},
 **Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/gui-lesson)
+
+<a id="example-gui-independent"></a>
+## Due contatori indipendenti
+
+I contatori figli mantengono il proprio stato quando il genitore cambia il passo; le callback usano il passo corrente.
+
+Feature: [DOM incrementale e stato indipendente](language.md#feature-incremental-gui)
+
+```mira
+# Mira GUI: ordinary functions; no compiler or DOM dependencies.
+column: items = {type: "column", children: items};
+row: items = {type: "row", children: items};
+title: caption = {type: "title", text: caption};
+text: content = {type: "text", text: content};
+button: caption, on click: action = {
+  type: "button", label: caption, onClick: action
+};
+button: caption, update: transition = {
+  type: "button", label: caption, update: transition
+};
+text input: caption, value: current, update: transition = {
+  type: "input", label: caption, value: current, update: transition
+};
+checkbox: caption, checked: current, update: transition = {
+  type: "checkbox", label: caption, checked: current, update: transition
+};
+choose: caption, value: current, options: choices, update: transition = {
+  type: "select", label: caption, value: current, options: choices, update: transition
+};
+state: initial, view: factory = {type: "state", initial: initial, view: factory};
+# Explicit identity for resetting a state at the same structural position.
+state: initial, key: identity, view: factory = {
+  type: "state", initial: initial, key: identity, view: factory
+};
+
+# Il genitore cambia il passo, non lo stato dei contatori figli.
+counter: caption, step: amount = state: 0, view: {n | row: [
+  button: caption, update: {old | old + amount},
+  text: n
+]};
+parent view: amount = column: [
+  title: "Due contatori indipendenti",
+  text: amount,
+  button: "Cambia passo", update: {old | old + 1},
+  counter: "A +1", step: amount,
+  counter: "B +1", step: amount
+];
+render (state: 1, view: (parent view: _));
+```
+
+**Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/gui-independent)
+
+<a id="example-gui-reset"></a>
+## Nuova sessione · reset esplicito
+
+Una chiave diversa resetta solo il componente figlio nella stessa posizione.
+
+Feature: [DOM incrementale e stato indipendente](language.md#feature-incremental-gui)
+
+```mira
+# Mira GUI: ordinary functions; no compiler or DOM dependencies.
+column: items = {type: "column", children: items};
+row: items = {type: "row", children: items};
+title: caption = {type: "title", text: caption};
+text: content = {type: "text", text: content};
+button: caption, on click: action = {
+  type: "button", label: caption, onClick: action
+};
+button: caption, update: transition = {
+  type: "button", label: caption, update: transition
+};
+text input: caption, value: current, update: transition = {
+  type: "input", label: caption, value: current, update: transition
+};
+checkbox: caption, checked: current, update: transition = {
+  type: "checkbox", label: caption, checked: current, update: transition
+};
+choose: caption, value: current, options: choices, update: transition = {
+  type: "select", label: caption, value: current, options: choices, update: transition
+};
+state: initial, view: factory = {type: "state", initial: initial, view: factory};
+# Explicit identity for resetting a state at the same structural position.
+state: initial, key: identity, view: factory = {
+  type: "state", initial: initial, key: identity, view: factory
+};
+
+# La chiave identifica la sessione: cambiare chiave azzera il figlio.
+counter view: n = row: [
+  text: n,
+  button: "Incrementa", update: {old | old + 1}
+];
+session view: session = column: [
+  title: "Sessione",
+  text: session,
+  button: "Nuova sessione", update: {old | if (old == "A") then "B" else "A"},
+  state: 0, key: session, view: (counter view: _)
+];
+render (state: "A", view: (session view: _));
+```
+
+**Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/gui-reset)
 
