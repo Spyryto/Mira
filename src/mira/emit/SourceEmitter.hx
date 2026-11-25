@@ -76,7 +76,7 @@ class SourceEmitter {
                 switch (body) {
                     case Steps(items):
                         final statements:Array<String> = [];
-                        for (index in 0...items.length - 1) {
+                        for (index in 0...(items.length - 1)) {
                             statements.push(expression(items[index], target,
                                 innerScope, reservedHostNames) + ";");
                         }

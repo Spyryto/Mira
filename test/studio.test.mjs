@@ -498,3 +498,34 @@ test('0.10 precedence and bare block selector arguments preserve canonical AST',
     assert.equal(compiled.ok,true,compiled.message);
   }
 });
+
+test('0.11 Steps appears only in multi-expression blocks in the Studio AST', () => {
+  const source=[
+    'rate = 3;',
+    'fee = {hours | hours + 1; hours * rate};',
+    'result = 4 >> fee;'
+  ].join('\n');
+  const ast=bridge.ast(source);
+  assert.equal(ast.ok,true,ast.message);
+  const body=JSON.parse(ast.output).definitions[1].body;
+  assert.equal(body.kind,'Block');
+  assert.deepEqual(body.parameters,['hours']);
+  assert.equal(body.body.kind,'Steps');
+  assert.equal(body.body.expressions.length,2);
+  assert.equal(body.body.expressions[0].kind,'Binary');
+  assert.equal(body.body.expressions[1].kind,'Binary');
+  const js=bridge.compile(source,'js');
+  const php=bridge.compile(source,'php');
+  assert.equal(js.ok,true,js.message);
+  assert.equal(php.ok,true,php.message);
+  assert.equal(runInNewContext(js.output+'\nresult',{}),12);
+  assert.match(php.output,/function\(\$hours\) use \(\$rate\)/);
+});
+
+test('0.11 single-expression blocks keep the previous AST shape', () => {
+  const ast=bridge.ast('result = 3 >> {n | n * 2};');
+  assert.equal(ast.ok,true,ast.message);
+  const block=JSON.parse(ast.output).definitions[0].body.callee;
+  assert.equal(block.kind,'Block');
+  assert.equal(block.body.kind,'Binary');
+});

@@ -114,3 +114,20 @@ test('unwrapped reducer blocks preserve nested punctuation and selector boundari
     assert.deepEqual(runPhp(php.output),expected,'PHP '+source);
   }
 });
+
+test('multi-expression reducer blocks run on both JS and PHP',()=>{
+  const cases = [
+    ['numbers = [1,2,3]; result = fold: numbers, with: {sum, item | item * 2; sum + (item * 2)}, from: 0;', 12],
+    ['numbers = [1,2,3]; result = collect: numbers, with: {item | item + 10; item * 3};', [3,6,9]],
+    ['offset = 10; numbers = [1,2]; result = fold: numbers, with: {sum, item | item * offset; sum + item}, from: 0;', 3]
+  ];
+  for (const [source,expected] of cases) {
+    const js=compiler.compile(source,'js',hostJson);
+    const php=compiler.compile(source,'php',hostJson);
+    assert.equal(js.ok,true,js.message+' / JS '+source);
+    assert.equal(php.ok,true,php.message+' / PHP '+source);
+    const actualJs=new Function('__miraHost',js.output+'\nreturn result;')(collectionHost());
+    assert.deepEqual(actualJs,expected,'JS '+source);
+    assert.deepEqual(runPhp(php.output),expected,'PHP '+source);
+  }
+});

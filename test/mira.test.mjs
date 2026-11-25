@@ -690,3 +690,46 @@ test('missing field after ~ reports a diagnostic and bare blocks remain records 
     assert.equal(run('result = {hours: 2, rate: 30} ~ rate;',target),'30');
   }
 });
+
+test('0.11 blocks evaluate multiple expressions in order and return the last', () => {
+  const cases = [
+    ['result = 3 >> {x | x + 1; x * 2};', '6'],
+    ['result = 3 >> {x | x + 1; x * 2;};', '6'],
+    ['result = 5 >> {_ | _ + 1; _ * 2};', '10'],
+    ['result = 5 >> {_ | _ + 1;};', '6'],
+    ['result = 3 >> {x | x + 1; x * 2; x + 10};', '13'],
+    ['rate = 4; result = 3 >> {x | x + rate; x * rate};', '12'],
+    ['result = 2 >> {outer | outer + 1; (outer + 1) >> {inner | inner * outer; inner + outer}};', '5'],
+    ['factor = 3; make: rate = {value | value + factor; value * rate}; result = 2 >> (make: 4);', '8'],
+    ['result = 3 >> {n | if (n > 2) then "ok" else "bad"; n + 1};', '4'],
+    ['result = 5 >> {x | x + 1};', '6'],
+    ['result = 5 >> {x | x + 1;};', '6']
+  ];
+  for (const [source, expected] of cases) {
+    for (const target of ['js','php'])
+      assert.equal(run(source,target),expected,source+' / '+target);
+  }
+});
+
+test('0.11 block expressions diagnose empty bodies and consecutive delimiters', () => {
+  const cases = [
+    ['result = {x | };', /A block needs at least one expression/],
+    ['result = {x | x + 1;; x * 2};', /Expected expression/],
+    ['result = {x | ; x + 1};', /Expected expression/],
+    ['result = {x | x + 1; missing};', /Unknown identifier|Unbound/]
+  ];
+  for (const [source, diagnostic] of cases) {
+    const failure = compileError(source);
+    assert.notEqual(failure.status,0,source);
+    assert.match(failure.stderr,diagnostic,source);
+  }
+});
+
+test('0.11 evaluates earlier expressions even when their result is discarded', () => {
+  const source = 'result = 1 >> {n | {field: 2} ~ missing; n + 1};';
+  for (const target of ['js','php']) {
+    const generated=compile(source,target);
+    assert.ok(generated.includes('Missing record field:'));
+    assert.throws(() => run(source,target),/Missing record field/);
+  }
+});
