@@ -855,11 +855,11 @@ test('0.12.1 diagnostics identify local self-reference and forward reference at 
 
 test('0.12.2 named-function parameters reject mangling collisions on JS/PHP', () => {
   const failures = [
-    ['sum: a b, and: aB = a b + aB; result = sum: 2, and: 3;', /Generated-name collision for function parameter aB.*at 1:\\d+/],
-    ['sum: a b,\\n and: aB = a b + aB; result = sum: 2, and: 3;'.replace('\\n','\n'), /Generated-name collision for function parameter aB.*at 2:\\d+/],
-    ['a b = 7; identity: aB = aB + 1; result = identity: 2;', /Generated-name collision for function parameter aB.*at 1:\\d+/],
-    ['identity: aB = aB + 1; a b = 7; result = identity: 2;', /Generated-name collision for function parameter aB.*at 1:\\d+/],
-    ['identity: __miraHost = __miraHost + 1; result = identity: 2;', /Reserved function parameter __miraHost.*at 1:\\d+/]
+    ['sum: a b, and: aB = a b + aB; result = sum: 2, and: 3;', /Generated-name collision for function parameter aB.*at 1:\d+/],
+    ['sum: a b,\\n and: aB = a b + aB; result = sum: 2, and: 3;'.replace('\\n','\n'), /Generated-name collision for function parameter aB.*at 2:\d+/],
+    ['a b = 7; identity: aB = aB + 1; result = identity: 2;', /Generated-name collision for function parameter aB.*at 1:\d+/],
+    ['identity: aB = aB + 1; a b = 7; result = identity: 2;', /Generated-name collision for function parameter aB.*at 1:\d+/],
+    ['identity: __miraHost = __miraHost + 1; result = identity: 2;', /Reserved function parameter __miraHost.*at 1:\d+/]
   ];
   for (const [source, diagnostic] of failures) {
     for (const target of ['js', 'php']) {
