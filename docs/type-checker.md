@@ -92,3 +92,46 @@ Restano da progettare update di righe aperte (distinguere sostituzione
 da aggiunta senza perdere informazioni), generalizzazione locale,
 diagnostica a livello di espressione e firme host. Il checker rimane
 opt-in; nessuna modifica alla semantica dei backend.
+
+## 0.41: polimorfismo locale e aggiornamenti
+
+I binding locali contengono uno schema di tipo: tipo e insieme delle
+variabili quantificate. Per generalizzare si sottraggono le variabili
+libere dell'ambiente lessicale e delle componenti ricorsive attive.
+Ogni uso istanzia soltanto le variabili quantificate. Le variabili
+catturate restano condivise; i parametri sono monomorfi.
+
+```mira
+result = () >> {|
+    id = {x | x};
+    {number: (1 >> id), text: ("ok" >> id)}
+};
+```
+
+Il risultato ha tipo {number: Number, text: Text}. Si applica una
+value restriction conservativa: generalizzazione locale solo per
+letterali, nomi, blocchi, accessori e aggregati di valori; non per
+chiamate, applicazioni o espressioni calcolate. Gli effetti host non
+sono ancora verificabili. La politica delle definizioni globali
+rimane invariata.
+
+```mira
+rename: r = update: r, with: {name: "Ada"};
+result = rename: {name: 42, age: 37};
+```
+
+Il tipo di rename è ({name: 'a | 'b}) -> {name: Text | 'b}.
+Il risultato conserva age: Number. La patch deve essere un record
+chiuso noto. Per una base chiusa sono ammessi aggiunte e sostituzioni.
+Per una base aperta o ignota, una patch su un campo non noto richiede
+che il campo esista nella base, salvo che un vincolo ne provi già
+l'assenza. È una scelta conservativa: può rifiutare aggiunte valide
+a runtime, ma non perde la coda del record e non inventa un tipo
+di campo. I tipi dei campi sostituiti possono cambiare. Non si
+introducono vincoli differiti di overwrite, righe opzionali o nuove
+primitive. Nessuna modifica ai backend o alla sintassi.
+
+La CI verifica generalizzazione, catture monomorfe, value restriction,
+sostituzioni multiple, campi mancanti e conservazione di campi extra;
+anche il bridge browser esegue il checker. Restano da progettare
+vincoli degli operatori, firme host, diagnostica precisa ed effetti.

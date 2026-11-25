@@ -1,5 +1,5 @@
 {
-  "version": "0.40.0",
+  "version": "0.41.0",
   "features": [
     {
       "id": "values",
@@ -1788,6 +1788,12 @@
       "title": "Inferenza ricorsiva per componenti e vincoli sulle righe",
       "since": "0.40",
       "doc": "docs/type-checker.md#040-gruppi-ricorsivi-e-vincoli-sulle-righe"
+    },
+    {
+      "id": "local-type-schemes",
+      "title": "Polimorfismo locale e aggiornamento strutturale dei record",
+      "since": "0.41",
+      "doc": "docs/type-checker.md#041-polimorfismo-locale-e-aggiornamenti"
     }
   ]
 }

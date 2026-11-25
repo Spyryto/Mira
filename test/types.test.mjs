@@ -76,3 +76,33 @@ test('types: structural projections are stable under deterministic field permuta
   assert.throws(()=>check('sum fields: r = r ~ a + r ~ b; result = sum fields: {a: 1, extra: true};'),/missing record field b/);
   assert.throws(()=>check('sum fields: r = r ~ a + r ~ b; result = sum fields: {a: 1, b: "x"};'),/expected Number, got Text|expected Text, got Number/);
 });
+
+test('types: immutable local identity and projection can be polymorphic',()=>{
+  const result=check('result = () >> {| id = {x | x}; get = {x | x ~ name}; {a: (1 >> id), b: ("x" >> id), c: ({name: true, age: 2} >> get), d: ({name: 7} >> get)}};');
+  assert.equal(result.result,'{a: Number, b: Text, c: Boolean, d: Number}');
+});
+test('types: local generalization never quantifies captured variables',()=>{
+  const result=check('make: x = () >> {| get = {y | x}; {a: (1 >> get), b: ("x" >> get)}}; result = make: true;');
+  assert.equal(result['make:'],"('a) -> {a: 'a, b: 'a}");
+  assert.equal(result.result,'{a: Boolean, b: Boolean}');
+  assert.throws(()=>check('bad: f = () >> {| alias = f; a = 1 >> alias; "x" >> alias};'),/expected Number, got Text|expected Text, got Number/);
+  assert.throws(()=>check('bad: x = () >> {| get = {y | x}; a = (1 >> get) + 2; if ("x" >> get) then a else 0};'),/expected Boolean, got Number|expected Number, got Boolean/);
+});
+test('types: computed locals remain monomorphic under the value restriction',()=>{
+  assert.throws(()=>check('result = () >> {| id = () >> {| {x | x}}; a = 1 >> id; "x" >> id};'),/expected Number, got Text|expected Text, got Number/);
+});
+test('types: open record updates replace fields without losing the remaining row',()=>{
+  const result=check('rename: r = update: r, with: {name: "Ada"}; a = rename: {name: 1, age: 20}; b = rename: {name: true, active: false}; bump: r = update: r, with: {hours: (r ~ hours + 1)}; c = bump: {hours: 2, paid: false};');
+  assert.equal(result['rename:'],"({name: 'a | 'b}) -> {name: Text | 'b}");
+  assert.equal(result.a,'{age: Number, name: Text}');
+  assert.equal(result.b,'{active: Boolean, name: Text}');
+  assert.equal(result['bump:'],"({hours: Number | 'a}) -> {hours: Number | 'a}");
+  assert.equal(result.c,'{hours: Number, paid: Boolean}');
+  assert.throws(()=>check('rename: r = update: r, with: {name: "Ada"}; a = rename: {age: 20};'),/missing record field name/);
+  assert.throws(()=>check('bump: r = update: r, with: {hours: (r ~ hours + 1)}; a = bump: {hours: "x"};'),/expected Number, got Text|expected Text, got Number/);
+});
+test('types: multi-field open updates retain the untouched fields',()=>{
+  const result=check('change: r = update: r, with: {a: "x", b: false}; result = change: {a: 1, b: 2, c: true};');
+  assert.equal(result.result,'{a: Text, b: Boolean, c: Boolean}');
+  assert.throws(()=>check('change: r = update: r, with: {a: "x", b: false}; result = change: {a: 1, c: true};'),/missing record field b/);
+});
