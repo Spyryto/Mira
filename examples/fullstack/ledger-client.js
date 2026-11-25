@@ -3,7 +3,7 @@
   const report = error => { document.getElementById('error').textContent = String(error?.message ?? error); };
   const renderer = MiraUiHost.createUiHost(document, document.getElementById('mount'), report);
   let app;
-  const transport = MiraEffects.jsonService('./ledger.php');
+  const transport = MiraEffects.rpcService('./ledger.php', 'ledger.command');
   const ledger = (payload, signal) => transport(payload, AbortSignal.any([signal, AbortSignal.timeout(10000)]));
   const host = Object.freeze({
     start(spec) { app = MiraEffects.createApp(renderer, spec, {ledger}, report); },
