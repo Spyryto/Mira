@@ -1,5 +1,5 @@
 {
-  "version": "0.42.0",
+  "version": "0.43.0",
   "features": [
     {
       "id": "values",
@@ -1800,6 +1800,12 @@
       "title": "Inferenza vincolata ScalarEq per uguaglianza generica",
       "since": "0.42",
       "doc": "docs/type-checker.md#042-vincoli-di-tipo"
+    },
+    {
+      "id": "type-diagnostics",
+      "title": "Diagnostica dei tipi con ancore sorgente e JSON",
+      "since": "0.43",
+      "doc": "docs/type-checker.md#043-diagnostica-delle-espressioni"
     }
   ]
 }
