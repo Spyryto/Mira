@@ -1,0 +1,2 @@
+student = {address: {city: {length: 6}}};
+result = student ~ address ~ city ~ length + 1;

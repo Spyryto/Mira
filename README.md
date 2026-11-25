@@ -49,6 +49,8 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Accesso diretto ai campi `~` | `0.6` | [Dettagli](docs/reference/language.md#feature-field-get) |
 | ✅ | Blocchi funzione con parametro | `0.8` | [Dettagli](docs/reference/language.md#feature-blocks) |
 | ✅ | Blocchi con più parametri | `0.9` | [Dettagli](docs/reference/language.md#feature-block-parameters) |
+| ✅ | Accesso `~` prima dell'aritmetica | `0.10` | [Dettagli](docs/reference/language.md#feature-field-precedence) |
+| ✅ | Blocchi diretti negli argomenti dei selettori | `0.10` | [Dettagli](docs/reference/language.md#feature-bare-block-arguments) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
