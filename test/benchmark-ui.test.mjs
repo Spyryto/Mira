@@ -337,17 +337,17 @@ test('0.27 batching workload remains ordinary Mira on JS and PHP',()=>{
   assert.match(read('gui-benchmark.html'),/id="batch-run"/);
 });
 
-test('real Chromium event loop measures batch commits and containment',{timeout:90000},async t=>{
+async function chromiumEvaluate(t,filename,expression,width=800){
   const executable=[process.env.CHROME_BIN,'google-chrome','chromium','chromium-browser'].filter(Boolean)
     .find(cmd=>spawnSync(cmd,['--version'],{encoding:'utf8'}).status===0);
   if(!executable){
     if(process.env.GITHUB_ACTIONS==='true')assert.fail('Chromium required');
-    return t.skip('Chromium not installed');
+    t.skip('Chromium not installed');return null;
   }
-  const profile=mkdtempSync(resolve(tmpdir(),'mira-batch-'));
-  const url=pathToFileURL(resolve(site,'gui-benchmark.html')).href;
+  const profile=mkdtempSync(resolve(tmpdir(),'mira-browser-'));
+  const url=pathToFileURL(resolve(site,filename)).href;
   const child=spawn(executable,['--headless','--no-sandbox','--disable-dev-shm-usage','--disable-gpu',
-    '--no-first-run','--remote-debugging-port=0','--user-data-dir='+profile,url],{stdio:'ignore'});
+    '--no-first-run','--window-size='+width+',800','--remote-debugging-port=0','--user-data-dir='+profile,url],{stdio:'ignore'});
   let ws;
   try{
     const portFile=resolve(profile,'DevToolsActivePort');
@@ -367,20 +367,58 @@ test('real Chromium event loop measures batch commits and containment',{timeout:
       ws.addEventListener('open',()=>{clearTimeout(timeout);ok();},{once:true});
       ws.addEventListener('error',()=>{clearTimeout(timeout);fail(new Error('CDP socket error'));},{once:true});
     });
-    const experiment=await new Promise((ok,fail)=>{
-      const timeout=setTimeout(()=>fail(new Error('Browser evaluation timeout')),60000);
-      ws.addEventListener('message',event=>{
-        const message=JSON.parse(event.data);
-        if(message.id!==1)return;
-        clearTimeout(timeout);
-        if(message.error||message.result.exceptionDetails)fail(new Error(JSON.stringify(message.error??message.result.exceptionDetails)));
-        else ok(message.result.result.value);
+    let nextId=10;
+    function rpc(method,params={},ms=5000){
+      const id=nextId++;
+      return new Promise((ok,fail)=>{
+        const cleanup=()=>{clearTimeout(timer);ws.removeEventListener('message',receive);};
+        const receive=event=>{
+          const message=JSON.parse(event.data);
+          if(message.id!==id)return;
+          cleanup();
+          if(message.error||message.result?.exceptionDetails)fail(new Error(JSON.stringify(message.error??message.result.exceptionDetails)));
+          else ok(message.result);
+        };
+        const timer=setTimeout(()=>{cleanup();fail(new Error('CDP timeout: '+method));},ms);
+        ws.addEventListener('message',receive);
+        ws.send(JSON.stringify({id,method,params}));
       });
-      ws.send(JSON.stringify({id:1,method:'Runtime.evaluate',params:{
-        expression:'(async()=>{if(document.readyState!=="complete")await new Promise(r=>window.addEventListener("load",r,{once:true}));const mount=document.getElementById("mount");return {batch:await MiraGuiBench.runBatchExperiment(MiraStudioCompiler,mount),containment:await MiraGuiBench.runContainmentExperiment(MiraStudioCompiler,mount)};})()',
-        awaitPromise:true,returnByValue:true
-      }}));
-    });
+    }
+    await rpc('Emulation.setDeviceMetricsOverride',{width,height:800,deviceScaleFactor:1,mobile:false});
+    const selector=filename==='laboratory.html'?'main.lab-page':'#mount';
+    let ready=false;
+    for(let i=0;i<50&&!ready;i++){
+      try{
+        const r=await rpc('Runtime.evaluate',{expression:'document.readyState==="complete" && document.URL==='+JSON.stringify(url)+' && !!document.querySelector('+JSON.stringify(selector)+')',returnByValue:true},2000);
+        ready=r.result.value===true;
+      }catch(error){if(i===49)throw error;}
+      if(!ready)await delay(100);
+    }
+    assert.ok(ready,'Expected report document did not load: '+filename);
+    const response=await rpc('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true},60000);
+    const experiment=response.result.value;
+    return experiment;
+  }finally{
+    // Ask Chrome to close its own profile cleanly before deleting it.
+    if(child.exitCode===null&&child.signalCode===null){
+      const exited=new Promise(resolve=>child.once('exit',resolve));
+      if(ws?.readyState===WebSocket.OPEN)ws.send(JSON.stringify({id:2,method:'Browser.close'}));
+      else child.kill();
+      await Promise.race([exited,delay(3000)]);
+      if(child.exitCode===null&&child.signalCode===null){child.kill();await Promise.race([exited,delay(3000)]);}
+    }
+    if(ws)ws.close();
+    try{rmSync(profile,{recursive:true,force:true,maxRetries:12,retryDelay:200});}
+    catch(error){
+      if(!['ENOTEMPTY','EBUSY','EPERM'].includes(error.code))throw error;
+      t.diagnostic('Temporary Chromium profile cleanup deferred by OS: '+error.code);
+    }
+  }
+}
+
+test('real Chromium event loop measures batch commits and containment',{timeout:90000},async t=>{
+  const experiment=await chromiumEvaluate(t,'gui-benchmark.html','(async()=>{if(document.readyState!=="complete")await new Promise(r=>window.addEventListener("load",r,{once:true}));const mount=document.getElementById("mount");return {batch:await MiraGuiBench.runBatchExperiment(MiraStudioCompiler,mount),containment:await MiraGuiBench.runContainmentExperiment(MiraStudioCompiler,mount)};})()');
+  if(!experiment)return;
     const result=experiment.batch;
     assert.equal(result.ok,true);
     assert.equal(result.version,bridge.version);
@@ -415,14 +453,6 @@ test('real Chromium event loop measures batch commits and containment',{timeout:
         row.modes.auto.skippedSamples>=0&&row.modes.auto.skippedSamples<=c.samples);
     }
     t.diagnostic('GUI_CONTAINMENT_BENCHMARK '+JSON.stringify(c));
-  }finally{
-    if(ws)ws.close();
-    if(child.exitCode===null&&child.signalCode===null){
-      const exited=new Promise(resolve=>child.once('exit',resolve));child.kill();
-      await Promise.race([exited,delay(2000)]);
-    }
-    rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:100});
-  }
 });
 
 
@@ -435,4 +465,100 @@ test('0.28 containment workload compiles on both targets with expected dynamic s
     assert.equal(compiled.plan.slots.length,workload==='all'?256:16);
   }
   assert.match(read('gui-benchmark.html'),/id="contain-run"/);
+});
+
+
+test('0.29 real Laboratory keeps navigation, details and remembered variable heights',{timeout:120000},async t=>{
+  const reports=[];
+  for(const width of [390,800]){
+    const result=await chromiumEvaluate(t,'laboratory.html', '('+async function(){
+      if(document.readyState!=='complete')await new Promise(r=>window.addEventListener('load',r,{once:true}));
+      const frame=()=>new Promise(r=>requestAnimationFrame(r));
+      const settle=async()=>{await frame();await frame();};
+      const toggle=document.getElementById('lab-render-normal'),main=document.querySelector('main');
+      const cards=[...main.querySelectorAll(':scope > section.lab-card:not(.lab-always)')];
+      const details=[...main.querySelectorAll(':scope > details.lab-card')];
+      const supported=CSS.supports('content-visibility','auto')&&CSS.supports('contain-intrinsic-block-size','auto 240px');
+      const check=(ok,message)=>{if(!ok)throw Error(message);};
+      check(supported,'Chromium CSS support');check(cards.length>20,'Real report cards');
+      const height=()=>document.scrollingElement.scrollHeight;
+      window.scrollTo(0,0);await settle();
+      const initialHeight=height();
+      check(getComputedStyle(cards.at(-1)).contentVisibility==='auto','Default optimized');
+      check(details.every(d=>getComputedStyle(d).contentVisibility==='visible'),'Disclosures eager');
+      const farChild=cards.at(-1).querySelector('p');
+      const farSkipped=typeof farChild.checkVisibility==='function'?!farChild.checkVisibility({contentVisibilityAuto:true}):null;
+      // Exercise actual fragment navigation using native links.
+      for(const link of main.querySelectorAll('nav a[href^="#"]')){
+        link.click();await settle();
+        const target=document.getElementById(link.hash.slice(1)),rect=target.getBoundingClientRect();
+        check(location.hash===link.hash&&rect.bottom>0&&rect.top<innerHeight,'Fragment '+link.hash);
+      }
+      const detail=details.at(-1),summary=detail.querySelector('summary');
+      summary.scrollIntoView();summary.click();await settle();
+      check(detail.open&&detail.querySelector('table').getBoundingClientRect().height>0,'Open details');
+      summary.click();await settle();check(!detail.open,'Close details');
+      // Visit every card so the browser can learn its natural block size.
+      const learned=[];
+      for(const card of cards){
+        card.scrollIntoView({block:'start'});await settle();
+        const rect=card.getBoundingClientRect();
+        check(rect.bottom>0&&rect.top<innerHeight,'Card visible');
+        learned.push(rect.height);
+      }
+      window.scrollTo(0,0);await settle();
+      const learnedHeight=height();
+      toggle.checked=true;await settle();
+      const normalHeight=height();
+      check(getComputedStyle(cards.at(-1)).contentVisibility==='visible','Normal mode');
+      const normalSizes=cards.map(c=>c.getBoundingClientRect().height);
+      check(normalSizes.every((h,i)=>Math.abs(h-learned[i])<=1),'Card geometry changed');
+      // The warmed height should converge, with minor subpixel rounding allowed.
+      check(Math.abs(learnedHeight-normalHeight)<=cards.length+4,'Remembered scroll extent');
+      toggle.checked=false;await settle();
+      const warmedHeight=height();
+      // Re-enabling can invalidate remembered sizes. Record the immediate estimate,
+      // then revisit each card and require convergence again, not a permanent cache.
+      for(const card of cards){card.scrollIntoView({block:'start'});await settle();}
+      window.scrollTo(0,0);await settle();
+      const relearnedHeight=height();
+      check(Math.abs(relearnedHeight-normalHeight)<=cards.length+4,'Relearned scroll extent');
+      // Resize-style invalidation of the real document, not a synthetic view.
+      // Alternate modes, force top geometry, and record final reveal separately.
+      const times={normal:[],auto:[]},reveals={normal:[],auto:[]};
+      const original=main.style.width;
+      for(let round=0;round<7;round++){
+        for(const mode of round%2?['auto','normal']:['normal','auto']){
+          toggle.checked=mode==='normal';window.scrollTo(0,0);
+          main.style.width=original;await settle();
+          const start=performance.now();
+          for(let i=0;i<10;i++){
+            main.style.width=i%2?'94%':'96%';
+            main.querySelector('h1').getBoundingClientRect();
+          }
+          times[mode].push((performance.now()-start)/10);
+          const reveal=performance.now();
+          cards.at(-1).scrollIntoView({block:'start'});
+          farChild.getBoundingClientRect();
+          reveals[mode].push(performance.now()-reveal);
+          await settle();
+          check(farChild.getBoundingClientRect().height>0,'Reveal text geometry');
+        }
+      }
+      main.style.width=original;toggle.checked=false;window.scrollTo(0,0);await settle();
+      const stats=a=>{const s=[...a].sort((a,b)=>a-b);return {medianMs:s[3],p95Ms:s[6]};};
+      return {width:innerWidth,cards:cards.length,details:details.length,farSkipped,initialHeight,learnedHeight,normalHeight,warmedHeight,relearnedHeight,
+        normal:{resize:stats(times.normal),reveal:stats(reveals.normal)},
+        auto:{resize:stats(times.auto),reveal:stats(reveals.auto)}};
+    }.toString()+')()',width);
+    if(!result)return;
+    assert.equal(result.width,width);
+    assert.ok(result.cards>20);assert.ok(result.details>0);
+    for(const mode of ['normal','auto'])for(const k of ['resize','reveal']){
+      assert.ok(Number.isFinite(result[mode][k].medianMs)&&result[mode][k].medianMs>=0);
+      assert.ok(result[mode][k].p95Ms>=result[mode][k].medianMs);
+    }
+    reports.push(result);
+  }
+  t.diagnostic('GUI_LABORATORY_BENCHMARK '+JSON.stringify({version:bridge.version,samples:7,steps:10,reports}));
 });

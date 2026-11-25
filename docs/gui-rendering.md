@@ -155,3 +155,7 @@ Aggiunti i log originali dei job 139409972419, 139425561403 e tutti i risultati 
 ## Aggiornamento 0.28: CSS containment
 
 Confronto isolato su 256 testi e pannelli a dimensione fissa: normale, contain layout paint e content-visibility auto. Aggiornamenti di tutti i testi o soltanto della regione lontana; misura anche il costo di rivelare il pannello dopo lo scroll. Nessuna modifica alla preview. Vedi [interop](browser-interop.md#mira-028-css-containment).
+
+## Archivio 0.28 e aggiornamento 0.29
+
+Il log CI 139433834245 aggiunge i risultati completi di containment. Mediane update/layout visibile: tutti i testi 1,340 / 1,180 / 0,165 ms (normale/contain/auto); solo lontani 0,115 / 0,120 / 0,005 ms. Reveal auto 0,2 e 0,4 ms. Il 0,29 applica sperimentalmente content-visibility alle sole schede statiche del Laboratory ad altezza variabile, con fallback CSS e checkbox di confronto. Vedi [Studio](studio.md#laboratory-layout-differito-029).

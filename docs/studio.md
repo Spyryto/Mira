@@ -343,3 +343,11 @@ DOM Performance Lab → Benchmark aggiornamenti raggruppati. Confronta immediato
 ## CSS containment (0.28)
 
 DOM Performance Lab → Benchmark CSS containment. Confronto su pannelli lunghi, con aggiornamenti in viewport e fuori viewport; reveal misurato separatamente. Supporto CSS rilevato nel browser. Renderer predefinito invariato. Laboratory conserva anche i dati 0.26–0.27.
+
+## Laboratory: layout differito (0.29)
+
+Le schede statiche del rapporto lungo possono usare content-visibility: auto e contain-intrinsic-block-size: auto 240px. Il valore iniziale è una stima, non un'altezza fissa: il browser può ricordare il block size effettivo dopo il rendering. Prima di visitare una scheda lo scroll extent può essere stimato e cambiare; non si promette uno scroll perfettamente stabile. L'ottimizzazione è circoscritta alle section.lab-card, con eccezione della sezione contenente il target architecture; i details/summary rimangono ordinari, così come le altre ancore. Le schede con focus interno sono forzate visibili. Nessun JS aggiunto al rapporto e nessun cambiamento a runtime o altre pagine. CSS @supports richiede entrambe le proprietà, altrimenti il layout resta ordinario e il checkbox non appare. Il checkbox nativo "Layout ordinario" disattiva l'esperimento senza ricaricare la pagina.
+
+Test Chromium sulla pagina realmente generata: navigazione dei link interni, apertura/chiusura dei dettagli, geometria delle schede dopo reveal, confronto dell'estensione dello scroll dopo aver visitato tutte le schede, disattivazione/riattivazione. Confronto esplorativo dei costi di invalidazione della larghezza (dieci cambi per campione, sette campioni) con lettura geometrica in cima e reveal finale separato. Non misura primo caricamento, paint, FPS, memoria, interazioni reali o scroll fluido; nessuna soglia prestazionale. Le stime possono dipendere da larghezza, zoom, font e browser. Verificare su iPhone, Firefox e smart TV prima di estendere ad altre parti di Studio.
+
+Il primo test Chromium ha mostrato che disattivare e riattivare la proprietà può invalidare le dimensioni ricordate. La verifica richiede quindi convergenza dopo una nuova visita delle schede, non la conservazione delle altezze al cambio modalità. Il confronto espone anche l'altezza immediatamente dopo la riattivazione.
