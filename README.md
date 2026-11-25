@@ -239,8 +239,9 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 ## Mira 0.47: annotazioni esplicite
 
-Annotazioni facoltative di parametri, risultati e valori globali,
-applicate prima dell'inferenza e cancellate dagli emitter.
+Annotazioni facoltative `nome (Tipo)` per parametri e valori globali,
+`-> Tipo` per risultati di funzioni; applicate prima dell'inferenza
+e cancellate dagli emitter.
 [Dettagli](docs/type-checker.md#047-annotazioni-esplicite).
 
 ## Mira 0.46: validazione runtime RPC
