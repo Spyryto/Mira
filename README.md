@@ -200,6 +200,30 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
 
+## Mira 0.12.1: diagnostica dello scoping lessicale
+
+Quando una definizione locale usa un nome che verrà introdotto
+soltanto dopo, Mira identifica **il nome e la posizione esatta**
+del riferimento:
+
+```mira
+result = 4 >> {value |
+  subtotal = amount + value;
+  amount = value * 2;
+  subtotal
+};
+```
+
+Il compilatore segnala che `amount` è usato prima della dichiarazione,
+invece di mostrare un generico identificatore sconosciuto.
+
+Un altro controllo impedisce che un parametro interno come `aB`
+collida in JS/PHP con un nome esterno diverso come `a b`.
+Resta invece valido lo **shadowing lessicale intenzionale** tra
+parametri con *lo stesso identico nome*. I valori locali `nome = ...`
+continuano a non poter ombreggiare nomi già visibili.
+Nessuna modifica alle funzioni generate o alle regole di mutabilità.
+
 ## Mira 0.12: valori locali immutabili nei blocchi
 
 ```mira

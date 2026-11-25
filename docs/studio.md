@@ -222,3 +222,14 @@ L'Inspector rappresenta la dichiarazione come `Local` dentro `Steps`,
 con un sottoalbero `value` per l'inizializzatore. La compilazione JS
 usa `const`, quella PHP variabili locali con cattura lessicale
 delle closure annidate.
+
+## Diagnostica dei valori locali (Mira 0.12.1)
+
+La **Guida → Diagnostica e ambiguità** contiene due esempi negativi:
+uso di un valore locale prima della dichiarazione e collisione di un
+parametro con un nome esterno diverso dopo il mangling. I messaggi
+riportano il nome e la posizione nel sorgente.
+
+Il preset **Shadowing lessicale · 0.12.1** mostra invece un caso valido:
+un parametro interno ombreggia un parametro esterno dallo stesso nome.
+Compilatore CLI e Studio usano lo stesso controllo Haxe.

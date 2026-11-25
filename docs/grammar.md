@@ -1,4 +1,4 @@
-# Mira 0.12: executable subset and grammar boundaries
+# Mira 0.12.1: executable subset and grammar boundaries
 
 This file documents the parser's **implemented** boundaries. It is a readable
 grammar sketch, not a separate parser generator or a promise of accepted syntax.
@@ -259,3 +259,21 @@ Il compilatore genera `const` su JS e variabili PHP ordinarie
 con regole d'immutabilità verificate nel frontend. Il calcolo
 delle catture nelle closure PHP considera l'ordine delle
 definizioni locali, preservando lo scoping lessicale.
+
+## Diagnostica degli ambiti (Mira 0.12.1)
+
+Il parser raccoglie, a sola fini diagnostici, i nomi locali dichiarati
+all'inizio delle espressioni di un blocco. La raccolta ignora i
+sottoblocchi annidati. Questi nomi **non** entrano in scope prima della
+dichiarazione: quando un riferimento sarebbe altrimenti sconosciuto,
+Mira può segnalare `Local value 'name' used before its declaration`
+con riga e colonna del token che lo usa.
+
+Per evitare errori silenziosi sul codice generato, un parametro di
+blocco non può avere un nome Mira diverso da un nome esterno visibile
+se entrambi risultano nello stesso identificatore dopo il mangling.
+È consentito invece lo shadowing con il medesimo nome letterale,
+che mantiene la semantica lessicale ordinaria.
+
+Le definizioni locali non introducono riassegnazione; il modello
+resta identico per i due target JS/PHP. Nessuna nuova forma AST.
