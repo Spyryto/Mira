@@ -55,6 +55,7 @@
       case 'Binary':return closed(node.left,parameters)&&closed(node.right,parameters);
       case 'Conditional':return [node.condition,node.whenTrue,node.whenFalse].every(x=>closed(x,parameters));
       case 'Record':return node.fields.every(f=>closed(f.value,parameters));
+      case 'Call':return node.selector==='update:with:'&&node.arguments.length===2&&node.arguments.every(x=>closed(x,parameters));
       case 'Sequence':return node.items.every(x=>closed(x,parameters));
       default:return false;
     }

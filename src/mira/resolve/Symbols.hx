@@ -7,6 +7,7 @@ import mira.lex.Token.TokenKind;
 import mira.syntax.Definition;
 
 class Symbols {
+    public static inline final RECORD_UPDATE = "update:with:";
     public final functions:Array<Definition> = [];
     public final globals:Array<String> = [];
     public final hostNames:Array<String> = [];
@@ -18,11 +19,16 @@ class Symbols {
         final seenGlobals = new Map<String, Bool>();
         final mangled = new Map<String, String>();
 
+        // Native selector participates in the ordinary selector resolver.
+        seenSelectors.set(RECORD_UPDATE, true);
+        functions.push(new Definition("", ["update", "with"], ["record", "patch"], [],
+            new Token(Word, "update", 1, 1)));
         for (name in this.environment.values.concat(this.environment.callables)) {
             seenGlobals.set(name, true);
             hostNames.push(Mangle.name(name));
         }
         for (selector in this.environment.selectors) {
+            if (seenSelectors.exists(selector)) throw new MiraError("Reserved native selector " + selector);
             seenSelectors.set(selector, true);
             hostNames.push(Mangle.selector(selector.substr(0, selector.length - 1).split(":")));
             final labels = selector.substr(0, selector.length - 1).split(":");

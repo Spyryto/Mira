@@ -4,6 +4,7 @@ import mira.MiraError;
 import mira.Target;
 import mira.syntax.Expr;
 import mira.resolve.Mangle;
+import mira.resolve.Symbols;
 
 class SourceEmitter {
     public static function expression(
@@ -141,7 +142,7 @@ class SourceEmitter {
                     };
                     final value = expression(values[index], target, scope, reservedHostNames);
                     entries.push(switch (target) {
-                        case JavaScript: key + ": " + value;
+                        case JavaScript: (keys[index] == "__proto__" ? "[" + key + "]" : key) + ": " + value;
                         case Php: key + " => " + value;
                     });
                 }
@@ -308,6 +309,8 @@ class SourceEmitter {
         target:Target,
         fromHost:Bool
     ):String {
+        if (!fromHost && selector == Symbols.RECORD_UPDATE)
+            return recordUpdate(arguments, target);
         final callee = fromHost
             ? hostAccess(selector, target)
             : Mangle.selector(selector.substr(0, selector.length - 1).split(":"));
@@ -316,6 +319,32 @@ class SourceEmitter {
         // require the parentheses, ordinary functions do not.
         return (fromHost ? "(" + callee + ")" : callee)
             + "(" + arguments.join(", ") + ")";
+    }
+
+
+    // JS and PHP use their native shallow-copy operations. Empty arrays
+    // are accepted as empty records on both targets because PHP cannot
+    // distinguish them. Integer-shaped keys are outside this operation's
+    // portable record subset.
+    static function recordUpdate(arguments:Array<String>, target:Target):String {
+        final callable = switch (target) {
+            case JavaScript:
+                '((a, b) => { const valid = v => v != null'
+                + ' && ((Array.isArray(v) && v.length === 0)'
+                + ' || Object.prototype.toString.call(v) === "[object Object]")'
+                + ' && Object.keys(v).every(k => !/^-?(0|[1-9][0-9]*)$/.test(k));'
+                + ' if (!valid(a) || !valid(b)) throw new Error("update:with: expects records with non-integer keys");'
+                + ' return {...a, ...b}; })';
+            case Php:
+                "((static function($a, $b) { "
+                + "$valid = static function($v) { if (!is_array($v)) return false;"
+                + " foreach (array_keys($v) as $k) if (!is_string($k)"
+                + " || preg_match('/^-?(0|[1-9][0-9]*)$/D', $k)) return false;"
+                + " return true; };"
+                + " if (!$valid($a) || !$valid($b)) throw new \\RuntimeException('update:with: expects records with non-integer keys');"
+                + " return array_replace($a, $b); }))";
+        };
+        return callable + "(" + arguments.join(", ") + ")";
     }
 
     static function freshParameter(

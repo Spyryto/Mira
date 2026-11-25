@@ -1,0 +1,4 @@
+original = {student: "Ada", hours: 2, details: {rate: 30}};
+change hours: n = (update: _, with: {hours: n});
+changed = original >> (change hours: 3);
+result = update: changed, with: {paid: true};

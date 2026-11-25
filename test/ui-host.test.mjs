@@ -879,3 +879,26 @@ test('0.30 imported GUI works with automatic preview and normal host',()=>{
   assert.equal(app.getState(),1);assert.equal(findAll(root,'p')[0].textContent,'1');
   assert.deepEqual(errors,[]);
 });
+
+
+test('0.31 record patches preserve controlled form state and specialized rendering',()=>{
+  const source=demo('record-update-form').source;
+  const initial={student:'Ada',hours:2,paid:false};
+  for(const mode of ['generic','specialized']){
+    const {root,errors,host,document}=setup(),sandbox={};
+    runInNewContext(read('ui-host.js'),sandbox);runInNewContext(read('gui-specialize.js'),sandbox);
+    const head=source.slice(0,source.lastIndexOf('\nrender '));
+    const compiled=compiler.compile(head,'js');
+    assert.equal(compiled.ok,true,compiled.message);
+    const view=runInNewContext(compiled.output+'\nview',{});
+    const app=mode==='generic'?host.renderState(view,initial):
+      sandbox.MiraGuiSpecialize.mountAuto(sandbox.MiraGuiSpecialize.compileAuto(compiler,head,'view:'),root,initial,msg=>errors.push(msg));
+    if(mode==='specialized')assert.equal(sandbox.MiraGuiSpecialize.compileAuto(compiler,head,'view:').mode,'specialized');
+    const [input,check]=findAll(root,'input');input.focus();input.value='Mira';input.setSelectionRange(2,2);input.dispatch('input');
+    findButtons(root)[0].click();check.checked=true;check.dispatch('change');
+    assert.equal(JSON.stringify(app.getState()),'{"student":"Mira","hours":3,"paid":true}');
+    assert.equal(JSON.stringify(initial),'{"student":"Ada","hours":2,"paid":false}');
+    assert.equal(findAll(root,'input')[0],input);assert.equal(document.activeElement,input);assert.equal(input.selectionStart,2);
+    assert.deepEqual(errors,[]);
+  }
+});

@@ -1,0 +1,11 @@
+view: model = column: [
+  title: "Registro lezioni",
+  text input: "Allievo", value: (model ~ student),
+    update: {old, entered | update: old, with: {student: entered}},
+  text: (model ~ student),
+  text: (model ~ hours),
+  button: "Aggiungi ora", update: {old | update: old, with: {hours: (old ~ hours + 1)}},
+  checkbox: "Saldato", checked: (model ~ paid),
+    update: {old, entered | update: old, with: {paid: entered}}
+];
+render (state: {student: "Ada", hours: 2, paid: false}, view: (view: _));

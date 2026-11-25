@@ -23,7 +23,7 @@ class ExpressionParser {
         ?allowOperatorArgument:Bool = false, ?pendingLocals:Array<String>) {
         this.tokens = tokens.copy();
         final last = tokens.length > 0 ? tokens[tokens.length - 1] : new Token(End, "", 1, 1);
-        this.tokens.push(new Token(End, "", last.line, last.column));
+        this.tokens.push(new Token(End, "", last.line, last.column, last.file));
         this.symbols = symbols;
         this.localNames = localNames;
         this.pendingLocals = pendingLocals == null ? [] : pendingLocals;
