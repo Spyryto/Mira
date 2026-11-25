@@ -222,3 +222,49 @@ test('RPC capabilities fix the method and enforce the portable wire subset',asyn
   const broken=rpcService('/rpc','ledger.quote',async()=>({ok:true,status:200,text:async()=>'{"ok":true}'}));
   await assert.rejects(broken({hours:2},controller.signal),/Invalid RPC response/);
 });
+
+test('typed RPC client rejects invalid inputs before fetch and invalid results after fetch',async()=>{
+  const context={AbortController,TextEncoder};
+  runInNewContext(read('studio/effects.js'),context);
+  const NumberType={kind:'Number'},TextType={kind:'Text'},BooleanType={kind:'Boolean'};
+  const record=fields=>({kind:'Record',fields:Object.entries(fields).map(([name,type])=>({name,type})),tail:null});
+  const contract={parameters:record({hours:NumberType}),result:record({items:{kind:'List',item:record({name:TextType,paid:BooleanType,total:NumberType})}}),integerPolicy:[{name:'hours',min:1,max:10000,type:'integer'}]};
+  let calls=0, reply={items:[{name:'Ada',paid:false,total:60}]};
+  const service=context.MiraEffects.rpcService('/rpc','quote',async()=>{calls++;return {ok:true,status:200,text:async()=>JSON.stringify({ok:true,value:reply})};},contract);
+  const signal=new AbortController().signal;
+  for(const invalid of [{hours:'2'},{hours:0},{hours:1.5},{hours:10001},{hours:true},{hours:2,extra:1}])
+    await assert.rejects(service(invalid,signal),/RPC invalid/);
+  assert.equal(calls,0);
+  assert.deepEqual(plain(await service({hours:2},signal)),reply);
+  for(const invalid of [{items:[{name:'Ada',paid:1,total:60}]},{items:[{name:'Ada',paid:false,total:'60'}]},{items:[{name:'Ada',paid:false,total:60,extra:1}]},{items:[{name:'Ada',paid:false}]},{items:{name:'Ada'}},{items:null}]){
+    reply=invalid;await assert.rejects(service({hours:2},signal),/RPC invalid result type/);
+  }
+  reply={items:[]};
+  assert.deepEqual(plain(await service({hours:2},signal)),reply);
+});
+test('PHP typed RPC adapter validates nested output and rejects invalid return values',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-rpc-schema-'));
+  try {
+    const schema={parameters:{kind:'Record',fields:[{name:'hours',type:{kind:'Number'}}],tail:null},result:{kind:'Record',fields:[{name:'items',type:{kind:'List',item:{kind:'Text'}}}],tail:null},integerPolicy:[{name:'hours',type:'integer',min:1,max:10000}]};
+    writeFileSync(join(dir,'schema.json'),JSON.stringify(schema));
+    writeFileSync(join(dir,'Rpc.php'),read('runtime/php/Rpc.php'));
+    writeFileSync(join(dir,'test.php'),`<?php
+require __DIR__.'/Rpc.php';
+$schema=json_decode(file_get_contents(__DIR__.'/schema.json'),true,512,JSON_THROW_ON_ERROR);
+$ok=\\Mira\\Rpc\\invokeTyped(fn($p)=>['items'=>['Ada']],['hours'=>2],$schema);
+if($ok!==['items'=>['Ada']])exit(2);
+$empty=\\Mira\\Rpc\\invokeTyped(fn($p)=>['items'=>[]],['hours'=>2],$schema);
+if($empty!==['items'=>[]])exit(3);
+foreach ([['items'=>[1]], ['items'=>null], ['items'=>['Ada'],'extra'=>true], ['other'=>[]], ['items'=>['x'=>'Ada']]] as $bad) {
+  try { \\Mira\\Rpc\\invokeTyped(fn($p)=>$bad,['hours'=>2],$schema); exit(4); }
+  catch (\\RuntimeException $e) { if($e->getMessage()!=='RPC result violates inferred type')exit(5); }
+}
+foreach ([['hours'=>'2'],['hours'=>0],['hours'=>1.5],['hours'=>10001]] as $bad) {
+  try { \\Mira\\Rpc\\invokeTyped(fn($p)=>throw new \\LogicException('handler invoked'),$bad,$schema); exit(6); }
+  catch (\\Mira\\Rpc\\Fault $e) { if($e->status!==400 || $e->kind!=='invalid_hours')exit(7); }
+}
+echo 'ok';
+`);
+    assert.equal(execFileSync('php',[join(dir,'test.php')],{encoding:'utf8'}),'ok');
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
