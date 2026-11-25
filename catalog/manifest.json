@@ -1,5 +1,5 @@
 {
-  "version": "0.36.0",
+  "version": "0.37.0",
   "features": [
     {
       "id": "values",
@@ -1764,6 +1764,12 @@
       "title": "Registro full-stack Mira JS/PHP con SQLite",
       "since": "0.36",
       "doc": "docs/studio.md#registro-full-stack-036"
+    },
+    {
+      "id": "rpc",
+      "title": "Servizi RPC JSON riutilizzabili tra JS e PHP",
+      "since": "0.37",
+      "doc": "docs/browser-interop.md#mira-037-rpc-json"
     }
   ]
 }
