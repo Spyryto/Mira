@@ -17,6 +17,7 @@ class TypeChecker {
     final inferred = new Map<String, Type>();
     final active = new Map<String, Type>();
     final lacks = new Map<Int, Map<String,Bool>>();
+    final scalarEq = new Map<Int,Bool>();
     var nextId = 0;
     var origin:Token;
 
@@ -73,6 +74,7 @@ class TypeChecker {
         }
         if (occurs(id,type)) fail("infinite type");
         if (lacks.exists(id)) constrainRow(type,lacks.get(id));
+        if (scalarEq.exists(id)) requireScalarEq(type);
         bindings.set(id,type);
     }
 
@@ -98,6 +100,7 @@ class TypeChecker {
     function constrainRow(type:Type, forbidden:Map<String,Bool>):Void {
         switch (prune(type)) {
             case Variable(id):
+                if (scalarEq.exists(id)) fail("scalar equality cannot constrain a record row");
                 if (!lacks.exists(id)) lacks.set(id,new Map<String,Bool>());
                 final current = lacks.get(id);
                 for (key in forbidden.keys()) current.set(key,true);
@@ -186,6 +189,7 @@ class TypeChecker {
                 if (!seen.exists(id)) {
                     final copy = fresh();
                     if (lacks.exists(id)) constrainRow(copy,lacks.get(id));
+                    if (scalarEq.exists(id)) requireScalarEq(copy);
                     seen.set(id,copy);
                 }
                 seen.get(id);
@@ -286,13 +290,22 @@ class TypeChecker {
         return result;
     }
 
+    // A closed built-in predicate, not a runtime typeclass dictionary.
+    // Unification may solve it now or propagate it to another variable.
+    function requireScalarEq(type:Type):Void {
+        switch (prune(type)) {
+            case NumberType | TextType | BooleanType:
+            case Variable(id):
+                if (lacks.exists(id)) fail("scalar equality cannot constrain a record row");
+                scalarEq.set(id,true);
+            default: fail("ScalarEq requires Number, Text or Boolean, got " + show(type));
+        }
+    }
+
     function binary(symbol:String,left:Type,right:Type):Type {
         if (symbol == "==" || symbol == "!=") {
             unify(left,right);
-            switch (prune(left)) {
-                case NumberType | TextType | BooleanType:
-                default: fail("equality currently requires a known scalar type");
-            }
+            requireScalarEq(left);
             return BooleanType;
         }
         unify(NumberType,left);
@@ -418,7 +431,11 @@ class TypeChecker {
     }
 
     function show(type:Type):String {
-        return render(type,new Map<Int,String>(),[]);
+        final names = new Map<Int,String>();
+        final order:Array<Int> = [];
+        final body = render(type,names,order);
+        final predicates = [for (id in order) if (scalarEq.exists(id)) names.get(id) + ": ScalarEq"];
+        return body + (predicates.length == 0 ? "" : " where " + predicates.join(", "));
     }
 
     function render(type:Type,names:Map<Int,String>,order:Array<Int>):String {
