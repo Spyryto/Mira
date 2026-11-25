@@ -200,6 +200,18 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
 
+## Mira 0.14: blocchi senza parametri
+
+```mira
+action = {| 21 * 2};
+result = () >> action;
+```
+
+Il blocco è una funzione differita; `() >>` la applica senza argomenti.
+Non si introduce un valore Unit. L'AST conserva Block e Apply, con
+argomento assente per l'applicazione nullaria. Entrambi i backend
+generano closure e chiamate native. Vedi [Guida](docs/grammar.md#blocchi-senza-parametri-014).
+
 ## Mira 0.13: posizioni nel sorgente per gli errori di esecuzione
 
 Studio, premendo **Esegui**, prova a collegare gli errori JavaScript
