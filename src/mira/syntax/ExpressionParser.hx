@@ -41,7 +41,21 @@ class ExpressionParser {
     }
 
     function expression():Expr {
-        var left = fieldAccess();
+        var left:Expr;
+        // () is syntax for zero arguments only, not a primary/value.
+        if (current().isSymbol("(") && tokens[position + 1].isSymbol(")")) {
+            final opening = consume();
+            consume();
+            if (!current().isSymbol(">>")) {
+                throw new MiraError("Empty () is only allowed before >>", opening);
+            }
+            final token = consume();
+            final callee = fieldAccess();
+            validatePipeline(callee, 0, token);
+            left = Apply(callee, null);
+        } else {
+            left = fieldAccess();
+        }
 
         // Arithmetic, comparisons, and >> keep their existing
         // left-to-right grouping. Only ~ binds more tightly.
@@ -49,37 +63,44 @@ class ExpressionParser {
             final token = consume();
             final right = fieldAccess();
             if (token.value == ">>") {
-                switch (right) {
-                    case Section(_, args) | HostSection(_, args):
-                        var holes = 0;
-                        for (arg in args) if (isPlaceholder(arg)) holes++;
-                        if (holes != 1) {
-                            throw new MiraError("Pipeline needs a unary section; this section has "
-                                + holes + " holes", token);
-                        }
-                    case OperatorSection(_, sectionLeft, sectionRight):
-                        final holes = (isPlaceholder(sectionLeft) ? 1 : 0)
-                            + (isPlaceholder(sectionRight) ? 1 : 0);
-                        if (holes != 1) {
-                            throw new MiraError("Pipeline needs a unary operator section; this section has "
-                                + holes + " holes", token);
-                        }
-                    case Block(parameters, _):
-                        if (parameters.length != 1) {
-                            throw new MiraError("Pipeline needs a unary block; this block has "
-                                + parameters.length + " parameters", token);
-                        }
-                    case Numeric(_) | Text(_) | BooleanLiteral(_) | Binary(_, _, _) | Placeholder
-                        | FieldGet(_, _):
-                        throw new MiraError("Pipeline target must be a function", token);
-                    default:
-                }
+                validatePipeline(right, 1, token);
                 left = Apply(right, left);
             } else {
                 left = Binary(token.value, left, right);
             }
         }
         return left;
+    }
+
+    static function validatePipeline(callee:Expr, arity:Int, token:Token):Void {
+        final expected = arity == 0 ? "zero-argument" : "unary";
+        switch (callee) {
+            case Section(_, args) | HostSection(_, args):
+                var holes = 0;
+                for (arg in args) if (isPlaceholder(arg)) holes++;
+                if (holes != arity) {
+                    throw new MiraError("Pipeline needs a " + expected + " section; this section has "
+                        + holes + " holes", token);
+                }
+            case OperatorSection(_, sectionLeft, sectionRight):
+                final holes = (isPlaceholder(sectionLeft) ? 1 : 0)
+                    + (isPlaceholder(sectionRight) ? 1 : 0);
+                if (holes != arity) {
+                    throw new MiraError("Pipeline needs a " + expected + " operator section; this section has "
+                        + holes + " holes", token);
+                }
+            case Block(parameters, _):
+                if (parameters.length != arity) {
+                    throw new MiraError("Pipeline needs a " + expected + " block; this block has "
+                        + parameters.length + " parameters", token);
+                }
+            case Numeric(_) | Text(_) | BooleanLiteral(_) | Binary(_, _, _) | Placeholder
+                | FieldGet(_, _):
+                throw new MiraError("Pipeline target must be a function", token);
+            case FieldSection(_) | FieldAccessor(_):
+                if (arity == 0) throw new MiraError("Pipeline needs a unary argument for a field accessor", token);
+            default:
+        }
     }
 
     // A field lookup is a postfix operator: a ~ b ~ c means
@@ -98,6 +119,11 @@ class ExpressionParser {
     function application():Expr {
         var callee = primary();
         while (startsPrimary(current()) && isPotentialCallable(callee)) {
+            switch (callee) {
+                case Block(parameters, _) if (parameters.length == 0):
+                    throw new MiraError("Zero-argument block requires () >>", current());
+                default:
+            }
             final argument = primary();
             callee = Apply(callee, argument);
         }
@@ -124,6 +150,7 @@ class ExpressionParser {
         if (token.isSymbol("{")) return isBlockStart() ? block() : record();
         if (token.isSymbol("(")) {
             consume();
+            if (current().isSymbol(")")) throw new MiraError("Empty () is only allowed before >>", token);
             operatorDepth++;
             final inner = expression();
             operatorDepth--;
@@ -301,10 +328,11 @@ class ExpressionParser {
         return Sequence(items);
     }
 
-    // A sequence of one or more parameter names separated by commas and
+    // An empty or comma-separated sequence of parameter names
     // followed by | distinguishes a block from a record, without guessing.
     function isBlockStart():Bool {
         var cursor = position + 1;
+        if (tokens[cursor].isSymbol("|")) return true;
         if (tokens[cursor].kind != Word) return false;
         while (true) {
             while (tokens[cursor].kind == Word) cursor++;
@@ -316,13 +344,13 @@ class ExpressionParser {
         return false;
     }
 
-    // A block has one or more parameters and expressions separated by ';'.
+    // A block has zero or more parameters and expressions separated by ';'.
     // Names can have spaces. Repeated _ refers to a single bound parameter.
     function block():Expr {
         consume(); // {
         final parameters:Array<String> = [];
         final emitted:Array<String> = [];
-        while (true) {
+        if (!current().isSymbol("|")) while (true) {
             final parameterToken = current();
             final words:Array<String> = [];
             while (current().kind == Word) words.push(consume().value);
