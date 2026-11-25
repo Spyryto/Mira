@@ -1,0 +1,3 @@
+unused = {| {present: 1} ~ missing};
+action = {| 21 * 2};
+result = () >> action;
