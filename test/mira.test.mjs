@@ -624,7 +624,7 @@ test('block parameters are locally bound, while unbound variables remain errors'
   for (const [source, expected] of [
     ['result = {_ | missing};', /Unknown identifier|Unbound/],
     ['result = {value | value + unknown};', /Unknown identifier|Unbound/],
-    ['result = {value | };', /Expected expression/],
+    ['result = {value | };', /A block needs at least one expression/],
     ['result = {value | value + 1; };', /Expected }/],
     ['result = {__miraHost | 1};', /Reserved block parameter/]
   ]) {
@@ -653,7 +653,7 @@ test('multi-parameter blocks remain distinct from records, preserve closure capt
     ['result = {__, __ | __};', /Duplicate or conflicting block parameter/],
     ['result = {__miraHost, value | value};', /Reserved block parameter/],
     ['result = {a, b | a + unknown};', /Unknown identifier|Unbound/],
-    ['result = {a, b | a + b; };', /Expected }/]
+    ['result = {a, b | a + b;; };', /Expected expression/]
   ];
   for (const [source, diagnostic] of errors) {
     const failure = compileError(source);
