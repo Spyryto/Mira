@@ -10,7 +10,8 @@ class TypeChecker {
     final bindings = new Map<Int, Type>();
     final definitions = new Map<String, Definition>();
     final inferred = new Map<String, Type>();
-    final active = new Map<String, Bool>();
+    final active = new Map<String, Type>();
+    final lacks = new Map<Int, Map<String,Bool>>();
     var nextId = 0;
     var origin:Token;
 
@@ -19,6 +20,8 @@ class TypeChecker {
     public function check(program:Array<Definition>):Array<Dynamic> {
         for (d in program) if (!d.isStatement)
             definitions.set(d.isFunction() ? d.selector() : d.name, d);
+        final graph = new Dependencies(program);
+        for (group in graph.ordered()) checkGroup(group,graph.recursive(group));
         final result:Array<Dynamic> = [];
         for (d in program) {
             origin = d.origin;
@@ -64,6 +67,7 @@ class TypeChecker {
             default:
         }
         if (occurs(id,type)) fail("infinite type");
+        if (lacks.exists(id)) constrainRow(type,lacks.get(id));
         bindings.set(id,type);
     }
 
@@ -84,6 +88,34 @@ class TypeChecker {
         }
     }
 
+    // Row variables carry a set of labels that must be absent. Propagate
+    // restrictions through variable aliases and concrete extensions.
+    function constrainRow(type:Type, forbidden:Map<String,Bool>):Void {
+        switch (prune(type)) {
+            case Variable(id):
+                if (!lacks.exists(id)) lacks.set(id,new Map<String,Bool>());
+                final current = lacks.get(id);
+                for (key in forbidden.keys()) current.set(key,true);
+            case RecordType(fields,tail):
+                final next = forbidden.copy();
+                for (key in fields.keys()) {
+                    if (next.exists(key)) fail("duplicate record row field " + key);
+                    next.set(key,true);
+                }
+                if (tail != null) constrainRow(tail,next);
+            default: fail("expected a record row");
+        }
+    }
+
+    function recordType(fields:Map<String,Type>,tail:Null<Type>):Type {
+        if (tail != null) {
+            final forbidden = new Map<String,Bool>();
+            for (key in fields.keys()) forbidden.set(key,true);
+            constrainRow(tail,forbidden);
+        }
+        return RecordType(fields,tail);
+    }
+
     // Flatten row extensions before comparison. A projection introduces an open
     // row, while a record literal closes it. Shared fields must agree.
     function row(type:Type):{fields:Map<String,Type>,tail:Null<Type>} {
@@ -93,8 +125,8 @@ class TypeChecker {
             switch (prune(current)) {
                 case RecordType(part,tail):
                     for (key => value in part) {
-                        if (fields.exists(key)) unify(fields.get(key),value);
-                        else fields.set(key,value);
+                        if (fields.exists(key)) fail("duplicate record row field " + key);
+                        fields.set(key,value);
                     }
                     current = tail;
                 case Variable(_): return {fields:fields,tail:prune(current)};
@@ -122,9 +154,9 @@ class TypeChecker {
         if (y.tail == null && missingX.length > 0) fail("missing record field " + missingX[0]);
         if (x.tail == null && y.tail == null) return;
         if (x.tail == null) {
-            unify(y.tail,RecordType(onlyX,null));
+            unify(y.tail,recordType(onlyX,null));
         } else if (y.tail == null) {
-            unify(x.tail,RecordType(onlyY,null));
+            unify(x.tail,recordType(onlyY,null));
         } else if (missingX.length == 0 && missingY.length == 0) {
             unify(x.tail,y.tail);
         } else {
@@ -134,51 +166,69 @@ class TypeChecker {
                 default:
             }
             final shared = fresh();
-            unify(x.tail,RecordType(onlyY,shared));
-            unify(y.tail,RecordType(onlyX,shared));
+            unify(x.tail,recordType(onlyY,shared));
+            unify(y.tail,recordType(onlyX,shared));
         }
     }
 
     // All free variables of a completed top-level definition are generalized.
-    // No local generalization or recursive dependency groups in this pilot.
+    // Recursive components are generalized only after checking every member.
     function instantiate(type:Type, ?variables:Map<Int,Type>):Type {
         final seen = variables == null ? new Map<Int,Type>() : variables;
         return switch (prune(type)) {
             case Variable(id):
-                if (!seen.exists(id)) seen.set(id,fresh());
+                if (!seen.exists(id)) {
+                    final copy = fresh();
+                    if (lacks.exists(id)) constrainRow(copy,lacks.get(id));
+                    seen.set(id,copy);
+                }
                 seen.get(id);
             case ListType(item): ListType(instantiate(item,seen));
             case FunctionType(args,result): FunctionType([for (a in args) instantiate(a,seen)],instantiate(result,seen));
             case RecordType(fields,tail):
                 final r = row(type);
-                RecordType([for (key => value in r.fields) key => instantiate(value,seen)],
+                recordType([for (key => value in r.fields) key => instantiate(value,seen)],
                     r.tail == null ? null : instantiate(r.tail,seen));
             default: prune(type);
         };
     }
 
+    function checkGroup(group:Array<String>,recursive:Bool):Void {
+        // A cyclic global value would require recursive initialization semantics,
+        // which neither Mira emitter currently promises.
+        for (name in group) {
+            final d = definitions.get(name);
+            origin = d.origin;
+            if (recursive && !d.isFunction()) fail("recursive value dependency not supported: " + name);
+            final placeholder:Type = d.isFunction()
+                ? FunctionType([for (p in d.parameters) fresh()],fresh()) : fresh();
+            active.set(name,placeholder);
+        }
+        for (name in group) {
+            final d = definitions.get(name);
+            origin = d.origin;
+            final scope = new Map<String,Type>();
+            final params = [for (p in d.parameters) fresh()];
+            for (i in 0...params.length) scope.set(d.parameters[i],params[i]);
+            final body = infer(d.body,scope);
+            final type:Type = d.isFunction() ? FunctionType(params,body) : body;
+            unify(active.get(name),type);
+        }
+        for (name in group) {
+            inferred.set(name,active.get(name));
+            active.remove(name);
+        }
+    }
+
     function declaration(name:String):Type {
+        if (active.exists(name)) return active.get(name);
         if (inferred.exists(name)) return instantiate(inferred.get(name));
-        if (active.exists(name)) return fail("recursive dependency not supported yet: " + name);
-        final d = definitions.get(name);
-        if (d == null) return fail("unknown declaration " + name);
-        final previous = origin;
-        origin = d.origin;
-        active.set(name,true);
-        final scope = new Map<String,Type>();
-        final params = [for (p in d.parameters) fresh()];
-        for (i in 0...params.length) scope.set(d.parameters[i],params[i]);
-        final body = infer(d.body,scope);
-        final type:Type = d.isFunction() ? FunctionType(params,body) : body;
-        active.remove(name);
-        inferred.set(name,type);
-        origin = previous;
-        return instantiate(type);
+        return fail("unknown declaration " + name);
     }
 
     function projection(record:Type,key:String):Type {
         final value = fresh();
-        unify(record,RecordType([key => value],fresh()));
+        unify(record,recordType([key => value],fresh()));
         return value;
     }
 
