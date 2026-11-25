@@ -79,6 +79,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Servizi RPC JSON riutilizzabili tra JS e PHP | `0.37` | [Dettagli](docs/browser-interop.md#mira-037-rpc-json) |
 | ✅ | Contratti RPC dichiarativi Mira e registrazioni generate | `0.38` | [Dettagli](docs/browser-interop.md#mira-038-contratti-di-servizio) |
 | ✅ | Inferenza strutturale sperimentale, opt-in | `0.39` | [Dettagli](docs/type-checker.md) |
+| ✅ | Inferenza ricorsiva per componenti e vincoli sulle righe | `0.40` | [Dettagli](docs/type-checker.md#040-gruppi-ricorsivi-e-vincoli-sulle-righe) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

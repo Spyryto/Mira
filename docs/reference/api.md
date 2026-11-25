@@ -1361,6 +1361,39 @@ Php
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Target.hx#L6)
 
+<a id="api-mira-types-dependencies"></a>
+### `mira.types.Dependencies`
+
+**class** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+class Dependencies
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Dependencies.hx#L7)
+
+<a id="api-mira-types-dependencies-new"></a>
+### `mira.types.Dependencies.new`
+
+**constructor** · Membro pubblico di mira.types.Dependencies.
+
+```haxe
+public function new(program:Array<Definition>)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Dependencies.hx#L17)
+
+<a id="api-mira-types-dependencies-ordered"></a>
+### `mira.types.Dependencies.ordered`
+
+**method** · Membro pubblico di mira.types.Dependencies.
+
+```haxe
+public function ordered():Array<Array<String>> return groups; public function recursive(group:Array<String>):Bool return group.length > 1 || edges.get(group[0]).indexOf(group[0]) >= 0; function visit(name:String):Void
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Dependencies.hx#L35)
+
 <a id="api-mira-types-type"></a>
 ### `mira.types.Type`
 
@@ -1469,7 +1502,7 @@ class TypeChecker
 public function check(program:Array<Definition>):Array<Dynamic>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L19)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L20)
 
 <a id="api-mira-types-typechecker-new"></a>
 ### `mira.types.TypeChecker.new`
@@ -1480,5 +1513,5 @@ public function check(program:Array<Definition>):Array<Dynamic>
 public function new()
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L17)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L18)
 
