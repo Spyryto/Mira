@@ -59,6 +59,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Stili GUI componibili e griglia | `0.17` | [Dettagli](docs/reference/language.md#feature-styled-gui) |
 | ✅ | Benchmark GUI sul DOM reale | `0.18` | [Dettagli](docs/browser-interop.md#mira-018-misure-sul-dom-reale) |
 | ✅ | Specializzazione sperimentale GUI su AST | `0.19` | [Dettagli](docs/browser-interop.md#mira-019-specializzazione-sperimentale-di-view-fisse) |
+| ✅ | Specializzazione GUI con record e stili dinamici | `0.20` | [Dettagli](docs/browser-interop.md#mira-020-record-e-stili-dinamici) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
