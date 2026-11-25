@@ -68,7 +68,7 @@ export function generateRpcContract(compiler,source,serverSource){
     }else fail('unknown service kind');
   }
   return {
-    client:'globalThis.MiraLedgerServices = Object.freeze('+JSON.stringify(bindings,null,2)+');\n',
+    client:'globalThis.MiraRpcBindings = Object.freeze('+JSON.stringify(bindings,null,2)+');\n',
     server:'<?php\ndeclare(strict_types=1);\n// Generated from Mira service declarations.\nreturn [\n  '+php.join(',\n  ')+'\n];\n'
   };
 }
