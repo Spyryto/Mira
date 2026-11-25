@@ -1,0 +1,6 @@
+result = 4 >> {value |
+  doubled = value * 2;
+  doubled >> {inner |
+    inner + doubled
+  }
+};

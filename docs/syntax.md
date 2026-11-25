@@ -178,7 +178,8 @@ La presenza di `|` distingue un blocco da un record:
 `{hours: 2}` resta un record. Dalla 0.9 sono supportati
 anche più parametri, separati da virgole. Dalla 0.11 le espressioni
 possono essere multiple, separate da `;`. Restano fuori dalle
-possibilità attuali le definizioni locali, le assegnazioni e i tipi.
+possibilità attuali le riassegnazioni, la mutabilità e i tipi.
+Dalla 0.12 sono ammesse definizioni locali immutabili.
 
 ## Implementato in Mira 0.9: più parametri nei blocchi
 
@@ -244,8 +245,33 @@ in Mira Studio. Le closure su JavaScript/PHP mantengono la
 cattura lessicale; PHP usa `function (...) use (...)` quando
 occorre un corpo con istruzioni.
 
-Il nucleo resta deliberatamente limitato alle **espressioni**:
-nessuna variabile locale o modifica di stato introdotta in questa fase.
+Dalla 0.12 i blocchi possono contenere anche definizioni
+di valori locali immutabili. Non sono previste riassegnazioni o mutazioni.
+
+## Implementato in Mira 0.12: valori locali immutabili
+
+```mira
+result = 4 >> {value |
+  doubled = value * 2;
+  doubled >> {inner |
+    inner + doubled
+  }
+};
+```
+
+Il risultato è `16`. La forma `nome = espressione;` all'interno
+di un blocco crea un valore **locale e immutabile**. Il nome è visibile
+soltanto nelle espressioni successive e può essere catturato dai
+blocchi annidati. Un blocco deve terminare con un'espressione che
+produca un valore; un'inizializzazione non è il risultato finale.
+
+Non si possono ridefinire nomi già disponibili (compresi parametri e
+valori globali), né introdurre nomi distinti che collidano dopo il
+mangling. Questo primo modello rende il comportamento uguale su
+JavaScript e PHP senza una nuova infrastruttura di scoping.
+`Local(name, value)` è un nodo AST interno a `Steps`. In JS
+si genera `const`; in PHP un'assegnazione a variabile ordinaria,
+ma Mira impedisce staticamente di riassegnare il nome.
 
 ## Proposto: closure generali e selettori parziali
 
@@ -254,8 +280,8 @@ greater than: limit = {x | x > limit};
 join, with " "
 ```
 
-**Non implementati**: blocchi con più istruzioni o definizioni locali,
-selector parziali con argomenti impliciti e type checker.
+**Non implementati**: mutabilità, riassegnazioni, selector parziali con
+argomenti impliciti e type checker.
 
 ## Proposed: type declarations and MVU records
 

@@ -733,3 +733,77 @@ test('0.11 evaluates earlier expressions even when their result is discarded', (
     assert.throws(() => run(source,target),/Missing record field/);
   }
 });
+
+test('0.12 local values are immutable and visible to following expressions on JS/PHP', () => {
+  const cases = [
+    ['result = 4 >> {value | doubled = value * 2; doubled + value};', '12'],
+    ['rate = 30; result = 2 >> {hours | subtotal = hours * rate; subtotal + 5};', '65'],
+    ['result = 3 >> {x | first = x + 1; second = first * 2; second + x};', '11'],
+    ['result = 5 >> {x | intermediate = x + 1; intermediate * 2;};', '12'],
+    ['result = 2 >> {x | local = x + 1; local >> {y | y + local}};', '6'],
+    ['result = 4 >> {x | local = x + 1; local >> {y | next = y + 1; next + local}};', '11'],
+    ['factor = 3; result = 4 >> {x | total = x * factor; total >> {y | y + factor}};', '15'],
+    ['result = 4 >> {x | local = x + 1; x >> {local | local + x}};', '8'],
+    ['result = 3 >> {x | a value = x * 2; a value + 1};', '7'],
+    ['result = 3 >> {x | flag = x > 2; if (flag) then "yes" else "no"};', '"yes"']
+  ];
+  for (const [source, expected] of cases)
+    for (const target of ['js','php'])
+      assert.equal(run(source,target),expected,source + ' / ' + target);
+});
+
+test('0.12 local bindings have sequential lexical scope and reject reassignment', () => {
+  const invalid = [
+    ['result = 2 >> {x | a = b + 1; b = 4; a};', /Unknown identifier|Unbound/],
+    ['result = 2 >> {x | local = x + 1; local = 5; local};', /Duplicate or shadowed local name/],
+    ['result = 2 >> {x | x = x + 1; x};', /Duplicate or shadowed local name/],
+    ['rate = 30; result = 2 >> {x | rate = 4; x};', /Duplicate or shadowed local name/],
+    ['a b = 30; result = 2 >> {x | aB = 4; x};', /Duplicate or shadowed local name/],
+    ['result = 2 >> {x | a b = 3; aB = 4; a b};', /Duplicate or shadowed local name/],
+    ['result = 2 >> {x | first = x + 1};', /A block must end with a value expression/],
+    ['result = 2 >> {x | first = ; x};', /Expected value for local/],
+    ['result = 2 >> {x | __miraHost = 3; x};', /Reserved local name/],
+    ['result = 2 >> {x | first = x + 1; first}; result outside = first;', /Unknown identifier|Unbound/]
+  ];
+  for (const [source, diagnostic] of invalid) {
+    const failure = compileError(source);
+    assert.notEqual(failure.status,0,source);
+    assert.match(failure.stderr, diagnostic,source);
+  }
+});
+
+test('0.12 generated JS uses const and PHP captures only referenced external values', () => {
+  const source = [
+    'rate = 3;',
+    'unused = 99;',
+    'result = 4 >> {x |',
+    '  subtotal = x * rate;',
+    '  subtotal >> {y | other = subtotal + y; other + rate}',
+    '};'
+  ].join('\n');
+  const js=compile(source,'js');
+  const php=compile(source,'php');
+  assert.match(js,/const subtotal =/);
+  assert.match(php,/\$subtotal =/);
+  assert.match(php,/function\(\$x\) use \(\$rate\)/);
+  assert.doesNotMatch(php,/use \(\$rate, \$unused/);
+  assert.equal(run(source,'js'),'27');
+  assert.equal(run(source,'php'),'27');
+});
+
+test('0.12 top-level definition scanner ignores = inside nested blocks', () => {
+  const cases = [
+    ['result = 2 >> {x | doubled = x * 2; doubled};', '4'],
+    ['result = (2 >> {x | doubled = x * 2; doubled}) + 1;', '5'],
+    ['result = [2, 3] ~ missing;', null]
+  ];
+  for (const [source,expected] of cases.slice(0,2))
+    for (const target of ['js','php'])
+      assert.equal(run(source,target),expected,source+' / '+target);
+  const expressionStatement = '1 >> {value | doubled = value * 2; doubled}; result = 3;';
+  for (const target of ['js','php'])
+    assert.equal(run(expressionStatement,target),'3');
+  const multipleTopLevel = compileError('result = 1 = 2;');
+  assert.notEqual(multipleTopLevel.status,0);
+  assert.match(multipleTopLevel.stderr,/Unexpected second =/);
+});

@@ -77,8 +77,18 @@ class SourceEmitter {
                     case Steps(items):
                         final statements:Array<String> = [];
                         for (index in 0...(items.length - 1)) {
-                            statements.push(expression(items[index], target,
-                                innerScope, reservedHostNames) + ";");
+                            switch (items[index]) {
+                                case Local(name, value):
+                                    final rhs = expression(value, target,
+                                        innerScope, reservedHostNames);
+                                    final symbol = Mangle.name(name);
+                                    statements.push((target == Php ? "$" : "const ")
+                                        + symbol + " = " + rhs + ";");
+                                    innerScope.unshift(name);
+                                default:
+                                    statements.push(expression(items[index], target,
+                                        innerScope, reservedHostNames) + ";");
+                            }
                         }
                         final last = expression(items[items.length - 1], target,
                             innerScope, reservedHostNames);
@@ -119,6 +129,8 @@ class SourceEmitter {
 
             case Steps(_):
                 throw new MiraError("Steps can only occur inside a block");
+            case Local(_, _):
+                throw new MiraError("Local bindings can only occur in block steps");
 
             case Record(keys, values):
                 final entries:Array<String> = [];
@@ -189,7 +201,20 @@ class SourceEmitter {
                 referencedNames(test, bound, names);
                 referencedNames(whenTrue, bound, names);
                 referencedNames(whenFalse, bound, names);
-            case Sequence(items) | Steps(items) | Call(_, items) | HostCall(_, items)
+            case Steps(items):
+                final visible = bound.copy();
+                for (item in items) {
+                    switch (item) {
+                        case Local(name, initializer):
+                            referencedNames(initializer, visible, names);
+                            visible.push(name);
+                        default:
+                            referencedNames(item, visible, names);
+                    }
+                }
+            case Local(_, initializer):
+                referencedNames(initializer, bound, names);
+            case Sequence(items) | Call(_, items) | HostCall(_, items)
                 | Section(_, items) | HostSection(_, items):
                 for (item in items) referencedNames(item, bound, names);
             case Record(_, values):

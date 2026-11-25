@@ -1,5 +1,5 @@
 {
-  "version": "0.11.0",
+  "version": "0.12.0",
   "features": [
     {
       "id": "values",
@@ -355,6 +355,19 @@
         "block-steps-fold"
       ],
       "since": "0.11"
+    },
+    {
+      "id": "local-values",
+      "title": "Valori locali immutabili nei blocchi",
+      "summary": "`{value | doubled = value * 2; doubled + value}` definisce un valore locale nel blocco.",
+      "details": "Da Mira 0.12 i blocchi ammettono definizioni locali `nome = espressione;` prima dell'espressione finale. Il nome, anche composto, è visibile solo alle espressioni successive e ai blocchi annidati. Non può essere riassegnato né ripetuto o collidere dopo mangling; per ora non può ombreggiare parametri e valori già visibili. L'ultima espressione è il risultato. Il nodo AST `Local(name, value)` vive in `Steps`. JavaScript usa const; PHP assegna una variabile ma Mira ne impedisce ogni ridefinizione. Le closure PHP catturano per valore i soli nomi esterni effettivamente usati.",
+      "api": "mira.syntax.Expr.Local",
+      "examples": [
+        "local-values-fee",
+        "local-values-closure",
+        "local-values-fold"
+      ],
+      "since": "0.12"
     }
   ],
   "examples": [
@@ -1187,6 +1200,40 @@
       "title": "Più espressioni nel riduttore",
       "description": "Un blocco binario con due espressioni viene invocato da `fold` senza parentesi aggiuntive.",
       "path": "catalog/examples/block-steps-fold.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "result",
+        "value": 12
+      }
+    },
+    {
+      "id": "local-values-fee",
+      "feature": "local-values",
+      "title": "Compenso con subtotale locale",
+      "description": "Un subtotale immutabile alimenta il risultato finale.",
+      "path": "catalog/examples/local-values-fee.mira",
+      "expect": {
+        "kind": "result",
+        "value": 65
+      }
+    },
+    {
+      "id": "local-values-closure",
+      "feature": "local-values",
+      "title": "Closure annidata con valore locale",
+      "description": "Il blocco interno cattura `doubled` definito nel blocco esterno.",
+      "path": "catalog/examples/local-values-closure.mira",
+      "expect": {
+        "kind": "result",
+        "value": 16
+      }
+    },
+    {
+      "id": "local-values-fold",
+      "feature": "local-values",
+      "title": "Riduzione con valore locale",
+      "description": "Il riduttore calcola `doubled` su ogni elemento.",
+      "path": "catalog/examples/local-values-fold.mira",
       "host": "studio/host.json",
       "expect": {
         "kind": "result",

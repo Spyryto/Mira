@@ -18,7 +18,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.11.0"
+            version: "0.12.0"
         });
     }
 
@@ -140,6 +140,8 @@ class Bridge {
                 {kind: "Block", parameters: parameters, body: expression(body)};
             case Steps(expressions):
                 {kind: "Steps", expressions: [for (item in expressions) expression(item)]};
+            case Local(name, initializer):
+                {kind: "Local", name: name, value: expression(initializer)};
             case Record(keys, values):
                 {kind: "Record", fields: [for (index in 0...keys.length)
                     {key: keys[index], value: expression(values[index])}]};

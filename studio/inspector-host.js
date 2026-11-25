@@ -19,6 +19,7 @@ export function childrenOf(node) {
     case 'FieldGet': return node.record ? [node.record] : [];
     case 'Block': return node.body ? [node.body] : [];
     case 'Steps': return Array.isArray(node.expressions) ? node.expressions : [];
+    case 'Local': return node.value ? [node.value] : [];
     case 'Conditional': return [node.condition, node.whenTrue, node.whenFalse].filter(Boolean);
     case 'Call':
     case 'Section':

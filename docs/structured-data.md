@@ -190,3 +190,23 @@ viene comunque valutata, ma solo l'ultima diventa il nuovo
 accumulatore. Per il momento i blocchi non possono definire
 variabili locali né modificare parametri: l'estensione
 alla sequenza di espressioni è indipendente da quella scelta.
+
+## Valori locali nelle riduzioni (Mira 0.12)
+
+Il nuovo valore locale consente di nominare passaggi intermedi
+senza cambiare l'immutabilità dei dati:
+
+```mira
+numbers = [1, 2, 3];
+result = fold: numbers,
+  with: {sum, item |
+    doubled = item * 2;
+    sum + doubled
+  },
+  from: 0;
+```
+
+Il risultato è `12`. Ogni chiamata alla callback dispone del
+proprio `doubled`, disponibile soltanto dopo la sua definizione
+e catturabile da eventuali closure annidate. Non sono previste
+riassegnazioni né stato condiviso implicito.

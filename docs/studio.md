@@ -210,3 +210,15 @@ mostra un riduttore con due argomenti e il relativo risultato. L'AST
 espone `parameters` come lista. Dalla 0.10, `with: {total, item | ...}`
 funziona senza parentesi tonde aggiuntive. L'esempio
 **Fold · compensi 0.10** mostra la nuova sintassi.
+
+## Mira 0.12: valori locali immutabili
+
+Il preset **Valori locali · 0.12** mostra un blocco che definisce
+`doubled` con `=` e lo rende disponibile a un blocco annidato.
+Il compilatore risolve i valori locali in ordine: un nome non è
+visibile prima dell'inizializzazione e non può essere ridefinito.
+
+L'Inspector rappresenta la dichiarazione come `Local` dentro `Steps`,
+con un sottoalbero `value` per l'inizializzatore. La compilazione JS
+usa `const`, quella PHP variabili locali con cattura lessicale
+delle closure annidate.

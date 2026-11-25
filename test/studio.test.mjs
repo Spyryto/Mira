@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.11.0');
+  assert.equal(bridge.version, '0.12.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.11.0');
+  assert.equal(bridge.version,'0.12.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -528,4 +528,28 @@ test('0.11 single-expression blocks keep the previous AST shape', () => {
   const block=JSON.parse(ast.output).definitions[0].body.callee;
   assert.equal(block.kind,'Block');
   assert.equal(block.body.kind,'Binary');
+});
+
+test('0.12 Inspector exposes ordered Local bindings and nested lexical closures', () => {
+  const source='result = 4 >> {value | doubled = value * 2; doubled >> {inner | inner + doubled}};';
+  const tree=bridge.ast(source);
+  assert.equal(tree.ok,true,tree.message);
+  const root=JSON.parse(tree.output).definitions[0].body;
+  assert.equal(root.kind,'Apply');
+  const outer=root.callee;
+  assert.equal(outer.kind,'Block');
+  assert.equal(outer.body.kind,'Steps');
+  assert.equal(outer.body.expressions[0].kind,'Local');
+  assert.equal(outer.body.expressions[0].name,'doubled');
+  assert.equal(outer.body.expressions[0].value.kind,'Binary');
+  const inner=outer.body.expressions[1].callee;
+  assert.equal(inner.kind,'Block');
+  assert.equal(inner.body.kind,'Binary');
+  assert.equal(inner.body.right.value,'doubled');
+  for (const target of ['js','php']) {
+    const compiled=bridge.compile(source,target);
+    assert.equal(compiled.ok,true,compiled.message);
+  }
+  const js=bridge.compile(source,'js');
+  assert.equal(runInNewContext(js.output+'\nresult',{}),16);
 });

@@ -42,9 +42,15 @@ class DefinitionParser {
 
     static function parseOne(tokens:Array<Token>):Definition {
         var equals = -1;
+        var depth = 0;
         for (i in 0...tokens.length) {
-            if (tokens[i].isSymbol("=")) {
-                if (equals != -1) throw new MiraError("Unexpected second =", tokens[i]);
+            final token = tokens[i];
+            if (token.isSymbol("(") || token.isSymbol("[") || token.isSymbol("{")) {
+                depth++;
+            } else if (token.isSymbol(")") || token.isSymbol("]") || token.isSymbol("}")) {
+                depth--;
+            } else if (depth == 0 && token.isSymbol("=")) {
+                if (equals != -1) throw new MiraError("Unexpected second =", token);
                 equals = i;
             }
         }
