@@ -96,7 +96,9 @@ export function mountBenchmark(root,compiler) {
   const ci=el('a','bench-ci','Benchmark JS/PHP della CI ↗');
   ci.href='https://github.com/Spyryto/Mira/actions/workflows/ci.yml';
   ci.target='_blank';ci.rel='noopener noreferrer';
-  root.replaceChildren(header,status,highlights,grid,note,ci);
+  const gui=el('a','bench-ci','DOM Performance Lab · benchmark GUI ↗');
+  gui.href='./gui-benchmark.html';
+  root.replaceChildren(header,status,highlights,grid,note,ci,gui);
 
   function resultCard(workload,rows,lines) {
     const panel=el('article','bench-result-card');

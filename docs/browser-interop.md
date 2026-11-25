@@ -200,3 +200,9 @@ espliciti completi, registrando allocazioni di elementi e scritture
 di stili, più tempi indicativi Node. Non misura layout, paint, latenza
 o memoria in un browser reale. Avvio: npm run benchmark:gui
 (dopo build di Studio, inclusa nello script).
+
+## Mira 0.18: misure sul DOM reale
+
+Il laboratorio separa la sola costruzione della view Mira dal tempo di aggiornamento. Il codice Mira genera 100 elementi di testo con padding, un pulsante e una transizione numerica; il caso sparso cambia un testo, quello denso tutti. Incrementale usa il normale evento del renderer; ricostruzione usa render esplicito della stessa view; DOM diretto costruisce la stessa struttura e aggiorna solo i testi noti, usando la transizione compilata. Il DOM diretto è un riferimento specializzato, non un'implementazione equivalente del renderer generico.
+
+Cinque campioni di 30 aggiornamenti, cinque warmup per campione; ordine delle strategie ruotato, mediana e P95 della media per aggiornamento. Si misura con e senza lettura forzata della geometria a ogni passo. Compilazione esclusa, checksum su ogni campione. La misura con layout forzato non misura paint o frame rate; quella sincrona può differire il layout. Il test CI usa Chrome headless, non Safari/iPhone. Da Studio: Bench → DOM Performance Lab. In locale: npm run build:studio, poi aprire dist/studio/gui-benchmark.html o eseguire il test con CHROME_BIN.

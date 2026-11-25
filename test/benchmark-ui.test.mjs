@@ -107,3 +107,56 @@ test('benchmark assets are cached and route has a visible tab',()=>{
   assert.doesNotMatch(read('benchmark-ui.js'),/bench-expand|toggleFullscreen/);
   assert.doesNotMatch(read('styles.css'),/\.benchmark-area\.bench-fullscreen|\.bench-expand|body\.bench-fullscreen-open/);
 });
+
+
+test('GUI browser benchmark workload uses actual compiled Mira view and transition',()=>{
+  const sandbox={};
+  runInNewContext(read('gui-benchmark.js'),sandbox);
+  for(const density of ['sparse','dense']){
+    const source=sandbox.MiraGuiBench.source(density);
+    for(const target of ['js','php']){
+      const result=bridge.compile(source,target);
+      assert.equal(result.ok,true,result.message);
+    }
+    const js=bridge.compile(source,'js');
+    const view=runInNewContext(js.output+'\nbench_view(3)',{});
+    assert.equal(view.children.length,101);
+    assert.equal(view.children[0].view.text,3);
+    assert.equal(view.children[99].view.text,density==='sparse'?99:102);
+    assert.equal(view.children[100].update(3),4);
+  }
+  for(const file of ['gui-benchmark.js','gui-benchmark.html']){
+    assert.ok(existsSync(resolve(site,file)),file);
+    assert.ok(read('sw.js').includes('./'+file));
+  }
+  assert.match(read('benchmark-ui.js'),/gui-benchmark\.html/);
+  assert.match(read('sw.js'),/cache\.put\(page, copy\)/);
+});
+
+test('GUI benchmark runs in a real Chromium DOM and checks all strategies',t=>{
+  const candidates=[process.env.CHROME_BIN,'google-chrome','chromium','chromium-browser'].filter(Boolean);
+  const executable=candidates.find(cmd=>spawnSync(cmd,['--version'],{encoding:'utf8'}).status===0);
+  if(!executable){
+    if(process.env.GITHUB_ACTIONS==='true')assert.fail('Chrome/Chromium is required on GitHub Actions');
+    return t.skip('Chrome/Chromium not installed; set CHROME_BIN');
+  }
+  const url=pathToFileURL(resolve(site,'gui-benchmark.html'));
+  url.searchParams.set('auto','1');
+  const output=spawnSync(executable,['--headless','--no-sandbox','--disable-dev-shm-usage',
+    '--no-first-run','--disable-gpu','--dump-dom',url.href],{encoding:'utf8',timeout:90000,maxBuffer:8*1024*1024});
+  assert.equal(output.status,0,output.error?.message??output.stderr);
+  const match=output.stdout.match(/<pre id="machine"[^>]*>([\s\S]*?)<\/pre>/);
+  assert.ok(match,'benchmark machine result missing');
+  const result=JSON.parse(match[1].replaceAll('&amp;','&').replaceAll('&lt;','<').replaceAll('&gt;','>'));
+  assert.equal(result.ok,true,result.message);
+  assert.equal(result.version,bridge.version);
+  assert.equal(result.rows,100);
+  assert.equal(result.results.length,4);
+  for(const row of result.results){
+    for(const strategy of ['view','incremental','rebuild','direct']){
+      assert.ok(Number.isFinite(row[strategy].medianMs)&&row[strategy].medianMs>=0);
+      assert.ok(row[strategy].p95Ms>=row[strategy].medianMs);
+    }
+  }
+  t.diagnostic('GUI_BROWSER_BENCHMARK '+JSON.stringify(result));
+});

@@ -1,5 +1,5 @@
 {
-  "version": "0.17.0",
+  "version": "0.18.0",
   "features": [
     {
       "id": "values",
@@ -1467,6 +1467,12 @@
       "title": "Interop: riferimenti a funzioni/valori dell'host",
       "since": "0.3",
       "doc": "docs/dogfooding.md#che-cosa-contiene-il-manifest"
+    },
+    {
+      "id": "gui-browser-benchmark",
+      "title": "Benchmark GUI sul DOM reale",
+      "since": "0.18",
+      "doc": "docs/browser-interop.md#mira-018-misure-sul-dom-reale"
     }
   ]
 }
