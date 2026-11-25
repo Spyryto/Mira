@@ -330,3 +330,7 @@ Il loader raccoglie le dichiarazioni per file in ordine DFS, dipendenze prima de
 CLI: `node dist/mira.cjs app.mira js`, con lib/ accanto ad app.mira. Core: resolver sincrono opzionale (String -> Null<String>), senza filesystem o rete. Studio: lib/gui.mira incorporata nel compiler bundle; API virtuale opzionale con mappa JSON dei file. Il CLI --benchmark resta limitato a sorgenti singoli per ora. La diagnostica delle dipendenze riporta file:riga:colonna e l'AST/mappa delle posizioni include il file quando importato.
 
 Scelta deliberatamente incrementale: separazione fisica e risoluzione deterministica prima di definire namespace e regole di visibilità, senza introdurre un secondo linker o un formato binario.
+
+## Mira 0.31: aggiornamento di record
+
+`update: record, with: patch` è un selettore intrinseco risolto normalmente, con sezioni e forme delimitate ordinarie. Nessuna nuova forma AST; semantica e limiti portabili in [dati strutturati](structured-data.md#aggiornamento-immutabile-dei-record-031).

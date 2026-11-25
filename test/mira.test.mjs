@@ -980,3 +980,27 @@ test('CLI imports transitive files once from entry directory and executes both t
     assert.notEqual(cycle.status,0);assert.match(cycle.stderr,/Import cycle: app\.mira -> lib\/fees\.mira -> lib\/rate\.mira -> app\.mira/);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.31 shallow update preserves old data, replaces nested records, and supports sections',()=>{
+  const source='base = {name: "Ada", info: {a: 1, b: 2}, hours: 2}; changed = base >> (update: _, with: {info: {a: 3}, hours: 4, paid: true}); result = {base: base, changed: changed};';
+  for(const target of ['js','php'])assert.deepEqual(JSON.parse(run(source,target)),{base:{name:'Ada',info:{a:1,b:2},hours:2},changed:{name:'Ada',info:{a:3},hours:4,paid:true}});
+});
+
+test('0.31 update accepts empty operands, preserves special keys, and rejects nonportable inputs',()=>{
+  for(const target of ['js','php']){
+    assert.deepEqual(JSON.parse(run('result = update: [], with: {"__proto__": 7, "01": 8};',target)),JSON.parse('{"__proto__":7,"01":8}'));
+    assert.deepEqual(JSON.parse(run('result = update: {a: 1}, with: {};',target)),{a:1});
+    for(const source of ['result = update: [1], with: {a: 2};','result = update: 1, with: {};','result = update: {a: 1}, with: {"0": 2};']){
+      const code=compile(source,target);
+      const p=target==='js'?spawnSync('node',['-e',code],{encoding:'utf8'}):spawnSync('php',['-r',code.replace(/^<\?php/,'')],{encoding:'utf8'});
+      assert.notEqual(p.status,0);assert.match(p.stderr,/expects records with non-integer keys/);
+    }
+    assert.match(compileError('update: a, with: b = a;',target).stderr,/Duplicate or conflicting selector/);
+  }
+});
+
+test('0.31 record update in a multi-step block captures lexical values on PHP too',()=>{
+  const source='patch = {hours: 4}; result = {hours: 2} >> {old | next = update: old, with: patch; next};';
+  for(const target of ['js','php'])assert.deepEqual(JSON.parse(run(source,target)),{hours:4});
+});

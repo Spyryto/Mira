@@ -1,0 +1,3 @@
+lesson = {student: "Ada", hours: 2, paid: false};
+changed = update: lesson, with: {student: "Mira", paid: true};
+result = {original: lesson, changed: changed};

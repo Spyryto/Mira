@@ -1,5 +1,5 @@
 {
-  "version": "0.30.0",
+  "version": "0.31.0",
   "features": [
     {
       "id": "values",
@@ -421,6 +421,19 @@
         "gui-style-toggle"
       ],
       "since": "0.17"
+    },
+    {
+      "id": "record-update",
+      "title": "Aggiornamento immutabile dei record",
+      "summary": "Sostituisce o aggiunge campi senza modificare il record originale.",
+      "details": "update:with: è un selettore intrinseco, risolto dal normale resolver e compilato in una copia superficiale nativa JS/PHP. Supporta sezioni. I campi della patch prevalgono; nessuna fusione ricorsiva. Record con chiavi intere canoniche esclusi; [] vuoto accettato per compatibilità con PHP. Nessun host richiesto. Binding GUI utilizzabile anche nel renderer specializzato.",
+      "api": "mira.resolve.Symbols",
+      "examples": [
+        "record-update-basic",
+        "record-update-section",
+        "record-update-form"
+      ],
+      "since": "0.31"
     }
   ],
   "examples": [
@@ -1441,6 +1454,59 @@
       "title": "Tema dinamico",
       "description": "Cambia i colori della stessa view senza rimontarla.",
       "path": "catalog/examples/gui-style-toggle.mira",
+      "library": "lib/gui.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "ui",
+        "description": "Anteprima interattiva nel browser"
+      }
+    },
+    {
+      "feature": "record-update",
+      "id": "record-update-basic",
+      "title": "Aggiorna una lezione",
+      "description": "Conserva il record originale e i campi non modificati.",
+      "path": "catalog/examples/record-update-basic.mira",
+      "expect": {
+        "kind": "result",
+        "value": {
+          "original": {
+            "student": "Ada",
+            "hours": 2,
+            "paid": false
+          },
+          "changed": {
+            "student": "Mira",
+            "hours": 2,
+            "paid": true
+          }
+        }
+      }
+    },
+    {
+      "feature": "record-update",
+      "id": "record-update-section",
+      "title": "Aggiornamento riutilizzabile",
+      "description": "Una sezione crea una funzione di aggiornamento; aggiunge anche un campo.",
+      "path": "catalog/examples/record-update-section.mira",
+      "expect": {
+        "kind": "result",
+        "value": {
+          "student": "Ada",
+          "hours": 3,
+          "details": {
+            "rate": 30
+          },
+          "paid": true
+        }
+      }
+    },
+    {
+      "feature": "record-update",
+      "id": "record-update-form",
+      "title": "Registro lezioni · modifica immutabile",
+      "description": "Input, ore e pagamento aggiornano solo il campo interessato.",
+      "path": "catalog/examples/record-update-form.mira",
       "library": "lib/gui.mira",
       "host": "studio/host.json",
       "expect": {

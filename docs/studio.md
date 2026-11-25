@@ -355,3 +355,7 @@ Il primo test Chromium ha mostrato che disattivare e riattivare la proprietà pu
 ## Import di librerie (0.30)
 
 Seleziona **Import GUI · 0.30** nell'editor e avvia l'anteprima. La libreria canonica è incorporata nel compilatore Haxe, quindi funziona senza fetch anche offline. Le API compile(source,target,hostJson,withLocations,modulesJson), ast(source,hostJson,modulesJson) e trace(source,hostJson,modulesJson) accettano anche una mappa JSON di percorsi relativi e stringhe sorgente per integrazioni. L'editor non è ancora un workspace multifile e l'anteprima automatica riconosce solo librerie incluse nel bundle. L'analisi token mostra il file di ingresso; AST e posizioni generate includono anche i file importati. Vedi [grammatica](grammar.md#mira-030-import-statici).
+
+## Record update (0.31)
+
+Apri dalla Guida **Registro lezioni · modifica immutabile**: i binding modificano un solo campo con `update:with:`. Il renderer automatico può specializzare le transizioni chiuse. Gli esempi di calcolo sono eseguibili anche senza host.

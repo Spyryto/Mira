@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.30.0');
+  assert.equal(bridge.version, '0.31.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.30.0');
+  assert.equal(bridge.version,'0.31.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -779,4 +779,17 @@ test('0.30 import diagnostics preserve dependency coordinates and reject invalid
   check('import "a.mira"',{},/Expected ; after import/);
   check('value = 1; import "a.mira";',{},/Imports must precede definitions/);
   check('import "a.mira"; x = 2;',{'a.mira':'x = 1;'},/Duplicate or conflicting value x/);
+});
+
+
+test('0.31 native update has a normal selector AST and no host dependency',()=>{
+  const source='original = {name: "Ada", hours: 2}; result = original >> (update: _, with: {hours: 3});';
+  const ast=JSON.parse(bridge.ast(source).output);
+  assert.equal(ast.definitions.at(-1).body.callee.kind,'Section');
+  assert.equal(ast.definitions.at(-1).body.callee.selector,'update:with:');
+  const built=bridge.compile(source,'js');
+  assert.equal(built.ok,true,built.message);
+  assert.equal(JSON.stringify(runInNewContext(built.output+'\nresult',{})),'{"name":"Ada","hours":3}');
+  const trace=JSON.parse(bridge.trace(source).output);
+  assert.ok(trace.symbols.some(s=>s.name==='update:with:'&&s.kind==='native selector'));
 });

@@ -17,7 +17,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.30.0"
+            version: "0.31.0"
         });
     }
 
@@ -129,6 +129,7 @@ class Bridge {
                     });
                 }
             }
+            signatures.push({name: Symbols.RECORD_UPDATE, kind: "native selector"});
             for (name in host.values) signatures.push({name: name, kind: "host value"});
             for (name in host.callables) signatures.push({name: name, kind: "host callable"});
             for (name in host.selectors) signatures.push({name: name, kind: "host selector"});

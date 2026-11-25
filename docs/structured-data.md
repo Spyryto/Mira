@@ -210,3 +210,16 @@ Il risultato è `12`. Ogni chiamata alla callback dispone del
 proprio `doubled`, disponibile soltanto dopo la sua definizione
 e catturabile da eventuali closure annidate. Non sono previste
 riassegnazioni né stato condiviso implicito.
+
+## Aggiornamento immutabile dei record (0.31)
+
+```mira
+lesson = {student: "Ada", hours: 2, paid: false};
+changed = update: lesson, with: {student: "Mira"};
+```
+
+Il selettore intrinseco `update:with:` restituisce un record nuovo, copiando superficialmente i campi del primo operando e aggiungendo o sovrascrivendo quelli del secondo. L'originale non viene modificato. Non c'è fusione ricorsiva: una patch di un record annidato sostituisce tutto quel campo. Una sezione come `(update: _, with: {paid: true})` è una funzione riutilizzabile. Gli argomenti vengono valutati una volta per applicazione. La sintassi, risoluzione e AST Call/Section sono quelli ordinari; l'emitter usa spread JS e array_replace PHP, senza manifest host.
+
+Limiti: operandi record (in JS oggetti record ordinari), chiavi intere canoniche escluse dalla forma portabile per evitare la conversione di chiavi PHP; anche una sequenza vuota è ammessa, perché PHP non distingue [] e {}. Le sequenze non vuote, numeri e altri valori non record sono rifiutati. L'immutabilità è superficiale, non deep freeze; non è ancora tipizzazione statica. La chiave __proto__ è emessa come proprietà propria in JS. Un selettore utente o host con la stessa firma è un conflitto. Il renderer specializzato riconosce la primitiva nelle transizioni chiuse; nessuna nuova strategia DOM.
+
+I tre esempi del catalogo mostrano aggiornamento, sezioni e form con binding. 
