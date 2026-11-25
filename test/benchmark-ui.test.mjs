@@ -159,6 +159,11 @@ test('GUI benchmark runs in a real Chromium DOM and checks all strategies',t=>{
       assert.ok(row[strategy].p95Ms>=row[strategy].medianMs);
     }
   }
+  assert.equal(result.form.length,2);
+  for(const row of result.form)for(const strategy of ['incremental','specialized']){
+    assert.ok(Number.isFinite(row[strategy].medianMs)&&row[strategy].medianMs>=0);
+    assert.ok(row[strategy].p95Ms>=row[strategy].medianMs);
+  }
   t.diagnostic('GUI_BROWSER_BENCHMARK '+JSON.stringify(result));
 });
 
@@ -209,4 +214,23 @@ test('0.20 record state and style slots agree with regular compiled view',()=>{
   const p=spawnSync('php',['-r',php.output.replace(/^<\?php\s*/,'')+'\n$v=bench_view(["count"=>7]); echo json_encode([$v["children"][0]["view"]["text"],$v["children"][0]["styles"][0]["padding"]]);'],{encoding:'utf8'});
   assert.equal(p.status,0,p.stderr);
   assert.deepEqual(JSON.parse(p.stdout),[7,8]);
+});
+
+
+test('0.21 form source compiles JS/PHP and rejects captured or dynamic control structure',()=>{
+  const sandbox={};
+  runInNewContext(read('gui-specialize.js'),sandbox);
+  runInNewContext(read('gui-benchmark.js'),sandbox);
+  const source=sandbox.MiraGuiBench.formSource(1);
+  for(const target of ['js','php']){
+    const result=bridge.compile(source,target);
+    assert.equal(result.ok,true,result.message);
+  }
+  const compiled=sandbox.MiraGuiSpecialize.compile(bridge,source,'form view:');
+  assert.equal(compiled.plan.slots.filter(s=>s.kind==='control').length,3);
+  assert.equal(compiled.plan.slots.length,6);
+  for(const source of [
+    'view: n = {type: "input", label: "Nome", value: n, update: {old, entered | n}};',
+    'view: n = {type: "select", label: "Nome", value: n, options: [n], update: {old, entered | entered}};'
+  ])assert.throws(()=>sandbox.MiraGuiSpecialize.compile(bridge,source,'view:'),/Unsupported specialized view/);
 });

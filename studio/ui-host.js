@@ -47,7 +47,42 @@
     return css;
   }
 
-  function createUiHost(doc, mount, onError = () => {}) {
+  // Both renderers use the same native control lifecycle and IME handling.
+  function controlValue(type, value, options) {
+    if (type === 'checkbox') {
+      if (typeof value !== 'boolean') throw new Error('checkbox.checked must be boolean');
+    } else if (type === 'select') {
+      if (typeof value !== 'string' || !options.includes(value)) {
+        throw new Error('select requires unique string options and a matching string value');
+      }
+    } else if (typeof value !== 'string') throw new Error('input.value must be a string');
+    return value;
+  }
+
+  function connectControl(control, type, binding, report) {
+    let composing = false;
+    const property = type === 'checkbox' ? 'checked' : 'value';
+    function sync(value) {
+      if (!composing && control[property] !== value) control[property] = value;
+    }
+    function change(event) {
+      if (!binding.active()) return;
+      if (event?.isComposing) { composing = true; return; }
+      if (composing) return;
+      const value = control[property];
+      if (value === binding.read()) return;
+      try { binding.apply(value); }
+      catch (error) { sync(binding.read()); report(error); }
+    }
+    control.addEventListener(type === 'input' ? 'input' : 'change', change);
+    if (type === 'input') {
+      control.addEventListener('compositionstart', () => { composing = true; });
+      control.addEventListener('compositionend', () => { composing = false; change(); });
+    }
+    return sync;
+  }
+
+  function createUiHost(doc, mount, onError = () => {}, bindControl = connectControl) {
     const MAX_NODES = 1000;
     const MAX_DEPTH = 24;
     const uiHost = Object.create(null);
@@ -146,19 +181,15 @@
           if (typeof spec.update !== 'function') throw new Error(type + '.update must be a Mira function');
           if (!parentState) throw new Error(type + '.update requires a state parent');
           plan.text = String(spec.label ?? '');
-          if (type === 'checkbox') {
-            if (typeof spec.checked !== 'boolean') throw new Error('checkbox.checked must be boolean');
-          } else if (type === 'select') {
+          if (type === 'select') {
             if (!Array.isArray(spec.options) || !spec.options.every(option => typeof option === 'string') ||
-                new Set(spec.options).size !== spec.options.length ||
-                typeof spec.value !== 'string' || !spec.options.includes(spec.value)) {
+                new Set(spec.options).size !== spec.options.length) {
               throw new Error('select requires unique string options and a matching string value');
             }
             budget.nodes += spec.options.length;
             if (budget.nodes > MAX_NODES) throw new Error('The view exceeds its size/depth limit');
-          } else if (typeof spec.value !== 'string') {
-            throw new Error('input.value must be a string');
           }
+          controlValue(type, type === 'checkbox' ? spec.checked : spec.value, spec.options);
           break;
         case 'state':
           if (typeof spec.view !== 'function') throw new Error('state.view must be a Mira function');
@@ -185,12 +216,7 @@
     }
 
     function syncControl(instance) {
-      const {spec, control} = instance;
-      if (spec.type === 'checkbox') {
-        if (control.checked !== spec.checked) control.checked = spec.checked;
-      } else if (!instance.composing && control.value !== spec.value) {
-        control.value = spec.value;
-      }
+      instance.sync(instance.spec.type === 'checkbox' ? instance.spec.checked : instance.spec.value);
     }
 
     function buildControl(instance, type) {
@@ -200,28 +226,12 @@
       const control = instance.control = doc.createElement(type === 'select' ? 'select' : 'input');
       control.className = 'mira-ui-input';
       if (type !== 'select') control.type = type === 'checkbox' ? 'checkbox' : 'text';
-      function change(event) {
-        if (!instance.active) return;
-        if (event?.isComposing) { instance.composing = true; return; }
-        if (instance.composing) return;
-        const {spec, parentState} = instance;
-        const value = type === 'checkbox' ? control.checked : control.value;
-        if (value === (type === 'checkbox' ? spec.checked : spec.value)) return;
-        try {
-          update(parentState, old => spec.update(old, value));
-        } catch (error) {
-          syncControl(instance);
-          report(error);
-        }
-      }
-      control.addEventListener(type === 'input' ? 'input' : 'change', change);
-      if (type === 'input') {
-        control.addEventListener('compositionstart', () => { instance.composing = true; });
-        control.addEventListener('compositionend', () => {
-          instance.composing = false;
-          change();
-        });
-      }
+      instance.sync = bindControl(control, type, {
+        active: () => instance.active,
+        read: () => type === 'checkbox' ? instance.spec.checked : instance.spec.value,
+        transition: () => instance.spec.update,
+        apply: value => update(instance.parentState, old => instance.spec.update(old, value))
+      }, report);
       wrapper.append(instance.label, control);
       return wrapper;
     }
@@ -345,5 +355,5 @@
     return Object.freeze(uiHost);
   }
 
-  global.MiraUiHost = Object.freeze({createUiHost, resolveStyles});
+  global.MiraUiHost = Object.freeze({createUiHost, resolveStyles, controlValue, connectControl});
 })(globalThis);

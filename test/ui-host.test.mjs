@@ -567,3 +567,53 @@ test('0.20 specialized styles preserve native nodes and reject invalid changes a
   assert.equal(findAll(root,'p')[0].textContent,'1');
   assert.match(errors[1],/Invalid style value/);
 });
+
+
+test('0.21 specialized form keeps controls, current state, focus and IME',()=>{
+  const {root,document,errors}=setup();
+  const sandbox={};
+  runInNewContext(read('ui-host.js'),sandbox);
+  runInNewContext(read('gui-specialize.js'),sandbox);
+  runInNewContext(read('gui-benchmark.js'),sandbox);
+  const compiled=sandbox.MiraGuiSpecialize.compile(compiler,sandbox.MiraGuiBench.formSource(1),'form view:');
+  const app=sandbox.MiraGuiSpecialize.mount(compiled,root,{student:'Ada',paid:false,mode:'In presenza'},msg=>errors.push(msg));
+  const [input,check]=findAll(root,'input'), select=findAll(root,'select')[0];
+  const labels=findAll(root,'p'), reset=findButtons(root)[0], created=document.created;
+  input.focus();
+  let writes=0, value=input.value;
+  Object.defineProperty(input,'value',{get:()=>value,set:v=>{writes++;value=v;}});
+  input.value='Ada Lovelace';input.setSelectionRange(3,3);input.dispatch('input');
+  assert.equal(writes,1);assert.equal(labels[0].textContent,'Ada Lovelace');
+  assert.equal(document.activeElement,input);assert.equal(input.selectionStart,3);
+  input.dispatch('compositionstart');input.value='新';input.dispatch('input',{isComposing:true});
+  check.checked=true;check.dispatch('change');
+  assert.equal(input.value,'新');assert.equal(app.getState().student,'Ada Lovelace');
+  assert.equal(labels[1].textContent,'Saldato');
+  input.dispatch('compositionend');input.dispatch('input');
+  assert.equal(app.getState().student,'新');assert.equal(labels[0].textContent,'新');
+  select.value='Online';select.dispatch('change');
+  assert.equal(app.getState().paid,true);assert.equal(labels[2].textContent,'Online');
+  reset.click();
+  assert.equal(input.value,'Ada');assert.equal(check.checked,false);assert.equal(select.value,'In presenza');
+  assert.equal(findAll(root,'input')[0],input);assert.equal(document.created,created);
+  assert.deepEqual(errors,[]);
+});
+
+test('0.21 invalid controlled transition rolls back input and other slots',()=>{
+  const {root,errors}=setup();
+  const sandbox={};
+  runInNewContext(read('ui-host.js'),sandbox);
+  runInNewContext(read('gui-specialize.js'),sandbox);
+  const source='view: model = {type: "column", children: [{type: "text", text: (model ~ name)}, {type: "input", label: "Nome", value: (model ~ name), update: {old, entered | {name: (if (entered == "bad") then 42 else entered)}}}]};';
+  const compiled=sandbox.MiraGuiSpecialize.compile(compiler,source,'view:');
+  const app=sandbox.MiraGuiSpecialize.mount(compiled,root,{name:'Ada'},msg=>errors.push(msg));
+  const input=findAll(root,'input')[0],label=findAll(root,'p')[0];
+  input.value='bad';input.dispatch('input');
+  assert.equal(app.getState().name,'Ada');assert.equal(label.textContent,'Ada');assert.equal(input.value,'Ada');
+  assert.match(errors[0],/input.value must be a string/);
+  input.value='OK';input.dispatch('input');assert.equal(label.textContent,'OK');
+  // Detached controls cannot trigger a previous specialized application.
+  sandbox.MiraGuiSpecialize.mount(compiled,root,{name:'New'},msg=>errors.push(msg));
+  input.value='stale';input.dispatch('input');
+  assert.equal(app.getState().name,'OK');assert.equal(findAll(root,'p')[0].textContent,'New');
+});

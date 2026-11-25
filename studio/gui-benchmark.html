@@ -30,6 +30,9 @@ small{display:block;line-height:1.5}
 <h2>Demo specializzata</h2>
 <p>Un record Mira controlla il contatore, il colore e il padding. <button id="demo-start" type="button">Monta demo</button></p>
 <div id="demo"></div>
+<h2>Form reattivo specializzato</h2>
+<p>Modifica allievo, pagamento e modalita; Reset aggiorna tutti i controlli. <button id="form-start" type="button">Monta form</button></p>
+<div id="form-demo"></div>
 <h2>Area DOM reale</h2>
 <div id="mount" aria-label="Area di misura collegata al documento"></div>
 <pre id="machine" hidden></pre>
@@ -62,6 +65,19 @@ small{display:block;line-height:1.5}
         }
         card.append(element('p','Slot dinamici: '+row.dynamicSlots),table);results.append(card);
       }
+      for(const row of data.form){
+        const card=document.createElement('section');card.className='result';
+        card.append(element('h2','Form reattivo · '+(row.flush?'layout forzato':'scritture sincrone')));
+        const table=document.createElement('table'),head=document.createElement('tr');
+        for(const title of ['Metodo','Mediana ms','P95 ms'])head.append(element('th',title));
+        table.append(head);
+        for(const [key,name] of [['incremental','Mira incrementale'],['specialized','Mira specializzato']]){
+          const tr=document.createElement('tr');
+          tr.append(element('td',name),element('td',row[key].medianMs.toFixed(3)),element('td',row[key].p95Ms.toFixed(3)));
+          table.append(tr);
+        }
+        card.append(table);results.append(card);
+      }
       status.textContent='Completato · Mira '+data.version+' · '+data.rounds+' campioni per caso';
     }catch(error){
       byId('machine').textContent=JSON.stringify({ok:false,message:String(error.message??error)});
@@ -74,6 +90,10 @@ small{display:block;line-height:1.5}
         'demo view: model = {type: "styled", view: {type: "column", children: [{type: "title", text: "Mira specializzato"}, {type: "text", text: (model ~ count)}, {type: "button", label: "Incrementa", update: (advance: _)}]}, styles: [{padding: (if ((model ~ count) % 2 == 0) then 12 else 24), background: (if ((model ~ count) % 2 == 0) then "#c1f1dc" else "#ffdbab"), radius: 12}]};';
       MiraGuiSpecialize.mount(MiraGuiSpecialize.compile(MiraStudioCompiler,source,'demo view:'),byId('demo'),{count:0},message=>{status.textContent=message;});
     }catch(error){status.textContent=String(error.message??error);}
+  });
+  byId('form-start').addEventListener('click',()=>{
+    try { MiraGuiBench.formSetup(MiraStudioCompiler,byId('form-demo'),true,1)(); }
+    catch(error){status.textContent=String(error.message??error);}
   });
   button.addEventListener('click',()=>{
     button.disabled=true;status.textContent='Preparazione…';
