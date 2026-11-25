@@ -46,7 +46,7 @@ function requirePortable(schema,depth=0){
     case 'Record':
       if(schema.tail!==null||!schema.fields.length)fail('RPC requires nonempty closed records');
       for(const field of schema.fields){
-        if(/^-?\\d+$/.test(field.name))fail('nonportable RPC record key '+field.name);
+        if(/^-?\d+$/.test(field.name))fail('nonportable RPC record key '+field.name);
         requirePortable(field.type,depth+1);
       }
       return;
@@ -90,12 +90,13 @@ export function generateRpcContract(compiler,source,serverSource){
       requirePortable(signature.result);
       schemas[method]={parameters:signature.parameters[0],result:signature.result,integerPolicy:params};
       const callable=handler.replaceAll(' ','_');
-      php.push(phpString(method)+' => static fn($params) => '+callable+'(\\Mira\\Rpc\\checkParams($params, '+phpArray(params)+'))');
+      php.push(phpString(method)+' => static fn($params) => \\Mira\\Rpc\\invokeTyped('+phpString(callable)+', $params, '+phpArray(schemas[method])+')');
     }else fail('unknown service kind');
   }
   return {
     schemas:JSON.stringify({version:1,methods:schemas},null,2)+'\n',
-    client:'globalThis.MiraRpcBindings = Object.freeze('+JSON.stringify(bindings,null,2)+');\n',
+    client:'globalThis.MiraRpcBindings = Object.freeze('+JSON.stringify(bindings,null,2)+');\n'+
+      'globalThis.MiraRpcTypes = JSON.parse('+JSON.stringify(JSON.stringify(schemas))+');\n',
     server:'<?php\ndeclare(strict_types=1);\n// Generated from Mira service declarations.\nreturn [\n  '+php.join(',\n  ')+'\n];\n'
   };
 }
