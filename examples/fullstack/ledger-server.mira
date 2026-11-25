@@ -1,0 +1,24 @@
+# Pure server reducer; the PHP adapter owns storage and HTTP.
+change hours: item, for: identity = if (item ~ id == identity) then (
+  update: item, with: {hours: (item ~ hours + 1)}
+) else item;
+
+toggle paid: item, for: identity = if (item ~ id == identity) then (
+  update: item, with: {paid: (if (item ~ paid) then false else true)}
+) else item;
+
+apply command: model, command: cmd = if (cmd ~ action == "load") then model else (
+  update: model, with: {
+    revision: (model ~ revision + 1),
+    next id: (if (cmd ~ action == "add") then (model ~ next id + 1) else (model ~ next id)),
+    lessons: (if (cmd ~ action == "add") then (
+      append: {id: (model ~ next id), student: (cmd ~ student), hours: 1, paid: false}, to: (model ~ lessons)
+    ) else (if (cmd ~ action == "hours") then (
+      collect: (model ~ lessons), with: (change hours: _, for: (cmd ~ id))
+    ) else (if (cmd ~ action == "paid") then (
+      collect: (model ~ lessons), with: (toggle paid: _, for: (cmd ~ id))
+    ) else (
+      remove: (model ~ lessons), if: {item | item ~ id == cmd ~ id}
+    ))))
+  }
+);
