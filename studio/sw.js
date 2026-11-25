@@ -39,6 +39,8 @@ const ASSETS = [
   './persistent-ledger.mira',
   './persistent-ledger-program.js',
   './effects.js',
+  './type-lab.html',
+  './type-lab.js',
   './effects-demo.mira',
   './effects-demo.js',
   './effects-demo.html',
@@ -89,7 +91,8 @@ self.addEventListener('fetch', event => {
           .then(hit => hit || fetch(request))));
       return;
     }
-    const page = url.pathname.endsWith('/effects-demo.html') ? './effects-demo.html'
+    const page = url.pathname.endsWith('/type-lab.html') ? './type-lab.html'
+      : url.pathname.endsWith('/effects-demo.html') ? './effects-demo.html'
       : url.pathname.endsWith('/persistent-ledger.html') ? './persistent-ledger.html'
       : url.pathname.endsWith('/gui-benchmark.html') ? './gui-benchmark.html'
       : url.pathname.endsWith('/ui-preview.html') ? './ui-preview.html' : './index.html';
