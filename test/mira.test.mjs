@@ -754,7 +754,7 @@ test('0.12 local values are immutable and visible to following expressions on JS
 
 test('0.12 local bindings have sequential lexical scope and reject reassignment', () => {
   const invalid = [
-    ['result = 2 >> {x | a = b + 1; b = 4; a};', /Unknown identifier|Unbound/],
+    ['result = 2 >> {x | a = b + 1; b = 4; a};', /Local value 'b' used before its declaration at 1:\d+/],
     ['result = 2 >> {x | local = x + 1; local = 5; local};', /Duplicate or shadowed local name/],
     ['result = 2 >> {x | x = x + 1; x};', /Duplicate or shadowed local name/],
     ['rate = 30; result = 2 >> {x | rate = 4; x};', /Duplicate or shadowed local name/],

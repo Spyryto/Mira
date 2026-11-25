@@ -1,0 +1,5 @@
+result = 4 >> {value |
+  subtotal = amount + value;
+  amount = value * 2;
+  subtotal
+};
