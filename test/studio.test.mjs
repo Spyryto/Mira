@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.42.0');
+  assert.equal(bridge.version, '0.43.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.42.0');
+  assert.equal(bridge.version,'0.43.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -893,4 +893,19 @@ test('browser checker exposes inferred scalar predicates',()=>{
   const bad=bridge.check('same: a, as: b = a == b; n = same: [1], as: [2];');
   assert.equal(bad.ok,false);
   assert.match(bad.message,/ScalarEq requires/);
+});
+
+test('browser checker reports structured expression locations and imported files',()=>{
+  const bad=bridge.check('x = 1;\ny = x + "a";');
+  assert.equal(bad.ok,false);
+  assert.deepEqual(JSON.parse(JSON.stringify(bad.diagnostic)),{
+    code:'type_error',message:'Type check: expected Number, got Text',file:null,line:2,column:7,endLine:2,endColumn:8
+  });
+  const missing=bridge.check('import "broken.mira";\na = 1;',null,JSON.stringify({'broken.mira':'f: x = x + "a";'}));
+  assert.equal(missing.ok,false);
+  assert.equal(missing.diagnostic.file,'broken.mira');
+  assert.equal(missing.diagnostic.column,10);
+  const syntax=bridge.check('x = @;');
+  assert.equal(syntax.ok,false);
+  assert.equal(syntax.diagnostic.code,'source_error');
 });
