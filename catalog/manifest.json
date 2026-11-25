@@ -1,5 +1,5 @@
 {
-  "version": "0.20.0",
+  "version": "0.21.0",
   "features": [
     {
       "id": "values",
@@ -1485,6 +1485,12 @@
       "title": "Specializzazione GUI con record e stili dinamici",
       "since": "0.20",
       "doc": "docs/browser-interop.md#mira-020-record-e-stili-dinamici"
+    },
+    {
+      "id": "gui-specialized-binding",
+      "title": "Binding dei controlli GUI specializzati",
+      "since": "0.21",
+      "doc": "docs/browser-interop.md#mira-021-binding-specializzato"
     }
   ]
 }

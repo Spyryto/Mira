@@ -45,6 +45,24 @@
     });
     return {source:'['+records.join(', ')+']',dynamic};
   }
+  // Conservative proof that a transition block captures no view parameter.
+  // Ordinary compiler still owns its semantics and code generation.
+  function closed(node,parameters){
+    switch(node?.kind){
+      case 'Name':return parameters.includes(node.value);
+      case 'Number':case 'Text':case 'Boolean':return true;
+      case 'FieldGet':return closed(node.record,parameters);
+      case 'Binary':return closed(node.left,parameters)&&closed(node.right,parameters);
+      case 'Conditional':return [node.condition,node.whenTrue,node.whenFalse].every(x=>closed(x,parameters));
+      case 'Record':return node.fields.every(f=>closed(f.value,parameters));
+      case 'Sequence':return node.items.every(x=>closed(x,parameters));
+      default:return false;
+    }
+  }
+  function transition(node,arity){
+    return node?.kind==='Section'&&node.arguments.length===arity&&node.arguments.every(a=>a.kind==='Placeholder') ||
+      node?.kind==='Block'&&node.parameters.length===arity&&closed(node.body,node.parameters);
+  }
   function analyze(ast,selector){
     if(ast?.kind!=='Program'||ast.definitions.some(d=>d.kind!=='Function'))fail('only function definitions');
     const definition=ast.definitions.find(d=>d.selector===selector);
@@ -82,9 +100,23 @@
         case 'button':{
           const f=fields(node,['type','label','update']);
           const action=f.get('update');
-          if(f.get('label').kind!=='Text'||action.kind!=='Section'||action.arguments.length!==1||
-             action.arguments[0].kind!=='Placeholder')fail('static unary transition section');
+          if(f.get('label').kind!=='Text'||!transition(action,1))fail('static unary transition');
           buttons.push(path);break;
+        }
+        case 'input':case 'checkbox':case 'select':{
+          const property=type.value==='checkbox'?'checked':'value';
+          const f=fields(node,['type','label',property,'update',...(type.value==='select'?['options']:[])]);
+          if(f.get('label').kind!=='Text'||!transition(f.get('update'),2))fail('static label and closed binary transition');
+          let options;
+          if(type.value==='select'){
+            const list=f.get('options');
+            if(list.kind!=='Sequence'||list.items.some(item=>item.kind!=='Text'))fail('static select options');
+            options=list.items.map(item=>item.value);
+          }
+          const expr=expression(f.get(property),parameter);
+          // Include even constant controlled values: a rejected edit must be restored.
+          slots.push({kind:'control',type:type.value,path,source:expr.source,options});
+          break;
         }
         default:fail('node type '+type.value);
       }
@@ -112,12 +144,16 @@
       Object.values(value).every(child=>data(child,depth+1));
   }
   const slotValue=(slot,value)=>slot.kind==='style'
-    ? global.MiraUiHost.resolveStyles(value) : String(value??'');
+    ? global.MiraUiHost.resolveStyles(value) : slot.kind==='control'
+      ? global.MiraUiHost.controlValue(slot.type,value,slot.options) : String(value??'');
   function mount(compiled,target,initial,onError=error=>{throw new Error(error);}){
     if(!data(initial))fail('data state');
     const {plan,program}=compiled;
-    let state=initial,bindings=[];
+    let state=initial,bindings=[],mountedRoot=null;
+    const controls=new Map();
+    const active=()=>mountedRoot!==null&&target.children[0]===mountedRoot;
     function update(transition){
+      if(!active())return;
       const next=transition(state);
       if(!data(next))fail('data next state');
       const values=program.values(next).map((value,i)=>slotValue(plan.slots[i],value));
@@ -127,6 +163,8 @@
           for(const [key,css] of Object.entries(value)){
             if(binding.value[key]!==css)binding.node.style.setProperty(key,css);
           }
+        }else if(plan.slots[i].kind==='control'){
+          binding.control.sync(value);
         }else if(binding.value!==value){
           binding.node.textContent=value;
         }
@@ -143,14 +181,30 @@
       }
     }
     const tree=staticTree(program.view(initial));
-    const host=global.MiraUiHost.createUiHost(target.ownerDocument,target,onError);
-    host.render({type:'state',initial,view:()=>tree});
-    const root=target.children[0].children[0];
     const values=program.values(initial).map((value,i)=>slotValue(plan.slots[i],value));
+    const host=global.MiraUiHost.createUiHost(target.ownerDocument,target,onError,
+      (control,type,binding,report)=>{
+        const item={slot:null};
+        item.sync=global.MiraUiHost.connectControl(control,type,{
+          active:()=>active()&&binding.active(),
+          read:()=>item.slot.value,
+          apply:value=>update(old=>binding.transition()(old,value))
+        },report);
+        controls.set(control,item);
+        return item.sync;
+      });
+    host.render({type:'state',initial,view:()=>tree});
+    mountedRoot=target.children[0];
+    const root=mountedRoot.children[0];
     bindings=plan.slots.map((slot,i)=>{
       let node=root;
       for(const index of slot.path)node=node.children[index];
-      return {node,value:values[i]};
+      const binding={node,value:values[i]};
+      if(slot.kind==='control'){
+        binding.control=controls.get(node.children[1]);
+        binding.control.slot=binding;
+      }
+      return binding;
     });
     return {dynamicSlots:bindings.length,getState:()=>state};
   }

@@ -305,3 +305,7 @@ DOM Performance Lab include Mira specializzato: pass sperimentale su AST risolto
 ## Record e stili specializzati (0.20)
 
 DOM Performance Lab include una demo da montare e il caso benchmark record/stile dinamico. Il renderer ordinario resta invariato nell'anteprima. Il validatore CSS è condiviso.
+
+## Binding specializzato (0.21)
+
+Bench → DOM Performance Lab → Monta form: scheda lezione con input, checkbox, select, riepilogo e reset. Il benchmark confronta due renderer sullo stesso form compilato da Mira; l'anteprima UI ordinaria continua a usare il renderer generico. Focus e selezione sono verificati in Chromium; IME è simulato nei test.

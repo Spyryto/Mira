@@ -129,6 +129,80 @@
     return stats(samples);
   }
 
+
+  function formSource(size=100) {
+    if(!Number.isInteger(size)||size<1||size>100)throw new Error('Invalid form size');
+    const texts=Array.from({length:size-1},(_,i)=>'{type: "text", text: '+i+'}');
+    return 'form view: model = {type: "column", children: ['+[
+      '{type: "title", text: "Scheda lezione"}',
+      '{type: "input", label: "Allievo", value: (model ~ student), update: {old, entered | {student: entered, paid: (old ~ paid), mode: (old ~ mode)}}}',
+      '{type: "checkbox", label: "Pagato", checked: (model ~ paid), update: {old, checked | {student: (old ~ student), paid: checked, mode: (old ~ mode)}}}',
+      '{type: "select", label: "Modalita", value: (model ~ mode), options: ["In presenza", "Online"], update: {old, selected | {student: (old ~ student), paid: (old ~ paid), mode: selected}}}',
+      '{type: "text", text: (model ~ student)}',
+      '{type: "text", text: (if (model ~ paid) then "Saldato" else "Da saldare")}',
+      '{type: "text", text: (model ~ mode)}',
+      '{type: "button", label: "Reset", update: {old | {student: "Ada", paid: false, mode: "In presenza"}}}',
+      ...texts
+    ].join(',\n')+']};';
+  }
+  const initialForm=()=>({student:'Ada',paid:false,mode:'In presenza'});
+  function formSetup(compiler,mount,specialized,size=100){
+    const source=formSource(size);
+    if(specialized){
+      const compiled=global.MiraGuiSpecialize.compile(compiler,source,'form view:');
+      return ()=>global.MiraGuiSpecialize.mount(compiled,mount,initialForm());
+    }
+    const code=compiler.compile(source,'js');
+    if(!code.ok)throw new Error(code.message);
+    const view=new Function(code.output+'\nreturn form_view;')();
+    return ()=>{
+      const host=global.MiraUiHost.createUiHost(mount.ownerDocument,mount,error=>{throw new Error(error);});
+      host.render({type:'state',initial:initialForm(),view});
+    };
+  }
+  function checkForm(mount){
+    const input=mount.querySelector('input[type=text]'),check=mount.querySelector('input[type=checkbox]'),select=mount.querySelector('select');
+    const labels=mount.querySelectorAll('p');
+    input.focus();input.value='Ada Lovelace';input.setSelectionRange(3,3);
+    input.dispatchEvent(new Event('input'));
+    if(input!==mount.querySelector('input[type=text]')||mount.ownerDocument.activeElement!==input||
+        input.selectionStart!==3||labels[0].textContent!=='Ada Lovelace')throw new Error('Form focus/caret checksum');
+    check.checked=true;check.dispatchEvent(new Event('change'));
+    select.value='Online';select.dispatchEvent(new Event('change'));
+    if(labels[1].textContent!=='Saldato'||labels[2].textContent!=='Online')throw new Error('Form controls checksum');
+    mount.querySelector('button').click();
+    if(input.value!=='Ada'||check.checked||select.value!=='In presenza'||labels[0].textContent!=='Ada')throw new Error('Form reset checksum');
+  }
+  function runForm(compiler,mount){
+    const setups={incremental:formSetup(compiler,mount,false),specialized:formSetup(compiler,mount,true)};
+    for(const setup of Object.values(setups)){setup();checkForm(mount);}
+    const results=[];
+    for(const flush of [false,true]){
+      const samples={incremental:[],specialized:[]};
+      for(let round=0;round<rounds;round++){
+        const order=round%2===0?['incremental','specialized']:['specialized','incremental'];
+        for(const strategy of order){
+          setups[strategy]();
+          const input=mount.querySelector('input[type=text]'),p=mount.querySelector('p');
+          const step=i=>{input.value='Allievo '+i;input.dispatchEvent(new Event('input'));};
+          for(let i=0;i<warmup;i++)step(i);
+          layout(mount);
+          const start=performance.now();
+          for(let i=warmup;i<warmup+updates;i++){
+            step(i);
+            if(flush)layout(mount);
+          }
+          samples[strategy].push((performance.now()-start)/updates);
+          if(p.textContent!=='Allievo '+(warmup+updates-1)||input!==mount.querySelector('input[type=text]'))throw new Error('Form benchmark checksum');
+          layout(mount);
+        }
+      }
+      results.push({flush,incremental:stats(samples.incremental),specialized:stats(samples.specialized)});
+    }
+    mount.replaceChildren();
+    return results;
+  }
+
   function run(compiler,mount) {
     if (!mount.isConnected) throw new Error('Benchmark requires connected DOM');
     const results=[];
@@ -149,9 +223,10 @@
       }
     }
     mount.replaceChildren();
-    return {ok:true,rows,updates,rounds,warmup,version:compiler.version,
+    const form=runForm(compiler,mount);
+    return {ok:true,rows,updates,rounds,warmup,form,version:compiler.version,
       userAgent:navigator.userAgent,results};
   }
 
-  global.MiraGuiBench=Object.freeze({source,run});
+  global.MiraGuiBench=Object.freeze({source,run,formSource,formSetup});
 })(globalThis);

@@ -208,6 +208,10 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
 
 
+## Mira 0.21: binding specializzato
+
+Il Performance Lab contiene una scheda lezione specializzata e un benchmark dei form reattivi. Input, checkbox e select mantengono i nodi nativi e condividono la gestione degli eventi con il renderer ordinario. [Metodo e limiti](docs/browser-interop.md#mira-021-binding-specializzato).
+
 ## Mira 0.20: record e stili dinamici specializzati
 
 Il laboratorio estende il pass a campi di record, condizioni e valori di stile dinamici, con validazione CSS condivisa e un caso benchmark dedicato.
