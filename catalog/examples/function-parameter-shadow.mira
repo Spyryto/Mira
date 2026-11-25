@@ -1,0 +1,3 @@
+x = 100;
+increment: x = x + 1;
+result = increment: 5;
