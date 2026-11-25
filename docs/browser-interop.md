@@ -388,3 +388,43 @@ La capability JSON semplice della 0.35 resta disponibile; il registro
 Nessuna sintassi nuova, reflection, generazione automatica di stub,
 autenticazione, autorizzazione per utente, retry o CORS. Usare solo
 in locale o dietro una futura infrastruttura di sicurezza.
+
+## Mira 0.38: contratti di servizio
+
+Un file Mira descrive i servizi pubblici in un unico valore letterale:
+
+```mira
+services = [
+  {capability: "ledger", method: "ledger.command", kind: "host", handler: "ledgerCommand"},
+  {capability: "quote", method: "ledger.quote", kind: "mira", handler: "quote",
+    parameters: [{name: "hours", type: "integer", min: 1, max: 10000}]}
+];
+```
+
+Il generatore `scripts/rpc-contract.mjs` legge l'AST del compilatore,
+senza eseguire il sorgente. Produce una mappa JS immutabile e un registro
+PHP esplicito. Rifiuta dichiarazioni non letterali, nomi duplicati,
+campi imprevisti, parametri non validi e selettori Mira sconosciuti.
+Per ora i servizi Mira devono avere un solo parametro (record), e lo
+schema supporta campi interi obbligatori con limiti inclusivi. Il
+dispatcher valida questi campi prima della chiamata; non consente campi
+extra. L'output resta soggetto al controllo di portabilità RPC 0.37,
+non a uno schema di risultato. I servizi host mantengono la propria
+validazione e il loro adattatore applicativo (es. SQLite).
+
+Il frontend usa `MiraEffects.rpcServices(endpoint, bindings)` per
+costruire le capability con timeout predefinito di 10 secondi; URL
+e timeout sono configurati dall'host. Il codice Mira usa ancora gli
+effetti normali. Il server carica il registro generato da una directory
+privata. Nessuna reflection dei nomi provenienti dalla rete.
+Il build genera i file, non serve né accetta contratti remoti.
+Le dichiarazioni host sono attendibili e indicano esplicitamente un
+callable PHP; l'esistenza del callable host non è verificata dal
+compilatore Mira. Il generatore usa la convenzione attuale di mangling
+dei selettori unari; non è un'estensione del linguaggio o un type checker.
+
+Il pilota del registro verifica sia il servizio persistente, sia il
+preventivo stateless richiamato dal browser. Lo stesso contratto
+produce le registrazioni di entrambi. Non sono introdotte dipendenze
+o modifiche al formato HTTP 0.37. Autenticazione e contratti tipizzati
+generali restano futuri.
