@@ -313,3 +313,7 @@ Bench → DOM Performance Lab → Monta form: scheda lezione con input, checkbox
 ## Componenti specializzati (0.22)
 
 Bench → DOM Performance Lab → Monta form usa la libreria reale gui.mira e selettori riutilizzabili. Apri Sorgente Mira del form per vedere il codice. I test specializzano anche le view canoniche Dashboard musicale e Scheda lezione. Il renderer ordinario dell'anteprima rimane invariato.
+
+## Archivio Laboratory · evoluzione GUI
+
+La pagina Laboratory è un rapporto statico offline, generato al build da catalog/laboratory/gui-rendering.json, senza caricare il compilatore. Contiene cronologia 0.15–0.22, grafici, tutti i risultati storici CI recuperati (mediana/P95), prove iPhone/TV trascritte dall'autore, limiti e roadmap. Il DOM Performance Lab resta separato e misura il dispositivo corrente. Vedi [rapporto tecnico](gui-rendering.md).
