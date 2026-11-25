@@ -79,6 +79,34 @@ class Symbols {
             mangled.set(hostName, identifier);
             hostNames.push(hostName);
         }
+        // Validate named-function scopes after all globals are collected,
+        // regardless of declaration order. The same literal name may shadow
+        // a global; distinct names must not become the same JS/PHP symbol.
+        for (definition in definitions) {
+            if (!definition.isFunction()) continue;
+            final generated = new Map<String, String>();
+            for (index in 0...definition.parameters.length) {
+                final parameter = definition.parameters[index];
+                final symbol = Mangle.name(parameter);
+                final token = definition.parameterOrigins.length > index
+                    ? definition.parameterOrigins[index] : definition.origin;
+                if (symbol == "__miraHost") {
+                    throw new MiraError("Reserved function parameter __miraHost", token);
+                }
+                final previous = generated.get(symbol);
+                if (previous != null) {
+                    throw new MiraError("Generated-name collision for function parameter "
+                        + parameter + " with " + previous, token);
+                }
+                generated.set(symbol, parameter);
+                for (outer in globals) {
+                    if (outer != parameter && Mangle.name(outer) == symbol) {
+                        throw new MiraError("Generated-name collision for function parameter "
+                            + parameter + " with visible name " + outer, token);
+                    }
+                }
+            }
+        }
     }
 
     public function isHostName(name:String):Bool {

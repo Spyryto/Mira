@@ -140,6 +140,15 @@ result = 4 >> {value |
 };`
   },
   {
+    id: 'function-shadow',
+    name: 'Funzioni e shadowing · 0.12.2',
+    source: `# Un parametro può ombreggiare un globale con lo stesso nome.
+# Nomi Mira differenti ma identici dopo mangling sono vietati.
+x = 100;
+increment: x = x + 1;
+result = increment: 5;`
+  },
+  {
     id: 'nested-shadow',
     name: 'Shadowing lessicale · 0.12.1',
     source: `# Lo stesso nome può essere riutilizzato nei parametri annidati.

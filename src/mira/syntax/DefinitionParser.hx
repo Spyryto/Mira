@@ -73,6 +73,7 @@ class DefinitionParser {
 
         final labels:Array<String> = [];
         final parameters:Array<String> = [];
+        final parameterOrigins:Array<Token> = [];
         for (part in parts) {
             var colon = -1;
             for (i in 0...part.length) {
@@ -86,9 +87,10 @@ class DefinitionParser {
             }
             labels.push(readWords(part.slice(0, colon)));
             parameters.push(readWords(part.slice(colon + 1)));
+            parameterOrigins.push(part[colon + 1]);
         }
 
-        return new Definition("", labels, parameters, body, tokens[0]);
+        return new Definition("", labels, parameters, body, tokens[0], false, parameterOrigins);
     }
 
     static function splitHeader(tokens:Array<Token>):Array<Array<Token>> {

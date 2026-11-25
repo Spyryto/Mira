@@ -1,0 +1,2 @@
+sum: a b, and: aB = a b + aB;
+result = sum: 2, and: 3;
