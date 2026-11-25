@@ -1752,6 +1752,12 @@
       "title": "Registro lezioni con persistenza locale",
       "since": "0.34",
       "doc": "docs/studio.md#registro-lezioni-persistente-034"
+    },
+    {
+      "id": "async-effects",
+      "title": "Effetti asincroni e servizio HTTP JSON",
+      "since": "0.35",
+      "doc": "docs/browser-interop.md#mira-035-effetti-asincroni-pilota"
     }
   ]
 }
