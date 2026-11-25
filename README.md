@@ -201,6 +201,28 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
 
+
+## Mira 0.15: libreria GUI
+
+`lib/gui.mira` è una piccola libreria di normali funzioni Mira. Non
+introduce keyword, tipi o regole nel compilatore. Il catalogo concatena
+esplicitamente la libreria e il programma, e Studio apre il sorgente
+completo e modificabile.
+
+```mira
+greeting: name = column: [
+  title: "Salutami",
+  text input: "Il tuo nome", value: name,
+    update: {old, entered | entered},
+  button: "Mostra saluto", on click: {| alert name}
+];
+render (state: "Mira", view: (greeting: _));
+```
+
+Prova **Guida → Libreria GUI Mira e binding** in Studio, scegli
+**Salutami** o **Scheda lezione** e premi **Anteprima UI**.
+Vedi [interoperabilità browser](docs/browser-interop.md#mira-015-libreria-gui-e-binding).
+
 ## Mira 0.14: blocchi senza parametri
 
 ```mira
