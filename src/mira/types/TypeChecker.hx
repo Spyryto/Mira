@@ -5,12 +5,17 @@ import mira.syntax.Definition;
 import mira.syntax.Expr;
 import mira.lex.Token;
 
+private typedef LocalScheme = {
+    var type:Type;
+    var quantified:Map<Int,Bool>;
+}
+
 // Experimental, target-independent inference. No code generation or evaluation.
 class TypeChecker {
     final bindings = new Map<Int, Type>();
     final definitions = new Map<String, Definition>();
-    final inferred = new Map<String, Type>();
-    final active = new Map<String, Type>();
+    final inferred = new Map<String, LocalScheme>();
+    final active = new Map<String, LocalScheme>();
     final lacks = new Map<Int, Map<String,Bool>>();
     var nextId = 0;
     var origin:Token;
@@ -26,7 +31,7 @@ class TypeChecker {
         for (d in program) {
             origin = d.origin;
             final name = d.isStatement ? "<expression>" : d.isFunction() ? d.selector() : d.name;
-            final type = d.isStatement ? infer(d.body, new Map<String, Type>()) : declaration(name);
+            final type = d.isStatement ? infer(d.body, new Map<String, LocalScheme>()) : declaration(name);
             result.push({name:name, type:show(type), line:d.origin.line, column:d.origin.column, file:d.origin.file});
         }
         return result;
@@ -173,9 +178,10 @@ class TypeChecker {
 
     // All free variables of a completed top-level definition are generalized.
     // Recursive components are generalized only after checking every member.
-    function instantiate(type:Type, ?variables:Map<Int,Type>):Type {
+    function instantiate(type:Type, ?variables:Map<Int,Type>, ?quantified:Map<Int,Bool>):Type {
         final seen = variables == null ? new Map<Int,Type>() : variables;
         return switch (prune(type)) {
+            case Variable(id) if (quantified != null && !quantified.exists(id)): Variable(id);
             case Variable(id):
                 if (!seen.exists(id)) {
                     final copy = fresh();
@@ -183,14 +189,56 @@ class TypeChecker {
                     seen.set(id,copy);
                 }
                 seen.get(id);
-            case ListType(item): ListType(instantiate(item,seen));
-            case FunctionType(args,result): FunctionType([for (a in args) instantiate(a,seen)],instantiate(result,seen));
+            case ListType(item): ListType(instantiate(item,seen,quantified));
+            case FunctionType(args,result): FunctionType([for (a in args) instantiate(a,seen,quantified)],instantiate(result,seen,quantified));
             case RecordType(fields,tail):
                 final r = row(type);
-                recordType([for (key => value in r.fields) key => instantiate(value,seen)],
-                    r.tail == null ? null : instantiate(r.tail,seen));
+                recordType([for (key => value in r.fields) key => instantiate(value,seen,quantified)],
+                    r.tail == null ? null : instantiate(r.tail,seen,quantified));
             default: prune(type);
         };
+    }
+
+    function free(type:Type, found:Map<Int,Bool>):Void {
+        switch (prune(type)) {
+            case Variable(id): found.set(id,true);
+            case ListType(item): free(item,found);
+            case FunctionType(args,result):
+                for (arg in args) free(arg,found);
+                free(result,found);
+            case RecordType(fields,tail):
+                for (value in fields) free(value,found);
+                if (tail != null) free(tail,found);
+            default:
+        }
+    }
+
+    function mono(type:Type):LocalScheme return {type:type, quantified:new Map<Int,Bool>()};
+
+    // Value restriction: generalize only non-expansive local initializers.
+    // In particular a call might eventually perform an external effect.
+    function isValue(expr:Expr):Bool {
+        return switch (expr) {
+            case Numeric(_) | Text(_) | BooleanLiteral(_) | Name(_) | Block(_,_) | FieldAccessor(_) | FieldSection(_): true;
+            case Sequence(items) | Record(_,items): Lambda.foreach(items,isValue);
+            default: false;
+        };
+    }
+
+    function localScheme(expr:Expr,type:Type,scope:Map<String,LocalScheme>):LocalScheme {
+        final scheme = mono(type);
+        if (!isValue(expr)) return scheme;
+        final excluded = new Map<Int,Bool>();
+        for (binding in scope) {
+            final vars = new Map<Int,Bool>();
+            free(binding.type,vars);
+            for (id in vars.keys()) if (!binding.quantified.exists(id)) excluded.set(id,true);
+        }
+        // Recursive group placeholders must stay monomorphic inside the group.
+        for (pending in active) free(pending,excluded);
+        free(type,scheme.quantified);
+        for (id in excluded.keys()) scheme.quantified.remove(id);
+        return scheme;
     }
 
     function checkGroup(group:Array<String>,recursive:Bool):Void {
@@ -209,7 +257,7 @@ class TypeChecker {
             origin = d.origin;
             final scope = new Map<String,Type>();
             final params = [for (p in d.parameters) fresh()];
-            for (i in 0...params.length) scope.set(d.parameters[i],params[i]);
+            for (i in 0...params.length) scope.set(d.parameters[i],mono(params[i]));
             final body = infer(d.body,scope);
             final type:Type = d.isFunction() ? FunctionType(params,body) : body;
             unify(active.get(name),type);
@@ -265,32 +313,63 @@ class TypeChecker {
             case "fold:with:from:":
                 unify(ListType(item),args[0]); unify(result,args[2]); unify(FunctionType([result,item],result),args[1]); return result;
             case "update:with:":
-                switch [prune(args[0]),prune(args[1])] {
-                    case [RecordType(_,_),RecordType(_, _)]:
-                        final a = row(args[0]);
-                        final b = row(args[1]);
-                        if (a.tail != null || b.tail != null) return fail("open record update not supported yet");
-                        for (k => v in b.fields) a.fields.set(k,v);
-                        return RecordType(a.fields,null);
-                    default: return fail("record update requires known closed records in this pilot");
-                }
+                return updateRecord(args[0],args[1]);
             default: return call(declaration(selector),args);
         }
     }
 
-    function operand(expr:Expr,scope:Map<String,Type>,holes:Array<Type>):Type {
+    // Closed patches only. For an unknown/open base, replacing an unknown
+    // field requires that field to exist. A field known absent may be added.
+    // No deferred overwrite constraints or optional row fields are invented.
+    function updateRecord(base:Type,patch:Type):Type {
+        switch (prune(patch)) {
+            case RecordType(_,_):
+            default: return fail("record update requires a known closed patch");
+        }
+        final changes = row(patch);
+        if (changes.tail != null) return fail("record update requires a known closed patch");
+        switch (prune(base)) {
+            case Variable(_): unify(base,recordType(new Map<String,Type>(),fresh()));
+            case RecordType(_,_):
+            default: return fail("record update requires a record base");
+        }
+        final original = row(base);
+        if (original.tail != null) {
+            for (key in changes.fields.keys()) {
+                if (!original.fields.exists(key)) {
+                    final current = row(base);
+                    if (current.fields.exists(key)) continue;
+                    final absent = switch (current.tail == null ? null : prune(current.tail)) {
+                        case Variable(id): lacks.exists(id) && lacks.get(id).exists(key);
+                        case null: true;
+                        default: false;
+                    };
+                    if (!absent) projection(base,key);
+                }
+            }
+        }
+        final updated = row(base);
+        for (key => value in changes.fields) updated.fields.set(key,value);
+        return recordType(updated.fields,updated.tail);
+    }
+
+    function operand(expr:Expr,scope:Map<String,LocalScheme>,holes:Array<Type>):Type {
         return switch (expr) {
             case Placeholder: final type = fresh(); holes.push(type); type;
             default: infer(expr,scope);
         };
     }
 
-    function infer(expr:Expr,scope:Map<String,Type>):Type {
+    function infer(expr:Expr,scope:Map<String,LocalScheme>):Type {
         return switch (expr) {
             case Numeric(_): NumberType;
             case Text(_): TextType;
             case BooleanLiteral(_): BooleanType;
-            case Name(name): scope.exists(name) ? scope.get(name) : declaration(name);
+            case Name(name):
+                if (scope.exists(name)) {
+                    final binding = scope.get(name);
+                    instantiate(binding.type,null,binding.quantified);
+                } else declaration(name);
             case HostRef(name) | HostCall(name,_) | HostSection(name,_):
                 fail("host type signature required: " + name);
             case FieldGet(record,key): projection(infer(record,scope),key);
@@ -311,13 +390,15 @@ class TypeChecker {
             case Block(parameters,body):
                 final inner = scope.copy();
                 final args = [for (p in parameters) fresh()];
-                for (i in 0...args.length) inner.set(parameters[i],args[i]);
+                for (i in 0...args.length) inner.set(parameters[i],mono(args[i]));
                 FunctionType(args,infer(body,inner));
             case Steps(items):
                 final inner = scope.copy();
                 var result:Type = fresh();
                 for (e in items) switch (e) {
-                    case Local(name,value): inner.set(name,infer(value,inner));
+                    case Local(name,value):
+                        final type = infer(value,inner);
+                        inner.set(name,localScheme(value,type,inner));
                     default: result = infer(e,inner);
                 }
                 result;
