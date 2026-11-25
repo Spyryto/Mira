@@ -916,3 +916,44 @@ test('0.13 optional definition locations preserve JS/PHP output and map runtime 
     });
   }
 });
+
+
+test('0.14 zero-parameter blocks are lazy, first class and return the final expression', () => {
+  const cases = [
+    ['result = () >> {| 42};', '42'],
+    ['action = {| 20 + 1}; result = () >> action >> {x | x * 2};', '42'],
+    ['unused = {| {present: 1} ~ missing}; result = 42;', '42'],
+    ['result = () >> {| a = 20; b = a + 1; b * 2;};', '42'],
+    ['base = 10; make: n = {| local = n + base; local * 2}; action = make: 11; result = () >> action;', '42'],
+    ['result = 20 >> {x | y = x + 1; action = {| y * 2}; () >> action};', '42'],
+    ['result = () >> {| x = 20; action = {| y = x + 1; y * 2}; () >> action};', '42'],
+    ['identity: x = x; result = identity: (() >> {| 42});', '42'],
+    ['result = 2 + (() >> {| 40});', '42'],
+  ];
+  for (const [source, expected] of cases)
+    for (const target of ['js', 'php'])
+      assert.equal(run(source, target), expected, source + ' / ' + target);
+  assert.match(compile('action = {| 42}; result = () >> action;', 'js'), /\(action\)\(\)/);
+  assert.match(compile('action = {| 42}; result = () >> action;', 'php'), /\(\$action\)\(\)/);
+});
+
+test('0.14 empty parentheses are not a value and literal block arity is checked', () => {
+  const cases = [
+    ['result = ();', /Empty \(\) is only allowed before >>/],
+    ['result = [(), 2];', /Empty \(\) is only allowed before >>/],
+    ['result = {| };', /A block needs at least one expression/],
+    ['result = 1 >> {| 42};', /Pipeline needs a unary block/],
+    ['result = () >> {x | x};', /Pipeline needs a zero-argument block/],
+    ['result = () >> {x, y | x + y};', /Pipeline needs a zero-argument block/],
+    ['result = () >> (_ + 1);', /Pipeline needs a zero-argument operator section/],
+    ['result = () >> 42;', /Pipeline target must be a function/],
+    ['result = {| 42} 1;', /Zero-argument block requires/],
+    ['result = () >> {| x = y; y = 1; x};', /Local value 'y' used before its declaration/]
+  ];
+  for (const [source, diagnostic] of cases)
+    for (const target of ['js','php']) {
+      const failure = compileError(source,target);
+      assert.notEqual(failure.status,0,source);
+      assert.match(failure.stderr,diagnostic,source);
+    }
+});
