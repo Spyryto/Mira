@@ -5,11 +5,14 @@ import mira.Target;
 import mira.syntax.Definition;
 import mira.resolve.Mangle;
 import mira.resolve.Symbols;
+import mira.emit.SourceLocations.GeneratedLocation;
 
 class PhpEmitter {
-    public static function emit(definitions:Array<Definition>, symbols:Symbols):String {
+    public static function emit(definitions:Array<Definition>, symbols:Symbols, ?locations:Array<GeneratedLocation>):String {
         final lines = ["<?php", "declare(strict_types=1);", ""];
+        var generatedLine = lines.length + 1;
         for (definition in definitions) {
+            final first = lines.length;
             if (definition.body == null) throw new MiraError("Missing resolved body", definition.origin);
             // Function parameters shadow outer named values, but global values remain
             // accessible from every function in both backends.
@@ -36,6 +39,8 @@ class PhpEmitter {
             } else {
                 lines.push("$" + Mangle.name(definition.name) + " = " + expr + ";");
             }
+            if (locations != null) generatedLine = SourceLocations.append(
+                locations, definition, lines, first, generatedLine);
         }
         return lines.join("\n") + "\n";
     }

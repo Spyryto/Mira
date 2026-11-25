@@ -47,6 +47,7 @@ const state = {
   target: 'js',
   view: 'code',
   output: '',
+  locations: undefined,
   valid: false,
   exampleInvocation: null,
   uiExample: false,
@@ -140,7 +141,7 @@ function setTarget(target) {
   compile(false);
 }
 
-function compile(revealOutput = false) {
+function compile(revealOutput = false, withLocations = false) {
   if (!compiler?.compile) {
     state.valid = false;
     setStatus('error', 'Il compilatore Haxe non è stato caricato.');
@@ -148,7 +149,8 @@ function compile(revealOutput = false) {
   }
 
   const begin = performance.now();
-  const result = compiler.compile(ui.source.value, state.target, state.hostJson);
+  const result = compiler.compile(ui.source.value, state.target, state.hostJson, withLocations);
+  state.locations = result?.locations;
   const elapsed = performance.now() - begin;
 
   if (!result?.ok) {
@@ -278,7 +280,7 @@ function formatExecutionTime(ms) {
 function runJavaScript() {
   if (state.uiExample) return runUiPreview();
   if (state.target !== 'js') return;
-  if (!compile(false)) {
+  if (!compile(false, true)) {
     setView('code');
     return;
   }
@@ -302,9 +304,14 @@ function runJavaScript() {
   worker.onmessage = event => {
     if (state.worker !== worker) return;
     clearTimeout(state.workerTimeout);
+    const location = event.data?.location;
+    const context = location
+      ? '\nMira: riga ' + location.line + ', colonna ' + location.column +
+        ' · ' + location.name + ' (definizione)'
+      : '';
     ui.runOutput.textContent = event.data?.ok
       ? event.data.output
-      : 'Errore: ' + (event.data?.message ?? 'esecuzione fallita');
+      : 'Errore: ' + (event.data?.message ?? 'esecuzione fallita') + context;
     setStatus(event.data?.ok ? 'ready' : 'error',
       event.data?.ok ? 'Esecuzione riuscita' : 'Esecuzione fallita',
       formatExecutionTime(event.data?.executionMs));
@@ -316,7 +323,7 @@ function runJavaScript() {
     setStatus('error', 'Errore durante l’esecuzione');
     stopWorker();
   };
-  worker.postMessage({ code: state.output, invoke: state.exampleInvocation });
+  worker.postMessage({ code: state.output, invoke: state.exampleInvocation, locations: state.locations });
 }
 
 

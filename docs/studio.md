@@ -233,3 +233,36 @@ riportano il nome e la posizione nel sorgente.
 Il preset **Shadowing lessicale · 0.12.1** mostra invece un caso valido:
 un parametro interno ombreggia un parametro esterno dallo stesso nome.
 Compilatore CLI e Studio usano lo stesso controllo Haxe.
+
+
+## Diagnostica runtime (Mira 0.13)
+
+Con **Esegui**, il controller richiede al compilatore Haxe le posizioni
+delle definizioni e le passa al Web Worker insieme al JavaScript.
+In caso di errore durante l'esecuzione il worker cerca uno stack frame
+del codice generato; calibra l'offset di `new Function` soltanto in caso
+di errore. Quando può collegare lo stack alla mappa, Studio mostra ad
+esempio:
+
+```text
+Errore: Missing record field: missing
+Mira: riga 2, colonna 1 · read: (definizione)
+```
+
+Prova il preset **Errore runtime · 0.13**. Non è un errore di compilazione:
+il campo mancante viene individuato durante l'esecuzione.
+
+L'API opzionale `MiraStudioCompiler.compile(source, target, hostJson, true)`
+aggiunge `locations` al risultato positivo; senza il quarto parametro il
+contratto originale rimane invariato. Il CLI espone gli stessi dati con
+`--locations`, come JSON con `output` e `locations`. Ogni voce indica
+`generatedStartLine` e `generatedEndLine` (inclusivi e a base 1),
+`line`, `column` e `name` della definizione Mira. Le posizioni PHP
+valgono per il file generato senza aggiungere righe all'inizio.
+
+Limiti: mappa a livello di definizione, non Source Map v3; nessuna
+posizione inventata quando lo stack del browser non è interpretabile.
+L'anteprima UI nell'iframe, i timeout, gli errori di sintassi JS e
+l'esecuzione PHP nel browser non sono coperti. PHP resta eseguibile
+esternamente: si può confrontare la riga indicata dal suo stack con
+la mappa CLI. Il codice emesso con e senza mappa è identico.

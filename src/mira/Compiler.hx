@@ -8,6 +8,7 @@ import mira.syntax.DefinitionParser;
 import mira.syntax.ExpressionParser;
 import mira.emit.JsEmitter;
 import mira.emit.PhpEmitter;
+import mira.emit.SourceLocations.GeneratedLocation;
 
 class Compiler {
     public static function parse(source:String, ?host:HostEnvironment):Array<Definition> {
@@ -20,12 +21,13 @@ class Compiler {
         return definitions;
     }
 
-    public static function transpile(source:String, target:Target, ?host:HostEnvironment):String {
+    public static function transpile(source:String, target:Target, ?host:HostEnvironment,
+        ?locations:Array<GeneratedLocation>):String {
         final definitions = parse(source, host);
         final symbols = new Symbols(definitions, host);
         return switch (target) {
-            case JavaScript: JsEmitter.emit(definitions, symbols);
-            case Php: PhpEmitter.emit(definitions, symbols);
+            case JavaScript: JsEmitter.emit(definitions, symbols, locations);
+            case Php: PhpEmitter.emit(definitions, symbols, locations);
         };
     }
 

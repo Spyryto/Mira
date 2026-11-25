@@ -140,6 +140,13 @@ result = 4 >> {value |
 };`
   },
   {
+    id: 'runtime-location',
+    name: 'Errore runtime · 0.13',
+    source: `# Compila, poi esegui: il campo richiesto manca.
+read: item = item ~ missing;
+result = read: {present: 1};`
+  },
+  {
     id: 'function-shadow',
     name: 'Funzioni e shadowing · 0.12.2',
     source: `# Un parametro può ombreggiare un globale con lo stesso nome.

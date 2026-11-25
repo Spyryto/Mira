@@ -1,6 +1,7 @@
 package mira;
 
 import js.Syntax;
+import mira.emit.SourceLocations.GeneratedLocation;
 
 class Main {
     static function main():Void {
@@ -35,15 +36,24 @@ class Main {
                 args.splice(flag, 2);
             }
 
+            final locationFlag = args.indexOf("--locations");
+            if (locationFlag >= 0) args.splice(locationFlag, 1);
+
             if (args.length < 2 || args.length > 3) {
                 usage(nodeProcess);
                 return;
             }
 
             final source:String = fs.readFileSync(args[0], "utf8");
-            final output = args[1] == "--tokens"
-                ? Compiler.inspectTokens(source) + "\n"
-                : Compiler.transpile(source, parseTarget(args[1]), host);
+            var output:String;
+            if (locationFlag >= 0) {
+                final locations:Array<GeneratedLocation> = [];
+                final code = Compiler.transpile(source, parseTarget(args[1]), host, locations);
+                output = haxe.Json.stringify({output: code, locations: locations}, null, "  ") + "\n";
+            } else {
+                output = args[1] == "--tokens" ? Compiler.inspectTokens(source) + "\n"
+                    : Compiler.transpile(source, parseTarget(args[1]), host);
+            }
 
             if (args.length == 3) {
                 fs.writeFileSync(args[2], output);
@@ -66,7 +76,7 @@ class Main {
 
     static function usage(nodeProcess:Dynamic):Void {
         nodeProcess.stderr.write(
-            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens> [output] [--host manifest.json]\n"
+            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens> [output] [--host manifest.json] [--locations]\n"
         );
         nodeProcess.exitCode = 2;
     }
