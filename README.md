@@ -60,6 +60,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Benchmark GUI sul DOM reale | `0.18` | [Dettagli](docs/browser-interop.md#mira-018-misure-sul-dom-reale) |
 | ✅ | Specializzazione sperimentale GUI su AST | `0.19` | [Dettagli](docs/browser-interop.md#mira-019-specializzazione-sperimentale-di-view-fisse) |
 | ✅ | Specializzazione GUI con record e stili dinamici | `0.20` | [Dettagli](docs/browser-interop.md#mira-020-record-e-stili-dinamici) |
+| ✅ | Binding dei controlli GUI specializzati | `0.21` | [Dettagli](docs/browser-interop.md#mira-021-binding-specializzato) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
