@@ -876,3 +876,43 @@ test('0.12.2 named-function parameters reject mangling collisions on JS/PHP', ()
       assert.equal(run(source, target), expected, source + ' / ' + target);
   }
 });
+
+test('0.13 optional definition locations preserve JS/PHP output and map runtime failure', () => {
+  const source = [
+    '# first line is a comment',
+    'message = "one\\ntwo";',
+    '',
+    'read: item = item ~ missing;',
+    'result = read: {present: 1};'
+  ].join('\n');
+  for (const target of ['js', 'php']) {
+    const mapped = withSource(source, path => JSON.parse(execFileSync(
+      'node', [compiler, path, target, '--locations'], {encoding:'utf8'}
+    )));
+    assert.equal(mapped.output, compile(source, target));
+    assert.deepEqual(mapped.locations.map(({name, line, column}) => [name,line,column]),
+      [['message',2,1],['read:',4,1],['result',5,1]]);
+    const lines = mapped.output.split('\n');
+    for (const entry of mapped.locations) {
+      assert.ok(entry.generatedStartLine <= entry.generatedEndLine);
+      assert.ok(entry.generatedEndLine < lines.length);
+    }
+    const read = mapped.locations[1];
+    assert.match(lines[read.generatedStartLine - 1], /function read/);
+    assert.match(lines[mapped.locations[2].generatedStartLine - 1], /result/);
+    withSource(source, (_, dir) => {
+      const outputPath = join(dir, target === 'js' ? 'failure.mjs' : 'failure.php');
+      writeFileSync(outputPath, mapped.output);
+      const child = spawnSync(target === 'js' ? 'node' : 'php', [outputPath], {encoding:'utf8'});
+      assert.notEqual(child.status, 0);
+      assert.match(child.stderr, /Missing record field: missing/);
+      const match = target === 'js'
+        ? child.stderr.match(/failure\.mjs:(\d+)/)
+        : child.stderr.match(/on line (\d+)/);
+      assert.ok(match, child.stderr);
+      const generatedLine = Number(match[1]);
+      assert.ok(generatedLine >= read.generatedStartLine && generatedLine <= read.generatedEndLine,
+        child.stderr);
+    });
+  }
+});
