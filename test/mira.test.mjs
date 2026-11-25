@@ -754,7 +754,7 @@ test('0.12 local values are immutable and visible to following expressions on JS
 
 test('0.12 local bindings have sequential lexical scope and reject reassignment', () => {
   const invalid = [
-    ['result = 2 >> {x | a = b + 1; b = 4; a};', /Unknown identifier|Unbound/],
+    ['result = 2 >> {x | a = b + 1; b = 4; a};', /Local value 'b' used before its declaration at 1:\d+/],
     ['result = 2 >> {x | local = x + 1; local = 5; local};', /Duplicate or shadowed local name/],
     ['result = 2 >> {x | x = x + 1; x};', /Duplicate or shadowed local name/],
     ['rate = 30; result = 2 >> {x | rate = 4; x};', /Duplicate or shadowed local name/],
@@ -806,4 +806,48 @@ test('0.12 top-level definition scanner ignores = inside nested blocks', () => {
   const multipleTopLevel = compileError('result = 1 = 2;');
   assert.notEqual(multipleTopLevel.status,0);
   assert.match(multipleTopLevel.stderr,/Unexpected second =/);
+});
+
+test('0.12.1 refuses generated-name collisions between block parameters and outer names', () => {
+  const failures = [
+    'a b = 4; result = (a b + 1) >> {aB | a b + aB};',
+    'result = 4 >> {a b | (a b + 1) >> {aB | a b + aB}};',
+    'result = 4 >> {aB | (aB + 1) >> {a b | aB + a b}};'
+  ];
+  for (const source of failures) {
+    for (const target of ['js','php']) {
+      const failure=compileError(source,target);
+      assert.notEqual(failure.status,0,source);
+      assert.match(failure.stderr,/Generated-name collision.*block parameter.*at 1:\d+/,source);
+    }
+  }
+  for (const [source,expected] of [
+    ['result = 4 >> {x | (x + 1) >> {x | x * 2}};', '10'],
+    ['x = 100; result = 5 >> {x | x + 1};', '6'],
+    ['result = 4 >> {a b | (a b + 1) >> {c | a b + c}};', '9']
+  ]) {
+    for (const target of ['js','php'])
+      assert.equal(run(source,target),expected,source+' / '+target);
+  }
+});
+
+test('0.12.1 diagnostics identify local self-reference and forward reference at source position',()=>{
+  const failures = [
+    ['result = 2 >> {x | before = after + x; after = 4; before};', 'after'],
+    ['result = 2 >> {x | before = before + x; before};', 'before'],
+    ['result = 2 >> {x | early = x >> {y | y + later}; later = 3; early};', 'later'],
+    ['result = 2 >> {x | early = if (true) then later else x; later = 3; early};', 'later'],
+    ['result = 2 >> {x | first = 1; second = next; next = 3; second};', 'next']
+  ];
+  for (const [source,name] of failures) {
+    for (const target of ['js','php']) {
+      const failure=compileError(source,target);
+      assert.notEqual(failure.status,0,source);
+      assert.match(failure.stderr,new RegExp("Local value '"+name+"' used before its declaration at 1:\\d+"),source);
+    }
+  }
+  const unrelated=compileError('result = 2 >> {x | value = missing + x; value};');
+  assert.notEqual(unrelated.status,0);
+  assert.match(unrelated.stderr,/Unknown identifier/);
+  assert.doesNotMatch(unrelated.stderr,/before its declaration/);
 });

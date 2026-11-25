@@ -1,5 +1,5 @@
 {
-  "version": "0.12.0",
+  "version": "0.12.1",
   "features": [
     {
       "id": "values",
@@ -173,11 +173,14 @@
       "id": "diagnostics",
       "title": "Diagnostica e ambiguità",
       "summary": "Esempi di errori intenzionali.",
-      "details": "Sono esercizi negativi: fallire con una diagnostica precisa è il comportamento corretto.",
+      "details": "Sono esercizi negativi: fallire con una diagnostica precisa è il comportamento corretto. Dalla 0.12.1 i valori locali usati prima della dichiarazione mostrano il nome e la posizione del riferimento; i parametri di blocchi annidati che colliderebbero dopo mangling con un nome esterno diverso vengono rifiutati. Lo shadowing con lo stesso identico nome resta consentito.",
       "api": "mira.MiraError",
       "examples": [
         "ambiguous-words",
-        "duplicate-parameter"
+        "duplicate-parameter",
+        "local-before-declaration",
+        "block-parameter-mangle",
+        "legal-nested-shadow"
       ],
       "since": "0.1"
     },
@@ -1238,6 +1241,39 @@
       "expect": {
         "kind": "result",
         "value": 12
+      }
+    },
+    {
+      "id": "local-before-declaration",
+      "feature": "diagnostics",
+      "title": "Locale usato prima della dichiarazione",
+      "description": "Errore intenzionale che segnala il nome del valore usato troppo presto e la posizione nel sorgente.",
+      "path": "catalog/examples/local-before-declaration.mira",
+      "expect": {
+        "kind": "error",
+        "contains": "used before its declaration"
+      }
+    },
+    {
+      "id": "block-parameter-mangle",
+      "feature": "diagnostics",
+      "title": "Collisione del parametro dopo mangling",
+      "description": "`a b` e `aB` sono diversi in Mira, ma non devono diventare la stessa variabile JS/PHP.",
+      "path": "catalog/examples/block-parameter-mangle.mira",
+      "expect": {
+        "kind": "error",
+        "contains": "Generated-name collision for block parameter"
+      }
+    },
+    {
+      "id": "legal-nested-shadow",
+      "feature": "diagnostics",
+      "title": "Shadowing lessicale con lo stesso nome",
+      "description": "Un parametro interno può ombreggiare correttamente un parametro esterno con identico nome.",
+      "path": "catalog/examples/legal-nested-shadow.mira",
+      "expect": {
+        "kind": "result",
+        "value": 10
       }
     }
   ],

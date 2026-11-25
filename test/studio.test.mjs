@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.12.0');
+  assert.equal(bridge.version, '0.12.1');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.12.0');
+  assert.equal(bridge.version,'0.12.1');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -552,4 +552,20 @@ test('0.12 Inspector exposes ordered Local bindings and nested lexical closures'
   }
   const js=bridge.compile(source,'js');
   assert.equal(runInNewContext(js.output+'\nresult',{}),16);
+});
+
+test('0.12.1 Studio diagnostics report local forward reference and mangled shadowing with locations',()=>{
+  for (const [source,pattern] of [
+    ['result = 4 >> {x | first = later + x; later = 1; first};', /Local value 'later' used before its declaration at 1:\d+/],
+    ['a b = 3; result = 4 >> {aB | a b + aB};', /Generated-name collision.*block parameter.*at 1:\d+/]
+  ]) {
+    for (const target of ['js','php']) {
+      const compiled=bridge.compile(source,target);
+      assert.equal(compiled.ok,false,source);
+      assert.match(compiled.message,pattern,source);
+    }
+  }
+  const good=bridge.compile('result = 4 >> {x | doubled = x * 2; doubled >> {y | y + doubled}};','js');
+  assert.equal(good.ok,true,good.message);
+  assert.equal(runInNewContext(good.output+'\nresult',{}),16);
 });

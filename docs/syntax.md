@@ -273,6 +273,44 @@ JavaScript e PHP senza una nuova infrastruttura di scoping.
 si genera `const`; in PHP un'assegnazione a variabile ordinaria,
 ma Mira impedisce staticamente di riassegnare il nome.
 
+## Implementato in Mira 0.12.1: diagnosi e collisioni di scope
+
+I valori locali si risolvono soltanto dopo il loro inizializzatore.
+Un riferimento a un nome dichiarato più avanti nello stesso blocco
+(o in un blocco esterno ancora in corso) produce una diagnostica
+precisa con **nome, riga e colonna**:
+
+```mira
+result = 4 >> {value |
+  subtotal = amount + value;
+  amount = value * 2;
+  subtotal
+};
+```
+
+In questo caso `amount` non è ancora disponibile nel calcolo
+di `subtotal`.
+
+I nomi composti vengono tradotti nei simboli generati. Mira
+impedisce ora anche che **il parametro di un blocco annidato**
+abbia un nome diverso da quello di un valore visibile, ma produca
+il medesimo simbolo JS/PHP: `a b` e `aB` diventano entrambi
+`aB`, perciò questa combinazione è un errore.
+
+Uno shadowing lessicale di parametro con il *medesimo nome Mira*
+è invece valido, per esempio:
+
+```mira
+result = 4 >> {value |
+  (value + 1) >> {value | value * 2}
+};
+```
+
+Il risultato è `10`. I valori locali `nome = ...` mantengono
+la regola conservativa introdotta nella 0.12: non possono ridefinire
+un nome già visibile. In questo aggiornamento non è stata aggiunta
+alcuna forma di assegnazione mutabile.
+
 ## Proposto: closure generali e selettori parziali
 
 ```mira

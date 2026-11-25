@@ -140,6 +140,17 @@ result = 4 >> {value |
 };`
   },
   {
+    id: 'nested-shadow',
+    name: 'Shadowing lessicale · 0.12.1',
+    source: `# Lo stesso nome può essere riutilizzato nei parametri annidati.
+# Nomi diversi che generano lo stesso simbolo sono invece rifiutati.
+result = 4 >> {value |
+  (value + 1) >> {value |
+    value * 2
+  }
+};`
+  },
+  {
     id: 'host-log',
     name: 'Interoperabilità: log',
     source: `# La funzione log arriva dall'oggetto host di Studio.

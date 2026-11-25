@@ -1,0 +1,2 @@
+a b = 4;
+result = (a b + 1) >> {aB | a b + aB};

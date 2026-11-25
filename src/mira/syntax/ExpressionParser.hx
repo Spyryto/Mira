@@ -12,16 +12,21 @@ class ExpressionParser {
     final symbols:Symbols;
     final selectorResolver:SelectorResolver;
     final localNames:Array<String>;
+    // Names declared later in the enclosing block are kept out of the
+    // lexical scope, but allow a precise forward-reference diagnostic.
+    final pendingLocals:Array<String>;
     var position:Int = 0;
     var operatorDepth:Int = 0;
     final allowOperatorArgument:Bool;
 
-    public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<String>, ?allowOperatorArgument:Bool = false) {
+    public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<String>,
+        ?allowOperatorArgument:Bool = false, ?pendingLocals:Array<String>) {
         this.tokens = tokens.copy();
         final last = tokens.length > 0 ? tokens[tokens.length - 1] : new Token(End, "", 1, 1);
         this.tokens.push(new Token(End, "", last.line, last.column));
         this.symbols = symbols;
         this.localNames = localNames;
+        this.pendingLocals = pendingLocals == null ? [] : pendingLocals;
         this.allowOperatorArgument = allowOperatorArgument;
         this.selectorResolver = new SelectorResolver(symbols);
     }
@@ -174,7 +179,8 @@ class ExpressionParser {
                     args.push(Placeholder);
                     holes++;
                 } else {
-                    args.push(new ExpressionParser(argumentTokens, symbols, localNames, true).parse());
+                    args.push(new ExpressionParser(argumentTokens, symbols, localNames,
+                        true, pendingLocals).parse());
                 }
             }
             if (symbols.isHostSelector(matched.selector)) {
@@ -192,6 +198,12 @@ class ExpressionParser {
                 return HostRef(name);
             }
             return Name(name);
+        }
+        for (future in pendingLocals) {
+            if (Symbols.matchesWords(tokens, position, future)) {
+                throw new MiraError("Local value '" + future
+                    + "' used before its declaration", token);
+            }
         }
         throw new MiraError(
             "Unknown identifier or incomplete selector; register host names explicitly",
@@ -231,7 +243,7 @@ class ExpressionParser {
         }
         if (start == position) throw new MiraError("Expected then expression", current());
         final whenTrue = new ExpressionParser(tokens.slice(start, position), symbols,
-            localNames, allowOperatorArgument).parse();
+            localNames, allowOperatorArgument, pendingLocals).parse();
 
         optionalSymbol(",");
         requireWord("else");
@@ -326,12 +338,23 @@ class ExpressionParser {
                 throw new MiraError("Duplicate or conflicting block parameter " + parameter,
                     parameterToken);
             }
+            // Identical names may shadow lexically. Different Mira names must
+            // never produce the same JS/PHP variable, or captured references
+            // silently refer to the wrong binding.
+            for (outer in localNames.concat(symbols.globals)) {
+                if (outer != parameter && Mangle.name(outer) == symbol) {
+                    throw new MiraError("Generated-name collision for block parameter "
+                        + parameter + " with visible name " + outer, parameterToken);
+                }
+            }
             parameters.push(parameter);
             emitted.push(symbol);
             if (!current().isSymbol(",")) break;
             consume();
         }
         requireSymbol("|");
+        final pending = upcomingLocalNames(position);
+        for (name in pending) pendingLocals.push(name);
         for (parameter in parameters) localNames.unshift(parameter);
         final expressions:Array<Expr> = [];
         if (current().isSymbol("}")) {
@@ -387,9 +410,41 @@ class ExpressionParser {
         }
         for (_ in bindings) localNames.shift();
         for (_ in parameters) localNames.shift();
+        for (_ in pending) pendingLocals.pop();
         requireSymbol("}");
         final body:Expr = expressions.length == 1 ? expressions[0] : Expr.Steps(expressions);
         return Block(parameters, body);
+    }
+
+    // Scan only statement starts at the current brace depth; assignments
+    // nested in a child block do not belong to this lexical scope.
+    function upcomingLocalNames(start:Int):Array<String> {
+        final names:Array<String> = [];
+        var cursor = start;
+        var depth = 0;
+        var startOfStep = true;
+        while (cursor < tokens.length && tokens[cursor].kind != End) {
+            final token = tokens[cursor];
+            if (depth == 0 && token.isSymbol("}")) break;
+            if (depth == 0 && startOfStep && token.kind == Word) {
+                var end = cursor;
+                final words:Array<String> = [];
+                while (tokens[end].kind == Word) {
+                    words.push(tokens[end].value);
+                    end++;
+                }
+                if (tokens[end].isSymbol("=")) names.push(words.join(" "));
+            }
+            if (token.isSymbol("(") || token.isSymbol("[") || token.isSymbol("{")) {
+                depth++;
+            } else if (token.isSymbol(")") || token.isSymbol("]")
+                || token.isSymbol("}")) {
+                depth--;
+            }
+            if (depth == 0) startOfStep = token.isSymbol(";");
+            cursor++;
+        }
+        return names;
     }
 
     // Recognize only an initial sequence of words immediately followed

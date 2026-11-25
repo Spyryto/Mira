@@ -1,0 +1,5 @@
+result = 4 >> {value |
+  (value + 1) >> {value |
+    value * 2
+  }
+};
