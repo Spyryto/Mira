@@ -56,6 +56,9 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Blocchi senza parametri | `0.14` | [Dettagli](docs/reference/language.md#feature-nullary-blocks) |
 | ✅ | Libreria GUI Mira e binding | `0.15` | [Dettagli](docs/reference/language.md#feature-gui-library) |
 | ✅ | DOM incrementale e stato indipendente | `0.16` | [Dettagli](docs/reference/language.md#feature-incremental-gui) |
+| ✅ | Stili GUI componibili e griglia | `0.17` | [Dettagli](docs/reference/language.md#feature-styled-gui) |
+| ✅ | Benchmark GUI sul DOM reale | `0.18` | [Dettagli](docs/browser-interop.md#mira-018-misure-sul-dom-reale) |
+| ✅ | Specializzazione sperimentale GUI su AST | `0.19` | [Dettagli](docs/browser-interop.md#mira-019-specializzazione-sperimentale-di-view-fisse) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

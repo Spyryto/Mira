@@ -1424,6 +1424,10 @@ state: initial, key: identity, view: factory = {
   type: "state", initial: initial, key: identity, view: factory
 };
 
+# Style records compose from left to right; decorators do not add DOM nodes.
+styled: view, with: layers = {type: "styled", view: view, styles: layers};
+grid: count, children: items = {type: "grid", columns: count, children: items};
+
 # Un input con binding e un pulsante che cattura lo stato.
 greeting: name = column: [
   title: "Salutami",
@@ -1472,6 +1476,10 @@ state: initial, view: factory = {type: "state", initial: initial, view: factory}
 state: initial, key: identity, view: factory = {
   type: "state", initial: initial, key: identity, view: factory
 };
+
+# Style records compose from left to right; decorators do not add DOM nodes.
+styled: view, with: layers = {type: "styled", view: view, styles: layers};
+grid: count, children: items = {type: "grid", columns: count, children: items};
 
 # Una piccola scheda lezione, con stato immutabile e componenti.
 lesson view: model = column: [
@@ -1551,6 +1559,10 @@ state: initial, key: identity, view: factory = {
   type: "state", initial: initial, key: identity, view: factory
 };
 
+# Style records compose from left to right; decorators do not add DOM nodes.
+styled: view, with: layers = {type: "styled", view: view, styles: layers};
+grid: count, children: items = {type: "grid", columns: count, children: items};
+
 # Il genitore cambia il passo, non lo stato dei contatori figli.
 counter: caption, step: amount = state: 0, view: {n | row: [
   button: caption, update: {old | old + amount},
@@ -1604,6 +1616,10 @@ state: initial, key: identity, view: factory = {
   type: "state", initial: initial, key: identity, view: factory
 };
 
+# Style records compose from left to right; decorators do not add DOM nodes.
+styled: view, with: layers = {type: "styled", view: view, styles: layers};
+grid: count, children: items = {type: "grid", columns: count, children: items};
+
 # La chiave identifica la sessione: cambiare chiave azzera il figlio.
 counter view: n = row: [
   text: n,
@@ -1621,4 +1637,122 @@ render (state: "A", view: (session view: _));
 **Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/gui-reset)
+
+<a id="example-gui-dashboard"></a>
+## Dashboard musicale · stili componibili
+
+Schede metriche, griglia, colori e pulsante reattivo.
+
+Feature: [Stili GUI componibili e griglia](language.md#feature-styled-gui)
+
+```mira
+# Mira GUI: ordinary functions; no compiler or DOM dependencies.
+column: items = {type: "column", children: items};
+row: items = {type: "row", children: items};
+title: caption = {type: "title", text: caption};
+text: content = {type: "text", text: content};
+button: caption, on click: action = {
+  type: "button", label: caption, onClick: action
+};
+button: caption, update: transition = {
+  type: "button", label: caption, update: transition
+};
+text input: caption, value: current, update: transition = {
+  type: "input", label: caption, value: current, update: transition
+};
+checkbox: caption, checked: current, update: transition = {
+  type: "checkbox", label: caption, checked: current, update: transition
+};
+choose: caption, value: current, options: choices, update: transition = {
+  type: "select", label: caption, value: current, options: choices, update: transition
+};
+state: initial, view: factory = {type: "state", initial: initial, view: factory};
+# Explicit identity for resetting a state at the same structural position.
+state: initial, key: identity, view: factory = {
+  type: "state", initial: initial, key: identity, view: factory
+};
+
+# Style records compose from left to right; decorators do not add DOM nodes.
+styled: view, with: layers = {type: "styled", view: view, styles: layers};
+grid: count, children: items = {type: "grid", columns: count, children: items};
+
+# Stili riutilizzabili, layout e componenti in Mira.
+panel style = {padding: 16, gap: 8, radius: 14, borderWidth: 2,
+  borderStyle: "solid", borderColor: "#202629", shadow: "hard"};
+metric: caption, amount: number, tint: tone = styled: (column: [
+  text: caption,
+  styled: (title: number), with: [{fontSize: 30, fontWeight: 800}]
+]), with: [panel style, {background: tone}];
+
+dashboard: count = styled: (column: [
+  styled: (title: "Studio musicale"), with: [{fontSize: 25}],
+  text: "Riepilogo lezioni",
+  grid: 2, children: [
+    metric: "Lezioni", amount: count, tint: "#c1f1dc",
+    metric: "Compenso EUR", amount: (count * 30), tint: "#ffdbab"
+  ],
+  styled: (button: "Nuova lezione", update: {old | old + 1}),
+    with: [{background: "#272a52", color: "#ffffff", padding: 14, radius: 10}]
+]), with: [{gap: 16, padding: 12}];
+
+render (state: 2, view: (dashboard: _));
+```
+
+**Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/gui-dashboard)
+
+<a id="example-gui-style-toggle"></a>
+## Tema dinamico
+
+Cambia i colori della stessa view senza rimontarla.
+
+Feature: [Stili GUI componibili e griglia](language.md#feature-styled-gui)
+
+```mira
+# Mira GUI: ordinary functions; no compiler or DOM dependencies.
+column: items = {type: "column", children: items};
+row: items = {type: "row", children: items};
+title: caption = {type: "title", text: caption};
+text: content = {type: "text", text: content};
+button: caption, on click: action = {
+  type: "button", label: caption, onClick: action
+};
+button: caption, update: transition = {
+  type: "button", label: caption, update: transition
+};
+text input: caption, value: current, update: transition = {
+  type: "input", label: caption, value: current, update: transition
+};
+checkbox: caption, checked: current, update: transition = {
+  type: "checkbox", label: caption, checked: current, update: transition
+};
+choose: caption, value: current, options: choices, update: transition = {
+  type: "select", label: caption, value: current, options: choices, update: transition
+};
+state: initial, view: factory = {type: "state", initial: initial, view: factory};
+# Explicit identity for resetting a state at the same structural position.
+state: initial, key: identity, view: factory = {
+  type: "state", initial: initial, key: identity, view: factory
+};
+
+# Style records compose from left to right; decorators do not add DOM nodes.
+styled: view, with: layers = {type: "styled", view: view, styles: layers};
+grid: count, children: items = {type: "grid", columns: count, children: items};
+
+# Cambia i colori senza rimontare il componente.
+base style = {padding: 18, radius: 14, gap: 12};
+theme view: dark = styled: (column: [
+  title: "Tema dinamico",
+  text: "Stessi nodi, colori diversi",
+  button: "Cambia tema", update: {old | if (old) then false else true}
+]), with: [base style, (if (dark)
+  then {background: "#202629", color: "#ffffff", shadow: "soft"}
+  else {background: "#c1f1dc", color: "#202629"})];
+render (state: false, view: (theme view: _));
+```
+
+**Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/gui-style-toggle)
 

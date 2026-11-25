@@ -1,4 +1,4 @@
-# Guida a Mira 0.16.0
+# Guida a Mira 0.19.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -479,4 +479,18 @@ API collegata: [`mira.HostEnvironment`](api.md#api-mira-hostenvironment)
 
 - [Due contatori indipendenti](examples.md#example-gui-independent) — Anteprima interattiva (browser JS; PHP compilato soltanto)
 - [Nuova sessione · reset esplicito](examples.md#example-gui-reset) — Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+<a id="feature-styled-gui"></a>
+## Stili GUI componibili e griglia
+
+**Disponibile dalla versione 0.17**
+
+Record di stile riutilizzabili, applicabili a qualunque view, e layout a griglia.
+
+styled:with: costruisce un record decoratore senza creare nodi DOM. I record successivi prevalgono sui precedenti, gli stili esterni su quelli interni. Il renderer accetta un vocabolario di proprietà CSS validate e aggiorna soltanto proprietà cambiate, rimuovendo quelle assenti. grid:children: produce una griglia da 1 a 6 colonne. Nessuna nuova sintassi; PHP esegue i costruttori ma non il DOM. Il benchmark sintetico conta allocazioni di elementi e scritture stile su DOM simulato, non layout o paint del browser.
+
+API collegata: [`mira.HostEnvironment`](api.md#api-mira-hostenvironment)
+
+- [Dashboard musicale · stili componibili](examples.md#example-gui-dashboard) — Anteprima interattiva (browser JS; PHP compilato soltanto)
+- [Tema dinamico](examples.md#example-gui-style-toggle) — Anteprima interattiva (browser JS; PHP compilato soltanto)
 
