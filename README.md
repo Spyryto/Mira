@@ -204,6 +204,10 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
 
 
+## Mira 0.19: specializzazione sperimentale GUI
+
+Il Performance Lab confronta anche un pass su AST risolto che compila soltanto gli slot testuali dinamici di una view fissa. Nessuna modifica alla grammatica, renderer generale invariato. [Metodo e limiti](docs/browser-interop.md#mira-019-specializzazione-sperimentale-di-view-fisse).
+
 ## Mira 0.18: DOM Performance Lab
 
 Da Studio → Bench → DOM Performance Lab: confronto sul DOM reale

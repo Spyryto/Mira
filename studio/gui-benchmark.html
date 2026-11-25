@@ -26,12 +26,13 @@ small{display:block;line-height:1.5}
 <button id="run" type="button">Avvia benchmark GUI</button>
 <p id="status" role="status">Pronto. Misurazioni locali, nessun invio di dati.</p>
 <div id="results"></div>
-<small>5 campioni da 30 aggiornamenti, 5 warmup per campione. Mediana e P95 del tempo medio per aggiornamento nel campione, in ms. Compilazione esclusa. Layout forzato: lettura della geometria a ogni aggiornamento; senza layout forzato: scritture sincrone, layout finale fuori dal timer. Non misura paint, frame rate o memoria. Incrementale e diretto passano da click(); ricostruzione invoca direttamente render. DOM diretto è un riferimento specializzato, non un renderer generico.</small>
+<small>5 campioni da 30 aggiornamenti, 5 warmup per campione. Mediana e P95 del tempo medio per aggiornamento nel campione, in ms. Compilazione esclusa. Layout forzato: lettura della geometria a ogni aggiornamento; senza layout forzato: scritture sincrone, layout finale fuori dal timer. Non misura paint, frame rate o memoria. Incrementale, specializzato e diretto passano da click(); ricostruzione invoca direttamente render. Il pass specializzato accetta solo view di struttura fissa e testi dinamici. DOM diretto è un riferimento scritto a mano.</small>
 <h2>Area DOM reale</h2>
 <div id="mount" aria-label="Area di misura collegata al documento"></div>
 <pre id="machine" hidden></pre>
 <script src="./compiler.js"></script>
 <script src="./ui-host.js"></script>
+<script src="./gui-specialize.js"></script>
 <script src="./gui-benchmark.js"></script>
 <script>
 (function(){
@@ -51,12 +52,12 @@ small{display:block;line-height:1.5}
         const head=document.createElement('tr');
         for(const title of ['Metodo','Mediana ms','P95 ms'])head.append(element('th',title));
         table.append(head);
-        for(const [key,name] of [['view','Solo view Mira'],['incremental','Mira incrementale'],['rebuild','Mira ricostruzione'],['direct','DOM diretto']]){
+        for(const [key,name] of [['view','Solo view Mira'],['incremental','Mira incrementale'],['rebuild','Mira ricostruzione'],['specialized','Mira specializzato'],['direct','DOM diretto']]){
           const tr=document.createElement('tr');
           tr.append(element('td',name),element('td',row[key].medianMs.toFixed(3)),element('td',row[key].p95Ms.toFixed(3)));
           table.append(tr);
         }
-        card.append(table);results.append(card);
+        card.append(element('p','Slot dinamici: '+row.dynamicSlots),table);results.append(card);
       }
       status.textContent='Completato · Mira '+data.version+' · '+data.rounds+' campioni per caso';
     }catch(error){

@@ -297,3 +297,7 @@ Guida → Stili GUI componibili e griglia: Dashboard musicale e Tema dinamico. L
 ## DOM Performance Lab (Mira 0.18)
 
 Da Bench apri **DOM Performance Lab**. Il benchmark gira sul DOM reale del dispositivo, non nel Worker: 100 testi, aggiornamenti sparsi/densi, confronto incrementale, render completo e DOM diretto. Il test headless Chrome/Chromium esegue lo stesso file in CI. Nessuna soglia prestazionale assoluta; si verificano checksum e tempi finiti. La navigazione offline conserva la pagina separata.
+
+## Specializzazione GUI (Mira 0.19)
+
+DOM Performance Lab include Mira specializzato: pass sperimentale su AST risolto per view fisse. Mostra numero di slot dinamici e tempi insieme agli altri tre renderer. Non cambia il renderer dell'anteprima generale; per limiti e metodo vedi browser-interop.md.

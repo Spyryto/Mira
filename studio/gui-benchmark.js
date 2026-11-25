@@ -3,7 +3,7 @@
 (function(global) {
   'use strict';
   const rows = 100, updates = 30, rounds = 5, warmup = 5;
-  const strategies = ['incremental','rebuild','direct'];
+  const strategies = ['incremental','rebuild','specialized','direct'];
   const cases = ['sparse','dense'];
   const stats = samples => {
     const sorted = [...samples].sort((a,b)=>a-b);
@@ -60,7 +60,12 @@
     return ()=>button.click();
   }
 
-  function setup(mount,density,program,strategy) {
+  function setup(mount,density,program,strategy,specialized) {
+    if(strategy==='specialized'){
+      global.MiraGuiSpecialize.mount(specialized,mount,0);
+      const button=mount.querySelector('button');
+      return ()=>button.click();
+    }
     if(strategy==='direct') return nativeMount(mount,density,program);
     const host=global.MiraUiHost.createUiHost(mount.ownerDocument,mount,error=>{throw new Error(error);});
     const initial=n=>({type:'state',initial:n,view:program.view});
@@ -80,8 +85,8 @@
     return mount.querySelector('p:last-of-type').getBoundingClientRect().bottom;
   }
 
-  function measure(mount,density,program,strategy,flush) {
-    const step=setup(mount,density,program,strategy);
+  function measure(mount,density,program,strategy,flush,specialized) {
+    const step=setup(mount,density,program,strategy,specialized);
     for(let i=0;i<warmup;i++)step();
     verify(mount,density,warmup);
     layout(mount);
@@ -122,6 +127,7 @@
     const results=[];
     for(const density of cases){
       const program=compile(compiler,density);
+      const specialized=global.MiraGuiSpecialize.compile(compiler,source(density),'bench view:');
       const view=measureView(program,density);
       for(const flush of [false,true]){
         const samples=Object.fromEntries(strategies.map(s=>[s,[]]));
@@ -129,10 +135,10 @@
         for(let round=0;round<rounds;round++){
           for(let i=0;i<strategies.length;i++){
             const strategy=strategies[(i+round)%strategies.length];
-            samples[strategy].push(measure(mount,density,program,strategy,flush));
+            samples[strategy].push(measure(mount,density,program,strategy,flush,specialized));
           }
         }
-        results.push({density,flush,view,...Object.fromEntries(strategies.map(s=>[s,stats(samples[s])]))});
+        results.push({density,flush,view,dynamicSlots:specialized.plan.slots.length,...Object.fromEntries(strategies.map(s=>[s,stats(samples[s])]))});
       }
     }
     mount.replaceChildren();

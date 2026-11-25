@@ -13,6 +13,7 @@ const ASSETS = [
   './benchmark-cases.js',
   './benchmark-worker.js',
   './gui-benchmark.js',
+  './gui-specialize.js',
   './gui-benchmark.html',
   './atlas-program.js',
   './atlas-data.json',

@@ -125,7 +125,7 @@ test('GUI browser benchmark workload uses actual compiled Mira view and transiti
     assert.equal(view.children[99].view.text,density==='sparse'?99:102);
     assert.equal(view.children[100].update(3),4);
   }
-  for(const file of ['gui-benchmark.js','gui-benchmark.html']){
+  for(const file of ['gui-benchmark.js','gui-benchmark.html','gui-specialize.js']){
     assert.ok(existsSync(resolve(site,file)),file);
     assert.ok(read('sw.js').includes('./'+file));
   }
@@ -153,10 +153,40 @@ test('GUI benchmark runs in a real Chromium DOM and checks all strategies',t=>{
   assert.equal(result.rows,100);
   assert.equal(result.results.length,4);
   for(const row of result.results){
-    for(const strategy of ['view','incremental','rebuild','direct']){
+    assert.equal(row.dynamicSlots,row.density==='sparse'?1:100);
+    for(const strategy of ['view','incremental','rebuild','specialized','direct']){
       assert.ok(Number.isFinite(row[strategy].medianMs)&&row[strategy].medianMs>=0);
       assert.ok(row[strategy].p95Ms>=row[strategy].medianMs);
     }
   }
   t.diagnostic('GUI_BROWSER_BENCHMARK '+JSON.stringify(result));
+});
+
+
+test('specialization uses resolved AST and recompiles only dynamic slot expressions',()=>{
+  const sandbox={};
+  runInNewContext(read('gui-specialize.js'),sandbox);
+  runInNewContext(read('gui-benchmark.js'),sandbox);
+  for(const density of ['sparse','dense']){
+    const source=sandbox.MiraGuiBench.source(density);
+    const result=sandbox.MiraGuiSpecialize.compile(bridge,source,'bench view:');
+    assert.equal(result.plan.slots.length,density==='sparse'?1:100);
+    for(const n of [0,1,42,-7]){
+      const view=result.program.view(n);
+      const values=result.program.values(n);
+      assert.equal(values.length,result.plan.slots.length);
+      for(let i=0;i<values.length;i++)assert.equal(values[i],view.children[i].view.text);
+    }
+  }
+  const nested='advance: n = n + 1; example: n = {type: "row", children: [{type: "title", text: "Fixed"}, {type: "column", children: [{type: "text", text: (n * 2 + 3)}, {type: "button", label: "Next", update: (advance: _)}]}]};';
+  const result=sandbox.MiraGuiSpecialize.compile(bridge,nested,'example:');
+  assert.equal(JSON.stringify(result.plan.slots[0].path),'[1,0]');
+  assert.equal(result.program.values(5)[0],result.program.view(5).children[1].children[0].text);
+  const unsupported=[
+    'example: n = if (n > 0) then {type: "text", text: n} else {type: "title", text: n};',
+    'example: n = {type: "styled", view: {type: "text", text: n}, styles: [{padding: n}]};',
+    'example: n = {type: "button", label: "Next", update: {old | old + n}};',
+    'example: n = {type: "text", text: (n ~ field)};'
+  ];
+  for(const source of unsupported)assert.throws(()=>sandbox.MiraGuiSpecialize.compile(bridge,source,'example:'),/Unsupported specialized view/);
 });

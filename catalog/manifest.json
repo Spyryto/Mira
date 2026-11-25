@@ -1,5 +1,5 @@
 {
-  "version": "0.18.0",
+  "version": "0.19.0",
   "features": [
     {
       "id": "values",
@@ -1473,6 +1473,12 @@
       "title": "Benchmark GUI sul DOM reale",
       "since": "0.18",
       "doc": "docs/browser-interop.md#mira-018-misure-sul-dom-reale"
+    },
+    {
+      "id": "gui-specialization",
+      "title": "Specializzazione sperimentale GUI su AST",
+      "since": "0.19",
+      "doc": "docs/browser-interop.md#mira-019-specializzazione-sperimentale-di-view-fisse"
     }
   ]
 }
