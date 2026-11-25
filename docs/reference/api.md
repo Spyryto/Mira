@@ -43,7 +43,7 @@ public static function run(source:String, target:Target, iterations:Int):Dynamic
 class Compiler
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L10)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L11)
 
 <a id="api-mira-compiler-check"></a>
 ### `mira.Compiler.check`
@@ -54,7 +54,7 @@ class Compiler
 public static function check(source:String, ?host:HostEnvironment, ?readModule:String->Null<String>, ?entry:String):Array<Dynamic>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L35)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L36)
 
 <a id="api-mira-compiler-inspecttokens"></a>
 ### `mira.Compiler.inspectTokens`
@@ -65,7 +65,7 @@ public static function check(source:String, ?host:HostEnvironment, ?readModule:S
 public static function inspectTokens(source:String):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L40)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L42)
 
 <a id="api-mira-compiler-parse"></a>
 ### `mira.Compiler.parse`
@@ -73,10 +73,10 @@ public static function inspectTokens(source:String):String
 **method** · Genera definizioni con corpi risolti dopo la raccolta delle firme dei selettori.
 
 ```haxe
-public static function parse(source:String, ?host:HostEnvironment, ?readModule:String->Null<String>, ?entry:String):Array<Definition>
+public static function parse(source:String, ?host:HostEnvironment, ?readModule:String->Null<String>, ?entry:String, ?origins:ExpressionOrigins):Array<Definition>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L13)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L14)
 
 Feature: [Dichiarazioni successive](language.md#feature-forward)
 
@@ -89,7 +89,7 @@ Feature: [Dichiarazioni successive](language.md#feature-forward)
 public static function transpile(source:String, target:Target, ?host:HostEnvironment, ?locations:Array<GeneratedLocation>, ?readModule:String->Null<String>, ?entry:String):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L24)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L25)
 
 <a id="api-mira-emit-jsemitter"></a>
 ### `mira.emit.JsEmitter`
@@ -328,6 +328,28 @@ public final column:Int
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/lex/Token.hx#L15)
 
+<a id="api-mira-lex-token-endcolumn"></a>
+### `mira.lex.Token.endColumn`
+
+**field** · Token lessicale dotato di valore e posizione.
+
+```haxe
+public final endColumn:Int
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/lex/Token.hx#L18)
+
+<a id="api-mira-lex-token-endline"></a>
+### `mira.lex.Token.endLine`
+
+**field** · Token lessicale dotato di valore e posizione.
+
+```haxe
+public final endLine:Int
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/lex/Token.hx#L17)
+
 <a id="api-mira-lex-token-file"></a>
 ### `mira.lex.Token.file`
 
@@ -348,7 +370,7 @@ public final file:Null<String>
 public function isSymbol(symbol:String):Bool
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/lex/Token.hx#L26)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/lex/Token.hx#L30)
 
 <a id="api-mira-lex-token-kind"></a>
 ### `mira.lex.Token.kind`
@@ -378,10 +400,10 @@ public final line:Int
 **constructor** · Costruisce un token lessicale con tipo, testo e coordinate.
 
 ```haxe
-public function new(kind:TokenKind, value:String, line:Int, column:Int, ?file:String)
+public function new(kind:TokenKind, value:String, line:Int, column:Int, ?file:String, ?endLine:Int, ?endColumn:Int)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/lex/Token.hx#L18)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/lex/Token.hx#L20)
 
 <a id="api-mira-lex-token-tokenkind"></a>
 ### `mira.lex.Token.TokenKind`
@@ -484,16 +506,27 @@ class MiraError
 
 Feature: [Diagnostica e ambiguità](language.md#feature-diagnostics)
 
+<a id="api-mira-miraerror-diagnostic"></a>
+### `mira.MiraError.diagnostic`
+
+**field** · Eccezione diagnostica con posizione del token quando disponibile.
+
+```haxe
+public final diagnostic:Dynamic
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/MiraError.hx#L6)
+
 <a id="api-mira-miraerror-new"></a>
 ### `mira.MiraError.new`
 
 **constructor** · Eccezione diagnostica con posizione del token quando disponibile.
 
 ```haxe
-public function new(message:String, ?token:Token)
+public function new(message:String, ?token:Token, code:String = "source_error")
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/MiraError.hx#L6)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/MiraError.hx#L8)
 
 <a id="api-mira-modules"></a>
 ### `mira.Modules`
@@ -1293,6 +1326,50 @@ Text(value:String)
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L8)
 
+<a id="api-mira-syntax-expressionorigins"></a>
+### `mira.syntax.ExpressionOrigins`
+
+**class** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+class ExpressionOrigins
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionOrigins.hx#L7)
+
+<a id="api-mira-syntax-expressionorigins-get"></a>
+### `mira.syntax.ExpressionOrigins.get`
+
+**method** · Membro pubblico di mira.syntax.ExpressionOrigins.
+
+```haxe
+public function get(expr:Expr):Null<Token> return anchors.get(expr); public function inherit(rewritten:Expr, original:Expr):Expr
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionOrigins.hx#L21)
+
+<a id="api-mira-syntax-expressionorigins-new"></a>
+### `mira.syntax.ExpressionOrigins.new`
+
+**constructor** · Membro pubblico di mira.syntax.ExpressionOrigins.
+
+```haxe
+public function new()
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionOrigins.hx#L11)
+
+<a id="api-mira-syntax-expressionorigins-remember"></a>
+### `mira.syntax.ExpressionOrigins.remember`
+
+**method** · Membro pubblico di mira.syntax.ExpressionOrigins.
+
+```haxe
+public function remember(expr:Expr, token:Token):Expr
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionOrigins.hx#L13)
+
 <a id="api-mira-syntax-expressionparser"></a>
 ### `mira.syntax.ExpressionParser`
 
@@ -1310,10 +1387,10 @@ class ExpressionParser
 **constructor** · Crea il parser per i token di un'espressione e uno scope di parametri.
 
 ```haxe
-public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<String>, ?allowOperatorArgument:Bool = false, ?pendingLocals:Array<String>)
+public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<String>, ?allowOperatorArgument:Bool = false, ?pendingLocals:Array<String>, ?origins:ExpressionOrigins)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L22)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L23)
 
 <a id="api-mira-syntax-expressionparser-parse"></a>
 ### `mira.syntax.ExpressionParser.parse`
@@ -1324,7 +1401,7 @@ public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<Strin
 public function parse():Expr
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L34)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L40)
 
 Feature: [Operatori aritmetici](language.md#feature-arithmetic), [Parentesi](language.md#feature-grouping), [Sezioni di operatori](language.md#feature-operator-sections), [Accesso `~` prima dell'aritmetica](language.md#feature-field-precedence)
 
@@ -1491,18 +1568,7 @@ Variable(id:Int)
 class TypeChecker
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L13)
-
-<a id="api-mira-types-typechecker-check"></a>
-### `mira.types.TypeChecker.check`
-
-**method** · Membro pubblico di mira.types.TypeChecker.
-
-```haxe
-public function check(program:Array<Definition>):Array<Dynamic>
-```
-
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L26)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L14)
 
 <a id="api-mira-types-typechecker-new"></a>
 ### `mira.types.TypeChecker.new`
@@ -1510,8 +1576,8 @@ public function check(program:Array<Definition>):Array<Dynamic>
 **constructor** · Membro pubblico di mira.types.TypeChecker.
 
 ```haxe
-public function new()
+public function new(origins:ExpressionOrigins) this.origins = origins; public function check(program:Array<Definition>):Array<Dynamic>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L24)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L27)
 
