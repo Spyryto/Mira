@@ -75,6 +75,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Identità stabile delle liste GUI | `0.33` | [Dettagli](docs/reference/language.md#feature-gui-keyed) |
 | ✅ | Registro lezioni con persistenza locale | `0.34` | [Dettagli](docs/studio.md#registro-lezioni-persistente-034) |
 | ✅ | Effetti asincroni e servizio HTTP JSON | `0.35` | [Dettagli](docs/browser-interop.md#mira-035-effetti-asincroni-pilota) |
+| ✅ | Registro full-stack Mira JS/PHP con SQLite | `0.36` | [Dettagli](docs/studio.md#registro-full-stack-036) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

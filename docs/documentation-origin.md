@@ -7,11 +7,11 @@
 
 | Categoria | Parole | Quota | Documenti coinvolti |
 | --- | ---: | ---: | ---: |
-| Generata automaticamente dal tooling | 17.565 | 43,0% | 4 |
-| Redatta con assistenza IA (dichiarata) | 18.484 | 45,2% | 10 |
+| Generata automaticamente dal tooling | 17.579 | 42,6% | 4 |
+| Redatta con assistenza IA (dichiarata) | 18.847 | 45,7% | 10 |
 | Redazione umana dichiarata | 0 | 0,0% | 0 |
-| Provenienza non verificata | 4834 | 11,8% | 3 |
-| **Totale** | **40.883** | **100%** | **16** |
+| Provenienza non verificata | 4834 | 11,7% | 3 |
+| **Totale** | **41.260** | **100%** | **16** |
 
 I documenti coinvolti **non sono sommabili**: per esempio il README contiene
 una sezione generata dal tooling e altre sezioni editoriali. Le percentuali
@@ -35,10 +35,10 @@ arrotondamenti).
 | [`docs/reference/language.md`](../docs/reference/language.md) | Intero documento | Generata automaticamente dal tooling | 3842 | `scripts/generate-reference.mjs` |
 | [`docs/reference/README.md`](../docs/reference/README.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 161 | — |
 | [`docs/structured-data.md`](../docs/structured-data.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 1617 | — |
-| [`docs/studio.md`](../docs/studio.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 3333 | — |
+| [`docs/studio.md`](../docs/studio.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 3655 | — |
 | [`docs/syntax.md`](../docs/syntax.md) | Intero documento | Provenienza non verificata | 1838 | — |
-| [`README.md`](../README.md) | Resto del documento | Redatta con assistenza IA (dichiarata) | 3586 | — |
-| [`README.md`](../README.md) | Sezione generata | Generata automaticamente dal tooling | 648 | `scripts/generate-reference.mjs` |
+| [`README.md`](../README.md) | Resto del documento | Redatta con assistenza IA (dichiarata) | 3627 | — |
+| [`README.md`](../README.md) | Sezione generata | Generata automaticamente dal tooling | 662 | `scripts/generate-reference.mjs` |
 
 ## Come interpretare le cifre
 
@@ -79,5 +79,5 @@ npm run docs
 node scripts/generate-documentation-origin.mjs --check
 ```
 
-Dimensione totale classificata: **307.178 byte UTF-8**,
+Dimensione totale classificata: **309.640 byte UTF-8**,
 in **16 documenti** e **17 sezioni attribuite**.
