@@ -92,6 +92,20 @@ small{display:block;line-height:1.5}
         }
         card.append(table);results.append(card);
       }
+      for(const row of data.textExperiment.results){
+        const card=document.createElement('section');card.className='result';
+        card.append(element('h2','Text node · '+(row.density==='sparse'?'1 su 100':'100 su 100')+' · '+(row.flush?'layout forzato':'scritture sincrone')));
+        card.append(element('p',data.textExperiment.samples+' campioni da '+data.textExperiment.steps+' aggiornamenti; stesso renderer specializzato.'));
+        const table=document.createElement('table'),head=document.createElement('tr');
+        for(const title of ['Metodo','Mediana ms','P95 ms'])head.append(element('th',title));
+        table.append(head);
+        for(const [key,name] of [['content','element.textContent'],['data','Text.data persistente']]){
+          const tr=document.createElement('tr');
+          tr.append(element('td',name),element('td',row[key].medianMs.toFixed(3)),element('td',row[key].p95Ms.toFixed(3)));
+          table.append(tr);
+        }
+        card.append(table);results.append(card);
+      }
       status.textContent='Completato · Mira '+data.version+' · '+data.rounds+' campioni per caso';
     }catch(error){
       byId('machine').textContent=JSON.stringify({ok:false,message:String(error.message??error)});

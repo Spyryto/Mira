@@ -139,3 +139,7 @@ I log originali dei job 139391850171, 139399014945, 139404483141 sono archiviati
 | 0.25.0 | 70.0 | 10.0 | 490.0 | 453.3 |
 
 Il confronto è interno a ciascun run, non una regressione controllata tra versioni. La 0.25 misura preparazione e montaggio nell'ispettore, ma non archivia ancora questi tempi. Il prossimo esperimento è Text.data; nessuna adozione automatica prima di misure comparabili.
+
+## Aggiornamento 0.26: Text node persistenti
+
+Esperimento isolato: confronto textContent / Text.data per gli stessi slot del renderer specializzato. La variante persistente è opt-in nel benchmark, non adottata nella preview. Si verifica identità, valori vuoti e sicurezza del testo. Vedi [interop browser](browser-interop.md#mira-026-text-node-persistenti).
