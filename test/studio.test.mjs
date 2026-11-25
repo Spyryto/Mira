@@ -909,3 +909,14 @@ test('browser checker reports structured expression locations and imported files
   assert.equal(syntax.ok,false);
   assert.equal(syntax.diagnostic.code,'source_error');
 });
+
+test('typed host signatures are available in Studio and keep diagnostics',()=>{
+  const manifest=JSON.stringify({values:['rate'],callables:['format'],types:{rate:'Number',format:{parameters:['Number'],result:'Text'}}});
+  const good=bridge.check('quote: hours = format (hours * rate); result = quote: 2;',manifest);
+  assert.equal(good.ok,true,good.message);
+  assert.deepEqual(JSON.parse(good.output).map(x=>x.type),['(Number) -> Text','Text']);
+  const bad=bridge.check('result = format true;',manifest);
+  assert.equal(bad.ok,false);assert.equal(bad.diagnostic.code,'type_error');
+  const invalid=bridge.check('x = 1;',JSON.stringify({types:{fake:'Number'}}));
+  assert.equal(invalid.ok,false);assert.equal(invalid.diagnostic.code,'host_type_error');
+});
