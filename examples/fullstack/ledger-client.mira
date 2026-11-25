@@ -1,0 +1,68 @@
+import "lib/gui.mira";
+
+unchanged: model = {model: model, effects: []};
+
+request: model, command: cmd = {
+  model: (update: model, with: {busy: true, request id: (model ~ request id + 1), status: "Attesa server…"}),
+  effects: [{service: "ledger", id: (model ~ request id + 1), reply: "reply", payload: cmd}]
+};
+
+transition: model, message: msg = if (msg ~ type == "reply") then (
+  if (msg ~ id == model ~ request id) then (
+    if (msg ~ ok) then (
+      unchanged: (update: model, with: {snapshot: (msg ~ value), busy: false, ready: true,
+        draft: (if (model ~ clear draft) then "" else (model ~ draft)), status: "Sincronizzato"})
+    ) else (
+      unchanged: (update: model, with: {busy: false, ready: false, status: (msg ~ error)})
+    )
+  ) else (unchanged: model)
+) else (if (model ~ busy) then (unchanged: model) else (
+  if (msg ~ type == "load") then (
+    request: (update: model, with: {clear draft: false}), command: {action: "load"}
+  ) else (if (model ~ ready) then (
+    if (msg ~ type == "add") then (
+      if (model ~ draft == "") then (unchanged: model) else (
+        request: (update: model, with: {clear draft: true}), command: {
+          action: "add", student: (model ~ draft), revision: (model ~ snapshot ~ revision)}
+      )
+    ) else (
+      request: (update: model, with: {clear draft: false}), command: {
+        action: (msg ~ type), id: (msg ~ id), revision: (model ~ snapshot ~ revision)}
+    )
+  ) else (unchanged: model))
+));
+
+lesson row: item, editable: enabled = styled: (column: [
+  title: (item ~ student),
+  text: (item ~ hours),
+  text: (if (item ~ paid) then "Saldato" else "Da saldare"),
+  (if (enabled) then (row: [
+    button: "+1 ora", on click: {| send ({type: "hours", id: (item ~ id)})},
+    button: "Saldato / non saldato", on click: {| send ({type: "paid", id: (item ~ id)})},
+    button: "Rimuovi", on click: {| send ({type: "remove", id: (item ~ id)})}
+  ]) else (text: "Operazioni sospese"))
+]), with: [{background: "#fff7db", padding: 12, radius: 10, gap: 8}];
+
+view: model = () >> {|
+  editable = if (model ~ busy) then false else (model ~ ready);
+  column: [
+    title: "Registro lezioni · server",
+    text: (model ~ status),
+    (if (model ~ busy) then (text: "Richiesta in corso") else (
+      button: "Ricarica dal server", on click: {| send ({type: "load"})}
+    )),
+    (if (editable) then (column: [
+      text input: "Allievo", value: (model ~ draft),
+        update: {old, entered | update: old, with: {draft: entered}},
+      button: "Aggiungi lezione", on click: {| send ({type: "add"})}
+    ]) else (text: (model ~ draft))),
+    title: "Compenso totale (€)",
+    text: (fold: (model ~ snapshot ~ lessons), with: {sum, item | sum + (item ~ hours * 30)}, from: 0),
+    column: (each: (model ~ snapshot ~ lessons), identified by: (_ ~ id),
+      view: (lesson row: _, editable: editable))
+  ]
+};
+
+start ({initial: {snapshot: {revision: 0, next id: 1, lessons: []},
+  draft: "", busy: false, ready: false, request id: 0, clear draft: false, status: "Pronto"},
+  view: (view: _), update: (transition: _, message: _)});
