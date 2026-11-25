@@ -78,7 +78,7 @@ globalThis.Worker = class {
   }
 };
 
-test('Inspector parses host-backed Studio examples with the editor manifest', async () => {
+test('Inspector parses native collections and still requires explicit host signatures', async () => {
   const catalog = JSON.parse(read('reference.json'));
   const example = catalog.examples.find(example => example.id === 'teaching-ledger');
   assert.ok(example, 'A real case study with host selectors must exist');
@@ -87,7 +87,12 @@ test('Inspector parses host-backed Studio examples with the editor manifest', as
   // Reproduces the user screenshot: a valid program fails AST parsing
   // without the very same host signatures passed during compilation.
   assert.equal(compiler.compile(example.source, 'js', mainHost).ok, true);
-  const withoutHost = compiler.ast(example.source);
+  // Collections are now native. Retain the regression check with a
+  // genuine host-only selector, and verify the real case study without host.
+  assert.equal(compiler.ast(example.source).ok, true);
+  const hostSource = 'result = get: "hours", from: {hours: 2};';
+  assert.equal(compiler.ast(hostSource, mainHost).ok, true);
+  const withoutHost = compiler.ast(hostSource);
   assert.equal(withoutHost.ok, false);
   assert.match(withoutHost.message, /Unknown identifier/);
 
