@@ -24,4 +24,4 @@ apply command: model, command: cmd = if (cmd ~ action == "load") then model else
 );
 
 # Stateless service exposed alongside the ledger command.
-quote: hours = {hours: hours, total: (hours * 30)};
+quote: params = {hours: (params ~ hours), total: (params ~ hours * 30)};
