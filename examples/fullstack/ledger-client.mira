@@ -43,7 +43,7 @@ lesson row: item, editable: enabled = styled: (column: [
   ]) else (text: "Operazioni sospese"))
 ]), with: [{background: "#fff7db", padding: 12, radius: 10, gap: 8}];
 
-view: model = {
+view: model = () >> {|
   editable = if (model ~ busy) then false else (model ~ ready);
   column: [
     title: "Registro lezioni · server",
