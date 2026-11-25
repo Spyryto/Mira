@@ -175,3 +175,51 @@ La suite verifica istanziazioni indipendenti, funzioni di ordine
 superiore, campi strutturali, closure, ricorsione e rifiuto di tipi
 incompatibili. Il checker resta opt-in. Non sono ancora disponibili
 firme host, annotazioni o generazione dei validatori RPC.
+
+## 0.43: diagnostica delle espressioni
+
+La normale AST Expr non cambia. Durante Compiler.check il parser
+registra un'ancora per nodo in una mappa di identità locale al
+check; i parser ricorsivi condividono la mappa e sectionify
+trasferisce l'ancora ai nodi riscritti. La normale transpilazione
+non alloca questa mappa. Il lexer conserva anche la fine esclusiva
+del token originale, incluse le stringhe con escape.
+
+Quando il checker entra in un'espressione cambia l'ancora corrente,
+ripristinandola dopo una inferenza riuscita. Una incompatibilità
+su un operatore segnala il token operatore; una proiezione segnala
+il primo token del nome del campo; una chiamata a selettore segnala
+il primo token del selettore. Una applicazione per giustapposizione
+segnala il primo token dell'argomento; >> segnala l'operatore.
+Le condizioni non booleane, i rami incompatibili e gli elementi
+incompatibili di liste segnalano l'ancora dell'espressione coinvolta.
+Per errori di gruppi ricorsivi o vincoli risolti soltanto alla fine
+della dichiarazione rimane la posizione della dichiarazione.
+
+```mira
+x = 1;
+y = x + "a";
+```
+
+Errore: Type check: expected Number, got Text at 2:7.
+
+CLI precedente --check invariata (testo su stderr per errori).
+Nuova CLI: node dist/mira.cjs program.mira --check-json.
+Restituisce {ok, types, diagnostics}; per un errore di sorgente
+o di tipo ritorna exit code 1 e diagnostica su stdout. Errori di
+I/O, manifest host o invocazione fuori dal check conservano la
+gestione CLI precedente. Il bridge Studio conserva ok/output/message
+e aggiunge diagnostic (oggetto singolo) per MiraError.
+
+Campi: code (source_error o type_error), message (senza suffisso
+posizionale), file, line, column, endLine, endColumn. Coordinate
+1-based, fine esclusiva; file null indica il sorgente principale.
+Su JS le colonne sono in unità UTF-16, non ancora coordinate LSP
+zero-based. Gli errori privi di token hanno coordinate null.
+Studio seleziona il token per errori del sorgente principale, senza
+inventare una selezione per un file importato.
+
+Limiti: sono ancore di token, non intervalli completi di tutte
+le espressioni; si riporta il primo errore, senza recupero multiplo.
+Non c'è ancora una catena delle origini dei vincoli né una API LSP.
+Nessuna modifica al linguaggio o alla semantica dei backend.
