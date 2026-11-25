@@ -1,5 +1,5 @@
 {
-  "version": "0.14.0",
+  "version": "0.15.0",
   "features": [
     {
       "id": "values",
@@ -385,6 +385,18 @@
         "nullary-closure"
       ],
       "since": "0.14"
+    },
+    {
+      "id": "gui-library",
+      "title": "Libreria GUI Mira e binding",
+      "summary": "Costruttori GUI componibili scritti in Mira, input controllati e stato immutabile.",
+      "details": "lib/gui.mira contiene normali selettori che costruiscono record. Row, input testuale, checkbox e select sono interpretati dall'host DOM. Per i campi controllati update riceve lo stato precedente e il nuovo valore; una funzione Mira restituisce lo stato successivo. I cataloghi concatenano esplicitamente la libreria con l'esempio durante la build, senza introdurre import o sintassi nuova. Il renderer ricostruisce il sottoalbero e prova a ripristinare focus e cursore nei controlli strutturalmente stabili. PHP compila le view ma non esegue il DOM.",
+      "api": "mira.HostEnvironment",
+      "examples": [
+        "gui-greeting",
+        "gui-lesson"
+      ],
+      "since": "0.15"
     }
   ],
   "examples": [
@@ -1332,6 +1344,32 @@
       "expect": {
         "kind": "result",
         "value": 42
+      }
+    },
+    {
+      "id": "gui-greeting",
+      "feature": "gui-library",
+      "title": "Salutami · input reattivo",
+      "description": "Un campo di testo aggiorna lo stato e una closure senza argomenti apre un saluto.",
+      "path": "catalog/examples/gui-greeting.mira",
+      "library": "lib/gui.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "ui",
+        "description": "Anteprima interattiva nel browser"
+      }
+    },
+    {
+      "id": "gui-lesson",
+      "feature": "gui-library",
+      "title": "Scheda lezione · form reattivo",
+      "description": "Input, layout orizzontale, checkbox e select con calcolo del compenso e stato immutabile.",
+      "path": "catalog/examples/gui-lesson.mira",
+      "library": "lib/gui.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "ui",
+        "description": "Anteprima interattiva nel browser"
       }
     }
   ],
