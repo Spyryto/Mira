@@ -47,7 +47,7 @@ class ExpressionParser {
             final opening = consume();
             consume();
             if (!current().isSymbol(">>")) {
-                throw new MiraError("Empty () is only allowed before >>", opening);
+                throw new MiraError("Expected expression: Empty () is only allowed before >>", opening);
             }
             final token = consume();
             final callee = fieldAccess();
@@ -150,7 +150,7 @@ class ExpressionParser {
         if (token.isSymbol("{")) return isBlockStart() ? block() : record();
         if (token.isSymbol("(")) {
             consume();
-            if (current().isSymbol(")")) throw new MiraError("Empty () is only allowed before >>", token);
+            if (current().isSymbol(")")) throw new MiraError("Expected expression: Empty () is only allowed before >>", token);
             operatorDepth++;
             final inner = expression();
             operatorDepth--;
