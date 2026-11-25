@@ -62,6 +62,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Specializzazione GUI con record e stili dinamici | `0.20` | [Dettagli](docs/browser-interop.md#mira-020-record-e-stili-dinamici) |
 | ✅ | Binding dei controlli GUI specializzati | `0.21` | [Dettagli](docs/browser-interop.md#mira-021-binding-specializzato) |
 | ✅ | Specializzazione di componenti GUI componibili | `0.22` | [Dettagli](docs/browser-interop.md#mira-022-componenti-componibili) |
+| ✅ | Rendering ibrido a regioni con stato condiviso | `0.23` | [Dettagli](docs/browser-interop.md#mira-023-rendering-ibrido) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
