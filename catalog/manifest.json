@@ -1,5 +1,5 @@
 {
-  "version": "0.15.0",
+  "version": "0.16.0",
   "features": [
     {
       "id": "values",
@@ -390,13 +390,25 @@
       "id": "gui-library",
       "title": "Libreria GUI Mira e binding",
       "summary": "Costruttori GUI componibili scritti in Mira, input controllati e stato immutabile.",
-      "details": "lib/gui.mira contiene normali selettori che costruiscono record. Row, input testuale, checkbox e select sono interpretati dall'host DOM. Per i campi controllati update riceve lo stato precedente e il nuovo valore; una funzione Mira restituisce lo stato successivo. I cataloghi concatenano esplicitamente la libreria con l'esempio durante la build, senza introdurre import o sintassi nuova. Il renderer ricostruisce il sottoalbero e prova a ripristinare focus e cursore nei controlli strutturalmente stabili. PHP compila le view ma non esegue il DOM.",
+      "details": "lib/gui.mira contiene normali selettori che costruiscono record. Row, input testuale, checkbox e select sono interpretati dall'host DOM. Per i campi controllati update riceve lo stato precedente e il nuovo valore; una funzione Mira restituisce lo stato successivo. I cataloghi concatenano esplicitamente la libreria con l'esempio durante la build, senza introdurre import o sintassi nuova. Dalla 0.16 il renderer conserva i nodi DOM compatibili per posizione e tipo. PHP compila le view ma non esegue il DOM.",
       "api": "mira.HostEnvironment",
       "examples": [
         "gui-greeting",
         "gui-lesson"
       ],
       "since": "0.15"
+    },
+    {
+      "id": "incremental-gui",
+      "title": "DOM incrementale e stato indipendente",
+      "summary": "I nodi compatibili restano montati; gli state annidati conservano il loro valore.",
+      "details": "Il renderer valida la nuova view prima di applicarla e confronta i nodi per posizione e tipo. Aggiorna testo, callback e proprietà mutate senza sostituire input compatibili. Uno state annidato conserva il valore mentre cambia la view del genitore. Un key esplicito diverso nella stessa posizione resetta lo state. Non è un algoritmo di riordino per liste con chiavi; non cambia l'AST. I test usano un DOM simulato, non un browser mobile reale.",
+      "api": "mira.HostEnvironment",
+      "examples": [
+        "gui-independent",
+        "gui-reset"
+      ],
+      "since": "0.16"
     }
   ],
   "examples": [
@@ -1365,6 +1377,32 @@
       "title": "Scheda lezione · form reattivo",
       "description": "Input, layout orizzontale, checkbox e select con calcolo del compenso e stato immutabile.",
       "path": "catalog/examples/gui-lesson.mira",
+      "library": "lib/gui.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "ui",
+        "description": "Anteprima interattiva nel browser"
+      }
+    },
+    {
+      "id": "gui-independent",
+      "feature": "incremental-gui",
+      "title": "Due contatori indipendenti",
+      "description": "I contatori figli mantengono il proprio stato quando il genitore cambia il passo; le callback usano il passo corrente.",
+      "path": "catalog/examples/gui-independent.mira",
+      "library": "lib/gui.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "ui",
+        "description": "Anteprima interattiva nel browser"
+      }
+    },
+    {
+      "id": "gui-reset",
+      "feature": "incremental-gui",
+      "title": "Nuova sessione · reset esplicito",
+      "description": "Una chiave diversa resetta solo il componente figlio nella stessa posizione.",
+      "path": "catalog/examples/gui-reset.mira",
       "library": "lib/gui.mira",
       "host": "studio/host.json",
       "expect": {
