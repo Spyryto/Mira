@@ -996,3 +996,36 @@ test('0.33 identity keys are sibling-scoped, typed, transparent and validated at
   assert.throws(()=>host.render(key(1,styled(key(2,text('bad'))))),/Multiple identity keys/);
   assert.equal(findAll(root,'h2')[0],title);
 });
+
+test('compiled effects demo dispatches through the real generic renderer', async () => {
+  const {host,root,errors}=setup();
+  const context={AbortController};
+  runInNewContext(read('effects.js'),context);
+  runInNewContext(read('effects-demo-program.js'),context);
+  let app;
+  const calls=[];
+  context.MiraEffectsDemoProgram({
+    start(spec) {
+      app=context.MiraEffects.createApp(host,spec,{
+        greeting(payload) {return new Promise((resolve,reject)=>calls.push({payload,resolve,reject}));}
+      },error=>errors.push(String(error)));
+    },
+    send(message) {app.dispatch(message);}
+  });
+  const flush=()=>new Promise(resolve=>setImmediate(resolve));
+  const buttons=findButtons(root);
+  buttons[0].click();
+  buttons[2].click();
+  buttons[1].click();
+  await flush();
+  assert.equal(calls.length,2);
+  calls[1].reject(Error('offline'));
+  await flush();
+  calls[0].resolve({message:'stale'});
+  await flush();
+  assert.equal(app.getState().status,'offline');
+  assert.equal(app.getState().count,1);
+  assert.ok(root.textContent.includes('offline'));
+  assert.equal(findButtons(root)[0],buttons[0]);
+  assert.deepEqual(errors,[]);
+});
