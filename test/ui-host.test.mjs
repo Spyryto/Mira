@@ -617,3 +617,47 @@ test('0.21 invalid controlled transition rolls back input and other slots',()=>{
   input.value='stale';input.dispatch('input');
   assert.equal(app.getState().name,'OK');assert.equal(findAll(root,'p')[0].textContent,'New');
 });
+
+
+test('0.22 canonical dashboard and lesson specialize without rewriting their views',()=>{
+  const sandbox={};
+  runInNewContext(read('ui-host.js'),sandbox);
+  runInNewContext(read('gui-specialize.js'),sandbox);
+  const source=id=>{
+    const full=demo(id).source;
+    const end=full.lastIndexOf('\nrender ');
+    assert.ok(end>0,'expected final render statement');
+    return full.slice(0,end);
+  };
+  {
+    const {root,errors,document}=setup();
+    const compiled=sandbox.MiraGuiSpecialize.compile(compiler,source('gui-dashboard'),'dashboard:');
+    const app=sandbox.MiraGuiSpecialize.mount(compiled,root,2,msg=>errors.push(msg));
+    const titles=findAll(root,'h2'),created=document.created;
+    assert.deepEqual(titles.map(n=>n.textContent),['Studio musicale','2','60']);
+    findButtons(root)[0].click();
+    assert.equal(app.getState(),3);
+    assert.deepEqual(titles.map(n=>n.textContent),['Studio musicale','3','90']);
+    assert.equal(findAll(root,'h2')[1],titles[1]);
+    assert.equal(document.created,created);
+    assert.deepEqual(errors,[]);
+  }
+  {
+    const {root,errors,document}=setup();
+    const compiled=sandbox.MiraGuiSpecialize.compile(compiler,source('gui-lesson'),'lesson view:');
+    const app=sandbox.MiraGuiSpecialize.mount(compiled,root,{student:'Ada',hours:2,paid:false,mode:'In presenza'},msg=>errors.push(msg));
+    const [input,check]=findAll(root,'input'),select=findAll(root,'select')[0];
+    const created=document.created;
+    input.value='Mira';input.dispatch('input');
+    findButtons(root).find(n=>n.textContent==='+1 ora').click();
+    check.checked=true;check.dispatch('change');
+    select.value='Online';select.dispatch('change');
+    assert.equal(app.getState().student,'Mira');
+    assert.equal(app.getState().hours,3);
+    assert.equal(app.getState().paid,true);
+    assert.equal(app.getState().mode,'Online');
+    assert.deepEqual(findAll(root,'p').map(p=>p.textContent),['3','Mira','Online','Compenso in euro (30 / ora)','90','Saldato']);
+    assert.equal(document.created,created);
+    assert.deepEqual(errors,[]);
+  }
+});

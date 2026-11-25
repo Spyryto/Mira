@@ -1,5 +1,5 @@
 {
-  "version": "0.21.0",
+  "version": "0.22.0",
   "features": [
     {
       "id": "values",
@@ -1491,6 +1491,12 @@
       "title": "Binding dei controlli GUI specializzati",
       "since": "0.21",
       "doc": "docs/browser-interop.md#mira-021-binding-specializzato"
+    },
+    {
+      "id": "gui-component-specialization",
+      "title": "Specializzazione di componenti GUI componibili",
+      "since": "0.22",
+      "doc": "docs/browser-interop.md#mira-022-componenti-componibili"
     }
   ]
 }

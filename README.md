@@ -209,6 +209,10 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
 
 
+## Mira 0.22: componenti GUI componibili
+
+Il pass sperimentale espande selettori Mira ordinari prima del montaggio. Il form del Performance Lab usa la vera libreria GUI e componenti riutilizzabili, senza sintassi speciale. [Metodo e limiti](docs/browser-interop.md#mira-022-componenti-componibili).
+
 ## Mira 0.21: binding specializzato
 
 Il Performance Lab contiene una scheda lezione specializzata e un benchmark dei form reattivi. Input, checkbox e select mantengono i nodi nativi e condividono la gestione degli eventi con il renderer ordinario. [Metodo e limiti](docs/browser-interop.md#mira-021-binding-specializzato).

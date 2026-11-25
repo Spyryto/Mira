@@ -46,6 +46,13 @@ for (const filename of assets) {
   copyFileSync(resolve(root, 'studio', filename), resolve(destination, filename));
 }
 
+// Bundle the canonical GUI library in the benchmark source generator.
+// No separate fetch: the lab works offline and from a local file URL.
+const guiBenchmark = resolve(destination, 'gui-benchmark.js');
+writeFileSync(guiBenchmark, readFileSync(guiBenchmark, 'utf8').replace(
+  "'__MIRA_GUI_LIBRARY__'", () => JSON.stringify(readFileSync(resolve(root, 'lib/gui.mira'), 'utf8'))
+));
+
 // The unique build marker invalidates the service-worker cache on deployments.
 let buildId = process.env.GITHUB_SHA?.slice(0, 12);
 if (!buildId) {
