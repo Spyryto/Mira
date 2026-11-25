@@ -135,6 +135,6 @@ test('full-stack ledger: actual Chromium, compiled Mira JS/PHP and SQLite', {tim
     writeFileSync(join(report,'latency.json'),JSON.stringify(metrics,null,2));
     console.log('FULLSTACK_LEDGER '+JSON.stringify(metrics));
   } finally {
-    cdp?.close();await stop(chrome);await stop(php);rmSync(dir,{recursive:true,force:true});
+    cdp?.close();await stop(chrome);await stop(php);rmSync(dir,{recursive:true,force:true,maxRetries:10,retryDelay:150});
   }
 });
