@@ -73,6 +73,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Aggiornamento immutabile dei record | `0.31` | [Dettagli](docs/reference/language.md#feature-record-update) |
 | ✅ | Operazioni native sulle sequenze | `0.32` | [Dettagli](docs/reference/language.md#feature-native-sequences) |
 | ✅ | Identità stabile delle liste GUI | `0.33` | [Dettagli](docs/reference/language.md#feature-gui-keyed) |
+| ✅ | Registro lezioni con persistenza locale | `0.34` | [Dettagli](docs/studio.md#registro-lezioni-persistente-034) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

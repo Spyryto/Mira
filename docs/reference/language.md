@@ -1,4 +1,4 @@
-# Guida a Mira 0.33.0
+# Guida a Mira 0.34.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -316,13 +316,13 @@ API collegata: [`mira.syntax.Expr.Conditional`](api.md#api-mira-syntax-expr-cond
 
 `filter: list, with: (predicate: _)` filtrando con funzioni Mira.
 
-Il predicato è scritto in Mira; l'host esegue solo l'iterazione limitata delle liste. `filter:with:`, `select:with:`, `select:if:` e `collect:if:` sono alias di filtraggio: conservano l'ordine e restituiscono una lista reindicizzata su JS/PHP. `collect:if:` significa «raccogli se», distinto da `collect:with:` che trasforma come il `collect:` di Smalltalk.
+Il predicato Mira seleziona gli elementi. filter:with:, select:with: e select:if: filtrano; collect:with: trasforma, secondo la semantica Smalltalk. Ordine preservato e lista reindicizzata su JS/PHP.
 
 API collegata: [`mira.HostEnvironment`](api.md#api-mira-hostenvironment)
 
 - [Numeri sopra soglia](examples.md#example-filter-numbers) — result = [5,9]
 - [Lezioni da fatturare](examples.md#example-filter-lessons) — result = ["Ada","Lia"]
-- [Collect if: selezionare lezioni](examples.md#example-collect-if-lessons) — result = [{"student":"Ada","hours":1.5},{"student":"Lia","hours":2}]
+- [Select if: selezionare lezioni](examples.md#example-collect-if-lessons) — result = [{"student":"Ada","hours":1.5},{"student":"Lia","hours":2}]
 
 <a id="feature-operator-sections"></a>
 ## Sezioni di operatori
@@ -516,7 +516,7 @@ API collegata: [`mira.resolve.Symbols`](api.md#api-mira-resolve-symbols)
 
 Append, rimozione, trasformazione, filtro e riduzione immutabili senza host.
 
-append:to: aggiunge un elemento; remove:if: elimina tutti quelli per cui il predicato è true. collect:with:/map:with:, collect:if:/filter:with:/select:if:/select:with: e fold:with:from: sono native per default. Le vecchie capability possono essere ancora dichiarate esplicitamente per compatibilità (es. fold dell'AST). Ordine stabile, liste dense, predicato Boolean, nessuna mutazione degli operandi; PHP usa array_is_list. Il renderer generico supporta le liste variabili, ancora con identità posizionale.
+append:to: aggiunge un elemento; remove:if: elimina tutti quelli per cui il predicato è true. collect:with:/map:with:, filter:with:/select:if:/select:with: e fold:with:from: sono native per default. Le vecchie capability possono essere ancora dichiarate esplicitamente per compatibilità (es. fold dell'AST). Ordine stabile, liste dense, predicato Boolean, nessuna mutazione degli operandi; PHP usa array_is_list. Il renderer generico supporta le liste variabili, ancora con identità posizionale.
 
 API collegata: [`mira.resolve.Symbols`](api.md#api-mira-resolve-symbols)
 

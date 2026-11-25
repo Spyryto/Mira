@@ -851,7 +851,7 @@ lessons = [
   {student: "Lia", hours: 2}
 ];
 billable: lesson = (lesson ~ hours) >= 1;
-result = collect: (collect: lessons, if: (billable: _)),
+result = collect: (select: lessons, if: (billable: _)),
   with: (_ ~ student);
 ```
 
@@ -941,9 +941,9 @@ result = lesson ~ total hours;
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/record-field-words)
 
 <a id="example-collect-if-lessons"></a>
-## Collect if: selezionare lezioni
+## Select if: selezionare lezioni
 
-`collect:if:` filtra usando un predicato Mira, senza introdurre un secondo algoritmo.
+select:if: filtra usando un predicato Mira.
 
 Feature: [Filtri con predicati Mira](language.md#feature-filtering)
 
@@ -954,7 +954,7 @@ lessons = [
   {student: "Lia", hours: 2}
 ];
 billable: lesson = (lesson ~ hours) >= 1;
-result = collect: lessons, if: (billable: _);
+result = select: lessons, if: (billable: _);
 ```
 
 **Risultato:** result = [{"student":"Ada","hours":1.5},{"student":"Lia","hours":2}]
@@ -1052,7 +1052,7 @@ lessons = [
   {student: "Eva", hours: 0.5},
   {student: "Lia", hours: 2}
 ];
-result = collect: lessons, if: ({_ | (_ ~ hours) >= 1});
+result = select: lessons, if: ({_ | (_ ~ hours) >= 1});
 ```
 
 **Risultato:** result = [{"student":"Ada","hours":1.5},{"student":"Lia","hours":2}]
