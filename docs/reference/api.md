@@ -133,7 +133,7 @@ public static function emit(definitions:Array<Definition>, symbols:Symbols, ?loc
 class SourceEmitter
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L6)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L7)
 
 <a id="api-mira-emit-sourceemitter-expression"></a>
 ### `mira.emit.SourceEmitter.expression`
@@ -144,7 +144,7 @@ class SourceEmitter
 public static function expression(expr:Expr, target:Target, scope:Array<String>, reservedHostNames:Array<String>):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L9)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L10)
 
 Feature: [Sezioni con più `_`](language.md#feature-multi-sections), [Cattura lessicale](language.md#feature-captures)
 
@@ -157,7 +157,7 @@ Feature: [Sezioni con più `_`](language.md#feature-multi-sections), [Cattura le
 public static function hostAccess(name:String, target:Target):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L234)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L235)
 
 <a id="api-mira-emit-sourcelocations"></a>
 ### `mira.emit.SourceLocations`
@@ -640,6 +640,8 @@ class Symbols
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L7)
 
+Feature: [Aggiornamento immutabile dei record](language.md#feature-record-update)
+
 <a id="api-mira-resolve-symbols-environment"></a>
 ### `mira.resolve.Symbols.environment`
 
@@ -649,7 +651,7 @@ class Symbols
 public final environment:HostEnvironment
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L13)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L14)
 
 <a id="api-mira-resolve-symbols-functions"></a>
 ### `mira.resolve.Symbols.functions`
@@ -660,7 +662,7 @@ public final environment:HostEnvironment
 public final functions:Array<Definition>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L10)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L11)
 
 <a id="api-mira-resolve-symbols-globals"></a>
 ### `mira.resolve.Symbols.globals`
@@ -671,7 +673,7 @@ public final functions:Array<Definition>
 public final globals:Array<String>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L11)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L12)
 
 <a id="api-mira-resolve-symbols-hostnames"></a>
 ### `mira.resolve.Symbols.hostNames`
@@ -682,7 +684,7 @@ public final globals:Array<String>
 public final hostNames:Array<String>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L12)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L13)
 
 <a id="api-mira-resolve-symbols-ishostname"></a>
 ### `mira.resolve.Symbols.isHostName`
@@ -693,7 +695,7 @@ public final hostNames:Array<String>
 public function isHostName(name:String):Bool
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L112)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L118)
 
 <a id="api-mira-resolve-symbols-ishostselector"></a>
 ### `mira.resolve.Symbols.isHostSelector`
@@ -704,7 +706,7 @@ public function isHostName(name:String):Bool
 public function isHostSelector(selector:String):Bool
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L117)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L123)
 
 <a id="api-mira-resolve-symbols-matcheswords"></a>
 ### `mira.resolve.Symbols.matchesWords`
@@ -715,7 +717,7 @@ public function isHostSelector(selector:String):Bool
 public static function matchesWords(tokens:Array<Token>, start:Int, name:String):Bool
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L138)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L144)
 
 <a id="api-mira-resolve-symbols-matchingfunctions"></a>
 ### `mira.resolve.Symbols.matchingFunctions`
@@ -726,7 +728,7 @@ public static function matchesWords(tokens:Array<Token>, start:Int, name:String)
 public function matchingFunctions(tokens:Array<Token>, start:Int):Array<Definition>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L121)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L127)
 
 <a id="api-mira-resolve-symbols-new"></a>
 ### `mira.resolve.Symbols.new`
@@ -737,7 +739,7 @@ public function matchingFunctions(tokens:Array<Token>, start:Int):Array<Definiti
 public function new(definitions:Array<Definition>, ?environment:HostEnvironment)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L15)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L16)
 
 <a id="api-mira-resolve-symbols-resolvename"></a>
 ### `mira.resolve.Symbols.resolveName`
@@ -748,7 +750,7 @@ public function new(definitions:Array<Definition>, ?environment:HostEnvironment)
 public function resolveName(tokens:Array<Token>, start:Int, locals:Array<String>):Null<String>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L129)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Symbols.hx#L135)
 
 Feature: [Identificatori composti](language.md#feature-names)
 

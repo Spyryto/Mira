@@ -1,4 +1,4 @@
-# Guida a Mira 0.30.0
+# Guida a Mira 0.31.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -493,4 +493,19 @@ API collegata: [`mira.HostEnvironment`](api.md#api-mira-hostenvironment)
 
 - [Dashboard musicale · stili componibili](examples.md#example-gui-dashboard) — Anteprima interattiva (browser JS; PHP compilato soltanto)
 - [Tema dinamico](examples.md#example-gui-style-toggle) — Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+<a id="feature-record-update"></a>
+## Aggiornamento immutabile dei record
+
+**Disponibile dalla versione 0.31**
+
+Sostituisce o aggiunge campi senza modificare il record originale.
+
+update:with: è un selettore intrinseco, risolto dal normale resolver e compilato in una copia superficiale nativa JS/PHP. Supporta sezioni. I campi della patch prevalgono; nessuna fusione ricorsiva. Record con chiavi intere canoniche esclusi; [] vuoto accettato per compatibilità con PHP. Nessun host richiesto. Binding GUI utilizzabile anche nel renderer specializzato.
+
+API collegata: [`mira.resolve.Symbols`](api.md#api-mira-resolve-symbols)
+
+- [Aggiorna una lezione](examples.md#example-record-update-basic) — result = {"original":{"student":"Ada","hours":2,"paid":false},"changed":{"student":"Mira","hours":2,"paid":true}}
+- [Aggiornamento riutilizzabile](examples.md#example-record-update-section) — result = {"student":"Ada","hours":3,"details":{"rate":30},"paid":true}
+- [Registro lezioni · modifica immutabile](examples.md#example-record-update-form) — Anteprima interattiva (browser JS; PHP compilato soltanto)
 

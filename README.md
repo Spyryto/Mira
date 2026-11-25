@@ -70,6 +70,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Benchmark CSS containment e content-visibility | `0.28` | [Dettagli](docs/browser-interop.md#mira-028-css-containment) |
 | ✅ | Layout differito delle schede Laboratory | `0.29` | [Dettagli](docs/studio.md#laboratory-layout-differito-029) |
 | ✅ | Import statici di file Mira | `0.30` | [Dettagli](docs/grammar.md#mira-030-import-statici) |
+| ✅ | Aggiornamento immutabile dei record | `0.31` | [Dettagli](docs/reference/language.md#feature-record-update) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
