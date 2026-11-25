@@ -1,5 +1,5 @@
 {
-  "version": "0.37.0",
+  "version": "0.38.0",
   "features": [
     {
       "id": "values",
@@ -1770,6 +1770,12 @@
       "title": "Servizi RPC JSON riutilizzabili tra JS e PHP",
       "since": "0.37",
       "doc": "docs/browser-interop.md#mira-037-rpc-json"
+    },
+    {
+      "id": "rpc-declarations",
+      "title": "Contratti RPC dichiarativi Mira e registrazioni generate",
+      "since": "0.38",
+      "doc": "docs/browser-interop.md#mira-038-contratti-di-servizio"
     }
   ]
 }
