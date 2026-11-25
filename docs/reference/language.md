@@ -1,4 +1,4 @@
-# Guida a Mira 0.13.0
+# Guida a Mira 0.14.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -166,7 +166,7 @@ API collegata: [`mira.emit.SourceEmitter.expression`](api.md#api-mira-emit-sourc
 
 Applicazione funzionale esplicita da sinistra a destra.
 
-`x >> f` applica `f` a `x` e si associa a sinistra; `>>` sostituisce il precedente `~` (0.2–0.5). Le sezioni a due placeholder non sono applicabili direttamente.
+`x >> f` applica `f` a `x` e si associa a sinistra; `>>` sostituisce il precedente `~` (0.2–0.5). Le sezioni a due placeholder non sono applicabili direttamente. Dalla 0.14, `() >> f` applica f senza argomenti.
 
 API collegata: [`mira.syntax.Expr`](api.md#api-mira-syntax-expr)
 
@@ -437,4 +437,18 @@ API collegata: [`mira.syntax.Expr.Local`](api.md#api-mira-syntax-expr-local)
 - [Compenso con subtotale locale](examples.md#example-local-values-fee) — result = 65
 - [Closure annidata con valore locale](examples.md#example-local-values-closure) — result = 16
 - [Riduzione con valore locale](examples.md#example-local-values-fold) — result = 12
+
+<a id="feature-nullary-blocks"></a>
+## Blocchi senza parametri
+
+**Disponibile dalla versione 0.14**
+
+`{| ...}` crea una computazione differita e `() >> action` la esegue.
+
+Il corpo non viene valutato alla creazione della closure. Cattura lessicale, passi e valori locali funzionano come nei blocchi unari. `()` non rappresenta un valore; è sintassi dell'applicazione nullaria. L'AST riusa Block con parametri vuoti e Apply con argument null. I backend emettono chiamate native; l'arità dei blocchi espliciti è controllata, ma non viene inferita per valori nominati.
+
+API collegata: [`mira.syntax.Expr.Block`](api.md#api-mira-syntax-expr-block)
+
+- [Computazione differita](examples.md#example-nullary-value) — result = 42
+- [Cattura lessicale senza argomenti](examples.md#example-nullary-closure) — result = 42
 

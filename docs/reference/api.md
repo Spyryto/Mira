@@ -157,7 +157,7 @@ Feature: [Sezioni con più `_`](language.md#feature-multi-sections), [Cattura le
 public static function hostAccess(name:String, target:Target):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L232)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L234)
 
 <a id="api-mira-emit-sourcelocations"></a>
 ### `mira.emit.SourceLocations`
@@ -960,10 +960,10 @@ Feature: [Sezioni unarie](language.md#feature-sections), [Pipeline `>>`](languag
 **variant** · AST canonico, indipendente dalla grafia superficiale dei selettori.
 
 ```haxe
-Apply(callee:Expr, argument:Expr)
+Apply(callee:Expr, argument:Null<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L26)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L27)
 
 <a id="api-mira-syntax-expr-binary"></a>
 ### `mira.syntax.Expr.Binary`
@@ -987,7 +987,7 @@ Block(parameters:Array<String>, body:Expr)
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L16)
 
-Feature: [Blocchi funzione con parametro](language.md#feature-blocks), [Blocchi con più parametri](language.md#feature-block-parameters)
+Feature: [Blocchi funzione con parametro](language.md#feature-blocks), [Blocchi con più parametri](language.md#feature-block-parameters), [Blocchi senza parametri](language.md#feature-nullary-blocks)
 
 <a id="api-mira-syntax-expr-booleanliteral"></a>
 ### `mira.syntax.Expr.BooleanLiteral`

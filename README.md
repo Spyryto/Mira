@@ -53,6 +53,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Blocchi diretti negli argomenti dei selettori | `0.10` | [Dettagli](docs/reference/language.md#feature-bare-block-arguments) |
 | ✅ | Blocchi con espressioni in sequenza | `0.11` | [Dettagli](docs/reference/language.md#feature-block-steps) |
 | ✅ | Valori locali immutabili nei blocchi | `0.12` | [Dettagli](docs/reference/language.md#feature-local-values) |
+| ✅ | Blocchi senza parametri | `0.14` | [Dettagli](docs/reference/language.md#feature-nullary-blocks) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

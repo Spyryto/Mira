@@ -1354,3 +1354,39 @@ result = increment: 5;
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/function-parameter-shadow)
 
+<a id="example-nullary-value"></a>
+## Computazione differita
+
+Un blocco creato ma non chiamato non valuta il proprio corpo.
+
+Feature: [Blocchi senza parametri](language.md#feature-nullary-blocks)
+
+```mira
+unused = {| {present: 1} ~ missing};
+action = {| 21 * 2};
+result = () >> action;
+```
+
+**Risultato:** result = 42
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/nullary-value)
+
+<a id="example-nullary-closure"></a>
+## Cattura lessicale senza argomenti
+
+Una closure senza parametri cattura un valore locale del blocco esterno.
+
+Feature: [Blocchi senza parametri](language.md#feature-nullary-blocks)
+
+```mira
+result = 20 >> {x |
+  subtotal = x + 1;
+  action = {| subtotal * 2};
+  () >> action
+};
+```
+
+**Risultato:** result = 42
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/nullary-closure)
+
