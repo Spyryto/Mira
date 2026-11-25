@@ -77,6 +77,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Effetti asincroni e servizio HTTP JSON | `0.35` | [Dettagli](docs/browser-interop.md#mira-035-effetti-asincroni-pilota) |
 | ✅ | Registro full-stack Mira JS/PHP con SQLite | `0.36` | [Dettagli](docs/studio.md#registro-full-stack-036) |
 | ✅ | Servizi RPC JSON riutilizzabili tra JS e PHP | `0.37` | [Dettagli](docs/browser-interop.md#mira-037-rpc-json) |
+| ✅ | Contratti RPC dichiarativi Mira e registrazioni generate | `0.38` | [Dettagli](docs/browser-interop.md#mira-038-contratti-di-servizio) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
