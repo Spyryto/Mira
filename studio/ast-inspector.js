@@ -33,11 +33,11 @@ function labelOf(node) {
     case 'Section':
     case 'HostCall':
     case 'HostSection': return node.kind + ' · ' + node.selector;
-    case 'Apply': return 'Apply';
+    case 'Apply': return node.argument == null ? 'Apply · 0 argomenti' : 'Apply';
     case 'Placeholder': return 'Placeholder · _';
     case 'Sequence': return 'Sequence · ' + (node.items?.length ?? 0) + ' elementi';
     case 'Record': return 'Record · ' + (node.fields?.length ?? 0) + ' campi';
-    case 'Block': return 'Blocco · ' + (node.parameters ?? []).join(', ');
+    case 'Block': return 'Blocco · ' + (node.parameters?.length ? node.parameters.join(', ') : '0 parametri');
     case 'Steps': return 'Espressioni · ' + (node.expressions?.length ?? 0);
     case 'Local': return 'Valore locale · ' + node.name;
     default: return String(node.kind ?? '?');
