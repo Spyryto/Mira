@@ -1,4 +1,4 @@
-# Guida a Mira 0.9.0
+# Guida a Mira 0.10.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -110,7 +110,7 @@ API collegata: [`mira.lex.Lexer.tokenize`](api.md#api-mira-lex-lexer-tokenize)
 
 `+`, `-`, `*`, `/` e `%`.
 
-Attenzione: stessa precedenza per tutti, associatività a sinistra.
+Gli operatori aritmetici `+`, `-`, `*`, `/`, `%` mantengono la stessa precedenza tra loro e l'associatività a sinistra (come da 0.1). Dalla 0.10, `~` è più forte di tutti gli operatori aritmetici: `lesson ~ hours * lesson ~ rate` si legge `(lesson ~ hours) * (lesson ~ rate)`.
 
 API collegata: [`mira.syntax.ExpressionParser.parse`](api.md#api-mira-syntax-expressionparser-parse)
 
@@ -340,7 +340,7 @@ API collegata: [`mira.syntax.ExpressionParser.parse`](api.md#api-mira-syntax-exp
 
 `record ~ field` legge un campo senza dichiarare accessor.
 
-Il nome dopo `~` è un campo letterale: una o più parole consecutive, oppure una stringa tra virgolette. Un operatore o delimitatore termina il nome, che non viene cercato tra le variabili. Gli accessi si concatenano e i campi mancanti producono lo stesso errore su JS/PHP. `(_ ~ total hours)` è una sezione unaria; le espressioni complesse possono ora usare `{ _ | (_ ~ hours) >= 1 }` (0.8); le sezioni implicite più complesse non sono ancora implementate.
+Il nome dopo `~` è un campo letterale: una o più parole consecutive, oppure una stringa tra virgolette. Un operatore o delimitatore termina il nome, che non viene cercato tra le variabili. Gli accessi si concatenano e i campi mancanti producono lo stesso errore su JS/PHP. `(_ ~ total hours)` è una sezione unaria; le espressioni complesse possono ora usare `{ _ | (_ ~ hours) >= 1 }` (0.8); le sezioni implicite più complesse non sono ancora implementate. Dalla 0.10 l'accesso `~` è associativo a sinistra e ha precedenza sulle operazioni aritmetiche, così `lesson ~ hours * lesson ~ rate` non richiede parentesi.
 
 API collegata: [`mira.syntax.Expr.FieldGet`](api.md#api-mira-syntax-expr-fieldget)
 
@@ -369,10 +369,38 @@ API collegata: [`mira.syntax.Expr.Block`](api.md#api-mira-syntax-expr-block)
 
 `{total, item | total + item}` è una callback binaria per `fold:with:from:`.
 
-Una lista di parametri espliciti separati da virgole precede `|`. I nomi possono avere più parole e catturano lessicalmente lo scope esterno. Il parser vieta duplicati, collisioni dopo il mangling e parametri riservati. Il nodo AST Block contiene un array di parametri. Non si introduce currying: `>>` resta applicazione unaria e rifiuta un blocco multi-parametro; i selettori host possono invocarlo con l'arità appropriata.
+Una lista di parametri espliciti separati da virgole precede `|`. I nomi possono avere più parole e catturano lessicalmente lo scope esterno. Il parser vieta duplicati, collisioni dopo il mangling e parametri riservati. Il nodo AST Block contiene un array di parametri. Non si introduce currying: `>>` resta applicazione unaria e rifiuta un blocco multi-parametro; i selettori host possono invocarlo con l'arità appropriata. Dalla 0.10 i blocchi si possono passare direttamente ai selettori, come `fold: items, with: {total, item | total + item}, from: 0`, senza parentesi aggiuntive.
 
 API collegata: [`mira.syntax.Expr.Block`](api.md#api-mira-syntax-expr-block)
 
 - [Somma di numeri con un blocco binario](examples.md#example-block-fold-numbers) — result = 10
 - [Ridurre il compenso di più lezioni](examples.md#example-block-fold-fees) — result = 120
+
+<a id="feature-field-precedence"></a>
+## Accesso `~` prima dell'aritmetica
+
+**Disponibile dalla versione 0.10**
+
+`lesson ~ hours * lesson ~ rate` equivale a `(lesson ~ hours) * (lesson ~ rate)`.
+
+L'accesso ai campi `~` forma una catena associativa a sinistra (`x ~ a ~ b` significa `(x ~ a) ~ b`) e precede tutti gli operatori aritmetici. Gli altri operatori mantengono la precedenza comune e il raggruppamento sinistra-destra già definiti in Mira. Non cambia il controllo dei campi o l'emissione JS/PHP.
+
+API collegata: [`mira.syntax.ExpressionParser.parse`](api.md#api-mira-syntax-expressionparser-parse)
+
+- [Tariffa senza parentesi sui campi](examples.md#example-precedence-fee) — result = 60
+- [Accessi concatenati e addizione](examples.md#example-precedence-nested-field) — result = 7
+
+<a id="feature-bare-block-arguments"></a>
+## Blocchi diretti negli argomenti dei selettori
+
+**Disponibile dalla versione 0.10**
+
+`fold: xs, with: {sum, x | sum + x}, from: 0` senza parentesi tonde.
+
+Le parentesi graffe delimitano già una singola espressione. Il riconoscitore dei selettori conserva le parentesi graffe e il loro contenuto, anche quando contengono record, chiamate o operatori. Le parentesi tonde restano accettate per compatibilità. Le parentesi quadrate di una lista possono analogamente delimitare un argomento.
+
+API collegata: [`mira.resolve.SelectorResolver.match`](api.md#api-mira-resolve-selectorresolver-match)
+
+- [Fold compensi con blocco diretto](examples.md#example-bare-fold-fees) — result = 120
+- [Trasformare una lista con un blocco diretto](examples.md#example-bare-collect-map) — result = [2,4,6]
 

@@ -1096,3 +1096,75 @@ result = fold: lessons,
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/block-fold-fees)
 
+<a id="example-precedence-fee"></a>
+## Tariffa senza parentesi sui campi
+
+La lettura di ciascun campo precede la moltiplicazione.
+
+Feature: [Accesso `~` prima dell'aritmetica](language.md#feature-field-precedence)
+
+```mira
+lesson = {hours: 2, rate: 30};
+result = lesson ~ hours * lesson ~ rate;
+```
+
+**Risultato:** result = 60
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/precedence-fee)
+
+<a id="example-precedence-nested-field"></a>
+## Accessi concatenati e addizione
+
+La concatenazione `a ~ b ~ c` viene completata prima della somma.
+
+Feature: [Accesso `~` prima dell'aritmetica](language.md#feature-field-precedence)
+
+```mira
+student = {address: {city: {length: 6}}};
+result = student ~ address ~ city ~ length + 1;
+```
+
+**Risultato:** result = 7
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/precedence-nested-field)
+
+<a id="example-bare-fold-fees"></a>
+## Fold compensi con blocco diretto
+
+Il blocco con due parametri è passato a `with:` senza parentesi tonde, come nell'esempio richiesto.
+
+Feature: [Blocchi diretti negli argomenti dei selettori](language.md#feature-bare-block-arguments)
+
+```mira
+lessons = [
+  {hours: 2, rate: 30},
+  {hours: 1.5, rate: 40}
+];
+
+result = fold: lessons,
+  with: {total, lesson |
+    total + (lesson ~ hours * lesson ~ rate)
+  },
+  from: 0;
+```
+
+**Risultato:** result = 120
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/bare-fold-fees)
+
+<a id="example-bare-collect-map"></a>
+## Trasformare una lista con un blocco diretto
+
+Il selettore `collect:with:` accetta direttamente un blocco unario.
+
+Feature: [Blocchi diretti negli argomenti dei selettori](language.md#feature-bare-block-arguments)
+
+```mira
+numbers = [1, 2, 3];
+result = collect: numbers, with: {_ | _ * 2};
+```
+
+**Risultato:** result = [2,4,6]
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/bare-collect-map)
+

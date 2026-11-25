@@ -506,7 +506,7 @@ public function match(tokens:Array<Token>, start:Int):Null<SelectorMatch>
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/SelectorResolver.hx#L29)
 
-Feature: [Selettori con più keyword](language.md#feature-selectors), [Chiamate discorsive](language.md#feature-shorthand)
+Feature: [Selettori con più keyword](language.md#feature-selectors), [Chiamate discorsive](language.md#feature-shorthand), [Blocchi diretti negli argomenti dei selettori](language.md#feature-bare-block-arguments)
 
 <a id="api-mira-resolve-selectorresolver-new"></a>
 ### `mira.resolve.SelectorResolver.new`
@@ -1188,7 +1188,7 @@ public function parse():Expr
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L29)
 
-Feature: [Operatori aritmetici](language.md#feature-arithmetic), [Parentesi](language.md#feature-grouping), [Sezioni di operatori](language.md#feature-operator-sections)
+Feature: [Operatori aritmetici](language.md#feature-arithmetic), [Parentesi](language.md#feature-grouping), [Sezioni di operatori](language.md#feature-operator-sections), [Accesso `~` prima dell'aritmetica](language.md#feature-field-precedence)
 
 <a id="api-mira-target"></a>
 ### `mira.Target`
