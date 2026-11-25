@@ -94,7 +94,7 @@ test('unwrapped reducer blocks preserve nested punctuation and selector boundari
     '    total + (lesson ~ hours * lesson ~ rate)',
     '  },',
     '  from: 0;'
-  ].join('\\n');
+  ].join('\n');
   const cases=[
     [exact,120],
     ['numbers = [1,2,3,4]; result = fold: numbers, with: {total, item | total + item}, from: 0;',10],
@@ -109,7 +109,7 @@ test('unwrapped reducer blocks preserve nested punctuation and selector boundari
     const php=compiler.compile(source,'php',hostJson);
     assert.equal(js.ok,true,js.message+' / JS '+source);
     assert.equal(php.ok,true,php.message+' / PHP '+source);
-    const actualJs=new Function('__miraHost',js.output+'\\nreturn result;')(collectionHost());
+    const actualJs=new Function('__miraHost',js.output+'\nreturn result;')(collectionHost());
     assert.deepEqual(actualJs,expected,'JS '+source);
     assert.deepEqual(runPhp(php.output),expected,'PHP '+source);
   }
