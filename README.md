@@ -194,6 +194,29 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
 
+## Mira 0.8: blocchi per funzioni ed espressioni complesse
+
+```mira
+lesson = {hours: 2, rate: 30};
+fee = {_ | (_ ~ hours) * (_ ~ rate)};
+result = lesson >> fee;
+```
+
+Il blocco `{parametro | espressione}` costruisce una funzione unaria che
+cattura lessicalmente i valori circostanti. Il separatore `|` distingue
+i blocchi dai record `{campo: valore}`. Il parametro può essere un nome
+composto oppure `_`; dentro un blocco con `_`, ogni occorrenza designa
+lo stesso parametro, anziché un nuovo placeholder.
+
+I blocchi funzionano nelle pipeline `>>` e come callback:
+
+```mira
+result = collect: lessons, if: ({_ | (_ ~ hours) >= 1});
+```
+
+Questa prima versione supporta un parametro e una sola espressione.
+Nessun type checker o runtime aggiuntivo: genera closure native JS/PHP.
+
 ## Mira 0.7: condizionali discorsivi
 
 ```mira
@@ -221,8 +244,8 @@ result = lesson >> (fee: _);
 
 `~` legge un campo letterale, senza risolvere il nome come variabile;
 `>>` applica un valore a una funzione. `(_ ~ hours)` è già un accessor
-anonimo unario; le espressioni con placeholder annidati più complessi
-saranno progettate insieme ai blocchi. `field "hours"` resta disponibile
+anonimo unario; per espressioni più complesse si usano i blocchi
+espliciti di Mira 0.8. `field "hours"` resta disponibile
 come accessor di prima classe. Il controllo di esistenza del campo è
 mantenuto su JS e PHP (nessun type checker richiesto).
 Questa è una modifica incompatibile con la sintassi 0.5.

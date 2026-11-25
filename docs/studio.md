@@ -54,7 +54,7 @@ La documentazione, incluso il riferimento API, è inclusa nella cache offline.
   retained locally before app refresh.
 
 This is a frontend for **Mira 0.3**. It supports keyword-selector sections and left-to-right pipelines. It does not silently implement
-arbitrary closure expressions, typed records, types, general currying, or HTML/MVU.
+multi-statement or multi-parameter blocks, typed records, types, general currying, or HTML/MVU.
 
 ### Useful shortcuts
 
@@ -191,3 +191,13 @@ colorazione viene disabilitata per mantenere fluido l'editor.
 Il modulo `studio/syntax-highlight.js` riconosce soltanto le forme lessicali
 per colorare: sintassi incompleta e diagnostica sono responsabilità del
 compilatore Haxe, non del coloratore.
+
+## Blocchi di espressione in Mira 0.8
+
+Il preset **Blocchi · 0.8** mostra una funzione unaria con parametro
+`_` esplicito, utilizzato più volte:
+`fee = {_ | (_ ~ hours) * (_ ~ rate)};`. La funzione può essere
+applicata con `>>` o passata come callback a `collect:if:`.
+L'Inspector mostra il nodo AST `Block` con parametro e corpo.
+
+Per ora i blocchi hanno esattamente un parametro e una sola espressione.
