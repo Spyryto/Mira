@@ -43,7 +43,7 @@ public static function run(source:String, target:Target, iterations:Int):Dynamic
 class Compiler
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L11)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L10)
 
 <a id="api-mira-compiler-inspecttokens"></a>
 ### `mira.Compiler.inspectTokens`
@@ -62,10 +62,10 @@ public static function inspectTokens(source:String):String
 **method** · Genera definizioni con corpi risolti dopo la raccolta delle firme dei selettori.
 
 ```haxe
-public static function parse(source:String, ?host:HostEnvironment):Array<Definition>
+public static function parse(source:String, ?host:HostEnvironment, ?readModule:String->Null<String>, ?entry:String):Array<Definition>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L14)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L13)
 
 Feature: [Dichiarazioni successive](language.md#feature-forward)
 
@@ -75,7 +75,7 @@ Feature: [Dichiarazioni successive](language.md#feature-forward)
 **method** · Converte il sorgente Mira nel target tipizzato `JavaScript` o `Php`.
 
 ```haxe
-public static function transpile(source:String, target:Target, ?host:HostEnvironment, ?locations:Array<GeneratedLocation>):String
+public static function transpile(source:String, target:Target, ?host:HostEnvironment, ?locations:Array<GeneratedLocation>, ?readModule:String->Null<String>, ?entry:String):String
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L24)
@@ -168,7 +168,7 @@ public static function hostAccess(name:String, target:Target):String
 class SourceLocations
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceLocations.hx#L12)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceLocations.hx#L13)
 
 <a id="api-mira-emit-sourcelocations-append"></a>
 ### `mira.emit.SourceLocations.append`
@@ -179,7 +179,7 @@ class SourceLocations
 public static function append(locations:Array<GeneratedLocation>, definition:Definition, lines:Array<String>, first:Int, generatedLine:Int):Int
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceLocations.hx#L15)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceLocations.hx#L16)
 
 <a id="api-mira-hostenvironment"></a>
 ### `mira.HostEnvironment`
@@ -277,10 +277,10 @@ class Lexer
 **constructor** · Crea uno scanner per la stringa sorgente fornita.
 
 ```haxe
-public function new(source:String)
+public function new(source:String, ?file:String)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/lex/Lexer.hx#L12)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/lex/Lexer.hx#L13)
 
 <a id="api-mira-lex-lexer-tokenize"></a>
 ### `mira.lex.Lexer.tokenize`
@@ -291,7 +291,7 @@ public function new(source:String)
 public function tokenize():Array<Token>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/lex/Lexer.hx#L16)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/lex/Lexer.hx#L18)
 
 Feature: [Letterali numerici](language.md#feature-numbers), [Letterali testuali](language.md#feature-strings)
 
@@ -317,6 +317,17 @@ public final column:Int
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/lex/Token.hx#L15)
 
+<a id="api-mira-lex-token-file"></a>
+### `mira.lex.Token.file`
+
+**field** · Token lessicale dotato di valore e posizione.
+
+```haxe
+public final file:Null<String>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/lex/Token.hx#L16)
+
 <a id="api-mira-lex-token-issymbol"></a>
 ### `mira.lex.Token.isSymbol`
 
@@ -326,7 +337,7 @@ public final column:Int
 public function isSymbol(symbol:String):Bool
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/lex/Token.hx#L24)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/lex/Token.hx#L26)
 
 <a id="api-mira-lex-token-kind"></a>
 ### `mira.lex.Token.kind`
@@ -356,10 +367,10 @@ public final line:Int
 **constructor** · Costruisce un token lessicale con tipo, testo e coordinate.
 
 ```haxe
-public function new(kind:TokenKind, value:String, line:Int, column:Int)
+public function new(kind:TokenKind, value:String, line:Int, column:Int, ?file:String)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/lex/Token.hx#L17)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/lex/Token.hx#L18)
 
 <a id="api-mira-lex-token-tokenkind"></a>
 ### `mira.lex.Token.TokenKind`
@@ -472,6 +483,28 @@ public function new(message:String, ?token:Token)
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/MiraError.hx#L6)
+
+<a id="api-mira-modules"></a>
+### `mira.Modules`
+
+**class** · Caricamento statico e ordinamento delle dipendenze tramite un resolver fornito dall'host; mantiene le coordinate dei file.
+
+```haxe
+class Modules
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Modules.hx#L10)
+
+<a id="api-mira-modules-collect"></a>
+### `mira.Modules.collect`
+
+**method** · Raccoglie dichiarazioni da import transitivi, una sola volta per percorso, prima del parsing delle espressioni.
+
+```haxe
+public static function collect(source:String, ?read:String->Null<String>, ?entry:String):Array<Definition>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Modules.hx#L12)
 
 <a id="api-mira-resolve-mangle"></a>
 ### `mira.resolve.Mangle`
@@ -728,7 +761,7 @@ Feature: [Identificatori composti](language.md#feature-names)
 class Bridge
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L12)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L10)
 
 <a id="api-mira-studio-bridge-ast"></a>
 ### `mira.studio.Bridge.ast`
@@ -736,10 +769,10 @@ class Bridge
 **method** · API browser: restituisce JSON con AST canonico del programma.
 
 ```haxe
-public static function ast(source:String, ?hostJson:String):Dynamic
+public static function ast(source:String, ?hostJson:String, ?modulesJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L47)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L64)
 
 <a id="api-mira-studio-bridge-compile"></a>
 ### `mira.studio.Bridge.compile`
@@ -747,10 +780,10 @@ public static function ast(source:String, ?hostJson:String):Dynamic
 **method** · API browser: `{ok,output}` o `{ok:false,message}` per `js` e `php`.
 
 ```haxe
-public static function compile(source:String, targetName:String, ?hostJson:String, ?withLocations:Bool = false):Dynamic
+public static function compile(source:String, targetName:String, ?hostJson:String, ?withLocations:Bool = false, ?modulesJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L26)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L43)
 
 <a id="api-mira-studio-bridge-main"></a>
 ### `mira.studio.Bridge.main`
@@ -761,7 +794,7 @@ public static function compile(source:String, targetName:String, ?hostJson:Strin
 public static function main():Void
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L15)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L13)
 
 <a id="api-mira-studio-bridge-tokens"></a>
 ### `mira.studio.Bridge.tokens`
@@ -772,7 +805,7 @@ public static function main():Void
 public static function tokens(source:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L43)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L60)
 
 <a id="api-mira-studio-bridge-trace"></a>
 ### `mira.studio.Bridge.trace`
@@ -780,10 +813,10 @@ public static function tokens(source:String):Dynamic
 **method** · Interfaccia JavaScript esposta dal compilatore Haxe nel browser.
 
 ```haxe
-public static function trace(source:String, ?hostJson:String):Dynamic
+public static function trace(source:String, ?hostJson:String, ?modulesJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L78)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L96)
 
 <a id="api-mira-syntax-definition"></a>
 ### `mira.syntax.Definition`

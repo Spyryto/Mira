@@ -69,6 +69,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Benchmark del raggruppamento dei commit DOM | `0.27` | [Dettagli](docs/browser-interop.md#mira-027-raggruppamento-dei-commit) |
 | ✅ | Benchmark CSS containment e content-visibility | `0.28` | [Dettagli](docs/browser-interop.md#mira-028-css-containment) |
 | ✅ | Layout differito delle schede Laboratory | `0.29` | [Dettagli](docs/studio.md#laboratory-layout-differito-029) |
+| ✅ | Import statici di file Mira | `0.30` | [Dettagli](docs/grammar.md#mira-030-import-statici) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
