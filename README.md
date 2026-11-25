@@ -200,6 +200,26 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
 
+## Mira 0.13: posizioni nel sorgente per gli errori di esecuzione
+
+Studio, premendo **Esegui**, prova a collegare gli errori JavaScript
+alla definizione Mira che li ha originati. Il messaggio nativo viene
+conservato; la posizione aggiuntiva è quella della **definizione**, non
+ancora della singola espressione. Browser che non espongono stack
+compatibili mostrano comunque l'errore originale.
+
+Il CLI può produrre un documento JSON con `output` (codice identico a
+quello normale) e `locations` (intervalli di righe generate, nome,
+riga e colonna Mira), per entrambi i backend:
+
+```sh
+node dist/mira.cjs examples/arithmetic.mira js --locations
+node dist/mira.cjs examples/arithmetic.mira php --locations
+```
+
+Non vengono introdotte istruzioni runtime di debug né un nuovo nodo AST.
+Vedi [Mira Studio: diagnostica runtime](docs/studio.md#diagnostica-runtime-mira-013).
+
 ## Mira 0.12.2: parametri delle funzioni senza collisioni
 
 Anche nelle funzioni nominate, i parametri distinti devono generare
