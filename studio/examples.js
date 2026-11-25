@@ -186,6 +186,20 @@ log (4 + 5);
 result = 9;`
   },
   {
+    id: 'import-gui',
+    name: 'Import GUI · 0.30',
+    source: `import "lib/gui.mira";
+
+view: count = column: [
+  title: "Lezioni",
+  text: count,
+  button: "Aggiungi", update: {old | old + 1}
+];
+
+render (state: 0, view: (view: _));`,
+    expect: {kind: 'ui'}
+  },
+  {
     id: 'errors',
     name: 'Ambiguità (errore)',
     source: `# Senza delimitatori la chiamata non è univoca.

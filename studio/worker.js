@@ -34,7 +34,8 @@ function locateRuntimeError(error, locations) {
       generatedLine >= entry.generatedStartLine && generatedLine <= entry.generatedEndLine);
     if (location) return {
       line: location.line, column: location.column,
-      name: location.name, generatedLine
+      name: location.name, generatedLine,
+      ...(location.file ? {file:location.file} : {})
     };
   }
   return undefined;

@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.29.0');
+  assert.equal(bridge.version, '0.30.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -168,7 +168,7 @@ test('all Studio examples match the syntax currently implemented', async () => {
   for (const example of examples) {
     const expectedSuccess = example.id !== 'errors';
     for (const target of ['js', 'php']) {
-      const manifest = ['host-log','collect-if','fold-blocks','fold-fees','block-steps','nullary-block'].includes(example.id)
+      const manifest = ['host-log','collect-if','fold-blocks','fold-fees','block-steps','nullary-block','import-gui'].includes(example.id)
         ? read('host.json') : undefined;
       const result = bridge.compile(example.source, target, manifest);
       assert.equal(result.ok, expectedSuccess,
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.29.0');
+  assert.equal(bridge.version,'0.30.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -724,4 +724,59 @@ test('0.25 preview renderer selection and inspector are bundled and sandboxed',(
   assert.match(read('ui-preview.html'),/src="\.\/gui-specialize\.js"/);
   assert.match(read('ui-preview.js'),/event\.source !== window\.parent/);
   assert.match(read('app.js'),/sandbox', 'allow-scripts'/);
+});
+
+
+test('0.30 browser imports the bundled canonical GUI without network access',()=>{
+  const library=readFileSync(resolve(root,'lib/gui.mira'),'utf8');
+  const entry='result = column: [title: "Mira", text: 42];';
+  for(const target of ['js','php']){
+    const direct=bridge.compile(library+'\n'+entry,target);
+    const imported=bridge.compile('import "lib/gui.mira";\n'+entry,target,undefined,true);
+    assert.equal(imported.ok,true,imported.message);
+    assert.equal(imported.output,direct.output);
+    assert.ok(imported.locations.some(l=>l.file==='lib/gui.mira'));
+  }
+  const ast=JSON.parse(bridge.ast('import "lib/gui.mira";\n'+entry).output);
+  assert.ok(ast.definitions.some(d=>d.file==='lib/gui.mira'&&d.selector==='column:'));
+  assert.equal(ast.definitions.at(-1).line,2);
+});
+
+test('0.30 virtual project graph is shared by compile, AST and trace',()=>{
+  const files=JSON.stringify({
+    'fees.mira':'import "shared/rate.mira"; fee: hours = hours * rate;',
+    'summary.mira':'import "shared/rate.mira"; doubled: n = n * 2;',
+    'shared/rate.mira':'rate = 30;'
+  });
+  const source='import "fees.mira"; import "summary.mira"; import "fees.mira"; result = doubled: (fee: 2);';
+  const js=bridge.compile(source,'js',undefined,true,files);
+  assert.equal(js.ok,true,js.message);
+  assert.equal(runInNewContext(js.output+'\nresult',{}),120);
+  const php=bridge.compile(source,'php',undefined,false,files);
+  assert.equal(php.ok,true,php.message);
+  const run=spawnSync('php',['-r',php.output.replace(/^<\?php/,'')+'\necho $result;'],{encoding:'utf8'});
+  assert.equal(run.status,0,run.stderr);assert.equal(run.stdout,'120');
+  const ast=JSON.parse(bridge.ast(source,undefined,files).output);
+  assert.equal(ast.definitions.filter(d=>d.name==='rate').length,1);
+  assert.equal(ast.definitions[0].file,'shared/rate.mira');
+  const trace=JSON.parse(bridge.trace(source,undefined,files).output);
+  assert.equal(trace.declarations.filter(d=>d.name==='rate').length,1);
+});
+
+test('0.30 import diagnostics preserve dependency coordinates and reject invalid graphs',()=>{
+  const check=(source,files,pattern)=>{
+    const result=bridge.compile(source,'js',undefined,false,JSON.stringify(files));
+    assert.equal(result.ok,false,source);
+    assert.match(result.message,pattern);
+  };
+  check('import "a.mira";',{'a.mira':'import "b.mira";','b.mira':'import "a.mira";'},/Import cycle: a\.mira -> b\.mira -> a\.mira.*b\.mira:1:1/);
+  check('import "a.mira";',{'a.mira':'\nresult = @;'},/a\.mira:2:10/);
+  check('import "a.mira";',{'a.mira':'\nresult = missing;'},/a\.mira:2:/);
+  check('import "a.mira";',{'a.mira':'42;'},/declarations only.*a\.mira:1:1/);
+  check('import "a.mira";',{},/Module not found: a\.mira/);
+  check('import "../a.mira";',{},/Invalid module path/);
+  check('import "https://example.org/a.mira";',{},/Invalid module path/);
+  check('import "a.mira"',{},/Expected ; after import/);
+  check('value = 1; import "a.mira";',{},/Imports must precede definitions/);
+  check('import "a.mira"; x = 2;',{'a.mira':'x = 1;'},/Duplicate or conflicting value x/);
 });

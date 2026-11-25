@@ -4,15 +4,15 @@ import mira.lex.Lexer;
 import mira.lex.Token;
 import mira.resolve.Symbols;
 import mira.syntax.Definition;
-import mira.syntax.DefinitionParser;
 import mira.syntax.ExpressionParser;
 import mira.emit.JsEmitter;
 import mira.emit.PhpEmitter;
 import mira.emit.SourceLocations.GeneratedLocation;
 
 class Compiler {
-    public static function parse(source:String, ?host:HostEnvironment):Array<Definition> {
-        final definitions = DefinitionParser.parse(new Lexer(source).tokenize());
+    public static function parse(source:String, ?host:HostEnvironment,
+        ?readModule:String->Null<String>, ?entry:String):Array<Definition> {
+        final definitions = Modules.collect(source, readModule, entry);
         final symbols = new Symbols(definitions, host);
         for (definition in definitions) {
             final locals = definition.isFunction() ? definition.parameters : [];
@@ -22,8 +22,8 @@ class Compiler {
     }
 
     public static function transpile(source:String, target:Target, ?host:HostEnvironment,
-        ?locations:Array<GeneratedLocation>):String {
-        final definitions = parse(source, host);
+        ?locations:Array<GeneratedLocation>, ?readModule:String->Null<String>, ?entry:String):String {
+        final definitions = parse(source, host, readModule, entry);
         final symbols = new Symbols(definitions, host);
         return switch (target) {
             case JavaScript: JsEmitter.emit(definitions, symbols, locations);

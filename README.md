@@ -86,7 +86,7 @@ Nessuna versione è assegnata finché non esiste un'implementazione verificata.
 | ⬜ | Currying completo e applicazione parziale generalizzata | — | [Decisioni aperte](docs/decisions.md#open-questions) |
 | ⬜ | Tipi dichiarati, record tipizzati e type checker | — | [Proposta di sintassi](docs/syntax.md#proposed-type-declarations-and-mvu-records) |
 | ⬜ | Pattern matching e confronti booleani nel nucleo | — | [Limiti attuali](docs/structured-data.md#limiti-conosciuti) |
-| ⬜ | Moduli/import e scoping strutturato delle capability | — | [Questioni aperte](docs/dogfooding.md#limiti-e-questioni-aperte) |
+| ⬜ | Namespace, export/private e scoping strutturato delle capability | — | [Questioni aperte](docs/dogfooding.md#limiti-e-questioni-aperte) |
 | ⬜ | Operatori definiti dall'utente | — | [Decisioni aperte](docs/decisions.md#open-questions) |
 | ⬜ | Metaprogrammazione e macro | — | [Decisioni architetturali](docs/decisions.md) |
 | ⬜ | Runtime/libreria MVU generale con lifecycle e diffing | — | [Limiti dell'host UI](docs/browser-interop.md#anteprima-e-limiti) |
@@ -220,6 +220,10 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 ## Laboratorio GUI: storia, risultati e roadmap
 
 [Laboratory in Mira Studio](https://spyryto.github.io/Mira/laboratory.html) raccoglie l'evoluzione 0.15–0.25, i benchmark CI e le misure dell'autore su iPhone e smart TV. [Rapporto tecnico](docs/gui-rendering.md) · [Archivio JSON](catalog/laboratory/gui-rendering.json). Il rapporto storico è statico e separato dal benchmark eseguibile.
+
+## Mira 0.30: import statici
+
+Import di file Mira con dipendenze transitive, diagnostica e libreria GUI integrata in Studio. Primo passo verso i moduli, senza namespace o visibilità privata. [Grammatica](docs/grammar.md#mira-030-import-statici).
 
 ## Mira 0.29: layout differito del Laboratory
 

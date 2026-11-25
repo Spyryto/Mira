@@ -864,3 +864,18 @@ test('0.27 deferred commits preserve every transition, validation, and mount own
   assert.equal(errors.length,2);
   assert.ok(errors.every(msg=>/data next state/.test(msg)));
 });
+
+
+test('0.30 imported GUI works with automatic preview and normal host',()=>{
+  const {root,errors}=setup(),sandbox={};
+  runInNewContext(read('ui-host.js'),sandbox);runInNewContext(read('gui-specialize.js'),sandbox);
+  const source='import "lib/gui.mira";\nview: n = column: [text: n, button: "Next", update: {old | old + 1}];\nrender (state: 0, view: (view: _));';
+  const built=compiler.compile(source,'js',manifest);
+  assert.equal(built.ok,true,built.message);
+  const plan=sandbox.MiraGuiSpecialize.previewPlan(compiler,source,manifest);
+  assert.equal(plan.mode,'specialized',plan.reason);
+  const app=sandbox.MiraGuiSpecialize.mountAuto(plan,root,0,msg=>errors.push(msg));
+  findButtons(root)[0].click();
+  assert.equal(app.getState(),1);assert.equal(findAll(root,'p')[0].textContent,'1');
+  assert.deepEqual(errors,[]);
+});

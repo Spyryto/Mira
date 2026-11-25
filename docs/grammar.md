@@ -313,3 +313,20 @@ Sono preservati lo shadowing esatto (`x = 100; increment: x = x + 1;`)
 e i nomi distinti che restano distinti dopo la generazione.
 Gli errori sui parametri riportano riga e colonna del parametro stesso.
 Nessuna nuova forma AST o regola runtime.
+
+## Mira 0.30: import statici
+
+```mira
+import "lib/gui.mira";
+import "lib/fees.mira";
+
+result = fee: 2;
+```
+
+Un import è una direttiva statica all'inizio del file, prima di ogni definizione, terminata da `;`. Il percorso è una stringa relativa alla directory del file di ingresso (anche negli import transitivi), con segmenti ASCII alfanumerici, underscore e trattino ed estensione .mira. Non sono ammessi URL, percorsi assoluti, . o ..; il CLI non segue alias tramite symlink. I moduli importati contengono solo dichiarazioni (non expression statements top-level); i loro inizializzatori di valore possono comunque valutare espressioni. Import ripetuti e dipendenze a diamante vengono deduplicati, cicli e file mancanti sono errori. Limiti: 128 file importati, profondità 32 e sorgente totale importato di circa 2 milioni di unità UTF-16.
+
+Il loader raccoglie le dichiarazioni per file in ordine DFS, dipendenze prima dell'importatore; poi il compilatore usa la stessa tabella globale di simboli e gli stessi parser/emitter JS/PHP. Le funzioni continuano a essere risolte globalmente; i valori sono inizializzati nell'ordine di emissione. Non è ancora un sistema di namespace: tutte le dichiarazioni sono visibili, anche transitivamente, le collisioni sono errori e non ci sono export/private/alias o isolamento delle capability. Non utilizzare riferimenti a valori non ancora inizializzati. Gli import non producono I/O a runtime; il risultato è un unico programma JS o PHP.
+
+CLI: `node dist/mira.cjs app.mira js`, con lib/ accanto ad app.mira. Core: resolver sincrono opzionale (String -> Null<String>), senza filesystem o rete. Studio: lib/gui.mira incorporata nel compiler bundle; API virtuale opzionale con mappa JSON dei file. Il CLI --benchmark resta limitato a sorgenti singoli per ora. La diagnostica delle dipendenze riporta file:riga:colonna e l'AST/mappa delle posizioni include il file quando importato.
+
+Scelta deliberatamente incrementale: separazione fisica e risoluzione deterministica prima di definire namespace e regole di visibilità, senza introdurre un secondo linker o un formato binario.

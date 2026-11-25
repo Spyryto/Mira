@@ -5,12 +5,14 @@ import mira.lex.Token.TokenKind;
 
 class Lexer {
     final source:String;
+    final file:Null<String>;
     var offset:Int = 0;
     var line:Int = 1;
     var column:Int = 1;
 
-    public function new(source:String) {
+    public function new(source:String, ?file:String) {
         this.source = source;
+        this.file = file;
     }
 
     public function tokenize():Array<Token> {
@@ -39,7 +41,7 @@ class Lexer {
                 while (isLetter(current()) || isDigit(current()) || current() == "_") {
                     advance();
                 }
-                tokens.push(new Token(Word, source.substring(start, offset), tokenLine, tokenColumn));
+                tokens.push(new Token(Word, source.substring(start, offset), tokenLine, tokenColumn, file));
                 continue;
             }
 
@@ -54,7 +56,7 @@ class Lexer {
                         advance();
                     }
                 }
-                tokens.push(new Token(Number, source.substring(start, offset), tokenLine, tokenColumn));
+                tokens.push(new Token(Number, source.substring(start, offset), tokenLine, tokenColumn, file));
                 continue;
             }
 
@@ -79,16 +81,16 @@ class Lexer {
                 }
 
                 if (!closed) {
-                    throw new MiraError("Unterminated string", new Token(Text, "", tokenLine, tokenColumn));
+                    throw new MiraError("Unterminated string", new Token(Text, "", tokenLine, tokenColumn, file));
                 }
                 final raw = source.substring(start, offset);
                 var decoded:String;
                 try {
                     decoded = haxe.Json.parse(raw);
                 } catch (error:Dynamic) {
-                    throw new MiraError("Invalid string literal", new Token(Text, "", tokenLine, tokenColumn));
+                    throw new MiraError("Invalid string literal", new Token(Text, "", tokenLine, tokenColumn, file));
                 }
-                tokens.push(new Token(Text, decoded, tokenLine, tokenColumn));
+                tokens.push(new Token(Text, decoded, tokenLine, tokenColumn, file));
                 continue;
             }
 
@@ -96,23 +98,23 @@ class Lexer {
             if (["==", "!=", "<=", ">=", "&&", "||", ">>"].indexOf(pair) != -1) {
                 advance();
                 advance();
-                tokens.push(new Token(Symbol, pair, tokenLine, tokenColumn));
+                tokens.push(new Token(Symbol, pair, tokenLine, tokenColumn, file));
                 continue;
             }
 
             if ("()[]{}:,;=+-*/%<>~!|".indexOf(character) != -1) {
                 advance();
-                tokens.push(new Token(Symbol, character, tokenLine, tokenColumn));
+                tokens.push(new Token(Symbol, character, tokenLine, tokenColumn, file));
                 continue;
             }
 
             throw new MiraError(
                 "Unexpected character " + haxe.Json.stringify(character),
-                new Token(Symbol, character, tokenLine, tokenColumn)
+                new Token(Symbol, character, tokenLine, tokenColumn, file)
             );
         }
 
-        tokens.push(new Token(End, "", line, column));
+        tokens.push(new Token(End, "", line, column, file));
         return tokens;
     }
 

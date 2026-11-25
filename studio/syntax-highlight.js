@@ -43,7 +43,7 @@ export function tokenizeMira(source) {
       } else {
         add(text === 'true' || text === 'false' ? 'boolean'
           : text === '_' ? 'placeholder'
-          : ['field','if','then','else'].includes(text) ? 'keyword' : 'plain', text);
+          : ['field','if','then','else','import'].includes(text) ? 'keyword' : 'plain', text);
       }
     } else if (twoCharOperators.has(source.slice(i, i+2))) {
       i += 2;

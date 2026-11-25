@@ -48,5 +48,7 @@
   "mira.studio.Bridge.main": "Installa `MiraStudioCompiler` sul global scope del browser.",
   "mira.studio.Bridge.compile": "API browser: `{ok,output}` o `{ok:false,message}` per `js` e `php`.",
   "mira.studio.Bridge.ast": "API browser: restituisce JSON con AST canonico del programma.",
-  "mira.studio.Bridge.tokens": "API browser: restituisce i token JSON e le posizioni."
+  "mira.studio.Bridge.tokens": "API browser: restituisce i token JSON e le posizioni.",
+  "mira.Modules": "Caricamento statico e ordinamento delle dipendenze tramite un resolver fornito dall'host; mantiene le coordinate dei file.",
+  "mira.Modules.collect": "Raccoglie dichiarazioni da import transitivi, una sola volta per percorso, prima del parsing delle espressioni."
 }

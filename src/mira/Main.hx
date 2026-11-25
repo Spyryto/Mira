@@ -45,14 +45,26 @@ class Main {
             }
 
             final source:String = fs.readFileSync(args[0], "utf8");
+            // Imports are relative to the entry directory, not to the process cwd.
+            final path:Dynamic = Syntax.code("require('node:path')");
+            final root:String = fs.realpathSync(path.dirname(path.resolve(args[0])));
+            final entry:String = path.basename(args[0]);
+            final readModule = function(name:String):Null<String> {
+                final requested:String = path.resolve(root, name);
+                if (!fs.existsSync(requested)) return null;
+                final actual:String = fs.realpathSync(requested);
+                if (actual != requested) throw new MiraError("Module symlinks are not supported");
+                if (!fs.statSync(actual).isFile()) return null;
+                return fs.readFileSync(actual, "utf8");
+            };
             var output:String;
             if (locationFlag >= 0) {
                 final locations:Array<GeneratedLocation> = [];
-                final code = Compiler.transpile(source, parseTarget(args[1]), host, locations);
+                final code = Compiler.transpile(source, parseTarget(args[1]), host, locations, readModule, entry);
                 output = haxe.Json.stringify({output: code, locations: locations}, null, "  ") + "\n";
             } else {
                 output = args[1] == "--tokens" ? Compiler.inspectTokens(source) + "\n"
-                    : Compiler.transpile(source, parseTarget(args[1]), host);
+                    : Compiler.transpile(source, parseTarget(args[1]), host, null, readModule, entry);
             }
 
             if (args.length == 3) {

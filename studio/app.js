@@ -307,6 +307,7 @@ function runJavaScript() {
     const location = event.data?.location;
     const context = location
       ? '\nMira: riga ' + location.line + ', colonna ' + location.column +
+        (location.file ? ' · ' + location.file : '') +
         ' · ' + location.name + ' (definizione)'
       : '';
     ui.runOutput.textContent = event.data?.ok
