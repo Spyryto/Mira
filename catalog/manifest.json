@@ -1,5 +1,5 @@
 {
-  "version": "0.12.1",
+  "version": "0.12.2",
   "features": [
     {
       "id": "values",
@@ -173,14 +173,16 @@
       "id": "diagnostics",
       "title": "Diagnostica e ambiguità",
       "summary": "Esempi di errori intenzionali.",
-      "details": "Sono esercizi negativi: fallire con una diagnostica precisa è il comportamento corretto. Dalla 0.12.1 i valori locali usati prima della dichiarazione mostrano il nome e la posizione del riferimento; i parametri di blocchi annidati che colliderebbero dopo mangling con un nome esterno diverso vengono rifiutati. Lo shadowing con lo stesso identico nome resta consentito.",
+      "details": "Sono esercizi negativi: fallire con una diagnostica precisa è il comportamento corretto. Dalla 0.12.1 i valori locali usati prima della dichiarazione mostrano il nome e la posizione del riferimento; i parametri di blocchi annidati che colliderebbero dopo mangling con un nome esterno diverso vengono rifiutati. Lo shadowing con lo stesso identico nome resta consentito. Dalla 0.12.2 la verifica copre anche i parametri delle funzioni nominate, con posizione del parametro e controllo indipendente dall'ordine di dichiarazione dei globali.",
       "api": "mira.MiraError",
       "examples": [
         "ambiguous-words",
         "duplicate-parameter",
         "local-before-declaration",
         "block-parameter-mangle",
-        "legal-nested-shadow"
+        "legal-nested-shadow",
+        "function-parameter-mangle",
+        "function-parameter-shadow"
       ],
       "since": "0.1"
     },
@@ -1274,6 +1276,28 @@
       "expect": {
         "kind": "result",
         "value": 10
+      }
+    },
+    {
+      "id": "function-parameter-mangle",
+      "feature": "diagnostics",
+      "title": "Collisione tra parametri nominati",
+      "description": "Due nomi distinti che generano lo stesso identificatore JS/PHP vengono rifiutati prima dell'emissione.",
+      "path": "catalog/examples/function-parameter-mangle.mira",
+      "expect": {
+        "kind": "error",
+        "contains": "Generated-name collision for function parameter"
+      }
+    },
+    {
+      "id": "function-parameter-shadow",
+      "feature": "diagnostics",
+      "title": "Shadowing valido in una funzione nominata",
+      "description": "Il parametro omonimo a un valore globale lo ombreggia senza rinominare il globale.",
+      "path": "catalog/examples/function-parameter-shadow.mira",
+      "expect": {
+        "kind": "result",
+        "value": 6
       }
     }
   ],
