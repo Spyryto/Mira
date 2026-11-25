@@ -223,3 +223,57 @@ Limiti: sono ancore di token, non intervalli completi di tutte
 le espressioni; si riporta il primo errore, senza recupero multiplo.
 Non c'è ancora una catena delle origini dei vincoli né una API LSP.
 Nessuna modifica al linguaggio o alla semantica dei backend.
+
+## 0.44: firme host
+
+Il manifest JSON esistente mantiene values, callables e selectors.
+Il campo facoltativo types descrive i tipi dei nomi già registrati:
+
+```json
+{
+  "values": ["rate"],
+  "callables": ["format"],
+  "types": {
+    "rate": "Number",
+    "format": {"parameters": ["Number"], "result": "Text"}
+  }
+}
+```
+
+```mira
+quote: hours = format (hours * rate);
+result = quote: 2;
+```
+
+quote: (Number) -> Text; result: Text.
+CLI: node dist/mira.cjs program.mira --check --host host.json.
+In Studio il Laboratorio tipi permette di modificare il manifest.
+
+HostTypeCodec decodifica direttamente in Type: Number, Text, Boolean,
+{"list": type}, {"record": {"field": type}}, {"parameters": [type],
+"result": type}. I record sono chiusi, i tipi delle funzioni possono
+essere annidati (callback), i callable possono avere zero parametri.
+I selettori richiedono arità identica al numero di etichette.
+Non sono ammesse firme per nomi non registrati; le firme non
+autorizzano accesso a nuove capability. Una firma mancante è
+un errore del checker, non della normale transpilazione.
+Le firme malformate sono rifiutate anche durante la compilazione
+ordinaria; il manifest legacy senza types resta supportato.
+
+Le firme sono monomorfe e chiuse: niente variabili di tipo, righe
+aperte, Unit, null, tipi opachi o effetti dichiarati in questa fase.
+Un record con campi extra rispetto a una firma chiusa può essere
+rifiutato conservativamente. Le firme sono una promessa dell'host,
+non validatori runtime: l'host deve fornire valori e implementazioni
+conformi. Nessun nuovo emitter, wrapper o costo nel codice generato.
+Gli errori di firma sono host_type_error (senza coordinate Mira);
+gli errori nelle espressioni restano type_error con ancore.
+La CLI valida il manifest prima di --check-json, quindi errori di
+manifest restano su stderr come nella 0.43.
+
+La suite verifica chiamate, sezioni, callback, campi e arità,
+manifest non validi, compatibilità delle firme mancanti e
+esecuzione su host JS/PHP. Il bridge usa lo stesso checker.
+Prossimo passo: esportare tipi chiusi inferiti in un formato
+riutilizzabile per derivare i contratti RPC e i validatori runtime,
+senza interpretare la stringa diagnostica dei tipi.
