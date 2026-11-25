@@ -1,6 +1,7 @@
 package mira.types;
 
 import mira.MiraError;
+import mira.HostEnvironment;
 import mira.syntax.Definition;
 import mira.syntax.Expr;
 import mira.syntax.ExpressionOrigins;
@@ -24,7 +25,12 @@ class TypeChecker {
 
     final origins:ExpressionOrigins;
 
-    public function new(origins:ExpressionOrigins) this.origins = origins;
+    final host:HostEnvironment;
+
+    public function new(origins:ExpressionOrigins,host:HostEnvironment) {
+        this.origins = origins;
+        this.host = host;
+    }
 
     public function check(program:Array<Definition>):Array<Dynamic> {
         for (d in program) if (!d.isStatement)
@@ -281,6 +287,11 @@ class TypeChecker {
         return fail("unknown declaration " + name);
     }
 
+    function hostType(name:String):Type {
+        if (!host.types.exists(name)) return fail("host type signature required: " + name);
+        return host.types.get(name);
+    }
+
     function projection(record:Type,key:String):Type {
         final value = fresh();
         unify(record,recordType([key => value],fresh()));
@@ -405,8 +416,12 @@ class TypeChecker {
                     final binding = scope.get(name);
                     instantiate(binding.type,null,binding.quantified);
                 } else declaration(name);
-            case HostRef(name) | HostCall(name,_) | HostSection(name,_):
-                fail("host type signature required: " + name);
+            case HostRef(name): hostType(name);
+            case HostCall(name,args): call(hostType(name),[for (arg in args) infer(arg,scope)]);
+            case HostSection(name,args):
+                final holes:Array<Type> = [];
+                final result = call(hostType(name),[for (arg in args) operand(arg,scope,holes)]);
+                FunctionType(holes,result);
             case FieldGet(record,key): projection(infer(record,scope),key);
             case FieldAccessor(key) | FieldSection(key):
                 final record = fresh();
