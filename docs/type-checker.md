@@ -355,15 +355,20 @@ payload non inviati, risultati malformati e integrazione reale.
 
 Dall'esperienza di Nail 0.61: un'annotazione deve vincolare la
 firma prima dell'inferenza, non scegliere un tipo dopo l'analisi.
-In Mira la prima grammatica sperimentale è (parametro: Tipo)
-per un parametro, e -> Tipo prima di = per il risultato di
-una funzione o il tipo di un valore globale.
+In Mira la grammatica è nome (Tipo) per parametri e valori
+globali, e -> Tipo prima di = per il risultato di una funzione.
+La stessa regola vale per nomi composti; il parser condivide
+annotatedName fra i due contesti. La precedente proposta
+(parametro: Tipo) e nome -> Tipo per valori è stata scartata
+prima del merge: non si mantengono due sintassi.
 
 ```mira
-rate -> Number = 30;
-quote: (p: {hours: Number}) -> {total: Number} =
+rate (Number) = 30;
+quote: p ({hours: Number}) -> {total: Number} =
   {total: (p ~ hours * rate)};
-empty -> [Text] = [];
+empty ([Text]) = [];
+multiply: first number (Number), by: second number (Number)
+  -> Number = first number * second number;
 ```
 
 Sono ammessi Number, Text, Boolean, [Tipo] e {campo: Tipo, ...},
