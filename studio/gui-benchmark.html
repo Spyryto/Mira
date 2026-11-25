@@ -24,6 +24,7 @@ small{display:block;line-height:1.5}
 <h1>DOM Performance Lab</h1>
 <p>100 elementi di testo, aggiornamenti sparsi (1 su 100) e densi (100 su 100), più un record di stato con stile dinamico. La view e la transizione vengono compilate da Mira.</p>
 <button id="run" type="button">Avvia benchmark GUI</button>
+<button id="batch-run" type="button">Benchmark aggiornamenti raggruppati</button>
 <p id="status" role="status">Pronto. Misurazioni locali, nessun invio di dati.</p>
 <div id="results"></div>
 <small>5 campioni da 30 aggiornamenti, 5 warmup per campione. Mediana e P95 del tempo medio per aggiornamento nel campione, in ms. Compilazione esclusa. Layout forzato: lettura della geometria a ogni aggiornamento; senza layout forzato: scritture sincrone, layout finale fuori dal timer. Non misura paint, frame rate o memoria. Incrementale, specializzato e diretto passano da click(); ricostruzione invoca direttamente render. Il pass specializzato accetta view di struttura fissa, testi e valori degli stili dinamici. DOM diretto è un riferimento scritto a mano.</small>
@@ -36,7 +37,7 @@ small{display:block;line-height:1.5}
 <details><summary>Sorgente Mira del form (con libreria)</summary><pre id="form-source" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></details>
 <h2>Rendering ibrido</h2><p>Il pass sceglie automaticamente le regioni dalla view Mira: una specializzata e una generica condividono il contatore. Avanti cambia anche la struttura del secondo componente. <button id="hybrid-start" type="button">Monta demo ibrida automatica</button></p><div id="hybrid-demo"></div><details><summary>Sorgente Mira</summary><pre id="hybrid-source" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></details><h2>Area DOM reale</h2>
 <div id="mount" aria-label="Area di misura collegata al documento"></div>
-<pre id="machine" hidden></pre>
+<pre id="machine" hidden></pre><pre id="batch-machine" hidden></pre>
 <script src="./compiler.js"></script>
 <script src="./ui-host.js"></script>
 <script src="./gui-specialize.js"></script>
@@ -47,7 +48,7 @@ small{display:block;line-height:1.5}
   const button=byId('run'), status=byId('status'), results=byId('results');
   const element=(tag,value)=>{const node=document.createElement(tag);node.textContent=value;return node;};
   function execute(){
-    button.disabled=true;results.replaceChildren();byId('machine').textContent='';
+    button.disabled=true;byId('batch-run').disabled=true;results.replaceChildren();byId('machine').textContent='';
     status.textContent='Misurazione in corso…';
     try {
       const data=MiraGuiBench.run(MiraStudioCompiler,byId('mount'));
@@ -110,7 +111,7 @@ small{display:block;line-height:1.5}
     }catch(error){
       byId('machine').textContent=JSON.stringify({ok:false,message:String(error.message??error)});
       status.textContent='Errore: '+String(error.message??error);
-    }finally{button.disabled=false;}
+    }finally{button.disabled=false;byId('batch-run').disabled=false;}
   }
   byId('demo-start').addEventListener('click',()=>{
     try{
@@ -129,6 +130,36 @@ small{display:block;line-height:1.5}
     try{MiraGuiBench.hybridSetup(MiraStudioCompiler,byId('hybrid-demo'),true,2)();}
     catch(error){status.textContent=String(error.message??error);}
   });
+  const batchButton=byId('batch-run');
+  async function executeBatch(){
+    button.disabled=true;batchButton.disabled=true;results.replaceChildren();
+    byId('batch-machine').textContent='';
+    status.textContent='Misurazione raggruppamento… tieni la pagina visibile.';
+    try{
+      const data=await MiraGuiBench.runBatchExperiment(MiraStudioCompiler,byId('mount'));
+      byId('batch-machine').textContent=JSON.stringify(data);
+      for(const row of data.results){
+        const card=document.createElement('section');card.className='result';
+        card.append(element('h2','Batch · '+(row.density==='sparse'?'1 su 100':'100 su 100')+' · '+row.events+' eventi'));
+        const table=document.createElement('table'),head=document.createElement('tr');
+        for(const title of ['Metodo','Commit','Scritture','Invio ms','Primo→commit ms','Ultimo→commit ms'])head.append(element('th',title));
+        table.append(head);
+        for(const [key,name] of [['immediate','Immediato'],['microtask','Microtask'],['frame','rAF']]){
+          const m=row.modes[key],tr=document.createElement('tr');
+          tr.append(element('td',name),element('td',m.commits),element('td',m.writes),
+            element('td',m.submit.medianMs.toFixed(3)),element('td',m.first.medianMs.toFixed(3)),element('td',m.last.medianMs.toFixed(3)));
+          table.append(tr);
+        }
+        card.append(table,element('p',data.bursts+' raffiche per strategia; commit e scritture totali. Tempi mediani per raffica, non paint.'));
+        results.append(card);
+      }
+      status.textContent='Completato · Mira '+data.version;
+    }catch(error){
+      byId('batch-machine').textContent=JSON.stringify({ok:false,message:String(error.message??error)});
+      status.textContent='Errore: '+String(error.message??error);
+    }finally{button.disabled=false;batchButton.disabled=false;}
+  }
+  batchButton.addEventListener('click',executeBatch);
   button.addEventListener('click',()=>{
     button.disabled=true;status.textContent='Preparazione…';
     setTimeout(execute,20);
