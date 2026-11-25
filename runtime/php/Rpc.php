@@ -90,7 +90,7 @@ function invokeTyped(callable $handler, mixed $params, array $contract): mixed {
     $params = checkParams($params, $contract['integerPolicy']);
     if (!matchesType($params, $contract['parameters'])) throw new Fault(400, 'invalid_parameters');
     $result = $handler($params);
-    if (!matchesType($result, $contract['result'])) throw new \\RuntimeException('RPC result violates inferred type');
+    if (!matchesType($result, $contract['result'])) throw new \RuntimeException('RPC result violates inferred type');
     return $result;
 }
 
