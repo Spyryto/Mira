@@ -93,3 +93,39 @@ lifecycle delle componenti, un framework MVU o tipi statici delle view.
 Per consultare il codice: `studio/ui-host.js` (capability e renderer),
 `studio/ui-preview.js` (avvio isolato), `test/ui-host.test.mjs` (test dei
 clic e delle transizioni), `catalog/examples/browser-*.mira` (sorgenti Mira).
+
+## Mira 0.15: libreria GUI e binding
+
+La libreria [lib/gui.mira](../lib/gui.mira) costruisce i record mediante
+normali selettori, senza accesso al DOM. Gli esempi nel catalogo dichiarano
+esplicitamente la dipendenza `library: "lib/gui.mira"`; il generatore
+concatena i due sorgenti prima della compilazione. Non è un sistema di
+moduli né un prelude implicito.
+
+| Costruttore Mira | Comportamento |
+| --- | --- |
+| `column: items` / `row: items` | Layout verticale/orizzontale |
+| `title: caption` / `text: content` | Titoli e testi |
+| `button: caption, on click: action` | Evento, anche closure nullaria |
+| `button: caption, update: transition` | Transizione unaria di stato |
+| `text input: caption, value: current, update: transition` | Testo controllato |
+| `checkbox: caption, checked: current, update: transition` | Booleano controllato |
+| `choose: caption, value: current, options: choices, update: transition` | Scelta tra stringhe |
+| `state: initial, view: factory` | Stato e funzione che produce la view |
+
+I controlli richiedono un antenato state e una funzione binaria
+`{old, entered | nextState}`. L'host conserva lo stato, legge unicamente
+il valore nativo dell'evento e chiama la funzione Mira. La view viene
+ricostruita; se la nuova view non è valida, lo stato precedente rimane.
+Il testo usa l'evento input e attende la fine della composizione IME.
+Focus e selezione sono ripristinati quando il controllo corrispondente
+mantiene posizione strutturale, tipo ed etichetta. Non è un diff DOM:
+comportamento della tastiera mobile e cambi strutturali richiedono
+ulteriore verifica su browser reali. Uno state annidato può essere
+ricreato durante un refresh del genitore.
+
+Le funzioni costruttrici funzionano su JS/PHP, ma gli eventi e il
+renderer DOM richiedono JS browser. Niente CSS arbitrario, component
+lifecycle, moduli, validazione statica delle view o binding mutabile.
+La Scheda lezione è un esempio reale nel catalogo; non sostituisce
+ancora il controller di Studio.

@@ -133,7 +133,12 @@ function validateCatalog(api) {
     if (!['result', 'invoke', 'error', 'ui'].includes(example.expect?.kind)) {
       throw new Error('Unsupported expected result for ' + example.id);
     }
-    examples.push({ ...example, source: readFileSync(join(root, example.path), 'utf8') });
+    // Explicit build-time composition, not a Mira import or implicit prelude.
+    if (example.library !== undefined && example.library !== 'lib/gui.mira') {
+      throw new Error('Unknown example library: ' + example.library);
+    }
+    const library = example.library ? readFileSync(join(root, example.library), 'utf8') + '\n' : '';
+    examples.push({ ...example, source: library + readFileSync(join(root, example.path), 'utf8') });
   }
 
   const index = new Map(examples.map(example => [example.id, example]));

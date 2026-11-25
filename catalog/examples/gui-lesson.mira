@@ -1,0 +1,38 @@
+# Una piccola scheda lezione, con stato immutabile e componenti.
+lesson view: model = column: [
+  title: "Scheda lezione",
+  text input: "Allievo", value: (model ~ student),
+    update: {old, entered | {
+      student: entered, hours: (old ~ hours), paid: (old ~ paid), mode: (old ~ mode)
+    }},
+  row: [
+    button: "-1 ora", update: {old | {
+      student: (old ~ student),
+      hours: (if (old ~ hours > 1) then (old ~ hours - 1) else 1),
+      paid: (old ~ paid), mode: (old ~ mode)
+    }},
+    text: (model ~ hours),
+    button: "+1 ora", update: {old | {
+      student: (old ~ student), hours: (old ~ hours + 1),
+      paid: (old ~ paid), mode: (old ~ mode)
+    }}
+  ],
+  choose: "Modalita", value: (model ~ mode), options: ["In presenza", "Online"],
+    update: {old, selected | {
+      student: (old ~ student), hours: (old ~ hours),
+      paid: (old ~ paid), mode: selected
+    }},
+  checkbox: "Pagato", checked: (model ~ paid),
+    update: {old, checked | {
+      student: (old ~ student), hours: (old ~ hours),
+      paid: checked, mode: (old ~ mode)
+    }},
+  text: (model ~ student),
+  text: (model ~ mode),
+  text: "Compenso in euro (30 / ora)",
+  text: (model ~ hours * 30),
+  text: (if (model ~ paid) then "Saldato" else "Da saldare")
+];
+
+render (state: {student: "Ada", hours: 2, paid: false, mode: "In presenza"},
+  view: (lesson view: _));

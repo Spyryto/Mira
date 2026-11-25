@@ -1,0 +1,9 @@
+# Un input con binding e un pulsante che cattura lo stato.
+greeting: name = column: [
+  title: "Salutami",
+  text input: "Il tuo nome", value: name, update: {old, entered | entered},
+  text: name,
+  button: "Mostra saluto", on click: {| alert name}
+];
+
+render (state: "Mira", view: (greeting: _));

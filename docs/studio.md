@@ -275,3 +275,11 @@ registra un messaggio solo al momento di `() >> action`, poi restituisce
 42. L'Inspector mostra **Blocco · 0 parametri** e **Apply · 0 argomenti**.
 I blocchi possono contenere più espressioni e valori locali; il compilatore
 emette chiamate native JS/PHP, senza parametri fittizi o runtime aggiuntivo.
+
+## GUI componibili e form (Mira 0.15)
+
+La Guida contiene la feature **Libreria GUI Mira e binding**, con due
+esempi interattivi, Salutami e Scheda lezione. Il codice completo include
+i costruttori di lib/gui.mira, ed è modificabile offline. Seleziona JS
+e premi Anteprima UI. I controlli usano stato immutabile e transizioni
+Mira; il renderer browser non implementa la logica dell'applicazione.

@@ -1,0 +1,21 @@
+# Mira GUI: ordinary functions; no compiler or DOM dependencies.
+column: items = {type: "column", children: items};
+row: items = {type: "row", children: items};
+title: caption = {type: "title", text: caption};
+text: content = {type: "text", text: content};
+button: caption, on click: action = {
+  type: "button", label: caption, onClick: action
+};
+button: caption, update: transition = {
+  type: "button", label: caption, update: transition
+};
+text input: caption, value: current, update: transition = {
+  type: "input", label: caption, value: current, update: transition
+};
+checkbox: caption, checked: current, update: transition = {
+  type: "checkbox", label: caption, checked: current, update: transition
+};
+choose: caption, value: current, options: choices, update: transition = {
+  type: "select", label: caption, value: current, options: choices, update: transition
+};
+state: initial, view: factory = {type: "state", initial: initial, view: factory};
