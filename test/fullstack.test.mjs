@@ -63,11 +63,19 @@ test('full-stack ledger: actual Chromium, compiled Mira JS/PHP and SQLite', {tim
       php=startProcess('php',['-S','127.0.0.1:'+serverPort,'-t',join(dir,'public')]);
       await until(async()=> (await fetch(endpoint,{signal:AbortSignal.timeout(500)})).status===405,'PHP ready');
     }
-    async function post(body){
-      const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(5000)});
-      return {status:r.status,body:await r.json()};
+    async function rpc(method, params){
+      const r=await fetch(endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({method,params}),signal:AbortSignal.timeout(5000)});
+      const envelope=await r.json();
+      assert.equal(envelope.ok,r.ok);
+      return {status:r.status,body:r.ok?envelope.value:envelope.error};
     }
+    const post=body=>rpc('ledger.command',body);
     await server();
+    assert.deepEqual(await rpc('ledger.quote',{hours:2}),{status:200,body:{hours:2,total:60}});
+    assert.deepEqual(await rpc('ledger.quote',{hours:-1}),{status:400,body:{code:'invalid_hours'}});
+    assert.deepEqual(await rpc('phpinfo',[]),{status:404,body:{code:'unknown_method'}});
+    assert.deepEqual(await rpc('ledger.quote',{}),{status:400,body:{code:'empty_record'}});
+    assert.deepEqual(await rpc('ledger.quote',{hours:2,'1':3}),{status:400,body:{code:'numeric_key'}});
     const exe=[process.env.CHROME_BIN,'google-chrome','chromium','chromium-browser'].filter(Boolean).find(cmd=>spawnSync(cmd,['--version'],{encoding:'utf8'}).status===0);
     assert.ok(exe,'Chromium required');
     // Only browser startup is retried, never application assertions.
