@@ -169,7 +169,7 @@ class TypeChecker {
         final params = [for (p in d.parameters) fresh()];
         for (i in 0...params.length) scope.set(d.parameters[i],params[i]);
         final body = infer(d.body,scope);
-        final type = d.isFunction() ? FunctionType(params,body) : body;
+        final type:Type = d.isFunction() ? FunctionType(params,body) : body;
         active.remove(name);
         inferred.set(name,type);
         origin = previous;
