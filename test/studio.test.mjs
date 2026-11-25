@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.12.2');
+  assert.equal(bridge.version, '0.13.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.12.2');
+  assert.equal(bridge.version,'0.13.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -593,4 +593,53 @@ test('0.12.2 Studio validates named-function parameter hygiene for JS/PHP', () =
     php.output.replace(/^<\?php/, '') + '\necho $result;'], { encoding: 'utf8' });
   assert.equal(executed.status, 0, executed.stderr);
   assert.equal(executed.stdout, '6');
+});
+
+test('0.13 browser compiler returns optional locations without modifying code', () => {
+  const source = '# comment\n  read: item = item ~ missing;\nresult = read: {present: 1};';
+  for (const target of ['js','php']) {
+    const plain = bridge.compile(source, target);
+    const mapped = bridge.compile(source, target, undefined, true);
+    assert.equal(mapped.ok, true, mapped.message);
+    assert.equal(mapped.output, plain.output);
+    assert.equal(plain.locations, undefined);
+    assert.equal(mapped.locations[0].line, 2);
+    assert.equal(mapped.locations[0].column, 3);
+    assert.equal(mapped.locations[0].name, 'read:');
+    assert.match(mapped.output.split('\n')[mapped.locations[0].generatedStartLine - 1], /function read/);
+  }
+});
+
+test('0.13 Studio worker reports Mira definition on runtime failure and retains native message', () => {
+  function execute(source, includeLocations = true, host) {
+    const compiled = bridge.compile(source, 'js', host, includeLocations);
+    assert.equal(compiled.ok, true, compiled.message);
+    let reply;
+    const context = {self: {postMessage(message) { reply = message; }}};
+    runInNewContext(read('worker.js'), context);
+    context.self.onmessage({data: {code: compiled.output, locations: compiled.locations}});
+    return reply;
+  }
+  const missing = '# comment\n  read: item = item ~ missing;\nresult = read: {present: 1};';
+  const failure = execute(missing);
+  assert.equal(failure.ok, false);
+  assert.match(failure.message, /Missing record field: missing/);
+  assert.equal(failure.location.line, 2);
+  assert.equal(failure.location.column, 3);
+  assert.equal(failure.location.name, 'read:');
+  assert.ok(Number.isInteger(failure.location.generatedLine));
+  assert.equal(execute(missing, false).location, undefined);
+
+  const host = JSON.stringify({selectors: ['filter:with:']});
+  const hostFailure = execute('# comment\nresult = filter: 1, with: {_ | true};', true, host);
+  assert.equal(hostFailure.ok, false);
+  assert.match(hostFailure.message, /expects a bounded list/);
+  assert.equal(hostFailure.location.line, 2);
+  assert.equal(hostFailure.location.name, 'result');
+
+  const success = execute('result = 42;');
+  assert.equal(success.ok, true);
+  assert.equal(success.output, '42');
+  assert.equal(success.location, undefined);
+  assert.match(read('app.js'), /Mira: riga/);
 });
