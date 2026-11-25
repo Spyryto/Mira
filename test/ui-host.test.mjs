@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runInNewContext } from 'node:vm';
+import { spawnSync } from 'node:child_process';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const site = resolve(root, 'dist/studio');
@@ -29,6 +30,10 @@ class FakeElement {
     this.parentNode = null;
     this.className = '';
     this.open = false;
+    this.attributes = new Map();
+    this.value = '';
+    this.selectionStart = null;
+    this.selectionEnd = null;
   }
   set textContent(value) {
     for (const child of this.children) child.parentNode = null;
@@ -51,7 +56,16 @@ class FakeElement {
     this.append(...nodes);
   }
   addEventListener(event, fn) { this.listeners.set(event, fn); }
-  click() { this.listeners.get('click')?.(); }
+  click() { this.dispatch('click'); }
+  dispatch(event, data = {}) { this.listeners.get(event)?.(data); }
+  setAttribute(name, value) { this.attributes.set(name, value); }
+  getAttribute(name) { return this.attributes.get(name) ?? null; }
+  focus() { this.ownerDocument.activeElement = this; }
+  setSelectionRange(start, end, direction) {
+    this.selectionStart = start;
+    this.selectionEnd = end;
+    this.selectionDirection = direction;
+  }
   showModal() { this.open = true; }
   close() { this.open = false; }
   remove() {
@@ -75,10 +89,15 @@ function setup() {
   const context = {};
   runInNewContext(read('ui-host.js'), context);
   const root = new FakeElement('root');
-  const document = {createElement(tag) { return new FakeElement(tag); }};
+  const document = {activeElement: null, createElement(tag) {
+    const node = new FakeElement(tag);
+    node.ownerDocument = this;
+    return node;
+  }};
+  root.ownerDocument = document;
   const errors = [];
   const host = context.MiraUiHost.createUiHost(document, root, msg => errors.push(msg));
-  return {host, root, errors};
+  return {host, root, errors, document};
 }
 function compileAndRun(example, host) {
   const compiled = compiler.compile(example.source, 'js', manifest);
@@ -88,7 +107,7 @@ function compileAndRun(example, host) {
 }
 
 test('all UI examples are advertised in the canonical documentation and compile on JS and PHP', () => {
-  for (const name of ['browser-alert', 'browser-view', 'browser-counter']) {
+  for (const name of ['browser-alert', 'browser-view', 'browser-counter', 'gui-greeting', 'gui-lesson']) {
     const sample = demo(name);
     assert.equal(sample.expect.kind, 'ui');
     assert.equal(sample.host, 'studio/host.json');
@@ -176,4 +195,94 @@ test('UI preview is a script-enabled, opaque-origin iframe without direct Studio
   for (const filename of ['ui-preview.html', 'ui-host.js', 'ui-preview.js']) {
     assert.ok(sw.includes('./' + filename), filename);
   }
+});
+
+
+test('0.15 greeting uses actual Mira constructors, input binding and nullary closure', () => {
+  const {host, root, errors, document} = setup();
+  const example = demo('gui-greeting');
+  assert.equal(example.library,'lib/gui.mira');
+  const library = readFileSync(resolve(fileURLToPath(new URL('../',import.meta.url)), example.library), 'utf8');
+  assert.ok(example.source.startsWith(library));
+  compileAndRun(example,host);
+  let input = findAll(root,'input')[0];
+  assert.equal(input.value,'Mira');
+  input.focus();
+  input.value = 'Ada';
+  input.setSelectionRange(2,2,'none');
+  input.dispatch('input',{isComposing:true});
+  assert.equal(findAll(root,'p')[0].textContent,'Mira');
+  input.dispatch('compositionend');
+  input = findAll(root,'input')[0];
+  assert.equal(input.value,'Ada');
+  assert.equal(findAll(root,'p')[0].textContent,'Ada');
+  assert.equal(document.activeElement,input);
+  assert.equal(input.selectionStart,2);
+  input.value = 'Ada Lovelace';
+  input.dispatch('input');
+  assert.equal(findAll(root,'p')[0].textContent,'Ada Lovelace');
+  findButtons(root)[0].click();
+  assert.match(findAll(root,'dialog')[0].textContent,/Ada Lovelace/);
+  assert.deepEqual(errors,[]);
+});
+
+test('0.15 lesson form preserves all model fields across text, button, select and checkbox transitions', () => {
+  const {host,root,errors} = setup();
+  compileAndRun(demo('gui-lesson'),host);
+  const textValues = () => findAll(root,'p').map(node=>node.textContent);
+  assert.ok(textValues().includes('60'));
+  let name = findAll(root,'input').find(node=>node.type==='text');
+  name.value='Lia';
+  name.dispatch('input');
+  findButtons(root).find(node=>node.textContent==='+1 ora').click();
+  const select = findAll(root,'select')[0];
+  select.value='Online';
+  select.dispatch('change');
+  const checkbox = findAll(root,'input').find(node=>node.type==='checkbox');
+  checkbox.checked=true;
+  checkbox.dispatch('change');
+  assert.ok(textValues().includes('Lia'));
+  assert.ok(textValues().includes('Online'));
+  assert.ok(textValues().includes('90'));
+  assert.ok(textValues().includes('Saldato'));
+  assert.equal(findAll(root,'input').find(node=>node.type==='text').value,'Lia');
+  assert.equal(findAll(root,'input').find(node=>node.type==='checkbox').checked,true);
+  assert.equal(findAll(root,'select')[0].value,'Online');
+  assert.ok(findAll(root,'div').some(node=>node.className==='mira-ui-row'));
+  for(let i=0;i<5;i++)findButtons(root).find(node=>node.textContent==='-1 ora').click();
+  assert.ok(textValues().includes('30'));
+  assert.deepEqual(errors,[]);
+});
+
+test('0.15 control validation and unsuccessful state refresh preserve prior state', () => {
+  const {host,root,errors} = setup();
+  assert.throws(()=>host.render({type:'input',label:'x',value:'a',update:()=>0}),/state parent/);
+  assert.throws(()=>host.render({type:'state',initial:0,view:()=>({
+    type:'select',value:'a',options:['a','a'],update:()=>0
+  })}),/unique string options/);
+  host.render({type:'state',initial:0,view:n=>n<0?{type:'unknown'}:{
+    type:'column',children:[
+      {type:'text',text:n},
+      {type:'button',label:'bad',update:()=>-1},
+      {type:'button',label:'good',update:old=>old+1}
+    ]
+  }});
+  findButtons(root)[0].click();
+  assert.match(errors[0],/Unsupported view type/);
+  findButtons(root)[1].click();
+  assert.equal(findAll(root,'p')[0].textContent,'1');
+});
+
+test('0.15 GUI constructors have equivalent native JS and PHP output as ordinary Mira functions', () => {
+  const library = readFileSync(resolve(root,'lib/gui.mira'),'utf8');
+  const source = library + '\nresult = row: [title: "Mira", text: 42];';
+  const js = compiler.compile(source,'js');
+  assert.equal(js.ok,true,js.message);
+  const actual = runInNewContext(js.output+'\nJSON.stringify(result)',{});
+  const php = compiler.compile(source,'php');
+  assert.equal(php.ok,true,php.message);
+  const result = spawnSync('php',['-r',php.output.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'});
+  assert.equal(result.status,0,result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout),JSON.parse(actual));
+  assert.deepEqual(JSON.parse(actual),{type:'row',children:[{type:'title',text:'Mira'},{type:'text',text:42}]});
 });
