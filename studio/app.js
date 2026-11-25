@@ -306,7 +306,7 @@ function runJavaScript() {
     clearTimeout(state.workerTimeout);
     const location = event.data?.location;
     const context = location
-      ? '\nMira: riga ' + location.line + ', colonna ' + location.column +
+      ? '\nMira: ' + (location.file ? location.file + ' · ' : '') + 'riga ' + location.line + ', colonna ' + location.column +
         ' · ' + location.name + ' (definizione)'
       : '';
     ui.runOutput.textContent = event.data?.ok

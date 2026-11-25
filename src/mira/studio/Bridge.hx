@@ -6,8 +6,6 @@ import mira.Target;
 import mira.MiraError;
 import mira.syntax.Expr;
 import mira.syntax.Definition;
-import mira.syntax.DefinitionParser;
-import mira.lex.Lexer;
 import mira.resolve.Symbols;
 import mira.emit.SourceLocations.GeneratedLocation;
 
@@ -19,12 +17,31 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.29.0"
+            version: "0.30.0"
         });
     }
 
+    // Studio bundles the actual library as a Haxe resource. Optional virtual
+    // project files are supplied explicitly, never fetched by source code.
+    static function resolver(?modulesJson:String):String->Null<String> {
+        final files = new Map<String, String>();
+        final gui = haxe.Resource.getString("lib/gui.mira");
+        if (gui != null) files.set("lib/gui.mira", gui);
+        if (modulesJson != null) {
+            final supplied:Dynamic = haxe.Json.parse(modulesJson);
+            if (supplied == null || !Reflect.isObject(supplied) || Std.isOfType(supplied, Array)
+                || Std.isOfType(supplied, String)) throw new MiraError("Expected a module file map");
+            for (name in Reflect.fields(supplied)) {
+                final value:Dynamic = Reflect.field(supplied, name);
+                if (!Std.isOfType(value, String)) throw new MiraError("Module source must be text: " + name);
+                files.set(name, value);
+            }
+        }
+        return function(name) return files.get(name);
+    }
+
     public static function compile(source:String, targetName:String, ?hostJson:String,
-        ?withLocations:Bool = false):Dynamic {
+        ?withLocations:Bool = false, ?modulesJson:String):Dynamic {
         final locations:Array<GeneratedLocation> = withLocations ? [] : null;
         final result = safely(function() {
             final target = switch (targetName) {
@@ -34,7 +51,7 @@ class Bridge {
             };
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
-            return Compiler.transpile(source, target, host, locations);
+            return Compiler.transpile(source, target, host, locations, resolver(modulesJson));
         });
         if (withLocations && result.ok) Reflect.setField(result, "locations", locations);
         return result;
@@ -44,11 +61,11 @@ class Bridge {
         return safely(function() return Compiler.inspectTokens(source));
     }
 
-    public static function ast(source:String, ?hostJson:String):Dynamic {
+    public static function ast(source:String, ?hostJson:String, ?modulesJson:String):Dynamic {
         return safely(function() {
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
-            final definitions = Compiler.parse(source, host);
+            final definitions = Compiler.parse(source, host, resolver(modulesJson));
             final tree:Array<Dynamic> = [];
             for (definition in definitions) {
                 final node:Dynamic = {
@@ -58,6 +75,7 @@ class Bridge {
                     column: definition.origin.column,
                     body: expression(definition.body)
                 };
+                if (definition.origin.file != null) Reflect.setField(node, "file", definition.origin.file);
                 if (definition.isFunction()) {
                     Reflect.setField(node, "selector", definition.selector());
                     Reflect.setField(node, "name", definition.selector());
@@ -75,11 +93,11 @@ class Bridge {
 
     // Exposes actual compiler intermediate data, not a reconstructed diagram.
     // The raw declarations are collected before expression resolution.
-    public static function trace(source:String, ?hostJson:String):Dynamic {
+    public static function trace(source:String, ?hostJson:String, ?modulesJson:String):Dynamic {
         return safely(function() {
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
-            final raw = DefinitionParser.parse(new Lexer(source).tokenize());
+            final raw = mira.Modules.collect(source, resolver(modulesJson));
             final symbols = new Symbols(raw, host);
             final declarations:Array<Dynamic> = [];
             for (definition in raw) {

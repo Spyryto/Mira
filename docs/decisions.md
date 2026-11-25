@@ -25,3 +25,7 @@
 - User-defined unary/binary `defop` and operator resolution.
 
 No backward-compatibility, shared IR, macro system or full runtime is promised before 1.0.
+
+## Direzione applicazioni (0.30)
+
+La ricerca prestazionale GUI lascia spazio alle applicazioni complete. Priorità: import e moduli, manipolazione ergonomica dei dati immutabili, liste GUI con identità stabile, interoperabilità e persistenza, tipizzazione progressiva e client/server JS/PHP. Un registro lezioni con allievi, ore e pagamenti è un progetto pilota proposto, non ancora implementato. Gli import statici a namespace condiviso sono il primo passo; namespace, export e privacy vanno progettati separatamente. Le ottimizzazioni GUI ulteriori saranno motivate dalle misure su app reali.

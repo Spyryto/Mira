@@ -2,3 +2,5 @@
 -main mira.studio.Bridge
 -js dist/studio/compiler.js
 -D js-es=6
+
+-resource lib/gui.mira@lib/gui.mira

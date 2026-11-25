@@ -9,6 +9,7 @@ typedef GeneratedLocation = {
     final line:Int;
     final column:Int;
     final name:String;
+    @:optional final file:String;
 }
 
 class SourceLocations {
@@ -21,14 +22,16 @@ class SourceLocations {
             // PHP string literals can contain actual newlines.
             nextLine += lines[i].split("\n").length;
         }
-        locations.push({
+        final location:GeneratedLocation = {
             generatedStartLine: generatedLine,
             generatedEndLine: nextLine - 1,
             line: definition.origin.line,
             column: definition.origin.column,
             name: definition.isStatement ? "<expression>"
                 : definition.isFunction() ? definition.selector() : definition.name
-        });
+        };
+        if (definition.origin.file != null) Reflect.setField(location, "file", definition.origin.file);
+        locations.push(location);
         return nextLine;
     }
 }
