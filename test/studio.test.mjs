@@ -939,13 +939,13 @@ test('Studio exports deterministic schemas and specializes functions without exe
 });
 
 test('Studio infers with annotations and specializes closed annotated signatures',()=>{
-  const source='quote: (p: {hours: Number}) -> {total: Number} = {total: (p ~ hours * 30)};';
+  const source='quote: p ({hours: Number}) -> {total: Number} = {total: (p ~ hours * 30)};';
   const report=bridge.check(source);
   assert.equal(report.ok,true,report.message);
   assert.equal(JSON.parse(report.output)[0].type,'({hours: Number}) -> {total: Number}');
   const specialized=bridge.specialize(source,'quote:',JSON.stringify([{record:{hours:'Number'}}]));
   assert.equal(specialized.ok,true,specialized.message);
-  const bad=bridge.check('x -> Text = 1;');
-  assert.equal(bad.ok,false);assert.equal(bad.diagnostic.column,6);
+  const bad=bridge.check('x (Text) = 1;');
+  assert.equal(bad.ok,false);assert.equal(bad.diagnostic.column,4);
   for(const target of ['js','php'])assert.equal(bridge.compile(source,target).ok,true);
 });
