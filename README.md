@@ -84,6 +84,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Inferenza vincolata ScalarEq per uguaglianza generica | `0.42` | [Dettagli](docs/type-checker.md#042-vincoli-di-tipo) |
 | ✅ | Diagnostica dei tipi con ancore sorgente e JSON | `0.43` | [Dettagli](docs/type-checker.md#043-diagnostica-delle-espressioni) |
 | ✅ | Firme host strutturali e verifica delle chiamate | `0.44` | [Dettagli](docs/type-checker.md#044-firme-host) |
+| ✅ | Schemi strutturati dei tipi e specializzazione | `0.45` | [Dettagli](docs/type-checker.md#045-esportazione-dei-tipi) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
