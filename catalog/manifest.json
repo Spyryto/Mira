@@ -1,5 +1,5 @@
 {
-  "version": "0.25.0",
+  "version": "0.26.0",
   "features": [
     {
       "id": "values",
@@ -1515,6 +1515,12 @@
       "title": "Anteprima GUI automatica e ispettore di specializzazione",
       "since": "0.25",
       "doc": "docs/browser-interop.md#mira-025-anteprima-e-ispettore"
+    },
+    {
+      "id": "gui-text-node-experiment",
+      "title": "Benchmark dei nodi testuali persistenti",
+      "since": "0.26",
+      "doc": "docs/browser-interop.md#mira-026-text-node-persistenti"
     }
   ]
 }
