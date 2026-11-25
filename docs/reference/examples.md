@@ -1267,3 +1267,57 @@ result = fold: numbers,
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/local-values-fold)
 
+<a id="example-local-before-declaration"></a>
+## Locale usato prima della dichiarazione
+
+Errore intenzionale che segnala il nome del valore usato troppo presto e la posizione nel sorgente.
+
+Feature: [Diagnostica e ambiguità](language.md#feature-diagnostics)
+
+```mira
+result = 4 >> {value |
+  subtotal = amount + value;
+  amount = value * 2;
+  subtotal
+};
+```
+
+**Risultato:** Errore atteso: used before its declaration
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/local-before-declaration)
+
+<a id="example-block-parameter-mangle"></a>
+## Collisione del parametro dopo mangling
+
+`a b` e `aB` sono diversi in Mira, ma non devono diventare la stessa variabile JS/PHP.
+
+Feature: [Diagnostica e ambiguità](language.md#feature-diagnostics)
+
+```mira
+a b = 4;
+result = (a b + 1) >> {aB | a b + aB};
+```
+
+**Risultato:** Errore atteso: Generated-name collision for block parameter
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/block-parameter-mangle)
+
+<a id="example-legal-nested-shadow"></a>
+## Shadowing lessicale con lo stesso nome
+
+Un parametro interno può ombreggiare correttamente un parametro esterno con identico nome.
+
+Feature: [Diagnostica e ambiguità](language.md#feature-diagnostics)
+
+```mira
+result = 4 >> {value |
+  (value + 1) >> {value |
+    value * 2
+  }
+};
+```
+
+**Risultato:** result = 10
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/legal-nested-shadow)
+

@@ -1198,10 +1198,10 @@ class ExpressionParser
 **constructor** · Crea il parser per i token di un'espressione e uno scope di parametri.
 
 ```haxe
-public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<String>, ?allowOperatorArgument:Bool = false)
+public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<String>, ?allowOperatorArgument:Bool = false, ?pendingLocals:Array<String>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L19)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L22)
 
 <a id="api-mira-syntax-expressionparser-parse"></a>
 ### `mira.syntax.ExpressionParser.parse`
@@ -1212,7 +1212,7 @@ public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<Strin
 public function parse():Expr
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L29)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L34)
 
 Feature: [Operatori aritmetici](language.md#feature-arithmetic), [Parentesi](language.md#feature-grouping), [Sezioni di operatori](language.md#feature-operator-sections), [Accesso `~` prima dell'aritmetica](language.md#feature-field-precedence)
 
