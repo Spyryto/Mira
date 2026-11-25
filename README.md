@@ -72,6 +72,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Import statici di file Mira | `0.30` | [Dettagli](docs/grammar.md#mira-030-import-statici) |
 | ✅ | Aggiornamento immutabile dei record | `0.31` | [Dettagli](docs/reference/language.md#feature-record-update) |
 | ✅ | Operazioni native sulle sequenze | `0.32` | [Dettagli](docs/reference/language.md#feature-native-sequences) |
+| ✅ | Identità stabile delle liste GUI | `0.33` | [Dettagli](docs/reference/language.md#feature-gui-keyed) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

@@ -1,4 +1,4 @@
-# Guida a Mira 0.32.0
+# Guida a Mira 0.33.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -523,4 +523,18 @@ API collegata: [`mira.resolve.Symbols`](api.md#api-mira-resolve-symbols)
 - [Aggiungere e rimuovere lezioni](examples.md#example-sequence-edit) — result = {"original":[{"id":1,"hours":2},{"id":2,"hours":1}],"remaining":[{"id":1,"hours":2},{"id":3,"hours":4}]}
 - [Registro lezioni · trasformazione e totale](examples.md#example-sequence-native-fold) — result = {"lessons":[{"hours":2,"paid":true},{"hours":3,"paid":true}],"total":150}
 - [Registro lezioni · lista dinamica](examples.md#example-sequence-gui-list) — Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+<a id="feature-gui-keyed"></a>
+## Identità stabile delle liste GUI
+
+**Disponibile dalla versione 0.33**
+
+Riconciliazione per chiave dei widget dinamici, senza wrapper DOM.
+
+each:identified by:view: è una normale funzione di lib/gui.mira che costruisce descrittori keyed:key/view. Il renderer generico mantiene le istanze per chiave fra fratelli, rimuove quelle non presenti e sposta i nodi esistenti. Stringhe non vuote e interi sicuri; duplicati e chiavi invalide sono errori prima del commit. Stato locale preservato per chiave e tipo, reinizializzato dopo rimozione e reinserimento. I widget senza chiave rimangono posizionali. Nessuna nuova sintassi; PHP costruisce i record ma non il DOM.
+
+API collegata: [`mira.HostEnvironment`](api.md#api-mira-hostenvironment)
+
+- [Identità delle righe · record GUI](examples.md#example-gui-keyed-descriptors) — result = [{"type":"keyed","key":7,"view":{"type":"text","text":"Ada"}},{"type":"keyed","key":9,"view":{"type":"text","text":"Lia"}}]
+- [Registro allievi · identità stabile](examples.md#example-gui-keyed-students) — Anteprima interattiva (browser JS; PHP compilato soltanto)
 

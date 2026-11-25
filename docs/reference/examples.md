@@ -1428,6 +1428,12 @@ state: initial, key: identity, view: factory = {
 styled: view, with: layers = {type: "styled", view: view, styles: layers};
 grid: count, children: items = {type: "grid", columns: count, children: items};
 
+# Identity belongs to the represented data, not its current position.
+keyed: identity, view: content = {type: "keyed", key: identity, view: content};
+each: items, identified by: identity, view: factory = collect: items, with: {item |
+  keyed: (item >> identity), view: (item >> factory)
+};
+
 # Un input con binding e un pulsante che cattura lo stato.
 greeting: name = column: [
   title: "Salutami",
@@ -1480,6 +1486,12 @@ state: initial, key: identity, view: factory = {
 # Style records compose from left to right; decorators do not add DOM nodes.
 styled: view, with: layers = {type: "styled", view: view, styles: layers};
 grid: count, children: items = {type: "grid", columns: count, children: items};
+
+# Identity belongs to the represented data, not its current position.
+keyed: identity, view: content = {type: "keyed", key: identity, view: content};
+each: items, identified by: identity, view: factory = collect: items, with: {item |
+  keyed: (item >> identity), view: (item >> factory)
+};
 
 # Una piccola scheda lezione, con stato immutabile e componenti.
 lesson view: model = column: [
@@ -1563,6 +1575,12 @@ state: initial, key: identity, view: factory = {
 styled: view, with: layers = {type: "styled", view: view, styles: layers};
 grid: count, children: items = {type: "grid", columns: count, children: items};
 
+# Identity belongs to the represented data, not its current position.
+keyed: identity, view: content = {type: "keyed", key: identity, view: content};
+each: items, identified by: identity, view: factory = collect: items, with: {item |
+  keyed: (item >> identity), view: (item >> factory)
+};
+
 # Il genitore cambia il passo, non lo stato dei contatori figli.
 counter: caption, step: amount = state: 0, view: {n | row: [
   button: caption, update: {old | old + amount},
@@ -1620,6 +1638,12 @@ state: initial, key: identity, view: factory = {
 styled: view, with: layers = {type: "styled", view: view, styles: layers};
 grid: count, children: items = {type: "grid", columns: count, children: items};
 
+# Identity belongs to the represented data, not its current position.
+keyed: identity, view: content = {type: "keyed", key: identity, view: content};
+each: items, identified by: identity, view: factory = collect: items, with: {item |
+  keyed: (item >> identity), view: (item >> factory)
+};
+
 # La chiave identifica la sessione: cambiare chiave azzera il figlio.
 counter view: n = row: [
   text: n,
@@ -1675,6 +1699,12 @@ state: initial, key: identity, view: factory = {
 # Style records compose from left to right; decorators do not add DOM nodes.
 styled: view, with: layers = {type: "styled", view: view, styles: layers};
 grid: count, children: items = {type: "grid", columns: count, children: items};
+
+# Identity belongs to the represented data, not its current position.
+keyed: identity, view: content = {type: "keyed", key: identity, view: content};
+each: items, identified by: identity, view: factory = collect: items, with: {item |
+  keyed: (item >> identity), view: (item >> factory)
+};
 
 # Stili riutilizzabili, layout e componenti in Mira.
 panel style = {padding: 16, gap: 8, radius: 14, borderWidth: 2,
@@ -1739,6 +1769,12 @@ state: initial, key: identity, view: factory = {
 # Style records compose from left to right; decorators do not add DOM nodes.
 styled: view, with: layers = {type: "styled", view: view, styles: layers};
 grid: count, children: items = {type: "grid", columns: count, children: items};
+
+# Identity belongs to the represented data, not its current position.
+keyed: identity, view: content = {type: "keyed", key: identity, view: content};
+each: items, identified by: identity, view: factory = collect: items, with: {item |
+  keyed: (item >> identity), view: (item >> factory)
+};
 
 # Cambia i colori senza rimontare il componente.
 base style = {padding: 18, radius: 14, gap: 12};
@@ -1828,6 +1864,12 @@ state: initial, key: identity, view: factory = {
 # Style records compose from left to right; decorators do not add DOM nodes.
 styled: view, with: layers = {type: "styled", view: view, styles: layers};
 grid: count, children: items = {type: "grid", columns: count, children: items};
+
+# Identity belongs to the represented data, not its current position.
+keyed: identity, view: content = {type: "keyed", key: identity, view: content};
+each: items, identified by: identity, view: factory = collect: items, with: {item |
+  keyed: (item >> identity), view: (item >> factory)
+};
 
 view: model = column: [
   title: "Registro lezioni",
@@ -1920,6 +1962,12 @@ state: initial, key: identity, view: factory = {
 styled: view, with: layers = {type: "styled", view: view, styles: layers};
 grid: count, children: items = {type: "grid", columns: count, children: items};
 
+# Identity belongs to the represented data, not its current position.
+keyed: identity, view: content = {type: "keyed", key: identity, view: content};
+each: items, identified by: identity, view: factory = collect: items, with: {item |
+  keyed: (item >> identity), view: (item >> factory)
+};
+
 lesson row: item = text: (item ~ name);
 view: model = column: [
   title: "Registro lezioni",
@@ -1941,4 +1989,139 @@ render (state: {lessons: [{id: 1, name: "Ada"}, {id: 2, name: "Lia"}], next id: 
 **Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/sequence-gui-list)
+
+<a id="example-gui-keyed-descriptors"></a>
+## Identità delle righe · record GUI
+
+each calcola una chiave per ogni dato, indipendentemente dalla sua posizione.
+
+Feature: [Identità stabile delle liste GUI](language.md#feature-gui-keyed)
+
+```mira
+# Mira GUI: ordinary functions; no compiler or DOM dependencies.
+column: items = {type: "column", children: items};
+row: items = {type: "row", children: items};
+title: caption = {type: "title", text: caption};
+text: content = {type: "text", text: content};
+button: caption, on click: action = {
+  type: "button", label: caption, onClick: action
+};
+button: caption, update: transition = {
+  type: "button", label: caption, update: transition
+};
+text input: caption, value: current, update: transition = {
+  type: "input", label: caption, value: current, update: transition
+};
+checkbox: caption, checked: current, update: transition = {
+  type: "checkbox", label: caption, checked: current, update: transition
+};
+choose: caption, value: current, options: choices, update: transition = {
+  type: "select", label: caption, value: current, options: choices, update: transition
+};
+state: initial, view: factory = {type: "state", initial: initial, view: factory};
+# Explicit identity for resetting a state at the same structural position.
+state: initial, key: identity, view: factory = {
+  type: "state", initial: initial, key: identity, view: factory
+};
+
+# Style records compose from left to right; decorators do not add DOM nodes.
+styled: view, with: layers = {type: "styled", view: view, styles: layers};
+grid: count, children: items = {type: "grid", columns: count, children: items};
+
+# Identity belongs to the represented data, not its current position.
+keyed: identity, view: content = {type: "keyed", key: identity, view: content};
+each: items, identified by: identity, view: factory = collect: items, with: {item |
+  keyed: (item >> identity), view: (item >> factory)
+};
+
+students = [{id: 7, name: "Ada"}, {id: 9, name: "Lia"}];
+student row: item = text: (item ~ name);
+result = each: students, identified by: (_ ~ id), view: (student row: _);
+```
+
+**Risultato:** result = [{"type":"keyed","key":7,"view":{"type":"text","text":"Ada"}},{"type":"keyed","key":9,"view":{"type":"text","text":"Lia"}}]
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/gui-keyed-descriptors)
+
+<a id="example-gui-keyed-students"></a>
+## Registro allievi · identità stabile
+
+Inverti l'ordine o rimuovi Ada: note e contatori locali seguono l'allievo, non la posizione.
+
+Feature: [Identità stabile delle liste GUI](language.md#feature-gui-keyed)
+
+```mira
+# Mira GUI: ordinary functions; no compiler or DOM dependencies.
+column: items = {type: "column", children: items};
+row: items = {type: "row", children: items};
+title: caption = {type: "title", text: caption};
+text: content = {type: "text", text: content};
+button: caption, on click: action = {
+  type: "button", label: caption, onClick: action
+};
+button: caption, update: transition = {
+  type: "button", label: caption, update: transition
+};
+text input: caption, value: current, update: transition = {
+  type: "input", label: caption, value: current, update: transition
+};
+checkbox: caption, checked: current, update: transition = {
+  type: "checkbox", label: caption, checked: current, update: transition
+};
+choose: caption, value: current, options: choices, update: transition = {
+  type: "select", label: caption, value: current, options: choices, update: transition
+};
+state: initial, view: factory = {type: "state", initial: initial, view: factory};
+# Explicit identity for resetting a state at the same structural position.
+state: initial, key: identity, view: factory = {
+  type: "state", initial: initial, key: identity, view: factory
+};
+
+# Style records compose from left to right; decorators do not add DOM nodes.
+styled: view, with: layers = {type: "styled", view: view, styles: layers};
+grid: count, children: items = {type: "grid", columns: count, children: items};
+
+# Identity belongs to the represented data, not its current position.
+keyed: identity, view: content = {type: "keyed", key: identity, view: content};
+each: items, identified by: identity, view: factory = collect: items, with: {item |
+  keyed: (item >> identity), view: (item >> factory)
+};
+
+ada = {id: 1, name: "Ada"};
+lia = {id: 2, name: "Lia"};
+
+local editor: model = column: [
+  text input: "Note", value: (model ~ note),
+    update: {old, entered | update: old, with: {note: entered}},
+  text: (model ~ count),
+  button: "+1", update: {old | update: old, with: {count: (old ~ count + 1)}}
+];
+
+student row: item = column: [
+  title: (item ~ name),
+  state: {note: "", count: 0}, view: (local editor: _)
+];
+
+visible students: model = select: (
+  if (model ~ reversed) then [lia, ada] else [ada, lia]
+), if: {item |
+  if (item ~ id == 1) then (model ~ show ada) else true
+};
+
+view: model = column: [
+  column: (each: (visible students: model),
+    identified by: (_ ~ id), view: (student row: _)),
+  button: "Inverti", update: {old |
+    update: old, with: {reversed: (if (old ~ reversed) then false else true)}
+  },
+  button: "Mostra/nascondi Ada", update: {old |
+    update: old, with: {show ada: (if (old ~ show ada) then false else true)}
+  }
+];
+render (state: {reversed: false, show ada: true}, view: (view: _));
+```
+
+**Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/gui-keyed-students)
 
