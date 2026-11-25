@@ -7,7 +7,8 @@
   <style>
     :root { font-family: system-ui, sans-serif; color: #1e2529; background: #fffdf7; }
     body { margin: 0; padding: 15px; }
-    .mira-ui-column { display: grid; gap: 12px; }
+    #mira-root, #mira-root * { box-sizing: border-box; }
+    .mira-ui-column, .mira-ui-grid { display: grid; gap: 12px; }
     .mira-ui-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
     .mira-ui-control { display: grid; gap: 5px; min-width: 0; }
     .mira-ui-label { font-size: 14px; font-weight: 700; }
