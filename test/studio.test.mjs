@@ -466,3 +466,35 @@ test('0.9 AST exposes multiple block parameters and preserves prior unary blocks
     assert.equal(compiled.ok,true,compiled.message);
   }
 });
+
+test('0.10 precedence and bare block selector arguments preserve canonical AST', () => {
+  const source = [
+    'lessons = [{hours: 2, rate: 30}, {hours: 1.5, rate: 40}];',
+    'result = fold: lessons,',
+    '  with: {total, lesson | total + (lesson ~ hours * lesson ~ rate)},',
+    '  from: 0;'
+  ].join('\\n');
+  const manifest=read('host.json');
+  const ast=bridge.ast(source,manifest);
+  assert.equal(ast.ok,true,ast.message);
+  const body=JSON.parse(ast.output).definitions[1].body;
+  assert.equal(body.kind,'HostCall');
+  assert.equal(body.selector,'fold:with:from:');
+  const reducer=body.arguments[1];
+  assert.equal(reducer.kind,'Block');
+  assert.deepEqual(reducer.parameters,['total','lesson']);
+  const expression=reducer.body;
+  assert.equal(expression.kind,'Binary');
+  assert.equal(expression.symbol,'+');
+  const multiply=expression.right;
+  assert.equal(multiply.kind,'Binary');
+  assert.equal(multiply.symbol,'*');
+  assert.equal(multiply.left.kind,'FieldGet');
+  assert.equal(multiply.left.key,'hours');
+  assert.equal(multiply.right.kind,'FieldGet');
+  assert.equal(multiply.right.key,'rate');
+  for (const target of ['js','php']) {
+    const compiled=bridge.compile(source,target,manifest);
+    assert.equal(compiled.ok,true,compiled.message);
+  }
+});

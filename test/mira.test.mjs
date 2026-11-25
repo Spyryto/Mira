@@ -661,3 +661,32 @@ test('multi-parameter blocks remain distinct from records, preserve closure capt
     assert.match(failure.stderr,diagnostic,source);
   }
 });
+
+test('~ chains left and binds before every arithmetic operator on JS and PHP', () => {
+  const programs = [
+    ['lesson = {hours: 2, rate: 30}; result = lesson ~ hours * lesson ~ rate;', '60'],
+    ['lesson = {hours: 2, rate: 30}; result = 10 + lesson ~ hours * lesson ~ rate;', '360'],
+    ['lesson = {hours: 2, rate: 30}; result = 10 + (lesson ~ hours * lesson ~ rate);', '70'],
+    ['lesson = {hours: 2, rate: 30}; result = lesson ~ rate / lesson ~ hours;', '15'],
+    ['lesson = {hours: 2, rate: 30}; result = lesson ~ rate - lesson ~ hours;', '28'],
+    ['student = {address: {postal code: 30032}}; result = student ~ address ~ postal code;', '30032'],
+    ['lesson = {hours: 2, rate: 30}; result = (lesson ~ hours) * (lesson ~ rate);', '60'],
+    ['lesson = {hours: 2, rate: 30}; result = lesson ~ hours >= 1;', 'true'],
+    ['result = 1 + 2 * 3;', '9'],
+    ['result = 2 + (3 * 4);', '14']
+  ];
+  for (const [source, expected] of programs) {
+    for (const target of ['js', 'php']) {
+      assert.equal(run(source, target), expected, source + ' / ' + target);
+    }
+  }
+});
+
+test('missing field after ~ reports a diagnostic and bare blocks remain records when appropriate', () => {
+  const error = compileError('result = {hours: 2} ~ ;');
+  assert.notEqual(error.status, 0);
+  assert.match(error.stderr, /Expected a field name after ~/);
+  for (const target of ['js','php']) {
+    assert.equal(run('result = {hours: 2, rate: 30} ~ rate;',target),'30');
+  }
+});
