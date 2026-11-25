@@ -1,5 +1,5 @@
 {
-  "version": "0.35.0",
+  "version": "0.36.0",
   "features": [
     {
       "id": "values",
@@ -1758,6 +1758,12 @@
       "title": "Effetti asincroni e servizio HTTP JSON",
       "since": "0.35",
       "doc": "docs/browser-interop.md#mira-035-effetti-asincroni-pilota"
+    },
+    {
+      "id": "fullstack-ledger",
+      "title": "Registro full-stack Mira JS/PHP con SQLite",
+      "since": "0.36",
+      "doc": "docs/studio.md#registro-full-stack-036"
     }
   ]
 }
