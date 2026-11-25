@@ -851,3 +851,28 @@ test('0.12.1 diagnostics identify local self-reference and forward reference at 
   assert.match(unrelated.stderr,/Unknown identifier/);
   assert.doesNotMatch(unrelated.stderr,/before its declaration/);
 });
+
+
+test('0.12.2 named-function parameters reject mangling collisions on JS/PHP', () => {
+  const failures = [
+    ['sum: a b, and: aB = a b + aB; result = sum: 2, and: 3;', /Generated-name collision for function parameter aB.*at 1:\\d+/],
+    ['sum: a b,\\n and: aB = a b + aB; result = sum: 2, and: 3;'.replace('\\n','\n'), /Generated-name collision for function parameter aB.*at 2:\\d+/],
+    ['a b = 7; identity: aB = aB + 1; result = identity: 2;', /Generated-name collision for function parameter aB.*at 1:\\d+/],
+    ['identity: aB = aB + 1; a b = 7; result = identity: 2;', /Generated-name collision for function parameter aB.*at 1:\\d+/],
+    ['identity: __miraHost = __miraHost + 1; result = identity: 2;', /Reserved function parameter __miraHost.*at 1:\\d+/]
+  ];
+  for (const [source, diagnostic] of failures) {
+    for (const target of ['js', 'php']) {
+      const outcome = compileError(source, target);
+      assert.notEqual(outcome.status, 0, source + ' / ' + target);
+      assert.match(outcome.stderr, diagnostic, source + ' / ' + target);
+    }
+  }
+  for (const [source, expected] of [
+    ['x = 100; increment: x = x + 1; result = increment: 5;', '6'],
+    ['sum: a b, and: c = a b + c; result = sum: 2, and: 3;', '5']
+  ]) {
+    for (const target of ['js', 'php'])
+      assert.equal(run(source, target), expected, source + ' / ' + target);
+  }
+});
