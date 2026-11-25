@@ -388,3 +388,41 @@ diventa un normale messaggio. Il programma è compilato in build su JS e PHP;
 solo JS monta la pagina. Sorgente Mira consultabile dalla pagina, asset
 offline. Il servizio è simulato e non utilizza la rete. L'editor non
 riceve nuove capability. Vedi [semantica](browser-interop.md#mira-035-effetti-asincroni-pilota).
+
+## Registro full-stack (0.36)
+
+Il pilota separato in [examples/fullstack](../examples/fullstack) usa il
+renderer generico e il runtime degli effetti 0.35. Il frontend descrive
+richieste JSON e mostra soltanto snapshot confermati dal server; il backend
+Mira applica aggiunta, incremento ore, pagamento e rimozione a un modello
+immutabile. L'adapter PHP valida richieste, gestisce HTTP e salva lo snapshot
+JSON in una singola riga SQLite dentro una transazione BEGIN IMMEDIATE.
+Ogni modifica porta la revisione attesa; una richiesta obsoleta riceve 409.
+Gli ID sono assegnati dal server e non riutilizzati. Nessuna modifica alla
+grammatica, ai renderer specializzati o al registro locale 0.34.
+
+```sh
+npm run build:fullstack
+php -S 127.0.0.1:8080 -t dist/fullstack/public
+```
+
+Aprire http://127.0.0.1:8080/; servire esclusivamente public, mai private.
+La cartella private contiene il programma PHP generato e il database.
+Per il test occorrono Haxe 4.3.7, Node 22+, PHP 8.3 con PDO SQLite e
+Chrome/Chromium (CHROME_BIN se necessario): npm run test:fullstack.
+
+Una sola operazione in volo per frontend; input e mutazioni sospesi mentre
+attende. Errore HTTP o timeout (10 s) blocca le mutazioni fino a ricarica:
+non si ritenta automaticamente un'operazione che potrebbe essere stata
+confermata dal server. La revisione protegge da scritture perse, non è
+autenticazione o un meccanismo generale di idempotenza. Una singola tabella
+snapshot è una scelta deliberata per il pilota (100 lezioni, nomi fino a
+120 byte, 10000 ore); non è un database relazionale di produzione. Non usare
+dati personali reali. Nessun CORS, utenti, backup o deploy pubblico.
+
+Il workflow Mira full-stack integration avvia PHP e Chromium su loopback,
+compila i due programmi, verifica DOM, CRUD, errore di rete, riavvio server,
+conflitti di revisione e validazione. Produce screenshot e campioni di
+latenza HTTP di lettura sequenziale (30 dopo 5 warmup), non throughput
+concorrente o prestazioni del browser; nessuna soglia prestazionale.
+Il sito Pages resta statico: il bundle server non viene pubblicato.
