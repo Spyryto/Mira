@@ -18,7 +18,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.42.0"
+            version: "0.43.0"
         });
     }
 
@@ -200,6 +200,8 @@ class Bridge {
     static function safely(produce:Void->String):Dynamic {
         try {
             return {ok: true, output: produce()};
+        } catch (error:MiraError) {
+            return {ok: false, message: error.message, diagnostic: error.diagnostic};
         } catch (error:haxe.Exception) {
             return {ok: false, message: error.message};
         } catch (error:Dynamic) {
