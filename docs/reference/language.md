@@ -516,7 +516,7 @@ API collegata: [`mira.resolve.Symbols`](api.md#api-mira-resolve-symbols)
 
 Append, rimozione, trasformazione, filtro e riduzione immutabili senza host.
 
-append:to: aggiunge un elemento; remove:if: elimina tutti quelli per cui il predicato è true. collect:with:/map:with:, filter:with:/select:if:/select:with: e fold:with:from: sono native per default. Le vecchie capability possono essere ancora dichiarate esplicitamente per compatibilità (es. fold dell'AST). Ordine stabile, liste dense, predicato Boolean, nessuna mutazione degli operandi; PHP usa array_is_list. Il renderer generico supporta le liste variabili, ancora con identità posizionale.
+append:to: aggiunge un elemento; remove:if: elimina tutti quelli per cui il predicato è true. collect:with:/map:with:, filter:with:/select:if:/select:with: e fold:with:from: sono native per default. Le vecchie capability possono essere ancora dichiarate esplicitamente per compatibilità (es. fold dell'AST). Ordine stabile, liste dense, predicato Boolean, nessuna mutazione degli operandi; PHP usa array_is_list. L'esempio 0.32 usa identità posizionale; dalla 0.33 le liste possono dichiarare chiavi stabili.
 
 API collegata: [`mira.resolve.Symbols`](api.md#api-mira-resolve-symbols)
 
