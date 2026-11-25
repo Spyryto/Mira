@@ -23,5 +23,6 @@ enum Expr {
     Placeholder;
     Section(selector:String, arguments:Array<Expr>);
     HostSection(selector:String, arguments:Array<Expr>);
-    Apply(callee:Expr, argument:Expr);
+    // A null argument represents a zero-argument call, not a Mira value.
+    Apply(callee:Expr, argument:Null<Expr>);
 }
