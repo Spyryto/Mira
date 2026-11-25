@@ -444,3 +444,10 @@ Calcola preventivo usa il secondo servizio direttamente da Mira, senza
 modificare il modello persistente. La CI verifica anche i contratti
 invalidi e la determinazione dell'output.
 Vedi [contratti RPC](browser-interop.md#mira-038-contratti-di-servizio).
+
+## Laboratorio tipi (0.39)
+
+Il laboratorio `type-lab.html` è accessibile dalla homepage e funziona
+offline. Il sorgente è analizzato dall'API `MiraStudioCompiler.check`;
+mostra tipi delle dichiarazioni o il primo errore, senza eseguire codice.
+Vedi [nucleo e limiti dell'inferenza](type-checker.md).

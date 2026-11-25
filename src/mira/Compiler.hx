@@ -31,6 +31,12 @@ class Compiler {
         };
     }
 
+    // Checking is opt-in while the type system is experimental.
+    public static function check(source:String, ?host:HostEnvironment,
+        ?readModule:String->Null<String>, ?entry:String):Array<Dynamic> {
+        return new mira.types.TypeChecker().check(parse(source,host,readModule,entry));
+    }
+
     public static function inspectTokens(source:String):String {
         final tokens = new Lexer(source).tokenize();
         final items:Array<Dynamic> = [];

@@ -1,5 +1,5 @@
 {
-  "version": "0.38.0",
+  "version": "0.39.0",
   "features": [
     {
       "id": "values",
@@ -1776,6 +1776,12 @@
       "title": "Contratti RPC dichiarativi Mira e registrazioni generate",
       "since": "0.38",
       "doc": "docs/browser-interop.md#mira-038-contratti-di-servizio"
+    },
+    {
+      "id": "type-inference",
+      "title": "Inferenza strutturale sperimentale, opt-in",
+      "since": "0.39",
+      "doc": "docs/type-checker.md"
     }
   ]
 }

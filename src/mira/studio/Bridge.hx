@@ -14,10 +14,11 @@ class Bridge {
         final global:Dynamic = js.Syntax.code("globalThis");
         Reflect.setField(global, "MiraStudioCompiler", {
             compile: compile,
+            check: check,
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.38.0"
+            version: "0.39.0"
         });
     }
 
@@ -55,6 +56,13 @@ class Bridge {
         });
         if (withLocations && result.ok) Reflect.setField(result, "locations", locations);
         return result;
+    }
+
+    public static function check(source:String, ?hostJson:String, ?modulesJson:String):Dynamic {
+        return safely(function() {
+            final host = hostJson == null ? HostEnvironment.empty() : HostEnvironment.fromJson(hostJson);
+            return haxe.Json.stringify(Compiler.check(source,host,resolver(modulesJson)), null, "  ");
+        });
     }
 
     public static function tokens(source:String):Dynamic {

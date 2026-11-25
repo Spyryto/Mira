@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.38.0');
+  assert.equal(bridge.version, '0.39.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.38.0');
+  assert.equal(bridge.version,'0.39.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -858,4 +858,18 @@ test('effects pilot is built and offline-cacheable',()=>{
     assert.ok(read('sw.js').includes("'./"+asset+"'"));
   }
   assert.match(read('index.html'),/href="\.\/effects-demo\.html"/);
+});
+
+test('type laboratory is available offline and uses the real compiler',()=>{
+  const result=bridge.check('identity: x = x; a = identity: 1; b = identity: "ok";');
+  assert.equal(result.ok,true,result.message);
+  assert.deepEqual(JSON.parse(result.output).map(x=>x.type),["('a) -> 'a","Number","Text"]);
+  const bad=bridge.check('a = 1 + "oops";');
+  assert.equal(bad.ok,false);
+  assert.match(bad.message,/expected Number, got Text/);
+  for(const asset of ['type-lab.html','type-lab.js']){
+    assert.ok(read(asset).length>0);
+    assert.ok(read('sw.js').includes(asset));
+  }
+  assert.ok(read('index.html').includes('type-lab.html'));
 });

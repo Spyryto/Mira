@@ -68,6 +68,10 @@
     "docs/gui-rendering.md": {
       "kind": "ai_assisted",
       "note": "Sintesi della storia GUI e delle decisioni; dati CI recuperati dai log e risultati iPhone/TV trascritti dalle immagini fornite dall'autore. L'archivio JSON conserva i dati."
+    },
+    "docs/type-checker.md": {
+      "kind": "ai_assisted",
+      "note": "Descrizione del checker e dei limiti sperimentali redatta con assistenza IA."
     }
   },
   "generatedSections": {
