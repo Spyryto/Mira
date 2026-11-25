@@ -18,9 +18,11 @@ class ExpressionParser {
     var position:Int = 0;
     var operatorDepth:Int = 0;
     final allowOperatorArgument:Bool;
+    final origins:Null<ExpressionOrigins>;
 
     public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<String>,
-        ?allowOperatorArgument:Bool = false, ?pendingLocals:Array<String>) {
+        ?allowOperatorArgument:Bool = false, ?pendingLocals:Array<String>, ?origins:ExpressionOrigins) {
+        this.origins = origins;
         this.tokens = tokens.copy();
         final last = tokens.length > 0 ? tokens[tokens.length - 1] : new Token(End, "", 1, 1);
         this.tokens.push(new Token(End, "", last.line, last.column, last.file));
@@ -29,6 +31,10 @@ class ExpressionParser {
         this.pendingLocals = pendingLocals == null ? [] : pendingLocals;
         this.allowOperatorArgument = allowOperatorArgument;
         this.selectorResolver = new SelectorResolver(symbols);
+    }
+
+    inline function at(expr:Expr, token:Token):Expr {
+        return origins == null ? expr : origins.remember(expr,token);
     }
 
     public function parse():Expr {
@@ -52,7 +58,7 @@ class ExpressionParser {
             final token = consume();
             final callee = fieldAccess();
             validatePipeline(callee, 0, token);
-            left = Apply(callee, null);
+            left = at(Apply(callee, null),token);
         } else {
             left = fieldAccess();
         }
@@ -64,9 +70,9 @@ class ExpressionParser {
             final right = fieldAccess();
             if (token.value == ">>") {
                 validatePipeline(right, 1, token);
-                left = Apply(right, left);
+                left = at(Apply(right, left),token);
             } else {
-                left = Binary(token.value, left, right);
+                left = at(Binary(token.value, left, right),token);
             }
         }
         return left;
@@ -109,7 +115,8 @@ class ExpressionParser {
         var left = application();
         while (current().isSymbol("~")) {
             consume();
-            left = FieldGet(left, literalKey("Expected a field name after ~"));
+            final keyToken = current();
+            left = at(FieldGet(left, literalKey("Expected a field name after ~")),keyToken);
         }
         return left;
     }
@@ -124,8 +131,9 @@ class ExpressionParser {
                     throw new MiraError("Zero-argument block requires () >>", current());
                 default:
             }
+            final argumentToken = current();
             final argument = primary();
-            callee = Apply(callee, argument);
+            callee = at(Apply(callee, argument),argumentToken);
         }
         return callee;
     }
@@ -146,8 +154,8 @@ class ExpressionParser {
 
     function primary():Expr {
         final token = current();
-        if (token.isSymbol("[")) return sequence();
-        if (token.isSymbol("{")) return isBlockStart() ? block() : record();
+        if (token.isSymbol("[")) return at(sequence(),token);
+        if (token.isSymbol("{")) return at(isBlockStart() ? block() : record(),token);
         if (token.isSymbol("(")) {
             consume();
             if (current().isSymbol(")")) throw new MiraError("Expected expression: Empty () is only allowed before >>", token);
@@ -160,33 +168,33 @@ class ExpressionParser {
         }
         if (token.kind == Number) {
             consume();
-            return Numeric(token.value);
+            return at(Numeric(token.value),token);
         }
         if (token.kind == Text) {
             consume();
-            return Text(token.value);
+            return at(Text(token.value),token);
         }
         if (token.kind != Word) throw new MiraError("Expected expression", token);
         // Native, typed-independent Boolean/record features; no host dispatch.
         if (token.value == "true" || token.value == "false") {
             consume();
-            return BooleanLiteral(token.value == "true");
+            return at(BooleanLiteral(token.value == "true"),token);
         }
         if (token.value == "field" && tokens[position + 1].kind == Text) {
             consume(); // field
             final key = consume().value;
-            return FieldAccessor(key);
+            return at(FieldAccessor(key),token);
         }
         if (token.value == "if" && (tokens[position + 1].isSymbol(":")
             || tokens[position + 1].isSymbol("("))) {
-            return conditional();
+            return at(conditional(),token);
         }
         if (token.value == "_") {
             // Inside an explicit {_ | body} block, every _ is the SAME
             // lexical variable, not a new implicit section parameter.
             if (localNames.indexOf("_") >= 0) {
                 consume();
-                return Name("_");
+                return at(Name("_"),token);
             }
             if (operatorDepth > 0 || allowOperatorArgument) {
                 consume();
@@ -207,14 +215,14 @@ class ExpressionParser {
                     holes++;
                 } else {
                     args.push(new ExpressionParser(argumentTokens, symbols, localNames,
-                        true, pendingLocals).parse());
+                        true, pendingLocals, origins).parse());
                 }
             }
             if (symbols.isHostSelector(matched.selector)) {
-                return holes == 0 ? HostCall(matched.selector, args)
-                    : HostSection(matched.selector, args);
+                return at(holes == 0 ? HostCall(matched.selector, args)
+                    : HostSection(matched.selector, args),token);
             }
-            return holes == 0 ? Call(matched.selector, args) : Section(matched.selector, args);
+            return at(holes == 0 ? Call(matched.selector, args) : Section(matched.selector, args),token);
         }
 
         final name = symbols.resolveName(tokens, position, localNames);
@@ -222,9 +230,9 @@ class ExpressionParser {
             position += name.split(" ").length;
             // Local parameter shadows an external name if explicitly present.
             if (localNames.indexOf(name) == -1 && symbols.isHostName(name)) {
-                return HostRef(name);
+                return at(HostRef(name),token);
             }
-            return Name(name);
+            return at(Name(name),token);
         }
         for (future in pendingLocals) {
             if (Symbols.matchesWords(tokens, position, future)) {
@@ -270,7 +278,7 @@ class ExpressionParser {
         }
         if (start == position) throw new MiraError("Expected then expression", current());
         final whenTrue = new ExpressionParser(tokens.slice(start, position), symbols,
-            localNames, allowOperatorArgument, pendingLocals).parse();
+            localNames, allowOperatorArgument, pendingLocals, origins).parse();
 
         optionalSymbol(",");
         requireWord("else");
@@ -414,7 +422,7 @@ class ExpressionParser {
                 }
                 // The initializer is resolved before this name comes into scope.
                 final value = expression();
-                expressions.push(Expr.Local(name, value));
+                expressions.push(at(Expr.Local(name, value),nameToken));
                 taken.push(symbol);
                 localNames.unshift(name);
                 bindings.push(name);
@@ -527,7 +535,7 @@ class ExpressionParser {
     // Parenthesized binary expressions can be functions without a new lambda
     // grammar. The holes must be direct operands; grouping stays explicit.
     function sectionify(expr:Expr):Expr {
-        return switch (expr) {
+        final result:Expr = switch (expr) {
             case Binary(symbol, left, right):
                 switch ([left, right]) {
                     case [FieldGet(Placeholder, _), _] | [_, FieldGet(Placeholder, _)]:
@@ -542,6 +550,7 @@ class ExpressionParser {
                 throw new MiraError("Placeholder '_' requires an operator section", current());
             default: expr;
         };
+        return origins == null ? result : origins.inherit(result,expr);
     }
 
     static function isPlaceholder(expr:Expr):Bool {

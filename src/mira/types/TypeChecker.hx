@@ -3,6 +3,7 @@ package mira.types;
 import mira.MiraError;
 import mira.syntax.Definition;
 import mira.syntax.Expr;
+import mira.syntax.ExpressionOrigins;
 import mira.lex.Token;
 
 private typedef LocalScheme = {
@@ -21,7 +22,9 @@ class TypeChecker {
     var nextId = 0;
     var origin:Token;
 
-    public function new() {}
+    final origins:ExpressionOrigins;
+
+    public function new(origins:ExpressionOrigins) this.origins = origins;
 
     public function check(program:Array<Definition>):Array<Dynamic> {
         for (d in program) if (!d.isStatement)
@@ -41,7 +44,7 @@ class TypeChecker {
     function fresh():Type return Variable(nextId++);
 
     function fail(message:String):Dynamic {
-        throw new MiraError("Type check: " + message, origin);
+        throw new MiraError("Type check: " + message, origin, "type_error");
     }
 
     function prune(type:Type):Type {
@@ -373,7 +376,26 @@ class TypeChecker {
         };
     }
 
+    function unifyAt(a:Type,b:Type,expr:Expr):Void {
+        final previous = origin;
+        final anchor = origins.get(expr);
+        if (anchor != null) origin = anchor;
+        unify(a,b);
+        origin = previous;
+    }
+
     function infer(expr:Expr,scope:Map<String,LocalScheme>):Type {
+        final previous = origin;
+        final anchor = origins.get(expr);
+        if (anchor != null) origin = anchor;
+        final type:Type = inferNode(expr,scope);
+        origin = previous;
+        return type;
+    }
+
+    // A failed child keeps its own anchor in the exception. A successful
+    // child restores the enclosing operator/call before unification.
+    function inferNode(expr:Expr,scope:Map<String,LocalScheme>):Type {
         return switch (expr) {
             case Numeric(_): NumberType;
             case Text(_): TextType;
@@ -390,13 +412,13 @@ class TypeChecker {
                 final record = fresh();
                 FunctionType([record],projection(record,key));
             case Conditional(condition,yes,no):
-                unify(BooleanType,infer(condition,scope));
+                unifyAt(BooleanType,infer(condition,scope),condition);
                 final a = infer(yes,scope);
-                unify(a,infer(no,scope));
+                unifyAt(a,infer(no,scope),no);
                 a;
             case Sequence(items):
                 final item = fresh();
-                for (e in items) unify(item,infer(e,scope));
+                for (e in items) unifyAt(item,infer(e,scope),e);
                 ListType(item);
             case Record(keys,values):
                 RecordType([for (i in 0...keys.length) keys[i] => infer(values[i],scope)],null);

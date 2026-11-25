@@ -41,7 +41,7 @@ class Lexer {
                 while (isLetter(current()) || isDigit(current()) || current() == "_") {
                     advance();
                 }
-                tokens.push(new Token(Word, source.substring(start, offset), tokenLine, tokenColumn, file));
+                tokens.push(new Token(Word, source.substring(start, offset), tokenLine, tokenColumn, file, line, column));
                 continue;
             }
 
@@ -56,7 +56,7 @@ class Lexer {
                         advance();
                     }
                 }
-                tokens.push(new Token(Number, source.substring(start, offset), tokenLine, tokenColumn, file));
+                tokens.push(new Token(Number, source.substring(start, offset), tokenLine, tokenColumn, file, line, column));
                 continue;
             }
 
@@ -81,16 +81,16 @@ class Lexer {
                 }
 
                 if (!closed) {
-                    throw new MiraError("Unterminated string", new Token(Text, "", tokenLine, tokenColumn, file));
+                    throw new MiraError("Unterminated string", new Token(Text, "", tokenLine, tokenColumn, file, line, column));
                 }
                 final raw = source.substring(start, offset);
                 var decoded:String;
                 try {
                     decoded = haxe.Json.parse(raw);
                 } catch (error:Dynamic) {
-                    throw new MiraError("Invalid string literal", new Token(Text, "", tokenLine, tokenColumn, file));
+                    throw new MiraError("Invalid string literal", new Token(Text, "", tokenLine, tokenColumn, file, line, column));
                 }
-                tokens.push(new Token(Text, decoded, tokenLine, tokenColumn, file));
+                tokens.push(new Token(Text, decoded, tokenLine, tokenColumn, file, line, column));
                 continue;
             }
 
@@ -98,13 +98,13 @@ class Lexer {
             if (["==", "!=", "<=", ">=", "&&", "||", ">>"].indexOf(pair) != -1) {
                 advance();
                 advance();
-                tokens.push(new Token(Symbol, pair, tokenLine, tokenColumn, file));
+                tokens.push(new Token(Symbol, pair, tokenLine, tokenColumn, file, line, column));
                 continue;
             }
 
             if ("()[]{}:,;=+-*/%<>~!|".indexOf(character) != -1) {
                 advance();
-                tokens.push(new Token(Symbol, character, tokenLine, tokenColumn, file));
+                tokens.push(new Token(Symbol, character, tokenLine, tokenColumn, file, line, column));
                 continue;
             }
 

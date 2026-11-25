@@ -58,7 +58,15 @@ class Main {
                 return fs.readFileSync(actual, "utf8");
             };
             var output:String;
-            if (locationFlag >= 0) {
+            if (args[1] == "--check-json") {
+                if (locationFlag >= 0) throw new MiraError("--locations is not applicable to --check-json");
+                try {
+                    output = haxe.Json.stringify({ok:true, types:Compiler.check(source,host,readModule,entry), diagnostics:[]}, null, "  ") + "\n";
+                } catch (error:MiraError) {
+                    output = haxe.Json.stringify({ok:false, types:[], diagnostics:[error.diagnostic]}, null, "  ") + "\n";
+                    nodeProcess.exitCode = 1;
+                }
+            } else if (locationFlag >= 0) {
                 final locations:Array<GeneratedLocation> = [];
                 final code = Compiler.transpile(source, parseTarget(args[1]), host, locations, readModule, entry);
                 output = haxe.Json.stringify({output: code, locations: locations}, null, "  ") + "\n";
@@ -89,7 +97,7 @@ class Main {
 
     static function usage(nodeProcess:Dynamic):Void {
         nodeProcess.stderr.write(
-            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens|--check> [output] [--host manifest.json] [--locations]\n"
+            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens|--check|--check-json> [output] [--host manifest.json] [--locations]\n"
         );
         nodeProcess.exitCode = 2;
     }
