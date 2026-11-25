@@ -64,6 +64,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Specializzazione di componenti GUI componibili | `0.22` | [Dettagli](docs/browser-interop.md#mira-022-componenti-componibili) |
 | ✅ | Rendering ibrido a regioni con stato condiviso | `0.23` | [Dettagli](docs/browser-interop.md#mira-023-rendering-ibrido) |
 | ✅ | Riconoscimento automatico delle regioni GUI | `0.24` | [Dettagli](docs/browser-interop.md#mira-024-selezione-automatica-del-renderer) |
+| ✅ | Anteprima GUI automatica e ispettore di specializzazione | `0.25` | [Dettagli](docs/browser-interop.md#mira-025-anteprima-e-ispettore) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
