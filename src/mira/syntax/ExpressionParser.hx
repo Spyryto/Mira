@@ -5,6 +5,7 @@ import mira.lex.Token;
 import mira.lex.Token.TokenKind;
 import mira.resolve.SelectorResolver;
 import mira.resolve.Symbols;
+import mira.resolve.Mangle;
 
 class ExpressionParser {
     final tokens:Array<Token>;
@@ -61,6 +62,11 @@ class ExpressionParser {
                         if (holes != 1) {
                             throw new MiraError("Pipeline needs a unary operator section; this section has "
                                 + holes + " holes", token);
+                        }
+                    case Block(parameters, _):
+                        if (parameters.length != 1) {
+                            throw new MiraError("Pipeline needs a unary block; this block has "
+                                + parameters.length + " parameters", token);
                         }
                     case Numeric(_) | Text(_) | BooleanLiteral(_) | Binary(_, _, _) | Placeholder
                         | FieldGet(_, _):
@@ -277,32 +283,54 @@ class ExpressionParser {
         return Sequence(items);
     }
 
-    // A leading parameter name followed by | selects a function block.
-    // {name: value} stays a record, with no backtracking or type inference.
+    // A sequence of one or more parameter names separated by commas and
+    // followed by | distinguishes a block from a record, without guessing.
     function isBlockStart():Bool {
         var cursor = position + 1;
         if (tokens[cursor].kind != Word) return false;
-        while (tokens[cursor].kind == Word) cursor++;
-        return tokens[cursor].isSymbol("|");
+        while (true) {
+            while (tokens[cursor].kind == Word) cursor++;
+            if (tokens[cursor].isSymbol("|")) return true;
+            if (!tokens[cursor].isSymbol(",")) return false;
+            cursor++;
+            if (tokens[cursor].kind != Word) return false;
+        }
+        return false;
     }
 
-    // Minimal expression block: exactly one named parameter and one body
-    // expression. Supports multiword names and the explicit _ parameter.
+    // A block is one expression with one or more explicit parameters.
+    // Names can have spaces. Repeated _ refers to a single bound parameter.
     function block():Expr {
         consume(); // {
-        final parameterToken = current();
-        final words:Array<String> = [];
-        while (current().kind == Word) words.push(consume().value);
-        final parameter = words.join(" ");
-        requireSymbol("|");
-        if (parameter == "__miraHost") {
-            throw new MiraError("Reserved block parameter __miraHost", parameterToken);
+        final parameters:Array<String> = [];
+        final emitted:Array<String> = [];
+        while (true) {
+            final parameterToken = current();
+            final words:Array<String> = [];
+            while (current().kind == Word) words.push(consume().value);
+            if (words.length == 0) {
+                throw new MiraError("Expected block parameter", parameterToken);
+            }
+            final parameter = words.join(" ");
+            final symbol = Mangle.name(parameter);
+            if (symbol == "__miraHost") {
+                throw new MiraError("Reserved block parameter __miraHost", parameterToken);
+            }
+            if (parameters.indexOf(parameter) >= 0 || emitted.indexOf(symbol) >= 0) {
+                throw new MiraError("Duplicate or conflicting block parameter " + parameter,
+                    parameterToken);
+            }
+            parameters.push(parameter);
+            emitted.push(symbol);
+            if (!current().isSymbol(",")) break;
+            consume();
         }
-        localNames.unshift(parameter);
+        requireSymbol("|");
+        for (parameter in parameters) localNames.unshift(parameter);
         final body = expression();
-        localNames.shift();
+        for (_ in parameters) localNames.shift();
         requireSymbol("}");
-        return Block(parameter, body);
+        return Block(parameters, body);
     }
 
     function record():Expr {
