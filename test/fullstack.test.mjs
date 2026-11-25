@@ -6,6 +6,31 @@ import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {createServer} from 'node:net';
 import {performance} from 'node:perf_hooks';
+import {runInNewContext} from 'node:vm';
+import {generateRpcContract} from '../scripts/rpc-contract.mjs';
+
+
+test('Mira RPC declaration generates both registries without evaluating source',()=>{
+  const context={};
+  runInNewContext(readFileSync('dist/studio/compiler.js','utf8'),context);
+  const compiler=context.MiraStudioCompiler;
+  const source=readFileSync('examples/fullstack/services.mira','utf8');
+  const server=readFileSync('examples/fullstack/ledger-server.mira','utf8');
+  const contract=generateRpcContract(compiler,source,server);
+  const client={};runInNewContext(contract.client,client);
+  assert.deepEqual(JSON.parse(JSON.stringify(client.MiraRpcBindings)),{ledger:'ledger.command',quote:'ledger.quote'});
+  assert.ok(Object.isFrozen(client.MiraRpcBindings));
+  assert.match(contract.server, /ledgerCommand/);
+  assert.match(contract.server, /static fn/);
+  assert.deepEqual(generateRpcContract(compiler,source,server),contract);
+  assert.throws(()=>generateRpcContract(compiler,source.replace('handler: "quote"','handler: "missing"'),server),/unknown unary Mira selector/);
+  assert.throws(()=>generateRpcContract(compiler,source.replace('capability: "quote"','capability: "ledger"'),server),/duplicate capability or method/);
+  assert.throws(()=>generateRpcContract(compiler,source.replace('method: "ledger.quote"','method: "ledger.command"'),server),/duplicate capability or method/);
+  assert.throws(()=>generateRpcContract(compiler,source.replace('min: 1','min: 20000'),server),/invalid integer parameter/);
+  assert.throws(()=>generateRpcContract(compiler,'services = 1 + 2;',server),/only literal data/);
+  const multi=generateRpcContract(compiler,source.replace('handler: "quote"','handler: "quote request"'),server.replace('quote: params','quote request: params'));
+  assert.match(multi.server, /quote_request\(/);
+});
 
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 async function until(fn, label) {
@@ -129,7 +154,7 @@ test('full-stack ledger: actual Chromium, compiled Mira JS/PHP and SQLite', {tim
     await click('Saldato / non saldato');await waitText('Sincronizzato');
     let saved=(await post({action:'load'})).body;
     assert.deepEqual(saved,{revision:3,'next id':2,lessons:[{id:1,student:'Ada',hours:2,paid:true}]});
-    assert.match(await text(),/60/);
+    assert.match(await text(),/Compenso totale \(€\)\s+60/);
     const screenshot=await cdp.call('Page.captureScreenshot',{format:'png'});
     writeFileSync(join(report,'ledger.png'),Buffer.from(screenshot.data,'base64'));
     assert.ok(existsSync(join(dir,'private','ledger.sqlite')));
