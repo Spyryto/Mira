@@ -6,11 +6,11 @@
   const boundedText=v=>typeof v==='string'&&v.length<=120;
   function valid(model){
     if(!model||typeof model!=='object'||!boundedText(model.draft)||
-       !Number.isSafeInteger(model.nextId)||model.nextId<1||
+       !Number.isSafeInteger(model['next id'])||model['next id']<1||
        !Array.isArray(model.lessons)||model.lessons.length>100)return false;
     const ids=new Set();
     for(const item of model.lessons){
-      if(!item||!Number.isSafeInteger(item.id)||item.id<1||item.id>=model.nextId||
+      if(!item||!Number.isSafeInteger(item.id)||item.id<1||item.id>=model['next id']||
         ids.has(item.id)||!boundedText(item.student)||!item.student.length||
         !Number.isSafeInteger(item.hours)||item.hours<1||item.hours>10000||
         typeof item.paid!=='boolean')return false;

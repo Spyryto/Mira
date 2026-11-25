@@ -835,7 +835,7 @@ test('0.34 ledger compiles on both targets and is bundled offline',()=>{
   for(const target of ['js','php'])assert.equal(bridge.compile(source,target,host).ok,true,bridge.compile(source,target,host).message);
   const sandbox={};runInNewContext(read('persistent-ledger-program.js'),sandbox);
   let spec;sandbox.MiraLessonLedgerProgram({render:v=>{spec=v;}});
-  assert.equal(spec.type,'state');assert.equal(spec.initial.nextId,1);
+  assert.equal(spec.type,'state');assert.equal(spec.initial['next id'],1);
   assert.ok(spec.view(spec.initial).children.length>0);
   for(const asset of ['persistent-ledger.html','persistent-ledger.css','persistent-state.js','persistent-ledger.js','persistent-ledger-program.js','persistent-ledger.mira']){
     assert.ok(existsSync(resolve(site,asset)));assert.ok(read('sw.js').includes('./'+asset));

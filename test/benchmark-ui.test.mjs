@@ -626,6 +626,7 @@ test('0.34 real Chromium persistent ledger survives document reload',{timeout:90
     const mount=document.getElementById('mount');
     const action=name=>[...mount.querySelectorAll('button')].find(b=>b.textContent===name).click();
     const input=mount.querySelector('input');
+    check(input,document.getElementById('storage-status').textContent);
     input.value='Ada';input.dispatchEvent(new Event('input',{bubbles:true}));
     action('Aggiungi lezione');action('+1 ora');action('Saldato / non saldato');
     const stored=JSON.parse(localStorage.getItem(key));
