@@ -238,6 +238,11 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Laboratory in Mira Studio](https://spyryto.github.io/Mira/laboratory.html) raccoglie l'evoluzione 0.15–0.34, i benchmark CI e le misure dell'autore su iPhone e smart TV. [Rapporto tecnico](docs/gui-rendering.md) · [Archivio JSON](catalog/laboratory/gui-rendering.json). Il rapporto storico è statico e separato dal benchmark eseguibile.
 
+## Mira 0.48: annotazioni locali
+
+La stessa notazione `nome (Tipo)` vale nei blocchi e nelle
+dichiarazioni locali immutabili. [Dettagli](docs/type-checker.md#048-annotazioni-locali).
+
 ## Mira 0.47: annotazioni esplicite
 
 Annotazioni facoltative `nome (Tipo)` per parametri e valori globali,
