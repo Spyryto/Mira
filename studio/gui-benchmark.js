@@ -362,6 +362,97 @@
     return {ok:true,version:compiler.version,bursts,results};
   }
 
+
+  const panelCount=16,panelRows=16,panelHeight=960;
+  function containmentSource(workload){
+    if(!['all','far'].includes(workload))throw new Error('Unknown containment workload');
+    const panels=Array.from({length:panelCount},(_,i)=>{
+      const text=workload==='all'||i===panelCount-1
+        ? '(if (n % 2 == 0) then "Riga breve" else "Una riga di testo piu lunga che puo andare a capo nel viewport")'
+        : '"Riga breve"';
+      return '{type: "column", children: ['+Array.from({length:panelRows},()=>'{type: "text", text: '+text+'}').join(', ')+']}';
+    });
+    return 'long view: n = {type: "column", children: ['+panels.join(', ')+
+      ', {type: "button", label: "Next", update: {old | old + 1}}]};';
+  }
+  async function runContainmentExperiment(compiler,mount){
+    if(!mount.isConnected||document.visibilityState==='hidden')throw new Error('Serve una pagina visibile e collegata');
+    const supported={contain:CSS.supports('contain','layout paint'),auto:CSS.supports('content-visibility','auto')};
+    const modes=['normal',...(supported.contain?['contain']:[]),...(supported.auto?['auto']:[])];
+    const samples=7,steps=20,results=[];
+    const savedStyle=mount.style.cssText,scrollX=window.scrollX,scrollY=window.scrollY;
+    const frame=()=>new Promise(resolve=>requestAnimationFrame(resolve));
+    const expected=n=>n%2===0?'Riga breve':'Una riga di testo piu lunga che puo andare a capo nel viewport';
+    try{
+      Object.assign(mount.style,{height:'240px',width:'320px',maxWidth:'100%',minWidth:'240px',boxSizing:'border-box',
+        overflow:'auto',overflowAnchor:'none',scrollBehavior:'auto',padding:'0'});
+      mount.scrollIntoView({block:'center'});
+      for(const workload of ['all','far']){
+        const compiled=global.MiraGuiSpecialize.compile(compiler,containmentSource(workload),'long view:');
+        const measurements=Object.fromEntries(modes.map(mode=>[mode,{update:[],reveal:[],height:[],skipped:[]}]));
+        for(let round=0;round<samples;round++){
+          for(let i=0;i<modes.length;i++){
+            const mode=modes[(i+round)%modes.length],sample=measurements[mode];
+            const app=global.MiraGuiSpecialize.mount(compiled,mount,0);
+            const column=mount.children[0].children[0],panels=[...column.children].slice(0,panelCount);
+            const button=column.children[panelCount],first=panels[0].children[0],last=panels.at(-1).children[0];
+            // Explicit equal box sizes avoid scroll-height differences as a confound.
+            for(const panel of panels){
+              Object.assign(panel.style,{display:'block',height:panelHeight+'px',boxSizing:'border-box',padding:'4px'});
+              if(mode==='contain')panel.style.contain='layout paint';
+              if(mode==='auto'){panel.style.contentVisibility='auto';panel.style.containIntrinsicSize=panelHeight+'px';}
+            }
+            mount.scrollTop=0;mount.scrollIntoView({block:'center'});
+            await frame();await frame();
+            const height=mount.scrollHeight,top=mount.getBoundingClientRect().top;
+            if(first.getBoundingClientRect().bottom<=top||first.getBoundingClientRect().top>=top+mount.clientHeight||
+               panels.at(-1).getBoundingClientRect().top<top+mount.clientHeight)
+              throw new Error('Invalid viewport arrangement');
+            // Query skipped content without forcing the far child's layout.
+            if(typeof last.checkVisibility==='function'){
+              sample.skipped.push(!last.checkVisibility({contentVisibilityAuto:true}));
+            }
+            button.click();first.getBoundingClientRect();
+            const start=performance.now();
+            for(let k=0;k<steps;k++){
+              button.click();
+              // Force visible geometry, never read the hidden child's geometry here.
+              first.getBoundingClientRect();
+            }
+            sample.update.push((performance.now()-start)/steps);
+            const state=steps+1;
+            if(app.getState()!==state||panels.some((panel,i)=>[...panel.children].some(p=>
+              p.textContent!==(workload==='all'||i===panelCount-1?expected(state):expected(0)))))
+              throw new Error('Containment DOM checksum');
+            const revealStart=performance.now();
+            mount.scrollTop=panels.at(-1).offsetTop-panels[0].offsetTop;
+            // Forced layout of newly reached content; not a paint/frame metric.
+            const rect=last.getBoundingClientRect();
+            sample.reveal.push(performance.now()-revealStart);
+            await frame();await frame();
+            const viewport=mount.getBoundingClientRect();
+            const tail=last.getBoundingClientRect();
+            const panelEnd=panels.at(-1).getBoundingClientRect().bottom;
+            if(panels.at(-1).lastElementChild.getBoundingClientRect().bottom>panelEnd)throw new Error('Panel content overflow');
+            if(!Number.isFinite(rect.top)||last.textContent!==expected(state)||
+               mount.scrollTop<=0||tail.bottom<viewport.top||tail.top>viewport.bottom||
+               mount.scrollHeight!==height)throw new Error('Reveal checksum or unstable scroll extent');
+            sample.height.push(height);
+          }
+        }
+        const base=measurements.normal.height[0];
+        if(Object.values(measurements).some(m=>m.height.some(h=>h!==base)))throw new Error('Different scroll extent between strategies');
+        results.push({workload,modes:Object.fromEntries(modes.map(mode=>{
+          const m=measurements[mode];return [mode,{update:stats(m.update),reveal:stats(m.reveal),
+            scrollHeight:base,skippedSamples:m.skipped.length?m.skipped.filter(Boolean).length:null}];
+        }))});
+      }
+      return {ok:true,version:compiler.version,supported,samples,steps,panels:panelCount,rows:panelRows,results};
+    }finally{
+      mount.replaceChildren();mount.style.cssText=savedStyle;window.scrollTo(scrollX,scrollY);
+    }
+  }
+
   function run(compiler,mount) {
     if (!mount.isConnected) throw new Error('Benchmark requires connected DOM');
     const results=[];
@@ -389,5 +480,5 @@
       userAgent:navigator.userAgent,results};
   }
 
-  global.MiraGuiBench=Object.freeze({source,run,formSource,formSetup,hybridSource,hybridSetup,runBatchExperiment});
+  global.MiraGuiBench=Object.freeze({source,run,formSource,formSetup,hybridSource,hybridSetup,runBatchExperiment,containmentSource,runContainmentExperiment});
 })(globalThis);

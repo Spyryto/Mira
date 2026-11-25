@@ -337,7 +337,7 @@ test('0.27 batching workload remains ordinary Mira on JS and PHP',()=>{
   assert.match(read('gui-benchmark.html'),/id="batch-run"/);
 });
 
-test('0.27 real Chromium event loop compares immediate, microtask and frame commits',{timeout:60000},async t=>{
+test('real Chromium event loop measures batch commits and containment',{timeout:90000},async t=>{
   const executable=[process.env.CHROME_BIN,'google-chrome','chromium','chromium-browser'].filter(Boolean)
     .find(cmd=>spawnSync(cmd,['--version'],{encoding:'utf8'}).status===0);
   if(!executable){
@@ -367,8 +367,8 @@ test('0.27 real Chromium event loop compares immediate, microtask and frame comm
       ws.addEventListener('open',()=>{clearTimeout(timeout);ok();},{once:true});
       ws.addEventListener('error',()=>{clearTimeout(timeout);fail(new Error('CDP socket error'));},{once:true});
     });
-    const result=await new Promise((ok,fail)=>{
-      const timeout=setTimeout(()=>fail(new Error('Batch evaluation timeout')),30000);
+    const experiment=await new Promise((ok,fail)=>{
+      const timeout=setTimeout(()=>fail(new Error('Browser evaluation timeout')),60000);
       ws.addEventListener('message',event=>{
         const message=JSON.parse(event.data);
         if(message.id!==1)return;
@@ -377,10 +377,11 @@ test('0.27 real Chromium event loop compares immediate, microtask and frame comm
         else ok(message.result.result.value);
       });
       ws.send(JSON.stringify({id:1,method:'Runtime.evaluate',params:{
-        expression:'(async()=>{if(document.readyState!=="complete")await new Promise(r=>window.addEventListener("load",r,{once:true}));return await MiraGuiBench.runBatchExperiment(MiraStudioCompiler,document.getElementById("mount"));})()',
+        expression:'(async()=>{if(document.readyState!=="complete")await new Promise(r=>window.addEventListener("load",r,{once:true}));const mount=document.getElementById("mount");return {batch:await MiraGuiBench.runBatchExperiment(MiraStudioCompiler,mount),containment:await MiraGuiBench.runContainmentExperiment(MiraStudioCompiler,mount)};})()',
         awaitPromise:true,returnByValue:true
       }}));
     });
+    const result=experiment.batch;
     assert.equal(result.ok,true);
     assert.equal(result.version,bridge.version);
     assert.equal(result.bursts,7);
@@ -395,6 +396,25 @@ test('0.27 real Chromium event loop compares immediate, microtask and frame comm
       }
     }
     t.diagnostic('GUI_BATCH_BENCHMARK '+JSON.stringify(result));
+    const c=experiment.containment;
+    assert.equal(c.ok,true);assert.equal(c.version,bridge.version);
+    assert.equal(c.panels,16);assert.equal(c.rows,16);assert.equal(c.results.length,2);
+    assert.equal(c.supported.contain,true);assert.equal(c.supported.auto,true);
+    for(const row of c.results){
+      assert.deepEqual(Object.keys(row.modes),['normal','contain','auto']);
+      for(const m of Object.values(row.modes)){
+        assert.equal(m.scrollHeight,row.modes.normal.scrollHeight);
+        for(const key of ['update','reveal']){
+          assert.ok(Number.isFinite(m[key].medianMs)&&m[key].medianMs>=0);
+          assert.ok(m[key].p95Ms>=m[key].medianMs);
+        }
+      }
+      // A real browser may change its relevance threshold; report skip counts,
+      // but do not fail on a performance heuristic.
+      assert.ok(row.modes.auto.skippedSamples===null||
+        row.modes.auto.skippedSamples>=0&&row.modes.auto.skippedSamples<=c.samples);
+    }
+    t.diagnostic('GUI_CONTAINMENT_BENCHMARK '+JSON.stringify(c));
   }finally{
     if(ws)ws.close();
     if(child.exitCode===null&&child.signalCode===null){
@@ -403,4 +423,16 @@ test('0.27 real Chromium event loop compares immediate, microtask and frame comm
     }
     rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:100});
   }
+});
+
+
+test('0.28 containment workload compiles on both targets with expected dynamic slots',()=>{
+  const sandbox={};runInNewContext(read('gui-specialize.js'),sandbox);runInNewContext(read('gui-benchmark.js'),sandbox);
+  for(const workload of ['all','far']){
+    const source=sandbox.MiraGuiBench.containmentSource(workload);
+    for(const target of ['js','php'])assert.equal(bridge.compile(source,target).ok,true);
+    const compiled=sandbox.MiraGuiSpecialize.compile(bridge,source,'long view:');
+    assert.equal(compiled.plan.slots.length,workload==='all'?256:16);
+  }
+  assert.match(read('gui-benchmark.html'),/id="contain-run"/);
 });

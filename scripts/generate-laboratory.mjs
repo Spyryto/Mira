@@ -19,8 +19,8 @@ function chart(c) {
   ).join('')+'</dl><p class="lab-note">Ricostruzione / specializzato: '+number(c.values.rebuild/c.values.specialized)+'× (dai valori riportati).</p></section>';
 }
 // Complete archive: no execution or network access needed to read the report.
-const allMethods = [['view','Solo view Mira'],...methods,['hybrid','Ibrido']];
-const scenario = c => (c.hybrid?'Rendering ibrido':c.density==='sparse'?'1 su 100':c.density==='dense'?'100 su 100':c.density==='styled'?'Record e stile dinamico':'Form reattivo')+
+const allMethods = [['view','Solo view Mira'],...methods,['hybrid','Ibrido'],['content','textContent'],['data','Text.data']];
+const scenario = c => (c.content?'Text node · '+(c.density==='sparse'?'1 su 100':'100 su 100'):c.hybrid?'Rendering ibrido':c.density==='sparse'?'1 su 100':c.density==='dense'?'100 su 100':c.density==='styled'?'Record e stile dinamico':'Form reattivo')+
   ' · '+(c.flush?'layout forzato':'scritture sincrone');
 const time = v => v.toLocaleString('it-IT',{minimumFractionDigits:3,maximumFractionDigits:3});
 function validMetric(m) {
@@ -37,6 +37,7 @@ for(const run of data.ci){
     validateRows(run.browser.results,run.version==='0.18.0'?['view','rebuild','incremental','direct']:['view','rebuild','incremental','specialized','direct']);
     if(run.browser.form)validateRows(run.browser.form,['incremental','specialized']);
     if(run.browser.hybrid)validateRows(run.browser.hybrid,['incremental','hybrid']);
+    if(run.browser.textExperiment)validateRows(run.browser.textExperiment.results,['content','data']);
   }
 }
 for(const run of data.devices)validateRows(run.results,['view','rebuild','incremental','specialized','direct']);
@@ -53,13 +54,23 @@ function archivedChart(row,title){
   ).join('')+'</dl></section>';
 }
 function ciReport(run){
-  const rows=run.browser?[...run.browser.results,...(run.browser.form??[]),...(run.browser.hybrid??[])]:[];
+  const rows=run.browser?[...run.browser.results,...(run.browser.form??[]),...(run.browser.hybrid??[]),...(run.browser.textExperiment?.results??[])]:[];
   const s=run.synthetic;
   return '<details class="lab-card"><summary><strong>Mira '+escape(run.version)+'</strong> · CI · '+rows.length+' scenari browser</summary>'+
     '<p>25 novembre 2026 · '+run.studioTests+' test Studio · '+run.documentedChecks+' verifiche degli esempi · <a href="'+escape(run.source)+'">Log del job '+run.jobId+'</a> · <a href="https://github.com/Spyryto/Mira/pull/'+run.pr+'">PR #'+run.pr+'</a></p>'+
     (s?'<p>DOM simulato: '+s.updates+' aggiornamenti, '+s.viewNodes+' elementi; allocazioni '+s.full+' → '+s.incremental+', scritture CSS '+s.fullStyleWrites+' → '+s.incrementalStyleWrites+'. Tempo totale ricostruzione '+time(s.fullMs)+' ms; incrementale '+time(s.incrementalMs)+' ms.</p>':'')+
     rows.map(table).join('')+'</details>';
 }
+
+function batchReport(run){
+  if(!run.batch)return '';
+  const keys=['immediate','microtask','frame'];
+  return '<section class="lab-card"><h3>Raggruppamento · '+escape(run.version)+'</h3><p>'+run.batch.bursts+' raffiche per strategia, conteggi totali. Mediana/P95 in ms per raffica; non paint.</p>'+
+    run.batch.results.map(row=>'<div class="lab-table-wrap"><table class="lab-table"><caption>'+escape(row.density==='sparse'?'Sparso':'Denso')+' · '+row.events+' eventi</caption><thead><tr><th>Metodo</th><th>Commit</th><th>Scritture</th><th>Primo→commit</th><th>P95</th><th>Ultimo→commit</th><th>P95</th><th>Invio</th><th>P95</th><th>Totale</th><th>P95</th></tr></thead><tbody>'+
+      keys.map(key=>{const m=row.modes[key];return '<tr><th>'+escape(key)+'</th><td>'+m.commits+'</td><td>'+m.writes+'</td>'+['first','last','submit','total'].map(k=>'<td>'+time(m[k].medianMs)+'</td><td>'+time(m[k].p95Ms)+'</td>').join('')+'</tr>';}).join('')+
+    '</tbody></table></div>').join('')+'</section>';
+}
+
 const latest=data.ci.find(run=>run.version==='0.22.0');
 const synthetic=data.ci[0].synthetic;
 const arch=[
@@ -73,15 +84,15 @@ const html = `<!doctype html>
 <html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#f4f0e6"><title>Mira Studio · Laboratory</title><link rel="stylesheet" href="./styles.css"><link rel="icon" href="./icon.svg"><style>.lab-table-wrap{overflow-x:auto;margin:1rem 0}.lab-table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.9rem}.lab-table caption{text-align:left;font-weight:700;padding:.5rem 0}.lab-table th,.lab-table td{padding:.5rem .25rem;border-bottom:1px solid #8885;text-align:right}.lab-table th:first-child{text-align:left}.lab-card summary{cursor:pointer;font-weight:600}.lab-page h2{margin-top:1.2rem}.lab-page nav{display:flex;gap:.7rem;flex-wrap:wrap}.lab-flow{padding-left:1.5rem}.lab-flow li{margin:.75rem 0}</style></head>
 <body><main class="app lab-page">
 <header class="masthead"><a href="./">← Mira Studio</a><span class="connection">Archivio sperimentale</span></header>
-<p class="eyebrow">LABORATORY / GUI / 001–011</p>
+<p class="eyebrow">LABORATORY / GUI / 001–013</p>
 <h1>${escape(data.title)}</h1>
 <p>${escape(data.environment)} · ${data.rows} elementi · ${escape(data.workload)}</p>
-<p>Archivio 0.15–0.25. Dati CI recuperati dai log, misure dell'autore su iPhone e smart TV, architettura e prossimi esperimenti. Tempi per aggiornamento: meno è meglio.</p>
+<p>Archivio 0.15–0.27. Dati CI recuperati dai log, misure dell'autore su iPhone e smart TV, architettura e prossimi esperimenti. Tempi per aggiornamento: meno è meglio.</p>
 <nav aria-label="Indice"><a href="#evolution">Evoluzione</a><a href="#architecture">Architettura</a><a href="#devices">Dispositivi</a><a href="#ci">Archivio CI</a><a href="#roadmap">Roadmap</a></nav>
 <h2>Il punto di svolta · Mira 0.19</h2><p>Quattro strategie a confronto, caso sparso in Chromium CI. Il rapporto introduttivo conserva i valori arrotondati originali.</p>
 ${data.cases.map(chart).join('')}
 <section class="lab-card"><h2>Che cosa emerge?</h2><p>In entrambi i casi il rendering specializzato e il DOM diretto hanno gli stessi tempi riportati. Non dimostra un overhead esattamente nullo: una differenza può essere inferiore alla risoluzione della misura.</p><p>Forzare una lettura geometrica include lavoro di layout del browser. Senza layout forzato non si misura il costo completo del frame. Non sono misure di FPS, paint o memoria.</p></section>
-<h2 id="evolution">Evoluzione 0.15–0.25</h2>
+<h2 id="evolution">Evoluzione 0.15–0.27</h2>
 ${data.timeline.map(item=>'<section class="lab-card"><h3>'+escape(item.version)+' · '+escape(item.title)+'</h3><p>'+escape(item.detail)+'</p><a href="https://github.com/Spyryto/Mira/pull/'+item.pr+'">PR #'+item.pr+'</a></section>').join('')}
 <section class="lab-card"><h2 id="architecture">Architettura</h2><ol class="lab-flow">${arch.map(([title,description])=>'<li><strong>'+escape(title)+'</strong> — '+escape(description)+'</li>').join('')}</ol><p>Il renderer generico mantiene identità posizionale e stato annidato; il renderer automatico nella 0.25 sceglie specializzato, ibrido o generico per i render finali riconoscibili. PHP compila i costruttori e le transizioni, ma il DOM è JavaScript. Le view con ricorsione, catture, struttura dinamica, stato annidato o opzioni dinamiche non sono ancora specializzate.</p></section>
 <section class="lab-card"><h2>0.17 · Allocazioni e CSS</h2><p>DOM simulato: ${synthetic.updates} aggiornamenti, ${synthetic.viewNodes} elementi.</p><table class="lab-table"><thead><tr><th>Metrica</th><th>Ricostruzione</th><th>Incrementale</th></tr></thead><tbody><tr><th>Elementi allocati</th><td>${synthetic.full}</td><td>${synthetic.incremental}</td></tr><tr><th>Scritture CSS</th><td>${synthetic.fullStyleWrites}</td><td>${synthetic.incrementalStyleWrites}</td></tr><tr><th>Tempo totale ms</th><td>${time(synthetic.fullMs)}</td><td>${time(synthetic.incrementalMs)}</td></tr></tbody></table><p>Il costo dell'algoritmo può superare quello del DOM simulato: non è una misura di layout reale.</p></section>
@@ -93,9 +104,15 @@ ${data.devices.map(run=>'<h3>'+escape(run.device)+'</h3>'+run.results.map(row=>a
 ${latest.browser.form.map(row=>archivedChart(row,scenario(row))).join('')}
 <p>Il form usa lib/gui.mira e selettori riutilizzabili. Nella CI 0.22, circa 6× più veloce dell'incrementale senza layout forzato; 1,33× con layout. Espansione e montaggio non sono inclusi.</p>
 <h2>0.23–0.25 · Rendering ibrido</h2>
-${data.ci.filter(run=>run.browser?.hybrid).map(run=>'<h3>Mira '+escape(run.version)+'</h3>'+run.browser.hybrid.map(row=>archivedChart(row,scenario(row))).join('')).join('')}
+${data.ci.filter(run=>run.browser?.hybrid&&['0.23.0','0.24.0','0.25.0'].includes(run.version)).map(run=>'<h3>Mira '+escape(run.version)+'</h3>'+run.browser.hybrid.map(row=>archivedChart(row,scenario(row))).join('')).join('')}
 <p>Una regione di 100 testi, uno dinamico, e un ramo generico che alterna titolo/paragrafo. Unico modello radice. La 0.24 riconosce il confine automaticamente; la 0.25 aggiunge l'ispettore nell'anteprima. Il costo di preparazione non è incluso nei tempi qui riportati.</p>
-<h2 id="ci">Archivio completo CI · 0.17–0.25</h2><p>Espandi ciascuna versione per tutte le mediane, i P95, i log e le misure sintetiche. Un valore 0,000 indica il limite del timer, non costo nullo. Non confrontare versioni diverse come una regressione controllata.</p>
+<h2>0.26–0.27 · Text node persistenti</h2>
+${data.ci.filter(run=>run.browser?.textExperiment).map(run=>'<h3>Mira '+escape(run.version)+'</h3>'+run.browser.textExperiment.results.map(row=>archivedChart(row,scenario(row))).join('')).join('')}
+<p>9 campioni da 120 aggiornamenti; stesso renderer specializzato, nessuna adozione predefinita.</p>
+<h2>0.27 · Raggruppamento</h2>
+${data.ci.map(batchReport).join('')}
+<p>Nel caso denso da dieci eventi, i commit accorpati riducono del 90% le scritture DOM. Microtask completa la raffica prima di rAF in questo esperimento; non sono eventi umani distribuiti nel tempo.</p>
+<h2 id="ci">Archivio completo CI · 0.17–0.27</h2><p>Espandi ciascuna versione per tutte le mediane, i P95, i log e le misure sintetiche. Un valore 0,000 indica il limite del timer, non costo nullo. Non confrontare versioni diverse come una regressione controllata.</p>
 ${data.ci.map(ciReport).join('')}
 <section class="lab-card"><h2>Metodo e limiti</h2><p>5 campioni da 30 aggiornamenti, 5 warmup per campione. Mediana e P95 delle medie per campione; con cinque campioni P95 coincide con il massimo. La sola view è misurata separatamente, non è additiva ai tempi DOM. La lettura geometrica forza layout, non paint. Compilazione, espansione e montaggio sono esclusi. Gli eventi del form sono sintetici; IME simulato, focus verificato in Chromium. Nessuna misura di memoria o frame rate. I risultati non sono soglie di CI.</p></section>
 <h2 id="roadmap">Roadmap · proposte, non implementazioni</h2>

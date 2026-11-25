@@ -1,4 +1,4 @@
-# Evoluzione del rendering GUI (Mira 0.15–0.25)
+# Evoluzione del rendering GUI (Mira 0.15–0.28)
 
 **Stato al 25 novembre 2026.** Rapporto storico, non specifica definitiva.
 
@@ -147,3 +147,11 @@ Esperimento isolato: confronto textContent / Text.data per gli stessi slot del r
 ## Aggiornamento 0.27: raggruppamento dei commit
 
 Esperimento opt-in per soli slot testuali. Transizioni e validazione immediate, commit eventualmente differito; confronta microtask e rAF sul vero event loop, conteggi di commit/scritture e latenza. Nessuna adozione predefinita. Vedi [interop](browser-interop.md#mira-027-raggruppamento-dei-commit).
+
+## Archivio 0.26–0.27
+
+Aggiunti i log originali dei job 139409972419, 139425561403 e tutti i risultati strutturati, incluse mediane/P95 dei nodi testuali e dei commit accorpati. La 0.27 conferma, su sette raffiche dense da dieci eventi, 7000 → 700 scritture; dal primo evento al commit finale, 0,6 ms immediato, 0,2 ms microtask, 15,1 ms rAF. Il renderer predefinito rimane immediato.
+
+## Aggiornamento 0.28: CSS containment
+
+Confronto isolato su 256 testi e pannelli a dimensione fissa: normale, contain layout paint e content-visibility auto. Aggiornamenti di tutti i testi o soltanto della regione lontana; misura anche il costo di rivelare il pannello dopo lo scroll. Nessuna modifica alla preview. Vedi [interop](browser-interop.md#mira-028-css-containment).
