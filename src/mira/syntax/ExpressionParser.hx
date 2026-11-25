@@ -350,8 +350,11 @@ class ExpressionParser {
                 if (symbol == "__miraHost") {
                     throw new MiraError("Reserved local name __miraHost", nameToken);
                 }
-                if (taken.indexOf(symbol) >= 0 || localNames.indexOf(name) >= 0
-                    || symbols.globals.indexOf(name) >= 0) {
+                var shadowsOuter = false;
+                for (outer in localNames.concat(symbols.globals)) {
+                    if (Mangle.name(outer) == symbol) shadowsOuter = true;
+                }
+                if (taken.indexOf(symbol) >= 0 || shadowsOuter) {
                     throw new MiraError("Duplicate or shadowed local name " + name, nameToken);
                 }
                 consume(); // =
@@ -364,6 +367,9 @@ class ExpressionParser {
                 taken.push(symbol);
                 localNames.unshift(name);
                 bindings.push(name);
+                if (current().isSymbol("}")) {
+                    throw new MiraError("A block must end with a value expression", current());
+                }
                 if (!current().isSymbol(";")) {
                     throw new MiraError("Expected ; after local " + name, current());
                 }

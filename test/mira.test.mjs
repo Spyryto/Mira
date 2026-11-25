@@ -758,6 +758,7 @@ test('0.12 local bindings have sequential lexical scope and reject reassignment'
     ['result = 2 >> {x | local = x + 1; local = 5; local};', /Duplicate or shadowed local name/],
     ['result = 2 >> {x | x = x + 1; x};', /Duplicate or shadowed local name/],
     ['rate = 30; result = 2 >> {x | rate = 4; x};', /Duplicate or shadowed local name/],
+    ['a b = 30; result = 2 >> {x | aB = 4; x};', /Duplicate or shadowed local name/],
     ['result = 2 >> {x | a b = 3; aB = 4; a b};', /Duplicate or shadowed local name/],
     ['result = 2 >> {x | first = x + 1};', /A block must end with a value expression/],
     ['result = 2 >> {x | first = ; x};', /Expected value for local/],
@@ -786,8 +787,8 @@ test('0.12 generated JS uses const and PHP captures only referenced external val
   assert.match(php,/\$subtotal =/);
   assert.match(php,/function\(\$x\) use \(\$rate\)/);
   assert.doesNotMatch(php,/use \(\$rate, \$unused/);
-  assert.equal(run(source,'js'),'19');
-  assert.equal(run(source,'php'),'19');
+  assert.equal(run(source,'js'),'27');
+  assert.equal(run(source,'php'),'27');
 });
 
 test('0.12 top-level definition scanner ignores = inside nested blocks', () => {
