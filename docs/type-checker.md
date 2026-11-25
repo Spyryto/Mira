@@ -395,3 +395,44 @@ o refinements in questa fase. Prima di introdurre interi positivi,
 intervalli, testi non vuoti e invarianti, va distinta la parte
 provabile staticamente da quella che richiede controlli runtime.
 I contratti RPC della 0.46 conservano la policy integer separata.
+
+## 0.48: annotazioni locali
+
+La grammatica nome (Tipo) della 0.47 vale anche per i parametri
+dei blocchi e per le dichiarazioni locali immutabili:
+
+```mira
+result = 2 >> {hours (Number) |
+  rate (Number) = 30;
+  hours * rate
+};
+names = () >> {|
+  students ([Text]) = [];
+  students
+};
+```
+
+Il parser riutilizza annotatedName; il lookahead bindingEnd
+riconosce il suffisso solo in un contesto di binding (prima
+di =, oppure di , o | nell'intestazione del blocco).
+Una normale chiamata f (1 + 2) rimane una chiamata. Il controllo
+dei riferimenti in avanti riconosce anche i locali annotati.
+Scoping, immutabilità, collisioni dei nomi e restriction sui
+valori locali non annotati rimangono invariati.
+
+I tipi chiusi dei parametri inizializzano direttamente i tipi
+del blocco. Una dichiarazione locale annotata viene unificata
+con il tipo dell'inizializzatore prima di introdurre il binding;
+la diagnostica in caso di incompatibilità punta al token del
+tipo. La firma chiusa non introduce variabili generalizzabili.
+Le annotazioni non modificano Expr: quando il checker è attivo
+ExpressionOrigins conserva una mappa di identità aggiuntiva
+solo per le espressioni annotate. La normale transpilazione
+convalida la sintassi ma non alloca questa mappa e cancella
+le annotazioni. Nessuna modifica agli emitter JS/PHP.
+
+Test di blocchi misti, tipi annidati, closure, collezioni,
+errori di scope, chiamate con parentesi ed equivalenza byte
+per byte del codice emesso. Restano fuori le annotazioni
+esplicite dei risultati dei blocchi, tipi funzione e refinements.
+Il controllo resta opt-in come nella 0.47.
