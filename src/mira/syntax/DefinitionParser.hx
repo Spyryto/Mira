@@ -78,9 +78,11 @@ class DefinitionParser {
         final parts = splitHeader(header);
 
         if (parts.length == 1 && !containsColon(parts[0])) {
-            final d = new Definition(readWords(header), [], [], body, tokens[0]);
-            d.resultAnnotation = resultType;
-            d.resultAnnotationOrigin = resultOrigin;
+            if (arrow >= 0) throw new MiraError("Use name (Type) for a value annotation",resultOrigin);
+            final value = annotatedName(header);
+            final d = new Definition(value.name, [], [], body, tokens[0]);
+            d.resultAnnotation = value.type;
+            d.resultAnnotationOrigin = value.typeOrigin;
             return d;
         }
 
@@ -94,22 +96,10 @@ class DefinitionParser {
                 throw new MiraError("Expected label: parameter", part[0]);
             }
             labels.push(readWords(part.slice(0, colon)));
-            final parameter = part.slice(colon+1);
-            if (parameter[0].isSymbol("(")) {
-                if (!parameter[parameter.length-1].isSymbol(")"))
-                    throw new MiraError("Expected closing ) for annotated parameter",parameter[0]);
-                final inner = parameter.slice(1,parameter.length-1);
-                final separator = topLevel(inner,":");
-                if (separator <= 0 || separator == inner.length-1)
-                    throw new MiraError("Expected (parameter: Type)",parameter[0]);
-                parameters.push(readWords(inner.slice(0,separator)));
-                parameterOrigins.push(inner[0]);
-                annotations.push(new TypeParser(inner.slice(separator+1),inner[separator]).parse());
-            } else {
-                parameters.push(readWords(parameter));
-                parameterOrigins.push(parameter[0]);
-                annotations.push(null);
-            }
+            final parameter = annotatedName(part.slice(colon+1));
+            parameters.push(parameter.name);
+            parameterOrigins.push(part[colon+1]);
+            annotations.push(parameter.type);
         }
 
         final d = new Definition("", labels, parameters, body, tokens[0], false, parameterOrigins);
@@ -117,6 +107,20 @@ class DefinitionParser {
         d.resultAnnotation = resultType;
         d.resultAnnotationOrigin = resultOrigin;
         return d;
+    }
+
+    // A binding has the same grammar in both value and parameter headers:
+    // multiword name, optionally followed by a single parenthesized type.
+    static function annotatedName(tokens:Array<Token>):{name:String,type:Null<Type>,typeOrigin:Null<Token>} {
+        final opening = topLevel(tokens,"(");
+        if (opening < 0) return {name:readWords(tokens),type:null,typeOrigin:null};
+        if (opening == 0) throw new MiraError("Expected name before type annotation",tokens[0]);
+        final name = readWords(tokens.slice(0,opening));
+        if (!tokens[tokens.length-1].isSymbol(")"))
+            throw new MiraError("Expected closing ) after type annotation",tokens[opening]);
+        final origin = opening + 1 < tokens.length - 1 ? tokens[opening+1] : tokens[opening];
+        final type = new TypeParser(tokens.slice(opening+1,tokens.length-1),origin).parse();
+        return {name:name,type:type,typeOrigin:origin};
     }
 
     static function splitHeader(tokens:Array<Token>):Array<Array<Token>> {
