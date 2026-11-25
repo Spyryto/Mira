@@ -1,0 +1,6 @@
+# Single source of truth for the public RPC surface.
+services = [
+  {capability: "ledger", method: "ledger.command", kind: "host", handler: "ledgerCommand"},
+  {capability: "quote", method: "ledger.quote", kind: "mira", handler: "quote",
+    parameters: [{name: "hours", type: "integer", min: 1, max: 10000}]}
+];
