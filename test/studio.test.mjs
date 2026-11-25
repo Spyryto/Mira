@@ -431,7 +431,7 @@ test('0.8 Studio AST exposes Block and resolves repeated _ as one lexical name',
     'lesson = {hours: 2, rate: 30};',
     'fee = {_ | (_ ~ hours) * (_ ~ rate)};',
     'result = lesson >> fee;'
-  ].join('\\n');
+  ].join('\n');
   const ast = bridge.ast(source);
   assert.equal(ast.ok,true,ast.message);
   const parsed = JSON.parse(ast.output).definitions;
@@ -448,5 +448,5 @@ test('0.8 Studio AST exposes Block and resolves repeated _ as one lexical name',
   const php=bridge.compile(source,'php');
   assert.equal(js.ok,true,js.message);
   assert.equal(php.ok,true,php.message);
-  assert.equal(runInNewContext(js.output+'\\nresult',{}),60);
+  assert.equal(runInNewContext(js.output+'\nresult',{}),60);
 });
