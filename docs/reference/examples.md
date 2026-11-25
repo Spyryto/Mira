@@ -1059,3 +1059,40 @@ result = collect: lessons, if: ({_ | (_ ~ hours) >= 1});
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/block-filter)
 
+<a id="example-block-fold-numbers"></a>
+## Somma di numeri con un blocco binario
+
+`fold` riceve direttamente `{total, item | total + item}` senza dichiarare un selettore riduttore.
+
+Feature: [Blocchi con più parametri](language.md#feature-block-parameters)
+
+```mira
+numbers = [1, 2, 3, 4];
+result = fold: numbers, with: ({total, item | total + item}), from: 0;
+```
+
+**Risultato:** result = 10
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/block-fold-numbers)
+
+<a id="example-block-fold-fees"></a>
+## Ridurre il compenso di più lezioni
+
+Un blocco con due parametri accede a due campi del record e accumula il compenso.
+
+Feature: [Blocchi con più parametri](language.md#feature-block-parameters)
+
+```mira
+lessons = [
+  {hours: 2, rate: 30},
+  {hours: 1.5, rate: 40}
+];
+result = fold: lessons,
+  with: ({total, lesson | total + ((lesson ~ hours) * (lesson ~ rate))}),
+  from: 0;
+```
+
+**Risultato:** result = 120
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/block-fold-fees)
+

@@ -1,4 +1,4 @@
-# Guida a Mira 0.8.0
+# Guida a Mira 0.9.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -355,10 +355,24 @@ API collegata: [`mira.syntax.Expr.FieldGet`](api.md#api-mira-syntax-expr-fieldge
 
 `{ value | expression }` crea una funzione lessicale applicabile con `>>`.
 
-I blocchi con un parametro e una sola espressione usano `{ nome | corpo }`, distinti dai record `{campo: valore}`. Il parametro può essere un nome composto o `_`: dentro `{ _ | ... }` tutte le occorrenze di `_` sono la stessa variabile, anziché nuovi placeholder indipendenti. Supportano cattura lessicale, annidamento e passaggio come callback in JS e PHP. Più parametri e più istruzioni saranno valutati in seguito.
+Un blocco è `{parametro | espressione}` con cattura lessicale, distinto dal record `{campo: valore}`. Il parametro può essere un nome composto o `_`; tutte le occorrenze di `_` nel blocco si riferiscono allo stesso argomento. Dalla 0.9 la stessa grammatica ammette anche più parametri separati da virgole (`{total, item | total + item}`), utili come callback di `fold:with:from:`. I blocchi sono closure native JS/PHP. Per ora una sola espressione per corpo.
 
 API collegata: [`mira.syntax.Expr.Block`](api.md#api-mira-syntax-expr-block)
 
 - [Calcolo della tariffa con un blocco](examples.md#example-block-fee) — result = 60
 - [Filtrare lezioni con un blocco](examples.md#example-block-filter) — result = [{"student":"Ada","hours":1.5},{"student":"Lia","hours":2}]
+
+<a id="feature-block-parameters"></a>
+## Blocchi con più parametri
+
+**Disponibile dalla versione 0.9**
+
+`{total, item | total + item}` è una callback binaria per `fold:with:from:`.
+
+Una lista di parametri espliciti separati da virgole precede `|`. I nomi possono avere più parole e catturano lessicalmente lo scope esterno. Il parser vieta duplicati, collisioni dopo il mangling e parametri riservati. Il nodo AST Block contiene un array di parametri. Non si introduce currying: `>>` resta applicazione unaria e rifiuta un blocco multi-parametro; i selettori host possono invocarlo con l'arità appropriata.
+
+API collegata: [`mira.syntax.Expr.Block`](api.md#api-mira-syntax-expr-block)
+
+- [Somma di numeri con un blocco binario](examples.md#example-block-fold-numbers) — result = 10
+- [Ridurre il compenso di più lezioni](examples.md#example-block-fold-fees) — result = 120
 
