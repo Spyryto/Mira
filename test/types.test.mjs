@@ -106,3 +106,41 @@ test('types: multi-field open updates retain the untouched fields',()=>{
   assert.equal(result.result,'{a: Text, b: Boolean, c: Boolean}');
   assert.throws(()=>check('change: r = update: r, with: {a: "x", b: false}; result = change: {a: 1, c: true};'),/missing record field b/);
 });
+
+test('types: scalar equality is inferred and instantiated independently',()=>{
+  const result=check('same: a, as: b = a == b; different: a, from: b = a != b; n = same: 2, as: 2; t = same: "a", as: "b"; b = different: true, from: false;');
+  assert.equal(result['same:as:'],"('a, 'a) -> Boolean where 'a: ScalarEq");
+  assert.equal(result['different:from:'],"('a, 'a) -> Boolean where 'a: ScalarEq");
+  for(const name of ['n','t','b'])assert.equal(result[name],'Boolean');
+});
+test('types: equality constraints survive local and higher-order instantiation',()=>{
+  const result=check('same: a, as: b = a == b; compare: f = {x | f x}; lifted = compare: {x | same: x, as: x}; local = () >> {| eq = {x | x == x}; {number: (1 >> eq), text: ("a" >> eq), flag: (true >> eq)}};');
+  assert.equal(result.lifted,"('a) -> Boolean where 'a: ScalarEq");
+  assert.equal(result.local,'{flag: Boolean, number: Boolean, text: Boolean}');
+  assert.throws(()=>check('same: a, as: b = a == b; compare: f = {x | f x}; lifted = compare: {x | same: x, as: x}; bad = [1] >> lifted;'),/ScalarEq requires/);
+  assert.throws(()=>check('bad = () >> {| eq = {x | x == x}; [1] >> eq};'),/ScalarEq requires/);
+});
+test('types: constrained record fields and captured variables retain their restrictions',()=>{
+  const result=check('same field: r, as: s = r ~ value == s ~ value; n = same field: {value: 1, extra: true}, as: {value: 2}; s = same field: {value: "x"}, as: {value: "y"}; capture: x = {y | x == y};');
+  assert.equal(result['same field:as:'],"({value: 'a | 'b}, {value: 'a | 'c}) -> Boolean where 'a: ScalarEq");
+  assert.equal(result['capture:'],"('a) -> ('a) -> Boolean where 'a: ScalarEq");
+  assert.throws(()=>check('same field: r, as: s = r ~ value == s ~ value; bad = same field: {value: [1]}, as: {value: [2]};'),/ScalarEq requires/);
+  assert.throws(()=>check('bad: x = () >> {| eq = {y | x == y}; first = 1 >> eq; "a" >> eq};'),/expected Number, got Text|expected Text, got Number/);
+});
+test('types: scalar predicates reject incompatible types regardless of alias direction',()=>{
+  for(const source of [
+    'same: a, as: b = a == b; x = same: 1, as: "a";',
+    'same: a, as: b = a == b; x = same: [1], as: [2];',
+    'same: a, as: b = a == b; x = same: {a: 1}, as: {a: 2};',
+    'same: a, as: b = a == b; x = same: {x | x}, as: {y | y};',
+    'bad: x = () >> {| a = x == x; x ~ name};',
+    'bad: x = () >> {| a = x ~ name; x == x};'
+  ])assert.throws(()=>check(source),/ScalarEq requires|expected Number, got Text|expected Text, got Number/);
+});
+test('types: scalar constraints resolve through arithmetic and recursive groups',()=>{
+  const result=check('positive: x = if (x == x) then (x + 1) else 0; first: x, with: y = if (x == y) then true else (second: y, with: x); second: x, with: y = first: y, with: x; n = first: 1, with: 1;');
+  assert.equal(result['positive:'],'(Number) -> Number');
+  assert.equal(result['first:with:'],"('a, 'a) -> Boolean where 'a: ScalarEq");
+  assert.equal(result['second:with:'],"('a, 'a) -> Boolean where 'a: ScalarEq");
+  assert.equal(result.n,'Boolean');
+});
