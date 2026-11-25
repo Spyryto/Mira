@@ -1,6 +1,6 @@
 # Mira: syntax experiments
 
-**Mira 0.6 implements selectors, selector/operator sections, field access, pipelines, sequence literals and anonymous records.** Typed records and other advanced forms remain under evaluation.
+**Mira 0.10 implements selectors, selector/operator sections, field access, expression blocks, pipelines, sequence literals and anonymous records.** Typed records and other advanced forms remain under evaluation.
 
 ## Implemented: complete selectors
 
@@ -197,10 +197,30 @@ Non è curried: `>>` continua ad applicare un solo argomento e rifiuta
 esplicitamente un blocco con arità diversa da uno.
 
 I selettori che ricevono callback di più argomenti, per esempio
-`fold:with:from:`, possono invece invocarlo direttamente. Il blocco
-va parenthesized nell'argomento `with:`, perché il parser dei
-selettori richiede un confine esplicito per un'espressione complessa.
+`fold:with:from:`, possono invece invocarlo direttamente. Fino alla 0.9 occorrevano parentesi tonde attorno al blocco
+nell'argomento `with:`. Dalla 0.10 le graffe delimitano già
+l'espressione: `with: {…}` funziona senza parentesi aggiuntive.
 Resta il limite di una sola espressione come corpo.
+
+## Implementato in Mira 0.10: accessi prioritari e blocchi diretti
+
+`~` è ora un operatore postfix associativo a sinistra, con
+precedenza rispetto a tutti gli operatori aritmetici:
+
+```mira
+lesson = {hours: 2, rate: 30};
+result = lesson ~ hours * lesson ~ rate;
+```
+
+Il risultato è `60`. `student ~ address ~ city` equivale a
+`(student ~ address) ~ city`. Gli operatori `+ - * / %`
+mantengono lo **stesso livello tra loro**: `1 + 2 * 3`
+vale ancora `9`, non `7`.
+
+Ora i selettori possono ricevere direttamente espressioni tra graffe,
+come `with: {total, lesson | ...}`. Non è necessaria un'ulteriore
+parentesi tonda, anche con record o espressioni annidati.
+La forma `with: ({...})` resta supportata.
 
 ## Proposto: closure generali e selettori parziali
 
