@@ -1,5 +1,5 @@
 {
-  "version": "0.7.1",
+  "version": "0.8.0",
   "features": [
     {
       "id": "values",
@@ -287,7 +287,7 @@
       "id": "field-get",
       "title": "Accesso diretto ai campi `~`",
       "summary": "`record ~ field` legge un campo senza dichiarare accessor.",
-      "details": "Il nome dopo `~` è un campo letterale: una o più parole consecutive, oppure una stringa tra virgolette. Un operatore o delimitatore termina il nome, che non viene cercato tra le variabili. Gli accessi si concatenano e i campi mancanti producono lo stesso errore su JS/PHP. `(_ ~ total hours)` è una sezione unaria; le espressioni complesse attendono i blocchi.",
+      "details": "Il nome dopo `~` è un campo letterale: una o più parole consecutive, oppure una stringa tra virgolette. Un operatore o delimitatore termina il nome, che non viene cercato tra le variabili. Gli accessi si concatenano e i campi mancanti producono lo stesso errore su JS/PHP. `(_ ~ total hours)` è una sezione unaria; le espressioni complesse possono ora usare `{ _ | (_ ~ hours) >= 1 }` (0.8); le sezioni implicite più complesse non sono ancora implementate.",
       "api": "mira.syntax.Expr.FieldGet",
       "examples": [
         "record-field-path",
@@ -295,6 +295,18 @@
         "record-field-words"
       ],
       "since": "0.6"
+    },
+    {
+      "id": "blocks",
+      "title": "Blocchi funzione con parametro",
+      "summary": "`{ value | expression }` crea una funzione lessicale applicabile con `>>`.",
+      "details": "I blocchi con un parametro e una sola espressione usano `{ nome | corpo }`, distinti dai record `{campo: valore}`. Il parametro può essere un nome composto o `_`: dentro `{ _ | ... }` tutte le occorrenze di `_` sono la stessa variabile, anziché nuovi placeholder indipendenti. Supportano cattura lessicale, annidamento e passaggio come callback in JS e PHP. Più parametri e più istruzioni saranno valutati in seguito.",
+      "api": "mira.syntax.Expr.Block",
+      "examples": [
+        "block-fee",
+        "block-filter"
+      ],
+      "since": "0.8"
     }
   ],
   "examples": [
@@ -1002,6 +1014,38 @@
       "expect": {
         "kind": "result",
         "value": "valid"
+      }
+    },
+    {
+      "id": "block-fee",
+      "feature": "blocks",
+      "title": "Calcolo della tariffa con un blocco",
+      "description": "Lo stesso parametro `_` viene riutilizzato per leggere due campi e calcolare il compenso.",
+      "path": "catalog/examples/block-fee.mira",
+      "expect": {
+        "kind": "result",
+        "value": 60
+      }
+    },
+    {
+      "id": "block-filter",
+      "feature": "blocks",
+      "title": "Filtrare lezioni con un blocco",
+      "description": "Il blocco `{ _ | (_ ~ hours) >= 1 }` evita una funzione nominata e viene passato direttamente al filtro.",
+      "path": "catalog/examples/block-filter.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "result",
+        "value": [
+          {
+            "student": "Ada",
+            "hours": 1.5
+          },
+          {
+            "student": "Lia",
+            "hours": 2
+          }
+        ]
       }
     }
   ],

@@ -1,0 +1,3 @@
+lesson = {hours: 2, rate: 30};
+fee = {_ | (_ ~ hours) * (_ ~ rate)};
+result = lesson >> fee;
