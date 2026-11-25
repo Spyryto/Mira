@@ -1207,3 +1207,63 @@ result = fold: numbers,
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/block-steps-fold)
 
+<a id="example-local-values-fee"></a>
+## Compenso con subtotale locale
+
+Un subtotale immutabile alimenta il risultato finale.
+
+Feature: [Valori locali immutabili nei blocchi](language.md#feature-local-values)
+
+```mira
+rate = 30;
+result = 2 >> {hours |
+  subtotal = hours * rate;
+  subtotal + 5
+};
+```
+
+**Risultato:** result = 65
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/local-values-fee)
+
+<a id="example-local-values-closure"></a>
+## Closure annidata con valore locale
+
+Il blocco interno cattura `doubled` definito nel blocco esterno.
+
+Feature: [Valori locali immutabili nei blocchi](language.md#feature-local-values)
+
+```mira
+result = 4 >> {value |
+  doubled = value * 2;
+  doubled >> {inner |
+    inner + doubled
+  }
+};
+```
+
+**Risultato:** result = 16
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/local-values-closure)
+
+<a id="example-local-values-fold"></a>
+## Riduzione con valore locale
+
+Il riduttore calcola `doubled` su ogni elemento.
+
+Feature: [Valori locali immutabili nei blocchi](language.md#feature-local-values)
+
+```mira
+numbers = [1, 2, 3];
+result = fold: numbers,
+  with: {sum, item |
+    doubled = item * 2;
+    sum + doubled
+  },
+  from: 0;
+```
+
+**Risultato:** result = 12
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/local-values-fold)
+

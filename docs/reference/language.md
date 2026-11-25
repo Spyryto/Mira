@@ -1,4 +1,4 @@
-# Guida a Mira 0.11.0
+# Guida a Mira 0.12.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -417,4 +417,19 @@ API collegata: [`mira.syntax.Expr.Steps`](api.md#api-mira-syntax-expr-steps)
 
 - [Il blocco restituisce l'ultima espressione](examples.md#example-block-steps-last) — result = 12
 - [Più espressioni nel riduttore](examples.md#example-block-steps-fold) — result = 12
+
+<a id="feature-local-values"></a>
+## Valori locali immutabili nei blocchi
+
+**Disponibile dalla versione 0.12**
+
+`{value | doubled = value * 2; doubled + value}` definisce un valore locale nel blocco.
+
+Da Mira 0.12 i blocchi ammettono definizioni locali `nome = espressione;` prima dell'espressione finale. Il nome, anche composto, è visibile solo alle espressioni successive e ai blocchi annidati. Non può essere riassegnato né ripetuto o collidere dopo mangling; per ora non può ombreggiare parametri e valori già visibili. L'ultima espressione è il risultato. Il nodo AST `Local(name, value)` vive in `Steps`. JavaScript usa const; PHP assegna una variabile ma Mira ne impedisce ogni ridefinizione. Le closure PHP catturano per valore i soli nomi esterni effettivamente usati.
+
+API collegata: [`mira.syntax.Expr.Local`](api.md#api-mira-syntax-expr-local)
+
+- [Compenso con subtotale locale](examples.md#example-local-values-fee) — result = 65
+- [Closure annidata con valore locale](examples.md#example-local-values-closure) — result = 16
+- [Riduzione con valore locale](examples.md#example-local-values-fold) — result = 12
 
