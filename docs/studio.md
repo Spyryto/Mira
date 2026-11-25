@@ -367,3 +367,9 @@ Guida → Registro lezioni · lista dinamica. Il renderer generico visualizza un
 ## Identità delle liste (0.33)
 
 Guida → Registro allievi · identità stabile. Scrivi note diverse e incrementa i contatori, poi Inverti: ciascuna riga conserva il proprio stato. Mostra/nascondi Ada rimuove il suo widget, e al reinserimento il suo stato locale riparte dall'iniziale. La chiave è dichiarata con each:identified by:view:, nessun ID DOM automatico. L'anteprima usa il renderer generico. [Semantica](browser-interop.md#mira-033-identità-delle-liste-gui).
+
+## Registro lezioni persistente (0.34)
+
+Dalla home, apri Registro lezioni. Inserisci un nome, aggiungi una lezione, incrementa le ore o cambia lo stato di pagamento. Il totale usa una tariffa dimostrativa di 30 €/ora. I record e il contatore next id vengono salvati in LocalStorage dopo il commit riuscito; anche la bozza viene conservata. Ricarica la pagina per ritrovare i dati. Il controllo Cancella dati locali chiede conferma. Limite del pilota: 100 lezioni, nomi/bozze fino a 120 caratteri, ore intere da 1 a 10000. La pagina segnala salvataggio o errore. Il servizio è locale al browser/origine e profilo, non sincronizzato, non cifrato e non un backup. Non usare dati personali reali per il test.
+
+Gli asset sono nel cache PWA e la navigazione offline ha la propria chiave. Per installazione offline occorre che Studio abbia completato l'installazione del service worker. Non si gestiscono conflitti fra schede aperte, sincronizzazione o migrazioni di schema. La pagina non è l'editor sandboxed e non esegue codice arbitrario.

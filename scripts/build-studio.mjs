@@ -1,5 +1,6 @@
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
+import { runInNewContext } from 'node:vm';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -30,6 +31,11 @@ const assets = [
   'worker.js',
   'ui-preview.html',
   'ui-host.js',
+  'persistent-state.js',
+  'persistent-ledger.html',
+  'persistent-ledger.css',
+  'persistent-ledger.js',
+  'persistent-ledger.mira',
   'ui-preview.js',
   'manifest.webmanifest',
   'icon.svg',
@@ -77,6 +83,15 @@ if (result.status !== 0) {
   process.exit(result.status ?? 1);
 }
 console.log(`Mira Studio Haxe browser bundle built in ${(performance.now() - started).toFixed(1)} ms`);
+// Compile the fixed, repository-owned pilot; no evaluation of editor code here.
+const context={};
+runInNewContext(readFileSync(resolve(destination,'compiler.js'),'utf8'),context);
+const ledger=context.MiraStudioCompiler.compile(
+  readFileSync(resolve(root,'studio/persistent-ledger.mira'),'utf8'),'js',
+  JSON.stringify({callables:['render']}));
+if(!ledger.ok)throw Error('Persistent ledger compilation: '+ledger.message);
+writeFileSync(resolve(destination,'persistent-ledger-program.js'),
+  'globalThis.MiraLessonLedgerProgram = function(__miraHost) {\n'+ledger.output+'\n};\n');
 // Compile Mira Atlas to JS and extract real source import dependencies.
 const atlas = spawnSync('node', ['scripts/generate-atlas.mjs'], {
   cwd: root, stdio: 'inherit'

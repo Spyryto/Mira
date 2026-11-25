@@ -1,5 +1,5 @@
 {
-  "version": "0.33.0",
+  "version": "0.34.0",
   "features": [
     {
       "id": "values",
@@ -1746,6 +1746,12 @@
       "title": "Import statici di file Mira",
       "since": "0.30",
       "doc": "docs/grammar.md#mira-030-import-statici"
+    },
+    {
+      "id": "local-persistence",
+      "title": "Registro lezioni con persistenza locale",
+      "since": "0.34",
+      "doc": "docs/studio.md#registro-lezioni-persistente-034"
     }
   ]
 }

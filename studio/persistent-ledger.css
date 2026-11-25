@@ -1,0 +1,11 @@
+.ledger-page{max-width:640px;margin:auto;padding:20px}
+.ledger-page .mira-ui-column,.ledger-page .mira-ui-state{display:flex;flex-direction:column;gap:12px;min-width:0}
+.ledger-page .mira-ui-row{display:flex;flex-wrap:wrap;gap:8px}
+.ledger-page .mira-ui-control{display:flex;flex-direction:column;gap:6px}
+.ledger-page .mira-ui-input{width:100%;box-sizing:border-box;padding:10px;border:2px solid #263238;border-radius:8px;font:inherit}
+.ledger-page .mira-ui-button,.ledger-page #reset-data{background:#c1f1dc;color:#202629;border:2px solid #202629;border-radius:8px;padding:10px;font:inherit;font-weight:600;cursor:pointer}
+.ledger-page #reset-data{background:#fff;margin-top:20px}
+.ledger-page .mira-ui-title{margin:0;font-size:1.2rem;color:#202629}
+.ledger-page .mira-ui-text{margin:0;overflow-wrap:anywhere}
+.ledger-page #storage-status{background:#e5f4ff;border-radius:8px;padding:12px;color:#202629}
+.ledger-page :focus-visible{outline:3px solid #2869a8;outline-offset:3px}

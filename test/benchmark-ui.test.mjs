@@ -337,7 +337,7 @@ test('0.27 batching workload remains ordinary Mira on JS and PHP',()=>{
   assert.match(read('gui-benchmark.html'),/id="batch-run"/);
 });
 
-async function chromiumEvaluate(t,filename,expression,width=800){
+async function chromiumEvaluate(t,filename,expression,width=800,afterReload){
   const executable=[process.env.CHROME_BIN,'google-chrome','chromium','chromium-browser'].filter(Boolean)
     .find(cmd=>spawnSync(cmd,['--version'],{encoding:'utf8'}).status===0);
   if(!executable){
@@ -397,6 +397,18 @@ async function chromiumEvaluate(t,filename,expression,width=800){
     assert.ok(ready,'Expected report document did not load: '+filename);
     const response=await rpc('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true},60000);
     const experiment=response.result.value;
+    if(afterReload){
+      await rpc('Page.reload');
+      await delay(300);
+      let reloaded=false;
+      for(let i=0;i<50&&!reloaded;i++){
+        try{const r=await rpc('Runtime.evaluate',{expression:'document.readyState==="complete" && !!document.querySelector("#mount input")',returnByValue:true});reloaded=r.result.value===true;}catch(error){if(i===49)throw error;}
+        if(!reloaded)await delay(100);
+      }
+      assert.ok(reloaded,'Reloaded ledger not ready');
+      const r=await rpc('Runtime.evaluate',{expression:afterReload,awaitPromise:true,returnByValue:true},60000);
+      return {before:experiment,after:r.result.value};
+    }
     return experiment;
   }finally{
     // Ask Chrome to close its own profile cleanly before deleting it.
@@ -604,4 +616,28 @@ test('0.33 Chromium keyed list preserves focused text input on native move and f
   if(!result)return;
   assert.ok(result.modes.includes('fallback'));
   t.diagnostic('KEYED_BROWSER '+JSON.stringify(result));
+});
+
+
+test('0.34 real Chromium persistent ledger survives document reload',{timeout:90000},async t=>{
+  const result=await chromiumEvaluate(t,'persistent-ledger.html','('+async function(){
+    const key='mira:apps:lesson-ledger';
+    const check=(ok,msg)=>{if(!ok)throw Error(msg);};
+    const mount=document.getElementById('mount');
+    const action=name=>[...mount.querySelectorAll('button')].find(b=>b.textContent===name).click();
+    const input=mount.querySelector('input');
+    input.value='Ada';input.dispatchEvent(new Event('input',{bubbles:true}));
+    action('Aggiungi lezione');action('+1 ora');action('Saldato / non saldato');
+    const stored=JSON.parse(localStorage.getItem(key));
+    check(stored.data.lessons[0].student==='Ada'&&stored.data.lessons[0].hours===2&&stored.data.lessons[0].paid,'Save actual app');
+    return {ok:true};
+  }.toString()+')()',800,'('+function(){
+    const mount=document.getElementById('mount');
+    if(!mount.textContent.includes('Ada')||!mount.textContent.includes('Saldato')||
+       !document.getElementById('storage-status').textContent.includes('ripristinati'))throw Error('Reload failed');
+    [...mount.querySelectorAll('button')].find(b=>b.textContent==='Rimuovi').click();
+    if(JSON.parse(localStorage.getItem('mira:apps:lesson-ledger')).data.lessons.length!==0)throw Error('Removal not saved');
+    return {ok:true};
+  }.toString()+')()');
+  if(result)assert.deepEqual(result,{before:{ok:true},after:{ok:true}});
 });

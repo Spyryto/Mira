@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mira · Registro lezioni</title>
+<link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="./persistent-ledger.css">
+</head>
+<body><main class="app ledger-page">
+<a href="./index.html">← Mira Studio</a>
+<h1>Registro lezioni</h1>
+<p>Prima app pilota Mira. Tariffa di esempio: 30 €/ora. Dati locali, non sincronizzati; usa dati di prova.</p>
+<p id="storage-status" role="status" aria-live="polite">Caricamento…</p>
+<div id="mount"></div>
+<button id="reset-data" type="button">Cancella dati locali</button>
+<p>Il browser può cancellare i dati. Non è ancora un archivio di produzione, né un backup.</p>
+</main>
+<script src="./ui-host.js"></script>
+<script src="./persistent-state.js"></script>
+<script src="./persistent-ledger-program.js"></script>
+<script src="./persistent-ledger.js"></script>
+</body></html>
