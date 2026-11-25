@@ -42,11 +42,4 @@ function ledgerCommand(mixed $cmd): array {
     }
 }
 
-// Second, stateless Mira service at the same endpoint; no database access.
-function ledgerQuote(mixed $params): array {
-    $hours = is_array($params) ? ($params['hours'] ?? null) : null;
-    if (!is_int($hours) || $hours < 1 || $hours > 10000) throw new Fault(400, 'invalid_hours');
-    return quote($hours);
-}
-
-serve(['ledger.command'=>'ledgerCommand', 'ledger.quote'=>'ledgerQuote']);
+serve(require __DIR__ . '/../private/rpc-methods.php');

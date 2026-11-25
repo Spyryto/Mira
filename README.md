@@ -229,6 +229,11 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Laboratory in Mira Studio](https://spyryto.github.io/Mira/laboratory.html) raccoglie l'evoluzione 0.15–0.34, i benchmark CI e le misure dell'autore su iPhone e smart TV. [Rapporto tecnico](docs/gui-rendering.md) · [Archivio JSON](catalog/laboratory/gui-rendering.json). Il rapporto storico è statico e separato dal benchmark eseguibile.
 
+## Mira 0.38: contratti di servizio
+
+Dichiarazioni Mira letterali, registri JS/PHP generati dall'AST e
+validazione dei parametri dei servizi Mira. [Dettagli e limiti](docs/browser-interop.md#mira-038-contratti-di-servizio).
+
 ## Mira 0.37: interoperabilità RPC
 
 Adapter HTTP/JSON riutilizzabili, metodi esplicitamente registrati e

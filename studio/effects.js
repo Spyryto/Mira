@@ -150,5 +150,13 @@
     };
   }
 
-  global.MiraEffects = Object.freeze({createApp, jsonService, rpcService});
+  function rpcServices(url, bindings, timeoutMs = 10000) {
+    if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1) throw Error('Invalid RPC timeout');
+    return Object.freeze(Object.fromEntries(Object.entries(bindings).map(([name, method]) => {
+      const transport = rpcService(url, method);
+      return [name, (payload, signal) => transport(payload, AbortSignal.any([signal, AbortSignal.timeout(timeoutMs)]))];
+    })));
+  }
+
+  global.MiraEffects = Object.freeze({createApp, jsonService, rpcService, rpcServices});
 })(globalThis);

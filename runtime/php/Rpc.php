@@ -45,6 +45,20 @@ function toWire(mixed $value, int $depth = 0): mixed {
     throw new \RuntimeException('Nonportable RPC result');
 }
 
+// A deliberately small wire schema, not the Mira type system.
+function checkParams(mixed $params, array $schema): array {
+    if (!is_array($params) || array_is_list($params)) throw new Fault(400, 'invalid_parameters');
+    foreach ($schema as $field) {
+        $name = $field['name'];
+        $value = $params[$name] ?? null;
+        if (!is_int($value) || $value < $field['min'] || $value > $field['max']) {
+            throw new Fault(400, 'invalid_' . $name);
+        }
+    }
+    if (count($params) !== count($schema)) throw new Fault(400, 'invalid_parameters');
+    return $params;
+}
+
 // No lookup of arbitrary PHP functions. The host explicitly registers names.
 function serve(array $methods): never {
     header('Content-Type: application/json; charset=utf-8');
