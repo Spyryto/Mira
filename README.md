@@ -66,6 +66,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Riconoscimento automatico delle regioni GUI | `0.24` | [Dettagli](docs/browser-interop.md#mira-024-selezione-automatica-del-renderer) |
 | ✅ | Anteprima GUI automatica e ispettore di specializzazione | `0.25` | [Dettagli](docs/browser-interop.md#mira-025-anteprima-e-ispettore) |
 | ✅ | Benchmark dei nodi testuali persistenti | `0.26` | [Dettagli](docs/browser-interop.md#mira-026-text-node-persistenti) |
+| ✅ | Benchmark del raggruppamento dei commit DOM | `0.27` | [Dettagli](docs/browser-interop.md#mira-027-raggruppamento-dei-commit) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
