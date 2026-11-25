@@ -1,5 +1,5 @@
 {
-  "version": "0.31.0",
+  "version": "0.32.0",
   "features": [
     {
       "id": "values",
@@ -434,6 +434,19 @@
         "record-update-form"
       ],
       "since": "0.31"
+    },
+    {
+      "id": "native-sequences",
+      "title": "Operazioni native sulle sequenze",
+      "summary": "Append, rimozione, trasformazione, filtro e riduzione immutabili senza host.",
+      "details": "append:to: aggiunge un elemento; remove:if: elimina tutti quelli per cui il predicato è true. collect:with:/map:with:, collect:if:/filter:with:/select:if:/select:with: e fold:with:from: sono native per default. Le vecchie capability possono essere ancora dichiarate esplicitamente per compatibilità (es. fold dell'AST). Ordine stabile, liste dense, predicato Boolean, nessuna mutazione degli operandi; PHP usa array_is_list. Il renderer generico supporta le liste variabili, ancora con identità posizionale.",
+      "api": "mira.resolve.Symbols",
+      "examples": [
+        "sequence-edit",
+        "sequence-native-fold",
+        "sequence-gui-list"
+      ],
+      "since": "0.32"
     }
   ],
   "examples": [
@@ -1513,6 +1526,74 @@
         "kind": "ui",
         "description": "Anteprima interattiva nel browser"
       }
+    },
+    {
+      "id": "sequence-edit",
+      "title": "Aggiungere e rimuovere lezioni",
+      "description": "Lista originale invariata; append e remove mantengono l'ordine.",
+      "expect": {
+        "kind": "result",
+        "value": {
+          "original": [
+            {
+              "id": 1,
+              "hours": 2
+            },
+            {
+              "id": 2,
+              "hours": 1
+            }
+          ],
+          "remaining": [
+            {
+              "id": 1,
+              "hours": 2
+            },
+            {
+              "id": 3,
+              "hours": 4
+            }
+          ]
+        }
+      },
+      "feature": "native-sequences",
+      "path": "catalog/examples/sequence-edit.mira"
+    },
+    {
+      "id": "sequence-native-fold",
+      "title": "Registro lezioni · trasformazione e totale",
+      "description": "Trasforma i record e calcola un totale senza host.",
+      "expect": {
+        "kind": "result",
+        "value": {
+          "lessons": [
+            {
+              "hours": 2,
+              "paid": true
+            },
+            {
+              "hours": 3,
+              "paid": true
+            }
+          ],
+          "total": 150
+        }
+      },
+      "feature": "native-sequences",
+      "path": "catalog/examples/sequence-native-fold.mira"
+    },
+    {
+      "id": "sequence-gui-list",
+      "title": "Registro lezioni · lista dinamica",
+      "description": "Aggiunge e rimuove elementi, e costruisce la GUI da una sequenza; identità posizionale provvisoria.",
+      "expect": {
+        "kind": "ui",
+        "description": "Anteprima interattiva nel browser"
+      },
+      "library": "lib/gui.mira",
+      "host": "studio/host.json",
+      "feature": "native-sequences",
+      "path": "catalog/examples/sequence-gui-list.mira"
     }
   ],
   "additionalCapabilities": [

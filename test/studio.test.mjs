@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.31.0');
+  assert.equal(bridge.version, '0.32.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.31.0');
+  assert.equal(bridge.version,'0.32.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -478,7 +478,7 @@ test('0.10 precedence and bare block selector arguments preserve canonical AST',
   const ast=bridge.ast(source,manifest);
   assert.equal(ast.ok,true,ast.message);
   const body=JSON.parse(ast.output).definitions[1].body;
-  assert.equal(body.kind,'HostCall');
+  assert.equal(body.kind,'Call');
   assert.equal(body.selector,'fold:with:from:');
   const reducer=body.arguments[1];
   assert.equal(reducer.kind,'Block');
@@ -792,4 +792,19 @@ test('0.31 native update has a normal selector AST and no host dependency',()=>{
   assert.equal(JSON.stringify(runInNewContext(built.output+'\nresult',{})),'{"name":"Ada","hours":3}');
   const trace=JSON.parse(bridge.trace(source).output);
   assert.ok(trace.symbols.some(s=>s.name==='update:with:'&&s.kind==='native selector'));
+});
+
+
+test('0.32 native collection resolution and explicit legacy host override',()=>{
+  const source='result = fold: [1, 2], with: {sum, n | sum + n}, from: 0;';
+  const host=JSON.stringify({selectors:['fold:with:from:']});
+  const native=bridge.compile(source,'js');
+  const external=bridge.compile(source,'js',host);
+  assert.equal(native.ok,true,native.message);assert.equal(external.ok,true,external.message);
+  assert.equal(runInNewContext(native.output+'\nresult',{}),3);
+  assert.equal(runInNewContext(external.output+'\nresult',{__miraHost:{'fold:with:from:':()=>42}}),42);
+  assert.equal(JSON.parse(bridge.ast(source).output).definitions.at(-1).body.kind,'Call');
+  assert.equal(JSON.parse(bridge.ast(source,host).output).definitions.at(-1).body.kind,'HostCall');
+  const conflict=bridge.compile('result = append: 1, to: [];','js',JSON.stringify({selectors:['append:to:']}));
+  assert.equal(conflict.ok,false);assert.match(conflict.message,/Reserved native selector/);
 });

@@ -1,0 +1,4 @@
+lessons = [{hours: 2, paid: false}, {hours: 3, paid: false}];
+paid lessons = collect: lessons, with: (update: _, with: {paid: true});
+total = fold: paid lessons, with: {sum, item | sum + (item ~ hours * 30)}, from: 0;
+result = {lessons: paid lessons, total: total};

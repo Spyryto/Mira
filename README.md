@@ -223,6 +223,10 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Laboratory in Mira Studio](https://spyryto.github.io/Mira/laboratory.html) raccoglie l'evoluzione 0.15–0.25, i benchmark CI e le misure dell'autore su iPhone e smart TV. [Rapporto tecnico](docs/gui-rendering.md) · [Archivio JSON](catalog/laboratory/gui-rendering.json). Il rapporto storico è statico e separato dal benchmark eseguibile.
 
+## Mira 0.32: sequenze native
+
+Append, remove, collect, filter e fold senza host; liste dinamiche in anteprima, riconciliazione posizionale. [Semantica e limiti](docs/structured-data.md#sequenze-native-e-immutabili-032).
+
 ## Mira 0.31: aggiornamento immutabile dei record
 
 `update: old, with: {student: entered}` copia il record e modifica soltanto i campi indicati. Intrinseco JS/PHP, sezioni e binding GUI supportati. [Semantica e limiti](docs/structured-data.md#aggiornamento-immutabile-dei-record-031).

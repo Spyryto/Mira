@@ -6,13 +6,6 @@
     "render"
   ],
   "selectors": [
-    "fold:with:from:",
-    "map:with:",
-    "get:from:",
-    "filter:with:",
-    "select:with:",
-    "select:if:",
-    "collect:if:",
-    "collect:with:"
+    "get:from:"
   ]
 }

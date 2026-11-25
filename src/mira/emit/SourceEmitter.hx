@@ -311,6 +311,8 @@ class SourceEmitter {
     ):String {
         if (!fromHost && selector == Symbols.RECORD_UPDATE)
             return recordUpdate(arguments, target);
+        if (!fromHost && Symbols.collectionSelectors().indexOf(selector) >= 0)
+            return collectionCall(selector, arguments, target);
         final callee = fromHost
             ? hostAccess(selector, target)
             : Mangle.selector(selector.substr(0, selector.length - 1).split(":"));
@@ -343,6 +345,41 @@ class SourceEmitter {
                 + " return true; };"
                 + " if (!$valid($a) || !$valid($b)) throw new \\RuntimeException('update:with: expects records with non-integer keys');"
                 + " return array_replace($a, $b); }))";
+        };
+        return callable + "(" + arguments.join(", ") + ")";
+    }
+
+
+    static function collectionCall(selector:String, arguments:Array<String>, target:Target):String {
+        final append = selector == "append:to:";
+        final fold = selector == "fold:with:from:";
+        final map = selector == "map:with:" || selector == "collect:with:";
+        final remove = selector == "remove:if:";
+        final message = selector + " expects a list";
+        final callable = switch (target) {
+            case JavaScript:
+                final formals = append ? "item, items" : fold ? "items, callback, seed" : "items, callback";
+                final check = 'if (!Array.isArray(items)) throw new Error(' + haxe.Json.stringify(message) + '); ';
+                final cb = append ? "" : 'if (typeof callback !== "function") throw new Error("Expected collection callback"); ';
+                final body = if (append) 'return [...items, item];'
+                    else if (fold) 'return items.reduce((acc, item) => callback(acc, item), seed);'
+                    else if (map) 'return items.map(item => callback(item));'
+                    else 'return items.filter(item => { const keep = callback(item); '
+                        + 'if (typeof keep !== "boolean") throw new Error("Expected Boolean predicate"); return '
+                        + (remove ? '!keep' : 'keep') + '; });';
+                '((' + formals + ') => { ' + check + cb + body + ' })';
+            case Php:
+                final formals = append ? "$item, $items" : fold ? "$items, $callback, $seed" : "$items, $callback";
+                final check = "if (!is_array($items) || !array_is_list($items)) throw new \\RuntimeException("
+                    + phpString(message) + "); ";
+                final cb = append ? "" : "if (!($callback instanceof \\Closure)) throw new \\RuntimeException('Expected collection callback'); ";
+                final body = if (append) "$items[] = $item; return $items;"
+                    else if (fold) "return array_reduce($items, $callback, $seed);"
+                    else if (map) "return array_map($callback, $items);"
+                    else "return array_values(array_filter($items, static function($item) use ($callback) { "
+                        + "$keep = $callback($item); if (!is_bool($keep)) throw new \\RuntimeException('Expected Boolean predicate'); return "
+                        + (remove ? "!$keep" : "$keep") + "; }));";
+                "((static function(" + formals + ") { " + check + cb + body + " }))";
         };
         return callable + "(" + arguments.join(", ") + ")";
     }

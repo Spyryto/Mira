@@ -359,3 +359,7 @@ Seleziona **Import GUI · 0.30** nell'editor e avvia l'anteprima. La libreria ca
 ## Record update (0.31)
 
 Apri dalla Guida **Registro lezioni · modifica immutabile**: i binding modificano un solo campo con `update:with:`. Il renderer automatico può specializzare le transizioni chiuse. Gli esempi di calcolo sono eseguibili anche senza host.
+
+## Collezioni native (0.32)
+
+Guida → Registro lezioni · lista dinamica. Il renderer generico visualizza una lista costruita con collect, aggiunge con append e rimuove con remove. Non serve una capability host di collezione. L'ispettore AST conserva il proprio manifest e fold su alberi. I figli non hanno ancora identità stabile.
