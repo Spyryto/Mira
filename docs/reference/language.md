@@ -1,4 +1,4 @@
-# Guida a Mira 0.12.1
+# Guida a Mira 0.12.2
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -208,7 +208,7 @@ API collegata: [`mira.Compiler.parse`](api.md#api-mira-compiler-parse)
 
 Esempi di errori intenzionali.
 
-Sono esercizi negativi: fallire con una diagnostica precisa è il comportamento corretto. Dalla 0.12.1 i valori locali usati prima della dichiarazione mostrano il nome e la posizione del riferimento; i parametri di blocchi annidati che colliderebbero dopo mangling con un nome esterno diverso vengono rifiutati. Lo shadowing con lo stesso identico nome resta consentito.
+Sono esercizi negativi: fallire con una diagnostica precisa è il comportamento corretto. Dalla 0.12.1 i valori locali usati prima della dichiarazione mostrano il nome e la posizione del riferimento; i parametri di blocchi annidati che colliderebbero dopo mangling con un nome esterno diverso vengono rifiutati. Lo shadowing con lo stesso identico nome resta consentito. Dalla 0.12.2 la verifica copre anche i parametri delle funzioni nominate, con posizione del parametro e controllo indipendente dall'ordine di dichiarazione dei globali.
 
 API collegata: [`mira.MiraError`](api.md#api-mira-miraerror)
 
@@ -217,6 +217,8 @@ API collegata: [`mira.MiraError`](api.md#api-mira-miraerror)
 - [Locale usato prima della dichiarazione](examples.md#example-local-before-declaration) — Errore atteso: used before its declaration
 - [Collisione del parametro dopo mangling](examples.md#example-block-parameter-mangle) — Errore atteso: Generated-name collision for block parameter
 - [Shadowing lessicale con lo stesso nome](examples.md#example-legal-nested-shadow) — result = 10
+- [Collisione tra parametri nominati](examples.md#example-function-parameter-mangle) — Errore atteso: Generated-name collision for function parameter
+- [Shadowing valido in una funzione nominata](examples.md#example-function-parameter-shadow) — result = 6
 
 <a id="feature-sequences"></a>
 ## Sequenze e trasformazioni

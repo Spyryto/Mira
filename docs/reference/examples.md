@@ -1321,3 +1321,36 @@ result = 4 >> {value |
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/legal-nested-shadow)
 
+<a id="example-function-parameter-mangle"></a>
+## Collisione tra parametri nominati
+
+Due nomi distinti che generano lo stesso identificatore JS/PHP vengono rifiutati prima dell'emissione.
+
+Feature: [Diagnostica e ambiguità](language.md#feature-diagnostics)
+
+```mira
+sum: a b, and: aB = a b + aB;
+result = sum: 2, and: 3;
+```
+
+**Risultato:** Errore atteso: Generated-name collision for function parameter
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/function-parameter-mangle)
+
+<a id="example-function-parameter-shadow"></a>
+## Shadowing valido in una funzione nominata
+
+Il parametro omonimo a un valore globale lo ombreggia senza rinominare il globale.
+
+Feature: [Diagnostica e ambiguità](language.md#feature-diagnostics)
+
+```mira
+x = 100;
+increment: x = x + 1;
+result = increment: 5;
+```
+
+**Risultato:** result = 6
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/function-parameter-shadow)
+
