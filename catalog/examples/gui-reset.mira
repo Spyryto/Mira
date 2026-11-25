@@ -1,0 +1,12 @@
+# La chiave identifica la sessione: cambiare chiave azzera il figlio.
+counter view: n = row: [
+  text: n,
+  button: "Incrementa", update: {old | old + 1}
+];
+session view: session = column: [
+  title: "Sessione",
+  text: session,
+  button: "Nuova sessione", update: {old | if (old == "A") then "B" else "A"},
+  state: 0, key: session, view: (counter view: _)
+];
+render (state: "A", view: (session view: _));
