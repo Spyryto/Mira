@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.46.0');
+  assert.equal(bridge.version, '0.47.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.46.0');
+  assert.equal(bridge.version,'0.47.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -936,4 +936,16 @@ test('Studio exports deterministic schemas and specializes functions without exe
   assert.deepEqual(sig.result,{kind:'Record',fields:[{name:'hours',type:{kind:'Number'}},{name:'total',type:{kind:'Number'}}],tail:null});
   assert.equal(bridge.specialize(source,'quote:',JSON.stringify([{record:{hours:'Text'}}])).ok,false);
   assert.equal(bridge.specialize(source,'missing:',args).ok,false);
+});
+
+test('Studio infers with annotations and specializes closed annotated signatures',()=>{
+  const source='quote: p ({hours: Number}) -> {total: Number} = {total: (p ~ hours * 30)};';
+  const report=bridge.check(source);
+  assert.equal(report.ok,true,report.message);
+  assert.equal(JSON.parse(report.output)[0].type,'({hours: Number}) -> {total: Number}');
+  const specialized=bridge.specialize(source,'quote:',JSON.stringify([{record:{hours:'Number'}}]));
+  assert.equal(specialized.ok,true,specialized.message);
+  const bad=bridge.check('x (Text) = 1;');
+  assert.equal(bad.ok,false);assert.equal(bad.diagnostic.column,4);
+  for(const target of ['js','php'])assert.equal(bridge.compile(source,target).ok,true);
 });

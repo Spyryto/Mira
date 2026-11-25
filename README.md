@@ -238,6 +238,13 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Laboratory in Mira Studio](https://spyryto.github.io/Mira/laboratory.html) raccoglie l'evoluzione 0.15–0.34, i benchmark CI e le misure dell'autore su iPhone e smart TV. [Rapporto tecnico](docs/gui-rendering.md) · [Archivio JSON](catalog/laboratory/gui-rendering.json). Il rapporto storico è statico e separato dal benchmark eseguibile.
 
+## Mira 0.47: annotazioni esplicite
+
+Annotazioni facoltative `nome (Tipo)` per parametri e valori globali,
+`-> Tipo` per risultati di funzioni; applicate prima dell'inferenza
+e cancellate dagli emitter.
+[Dettagli](docs/type-checker.md#047-annotazioni-esplicite).
+
 ## Mira 0.46: validazione runtime RPC
 
 Gli schemi inferiti verificano parametri e risultati sui due lati

@@ -350,3 +350,48 @@ del programma. I controlli riguardano il confine RPC, non ogni
 operazione Mira. services.mira conserva la scelta esplicita
 dei servizi e la policy numerica. Test negativi sui due runtime,
 payload non inviati, risultati malformati e integrazione reale.
+
+## 0.47: annotazioni esplicite
+
+Dall'esperienza di Nail 0.61: un'annotazione deve vincolare la
+firma prima dell'inferenza, non scegliere un tipo dopo l'analisi.
+In Mira la grammatica è nome (Tipo) per parametri e valori
+globali, e -> Tipo prima di = per il risultato di una funzione.
+La stessa regola vale per nomi composti; il parser condivide
+annotatedName fra i due contesti. La precedente proposta
+(parametro: Tipo) e nome -> Tipo per valori è stata scartata
+prima del merge: non si mantengono due sintassi.
+
+```mira
+rate (Number) = 30;
+quote: p ({hours: Number}) -> {total: Number} =
+  {total: (p ~ hours * rate)};
+empty ([Text]) = [];
+multiply: first number (Number), by: second number (Number)
+  -> Number = first number * second number;
+```
+
+Sono ammessi Number, Text, Boolean, [Tipo] e {campo: Tipo, ...},
+anche annidati. I campi possono essere multiword o stringhe.
+I record annotati sono strutturali chiusi, non nominali.
+Parametri e risultati non annotati restano inferiti.
+Le annotazioni diventano direttamente Type; le firme provvisorie
+delle componenti ricorsive usano questi tipi, e il corpo viene
+unificato con il risultato dichiarato. Non si introducono cast,
+coercizioni o validatori impliciti. Il parser condivide il lexer
+e distingue i separatori di selettore dai delimitatori annidati.
+
+Il checker resta opt-in (--check, --check-json, Studio).
+La compilazione ordinaria verifica la grammatica delle annotazioni
+ma non la loro correttezza semantica; le cancella nell'emissione.
+I test confrontano l'output JS/PHP annotato e non annotato byte
+per byte ed eseguono entrambi i target. L'AST inspector continua
+a mostrare i nomi dei parametri e il corpo; lo schema del checker
+mostra la firma risultante.
+
+Decisione provvisoria: niente nuovi tipi nominali, unioni, alias,
+annotazioni locali, tipi funzione espliciti, righe aperte esplicite
+o refinements in questa fase. Prima di introdurre interi positivi,
+intervalli, testi non vuoti e invarianti, va distinta la parte
+provabile staticamente da quella che richiede controlli runtime.
+I contratti RPC della 0.46 conservano la policy integer separata.

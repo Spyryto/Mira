@@ -263,3 +263,65 @@ test('types: structured schemas preserve variables, constraints and open rows',(
     assert.deepEqual(report[2].schema,{kind:'Record',fields:[{name:'a',type:{kind:'List',item:{kind:'Number'}}},{name:'z',type:{kind:'Boolean'}}],tail:null});
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('types: optional annotations constrain parameters, values and results before generalization',()=>{
+  const source='rate (Number) = 30; quote: p ({hours: Number, student: Text}) -> {total: Number, student: Text} = {total: (p ~ hours * rate), student: (p ~ student)}; result = quote: {student: "Ada", hours: 2}; same: a (Number), as: b = a == b; empty ([Text]) = [];';
+  const result=check(source);
+  assert.equal(result.rate,'Number');
+  assert.equal(result['quote:'],'({hours: Number, student: Text}) -> {student: Text, total: Number}');
+  assert.equal(result.result,'{student: Text, total: Number}');
+  assert.equal(result['same:as:'],'(Number, Number) -> Boolean');
+  assert.equal(result.empty,'[Text]');
+});
+test('types: annotations remain structural, exact and checked in recursive groups',()=>{
+  const result=check('even: n (Number) -> Boolean = if (n <= 0) then true else (odd: (n - 1)); odd: n = if (n <= 0) then false else (even: (n - 1)); x = even: 2;');
+  assert.equal(result['odd:'],'(Number) -> Boolean');
+  for(const [source,pattern] of [
+    ['x (Text) = 1;',/expected Text, got Number/],
+    ['f: x (Text) = x + 1;',/expected Number, got Text/],
+    ['f: x (Number) -> Boolean = x + 1;',/expected Boolean, got Number/],
+    ['f: r ({name: Text}) = r ~ age;',/missing record field age/],
+    ['f: r ({name: Text}) = r ~ name; a = f: {name: "Ada", age: 1};',/missing record field age/],
+    ['even: n (Number) -> Boolean = odd: n; odd: n = 1;',/expected Boolean, got Number/],
+    ['xs ([Text]) = [1];',/expected Text, got Number/],
+    ['x (Dynamic) = 1;',/Unknown annotation type Dynamic/],
+    ['f: x ({a: Number, a: Text}) = x;',/Duplicate type field a/],
+    ['f: x (Number, y: Text) = x;',/Unexpected token in type annotation/]
+  ])assert.throws(()=>check(source),pattern,source);
+});
+test('types: annotations erase identically for JS and PHP emission',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-annotations-'));
+  try{
+    const input=join(dir,'program.mira');
+    const annotated='rate (Number) = 30; quote: p ({hours: Number}) -> Number = p ~ hours * rate; result = quote: {hours: 2};';
+    assert.equal(check(annotated).result,'Number');
+    const bare='rate = 30; quote: p = p ~ hours * rate; result = quote: {hours: 2};';
+    for(const target of ['js','php']){
+      const compile=source=>{writeFileSync(input,source);const r=spawnSync('node',['dist/mira.cjs',input,target],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);return r.stdout;};
+      const output=compile(annotated);
+      assert.equal(output,compile(bare));
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,output+(target==='js'?'\nconsole.log(result);':'\necho $result;'));
+      const r=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);assert.equal(r.stdout.trim(),'60');
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('types: shared postfix annotations support multiword names and nested data types',()=>{
+  const result=check('first rate (Number) = 30; multiply: first number (Number), by: second number (Number) -> Number = first number * second number; lesson list ([{student name: Text, hours: Number}]) = [{student name: "Ada", hours: 2}]; r = multiply: first rate, by: 2;');
+  assert.equal(result['first rate'],'Number');
+  assert.equal(result['multiply:by:'],'(Number, Number) -> Number');
+  assert.equal(result['lesson list'],'[{hours: Number, student name: Text}]');
+  assert.equal(result.r,'Number');
+});
+test('types: obsolete and malformed annotations are rejected, not interpreted as names',()=>{
+  for(const [source,pattern] of [
+    ['f: (x: Number) = x;',/Expected name before type annotation/],
+    ['x -> Number = 1;',/Use name \(Type\) for a value annotation/],
+    ['f: x () = x;',/Expected a type annotation/],
+    ['x (Number) (Text) = 1;',/Unexpected token in type annotation/],
+    ['x (Number) extra = 1;',/Expected closing \)/],
+    ['(Number) = 1;',/Expected name before type annotation/]
+  ])assert.throws(()=>check(source),pattern,source);
+});
