@@ -31,8 +31,9 @@ small{display:block;line-height:1.5}
 <p>Un record Mira controlla il contatore, il colore e il padding. <button id="demo-start" type="button">Monta demo</button></p>
 <div id="demo"></div>
 <h2>Form reattivo specializzato</h2>
-<p>Modifica allievo, pagamento e modalita; Reset aggiorna tutti i controlli. <button id="form-start" type="button">Monta form</button></p>
+<p>La stessa scheda ora usa i selettori della libreria GUI e componenti riutilizzabili. Modifica allievo, pagamento e modalità; Reset aggiorna tutti i controlli. <button id="form-start" type="button">Monta form</button></p>
 <div id="form-demo"></div>
+<details><summary>Sorgente Mira del form (con libreria)</summary><pre id="form-source" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></details>
 <h2>Area DOM reale</h2>
 <div id="mount" aria-label="Area di misura collegata al documento"></div>
 <pre id="machine" hidden></pre>
@@ -91,6 +92,7 @@ small{display:block;line-height:1.5}
       MiraGuiSpecialize.mount(MiraGuiSpecialize.compile(MiraStudioCompiler,source,'demo view:'),byId('demo'),{count:0},message=>{status.textContent=message;});
     }catch(error){status.textContent=String(error.message??error);}
   });
+  byId('form-source').textContent=MiraGuiBench.formSource(1);
   byId('form-start').addEventListener('click',()=>{
     try { MiraGuiBench.formSetup(MiraStudioCompiler,byId('form-demo'),true,1)(); }
     catch(error){status.textContent=String(error.message??error);}

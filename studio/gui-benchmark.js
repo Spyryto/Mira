@@ -130,20 +130,25 @@
   }
 
 
+  // Stamped with the actual lib/gui.mira at PWA build time.
+  const guiLibrary = '__MIRA_GUI_LIBRARY__';
   function formSource(size=100) {
     if(!Number.isInteger(size)||size<1||size>100)throw new Error('Invalid form size');
-    const texts=Array.from({length:size-1},(_,i)=>'{type: "text", text: '+i+'}');
-    return 'form view: model = {type: "column", children: ['+[
-      '{type: "title", text: "Scheda lezione"}',
-      '{type: "input", label: "Allievo", value: (model ~ student), update: {old, entered | {student: entered, paid: (old ~ paid), mode: (old ~ mode)}}}',
-      '{type: "checkbox", label: "Pagato", checked: (model ~ paid), update: {old, checked | {student: (old ~ student), paid: checked, mode: (old ~ mode)}}}',
-      '{type: "select", label: "Modalita", value: (model ~ mode), options: ["In presenza", "Online"], update: {old, selected | {student: (old ~ student), paid: (old ~ paid), mode: selected}}}',
-      '{type: "text", text: (model ~ student)}',
-      '{type: "text", text: (if (model ~ paid) then "Saldato" else "Da saldare")}',
-      '{type: "text", text: (model ~ mode)}',
-      '{type: "button", label: "Reset", update: {old | {student: "Ada", paid: false, mode: "In presenza"}}}',
-      ...texts
-    ].join(',\n')+']};';
+    const texts=Array.from({length:size-1},(_,i)=>'text: '+i);
+    return guiLibrary+'\n'+
+      'summary line: value = text: value;\n'+
+      'student field: model = text input: "Allievo", value: (model ~ student), update: {old, entered | {student: entered, paid: (old ~ paid), mode: (old ~ mode)}};\n'+
+      'form view: model = column: [\n'+[
+        'title: "Scheda lezione"',
+        'student field: model',
+        'checkbox: "Pagato", checked: (model ~ paid), update: {old, checked | {student: (old ~ student), paid: checked, mode: (old ~ mode)}}',
+        'choose: "Modalita", value: (model ~ mode), options: ["In presenza", "Online"], update: {old, selected | {student: (old ~ student), paid: (old ~ paid), mode: selected}}',
+        'summary line: (model ~ student)',
+        'summary line: (if (model ~ paid) then "Saldato" else "Da saldare")',
+        'summary line: (model ~ mode)',
+        'button: "Reset", update: {old | {student: "Ada", paid: false, mode: "In presenza"}}',
+        ...texts
+      ].join(',\n')+'\n];';
   }
   const initialForm=()=>({student:'Ada',paid:false,mode:'In presenza'});
   function formSetup(compiler,mount,specialized,size=100){

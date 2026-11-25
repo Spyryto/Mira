@@ -63,8 +63,88 @@
     return node?.kind==='Section'&&node.arguments.length===arity&&node.arguments.every(a=>a.kind==='Placeholder') ||
       node?.kind==='Block'&&node.parameters.length===arity&&closed(node.body,node.parameters);
   }
+  // Expand only a side-effect-free, finite subset of ordinary selectors.
+  // Substitutions use the callee's lexical environment, never the caller's.
+  function literalData(node){
+    switch(node?.kind){
+      case 'Number':case 'Text':case 'Boolean':return true;
+      case 'Record':return node.fields.every(f=>literalData(f.value));
+      case 'Sequence':return node.items.every(literalData);
+      default:return false;
+    }
+  }
+  // Preserve eager argument evaluation: every formal must occur outside
+  // deferred blocks or conditional branches (unless the actual is literal).
+  function strictNames(node,names=new Set()){
+    switch(node?.kind){
+      case 'Name':names.add(node.value);break;
+      case 'Record':node.fields.forEach(f=>strictNames(f.value,names));break;
+      case 'Sequence':node.items.forEach(x=>strictNames(x,names));break;
+      case 'Call':node.arguments.forEach(x=>strictNames(x,names));break;
+      case 'FieldGet':strictNames(node.record,names);break;
+      case 'Binary':strictNames(node.left,names);strictNames(node.right,names);break;
+      case 'Conditional':strictNames(node.condition,names);break;
+    }
+    return names;
+  }
+  function expandView(ast,definition){
+    const functions=new Map(ast.definitions.filter(d=>d.kind==='Function').map(d=>[d.selector,d]));
+    const constants=new Map(ast.definitions.filter(d=>d.kind==='Value').map(d=>[d.name,d.body]));
+    if([...constants.values()].some(value=>!literalData(value)))fail('only literal global data');
+    let work=0,calls=0;
+    function expand(node,env,stack,depth){
+      if(++work>20000||depth>64)fail('component expansion limit');
+      const child=x=>expand(x,env,stack,depth+1);
+      switch(node?.kind){
+        case 'Name':
+          if(env.has(node.value))return env.get(node.value);
+          if(constants.has(node.value))return constants.get(node.value);
+          fail('unbound component name '+node.value);break;
+        case 'Number':case 'Text':case 'Boolean':return node;
+        case 'Record':return {...node,fields:node.fields.map(f=>({...f,value:child(f.value)}))};
+        case 'Sequence':return {...node,items:node.items.map(child)};
+        case 'FieldGet':return {...node,record:child(node.record)};
+        case 'Binary':return {...node,left:child(node.left),right:child(node.right)};
+        case 'Conditional':return {...node,condition:child(node.condition),whenTrue:child(node.whenTrue),whenFalse:child(node.whenFalse)};
+        case 'Block':
+          if(!closed(node.body,node.parameters))fail('captured or unsupported component block');
+          return node;
+        case 'Section':
+          if(node.arguments.some(a=>a.kind!=='Placeholder'))fail('captured component section');
+          return node;
+        case 'Call':{
+          const target=functions.get(node.selector);
+          if(!target||stack.includes(node.selector)||target.parameters.length!==node.arguments.length)
+            fail('recursive or unresolved component '+node.selector);
+          const args=node.arguments.map(child);
+          const strict=strictNames(target.body);
+          if(target.parameters.some((name,i)=>!strict.has(name)&&!literalData(args[i])))
+            fail('non-strict component argument '+node.selector);
+          calls++;
+          const local=new Map(target.parameters.map((name,i)=>[name,args[i]]));
+          return expand(target.body,local,[...stack,node.selector],depth+1);
+        }
+        default:fail('component expression '+String(node?.kind));
+      }
+    }
+    const parameter=definition.parameters[0];
+    const body=expand(definition.body,new Map([[parameter,{kind:'Name',value:parameter}]]),[definition.selector],0);
+    // Bound the fully expanded tree, including repeated substitutions.
+    let nodes=0;
+    function check(node,depth=0){
+      if(++nodes>20000||depth>64)fail('expanded component size/depth limit');
+      for(const value of Object.values(node)){
+        if(value&&typeof value==='object'){
+          if(Array.isArray(value))for(const item of value){if(item&&typeof item==='object')check(item,depth+1);}
+          else check(value,depth+1);
+        }
+      }
+    }
+    check(body);
+    return {body,calls};
+  }
   function analyze(ast,selector){
-    if(ast?.kind!=='Program'||ast.definitions.some(d=>d.kind!=='Function'))fail('only function definitions');
+    if(ast?.kind!=='Program'||ast.definitions.some(d=>!['Function','Value'].includes(d.kind)))fail('only functions and literal data definitions');
     const definition=ast.definitions.find(d=>d.selector===selector);
     if(!definition||definition.parameters.length!==1||!identifier(definition.parameters[0])||
         !definition.labels.every(identifier))fail('unary view selector');
@@ -121,8 +201,9 @@
         default:fail('node type '+type.value);
       }
     }
-    visit(definition.body,[],0);
-    return {parameter,slots,buttons,viewName:definition.labels.map(s=>s.replaceAll(' ','_')).join('__')};
+    const expanded=expandView(ast,definition);
+    visit(expanded.body,[],0);
+    return {parameter,slots,buttons,expandedCalls:expanded.calls,viewName:definition.labels.map(s=>s.replaceAll(' ','_')).join('__')};
   }
   function compile(compiler,source,selector){
     const ast=compiler.ast(source);

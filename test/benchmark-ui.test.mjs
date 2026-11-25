@@ -234,3 +234,44 @@ test('0.21 form source compiles JS/PHP and rejects captured or dynamic control s
     'view: n = {type: "select", label: "Nome", value: n, options: [n], update: {old, entered | entered}};'
   ])assert.throws(()=>sandbox.MiraGuiSpecialize.compile(bridge,source,'view:'),/Unsupported specialized view/);
 });
+
+
+test('0.22 component specialization uses actual GUI library and lexical selector expansion',()=>{
+  const sandbox={};
+  runInNewContext(read('gui-specialize.js'),sandbox);
+  runInNewContext(read('gui-benchmark.js'),sandbox);
+  const library=readFileSync(resolve(root,'lib/gui.mira'),'utf8');
+  const form=sandbox.MiraGuiBench.formSource(1);
+  assert.ok(form.startsWith(library+'\n'));
+  assert.match(form,/student field: model = text input:/);
+  const compiled=sandbox.MiraGuiSpecialize.compile(bridge,form,'form view:');
+  assert.ok(compiled.plan.expandedCalls>=10);
+  assert.equal(compiled.plan.slots.length,6);
+  const model={student:'Ada',paid:true,mode:'Online'};
+  assert.deepEqual(Array.from(compiled.program.values(model)),['Ada',true,'Online','Ada','Saldato','Online']);
+  for(const target of ['js','php'])assert.equal(bridge.compile(form,target).ok,true);
+
+  // Same helper, distinct arguments and nested lexical parameter shadowing.
+  const source=library+'\n'+
+    'panel style = {padding: 12, background: "#abc"};\n'+
+    'metric: caption, amount: n = styled: (column: [title: caption, text: n, text: (n * 2)]), with: [panel style];\n'+
+    'view: n = column: [metric: "A", amount: n, metric: "B", amount: (n + 1)];';
+  const result=sandbox.MiraGuiSpecialize.compile(bridge,source,'view:');
+  assert.deepEqual(Array.from(result.program.values(4)),[4,8,5,10]);
+  assert.deepEqual(JSON.parse(JSON.stringify(result.plan.slots.map(s=>s.path))),[[0,1],[0,2],[1,1],[1,2]]);
+  assert.equal(result.program.view(4).children[1].view.children[2].text,10);
+});
+
+test('0.22 rejects recursion, eager discarded reads and unsafe component captures',()=>{
+  const sandbox={};
+  runInNewContext(read('gui-specialize.js'),sandbox);
+  const bad=[
+    'loop: n = loop: n; view: n = loop: n;',
+    'ignore: n = {type: "text", text: "fixed"}; view: n = ignore: (n ~ missing);',
+    'maybe: x, when: ok = {type: "text", text: (if (ok) then x else 0)}; view: n = maybe: (n ~ missing), when: false;',
+    'helper: n = {type: "button", label: "Next", update: {old | old + n}}; view: n = helper: n;',
+    'value = 1 + 2; view: n = {type: "text", text: n};',
+    'view: n = {type: "text", text: n}; render view: 0;'
+  ];
+  for(const source of bad)assert.throws(()=>sandbox.MiraGuiSpecialize.compile(bridge,source,'view:'));
+});

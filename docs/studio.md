@@ -309,3 +309,7 @@ DOM Performance Lab include una demo da montare e il caso benchmark record/stile
 ## Binding specializzato (0.21)
 
 Bench → DOM Performance Lab → Monta form: scheda lezione con input, checkbox, select, riepilogo e reset. Il benchmark confronta due renderer sullo stesso form compilato da Mira; l'anteprima UI ordinaria continua a usare il renderer generico. Focus e selezione sono verificati in Chromium; IME è simulato nei test.
+
+## Componenti specializzati (0.22)
+
+Bench → DOM Performance Lab → Monta form usa la libreria reale gui.mira e selettori riutilizzabili. Apri Sorgente Mira del form per vedere il codice. I test specializzano anche le view canoniche Dashboard musicale e Scheda lezione. Il renderer ordinario dell'anteprima rimane invariato.
