@@ -859,3 +859,17 @@ test('effects pilot is built and offline-cacheable',()=>{
   }
   assert.match(read('index.html'),/href="\.\/effects-demo\.html"/);
 });
+
+test('type laboratory is available offline and uses the real compiler',()=>{
+  const result=bridge.check('identity: x = x; a = identity: 1; b = identity: "ok";');
+  assert.equal(result.ok,true,result.message);
+  assert.deepEqual(JSON.parse(result.output).map(x=>x.type),["('a) -> 'a","Number","Text"]);
+  const bad=bridge.check('a = 1 + "oops";');
+  assert.equal(bad.ok,false);
+  assert.match(bad.message,/expected Number, got Text/);
+  for(const asset of ['type-lab.html','type-lab.js']){
+    assert.ok(read(asset).length>0);
+    assert.ok(read('sw.js').includes(asset));
+  }
+  assert.ok(read('index.html').includes('type-lab.html'));
+});
