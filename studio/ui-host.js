@@ -98,18 +98,27 @@
       return node;
     }
 
-    // Decorations are transparent: no wrapper DOM node, and the underlying
-    // component keeps its identity. Inner styles first, outer styles last.
+    // Decorations are transparent: no wrapper DOM node. Keys are scoped
+    // to siblings, independently of the existing state.key reset token.
     function unwrap(spec) {
       const layers = [];
-      while (spec?.type === 'styled') {
-        if (layers.length >= MAX_DEPTH || !Array.isArray(spec.styles) || spec.styles.length > 32) {
-          throw new Error('styled.styles must be a bounded sequence');
+      let identity, depth = 0;
+      while (spec?.type === 'styled' || spec?.type === 'keyed') {
+        if (++depth > MAX_DEPTH) throw new Error('View decoration depth limit');
+        if (spec.type === 'keyed') {
+          if (identity !== undefined) throw new Error('Multiple identity keys on one view');
+          const key = spec.key;
+          if (!(typeof key === 'string' && key.length > 0) && !Number.isSafeInteger(key))
+            throw new Error('Identity key must be a nonempty string or safe integer');
+          identity = key;
+        } else {
+          if (!Array.isArray(spec.styles) || spec.styles.length > 32)
+            throw new Error('styled.styles must be a bounded sequence');
+          layers.push(spec.styles);
         }
-        layers.push(spec.styles);
         spec = spec.view;
       }
-      return {spec, css: resolveStyles(layers.reverse())};
+      return {spec, identity, css: resolveStyles(layers.reverse())};
     }
 
     function patchStyles(instance, css) {
@@ -125,7 +134,7 @@
 
     // Prepare a validated view before touching the mounted DOM. Instances
     // retain native nodes and the current callbacks, not copies of Mira state.
-    function prepare(spec, previous, parentState, budget, depth, nextState) {
+    function prepare(spec, previous, parentState, budget, depth, nextState, decoration) {
       if (!spec || typeof spec !== 'object' || Array.isArray(spec)) {
         throw new Error('A view must be a Mira record');
       }
@@ -133,7 +142,7 @@
         throw new Error('The view exceeds its size/depth limit');
       }
       const source = spec;
-      const decorated = unwrap(spec);
+      const decorated = decoration ?? unwrap(spec);
       spec = decorated.spec;
       if (!spec || typeof spec !== 'object' || Array.isArray(spec)) {
         throw new Error('A styled view must contain a Mira record');
@@ -142,10 +151,10 @@
       if (type === 'state' && spec.key !== undefined && typeof spec.key !== 'string') {
         throw new Error('state.key must be a string');
       }
-      const same = previous && previous.spec.type === type &&
+      const same = previous && previous.spec.type === type && previous.identity === decorated.identity &&
         (type !== 'state' || previous.spec.key === spec.key);
       const instance = same ? previous : {active: false, children: [], node: null};
-      const plan = {instance, spec, source, css: decorated.css, parentState, depth, children: []};
+      const plan = {instance, spec, source, identity: decorated.identity, css: decorated.css, parentState, depth, children: []};
       const oldChildren = same ? instance.children : [];
       const child = (value, index, owner = parentState) =>
         prepare(value, oldChildren[index], owner, budget, depth + 1);
@@ -164,7 +173,29 @@
         case 'column':
         case 'row':
           if (!Array.isArray(spec.children)) throw new Error(type + '.children must be a sequence');
-          plan.children = spec.children.map((value, index) => child(value, index));
+          // Validate keys before committing any node. Unkeyed siblings retain
+          // positional matching; they never consume a keyed instance.
+          const decoratedChildren = spec.children.map(unwrap);
+          plan.keyed = oldChildren.some(c => c.identity !== undefined) ||
+            decoratedChildren.some(c => c.identity !== undefined);
+          if (!plan.keyed) {
+            plan.children = spec.children.map((value, i) =>
+              prepare(value, oldChildren[i], parentState, budget, depth + 1, undefined, decoratedChildren[i]));
+          } else {
+            const byKey = new Map(oldChildren.filter(c => c.identity !== undefined).map(c => [c.identity, c]));
+            const seen = new Set();
+            plan.children = spec.children.map((value, i) => {
+              const decoration = decoratedChildren[i], key = decoration.identity;
+              if (key !== undefined) {
+                if (seen.has(key)) throw new Error('Duplicate sibling identity: ' + String(key));
+                seen.add(key);
+              }
+              const previous = key === undefined
+                ? (oldChildren[i]?.identity === undefined ? oldChildren[i] : undefined)
+                : byKey.get(key);
+              return prepare(value, previous, parentState, budget, depth + 1, undefined, decoration);
+            });
+          }
           break;
         case 'button':
           if (spec.update !== undefined && typeof spec.update !== 'function') {
@@ -287,6 +318,7 @@
       const node = instance.node;
       instance.spec = spec;
       instance.source = plan.source;
+      instance.identity = plan.identity;
       patchStyles(instance, plan.css);
       instance.parentState = plan.parentState;
       instance.depth = plan.depth;
@@ -308,9 +340,38 @@
         }
         syncControl(instance);
       }
-      // Positional reconciliation: stable type/position keeps native identity.
-      // No keyed list reordering; state keys only opt into a local reset.
       const old = instance.children;
+      if (plan.keyed) {
+        const children = plan.children.map(commit);
+        const retained = new Set(children);
+        for (const previous of old) if (!retained.has(previous)) {
+          deactivate(previous);
+          previous.node.remove();
+        }
+        // Reuse existing native nodes, including nested state owners.
+        // moveBefore preserves browser state on supporting engines. For
+        // older engines, restore focus/selection after an actual DOM move.
+        for (let i = 0; i < children.length; i++) {
+          const next = children[i].node, before = node.children[i] ?? null;
+          if (next === before) continue;
+          if (next.parentNode === node && typeof node.moveBefore === 'function') {
+            node.moveBefore(next, before);
+          } else {
+            const focused = doc.activeElement;
+            const preserve = next.parentNode === node && focused && next.contains(focused);
+            const selection = preserve && typeof focused.selectionStart === 'number'
+              ? [focused.selectionStart, focused.selectionEnd, focused.selectionDirection] : null;
+            node.insertBefore(next, before);
+            if (preserve && doc.activeElement !== focused) {
+              focused.focus({preventScroll: true});
+              if (selection) focused.setSelectionRange(...selection);
+            }
+          }
+        }
+        instance.children = children;
+        return instance;
+      }
+      // Fast positional path for ordinary static siblings.
       const children = plan.children.map((child, index) => {
         const next = commit(child);
         const before = old[index];

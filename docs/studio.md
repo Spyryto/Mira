@@ -363,3 +363,7 @@ Apri dalla Guida **Registro lezioni · modifica immutabile**: i binding modifica
 ## Collezioni native (0.32)
 
 Guida → Registro lezioni · lista dinamica. Il renderer generico visualizza una lista costruita con collect, aggiunge con append e rimuove con remove. Non serve una capability host di collezione. L'ispettore AST conserva il proprio manifest e fold su alberi. I figli non hanno ancora identità stabile.
+
+## Identità delle liste (0.33)
+
+Guida → Registro allievi · identità stabile. Scrivi note diverse e incrementa i contatori, poi Inverti: ciascuna riga conserva il proprio stato. Mostra/nascondi Ada rimuove il suo widget, e al reinserimento il suo stato locale riparte dall'iniziale. La chiave è dichiarata con each:identified by:view:, nessun ID DOM automatico. L'anteprima usa il renderer generico. [Semantica](browser-interop.md#mira-033-identità-delle-liste-gui).

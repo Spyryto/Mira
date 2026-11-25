@@ -239,3 +239,5 @@ Gli operandi non vengono mutati, le copie sono superficiali e l'ordine degli ele
 Compatibilità: i selettori di collezione già esistenti come capability possono ancora essere registrati esplicitamente nel manifest host, e in tal caso mantengono il comportamento precedente (es. fold dell'ispettore AST su alberi). Il manifest Studio ordinario ora usa le operazioni native; get:from: resta host. I nuovi append/remove e update:with: non sono sovrascrivibili. Le definizioni utente con le stesse firme sono conflitti.
 
 La lista GUI dinamica del nuovo esempio usa il renderer generico: i figli sono ancora riconciliati per posizione. Identità stabile, riordinamento e conservazione dello stato locale dei figli saranno il prossimo passo.
+
+Dalla 0.33, la libreria GUI aggiunge `each:identified by:view:` per produrre liste con identità stabile. `collect` rimane un'operazione di trasformazione generica; i suoi alias precedenti sono invariati in questa iterazione. Vedi [interop GUI](browser-interop.md#mira-033-identità-delle-liste-gui).

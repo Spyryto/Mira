@@ -562,3 +562,46 @@ test('0.29 real Laboratory keeps navigation, details and remembered variable hei
   }
   t.diagnostic('GUI_LABORATORY_BENCHMARK '+JSON.stringify({version:bridge.version,samples:7,steps:10,reports}));
 });
+
+
+test('0.33 Chromium keyed list preserves focused text input on native move and fallback',{timeout:90000},async t=>{
+  const catalog=JSON.parse(read('reference.json'));
+  const source=catalog.examples.find(e=>e.id==='gui-keyed-students').source;
+  const compiled=bridge.compile(source,'js',read('host.json'));
+  assert.equal(compiled.ok,true,compiled.message);
+  const result=await chromiumEvaluate(t,'gui-benchmark.html','('+function(code){
+    const mount=document.getElementById('mount');
+    const check=(ok,msg)=>{if(!ok)throw Error(msg);};
+    const native=Element.prototype.moveBefore;
+    const modes=typeof native==='function'?['native','fallback']:['fallback'];
+    for(const mode of modes){
+      if(mode==='fallback')Object.defineProperty(Element.prototype,'moveBefore',{value:undefined,configurable:true,writable:true});
+      try{
+        const errors=[];
+        const host=MiraUiHost.createUiHost(document,mount,e=>errors.push(e));
+        new Function('__miraHost',code)(host);
+        const inputs=[...mount.querySelectorAll('input')],lia=inputs[1];
+        lia.focus();lia.value='Lia note';lia.dispatchEvent(new Event('input',{bubbles:true}));
+        lia.setSelectionRange(2,4,'forward');
+        const action=caption=>[...mount.querySelectorAll('button')].find(b=>b.textContent===caption).click();
+        action('Inverti');
+        check(mount.querySelector('input')===lia,'Identity '+mode);
+        check(document.activeElement===lia,'Focus '+mode);
+        check(lia.selectionStart===2&&lia.selectionEnd===4,'Selection '+mode);
+        check(lia.value==='Lia note','Value '+mode);
+        action('Mostra/nascondi Ada');
+        check(mount.querySelectorAll('input').length===1&&mount.querySelector('input')===lia,'Removal '+mode);
+        action('Mostra/nascondi Ada');
+        check(mount.querySelectorAll('input')[1]!==inputs[0],'Reinsertion '+mode);
+        check(errors.length===0,errors.join('\n'));
+      }finally{
+        if(native)Object.defineProperty(Element.prototype,'moveBefore',{value:native,configurable:true,writable:true});
+        else delete Element.prototype.moveBefore;
+      }
+    }
+    return {modes};
+  }.toString()+')('+JSON.stringify(compiled.output)+')');
+  if(!result)return;
+  assert.ok(result.modes.includes('fallback'));
+  t.diagnostic('KEYED_BROWSER '+JSON.stringify(result));
+});
