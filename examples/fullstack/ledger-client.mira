@@ -7,7 +7,7 @@ request: model, command: cmd = {
   effects: [{service: "ledger", id: (model ~ request id + 1), reply: "reply", payload: cmd}]
 };
 
-transition: model, message: msg = if (msg ~ type == "reply") then (
+ledger transition: model, message: msg = if (msg ~ type == "reply") then (
   if (msg ~ id == model ~ request id) then (
     if (msg ~ ok) then (
       unchanged: (update: model, with: {snapshot: (msg ~ value), busy: false, ready: true,
@@ -31,6 +31,18 @@ transition: model, message: msg = if (msg ~ type == "reply") then (
     )
   ) else (unchanged: model))
 ));
+
+# The quote capability comes from services.mira, not a handwritten JS map.
+transition: model, message: msg = if (msg ~ type == "quote") then (
+  if (model ~ quote pending) then (unchanged: model) else (
+    {model: (update: model, with: {quote pending: true, quote status: "Calcolo preventivo…"}),
+     effects: [{service: "quote", id: 1, reply: "quote reply", payload: {hours: 2}}]}
+  )
+) else (if (msg ~ type == "quote reply") then (
+  unchanged: (update: model, with: {quote pending: false,
+    quote status: (if (msg ~ ok) then "Preventivo pronto" else (msg ~ error)),
+    quote total: (if (msg ~ ok) then (msg ~ value ~ total) else 0)})
+) else (ledger transition: model, message: msg));
 
 lesson row: item, editable: enabled = styled: (column: [
   title: (item ~ student),
@@ -56,6 +68,12 @@ view: model = () >> {|
         update: {old, entered | update: old, with: {draft: entered}},
       button: "Aggiungi lezione", on click: {| send ({type: "add"})}
     ]) else (text: (model ~ draft))),
+    title: "Preventivo per 2 ore (€)",
+    text: (model ~ quote status),
+    text: (model ~ quote total),
+    (if (model ~ quote pending) then (text: "Calcolo in corso") else (
+      button: "Calcola preventivo", on click: {| send ({type: "quote"})}
+    )),
     title: "Compenso totale (€)",
     text: (fold: (model ~ snapshot ~ lessons), with: {sum, item | sum + (item ~ hours * 30)}, from: 0),
     column: (each: (model ~ snapshot ~ lessons), identified by: (_ ~ id),
@@ -64,5 +82,5 @@ view: model = () >> {|
 };
 
 start ({initial: {snapshot: {revision: 0, next id: 1, lessons: []},
-  draft: "", busy: false, ready: false, request id: 0, clear draft: false, status: "Pronto"},
+  draft: "", busy: false, ready: false, quote pending: false, quote status: "Pronto", quote total: 0, request id: 0, clear draft: false, status: "Pronto"},
   view: (view: _), update: (transition: _, message: _)});
