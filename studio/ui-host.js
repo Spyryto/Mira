@@ -239,17 +239,18 @@
     }
 
     function update(instance, transition) {
-      if (!instance?.active || !mounted || mount.children[0] !== mounted.node) return;
+      if (!instance?.active || !mounted || mount.children[0] !== mounted.node) return false;
       const next = transition(instance.state);
       if (instance.hybrid) {
         updateHybrid(instance, next);
         if (instance === mounted) onRootCommit(instance.state);
-        return;
+        return true;
       }
       const plan = prepare(instance.source, instance, instance.parentState,
         {nodes: 0}, instance.depth, {value: next});
       commit(plan);
       if (instance === mounted) onRootCommit(instance.state);
+      return true;
     }
 
     function syncControl(instance) {
@@ -407,7 +408,11 @@
     uiHost.renderState = (view, initial) => {
       uiHost.render({type: 'state', initial, view});
       const owner = mounted;
-      return {getState: () => owner.state};
+      return {
+        getState: () => owner.state,
+        isActive: () => owner.active && mounted === owner && mount.children[0] === owner.node,
+        dispatch: transition => update(owner, transition)
+      };
     };
 
     // Hybrid roots use the ordinary state owner and reconciliation for

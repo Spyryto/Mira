@@ -36,6 +36,10 @@ const assets = [
   'persistent-ledger.css',
   'persistent-ledger.js',
   'persistent-ledger.mira',
+  'effects.js',
+  'effects-demo.mira',
+  'effects-demo.js',
+  'effects-demo.html',
   'ui-preview.js',
   'manifest.webmanifest',
   'icon.svg',
@@ -92,6 +96,13 @@ const ledger=context.MiraStudioCompiler.compile(
 if(!ledger.ok)throw Error('Persistent ledger compilation: '+ledger.message);
 writeFileSync(resolve(destination,'persistent-ledger-program.js'),
   'globalThis.MiraLessonLedgerProgram = function(__miraHost) {\n'+ledger.output+'\n};\n');
+const effectsSource = readFileSync(resolve(root,'studio/effects-demo.mira'),'utf8');
+const effectsManifest = JSON.stringify({callables:['start','send']});
+const effects = context.MiraStudioCompiler.compile(effectsSource,'js',effectsManifest);
+const effectsPhp = context.MiraStudioCompiler.compile(effectsSource,'php',effectsManifest);
+if(!effects.ok || !effectsPhp.ok)throw Error('Effects pilot compilation: '+(effects.message || effectsPhp.message));
+writeFileSync(resolve(destination,'effects-demo-program.js'),
+  'globalThis.MiraEffectsDemoProgram = function(__miraHost) {\n'+effects.output+'\n};\n');
 // Compile Mira Atlas to JS and extract real source import dependencies.
 const atlas = spawnSync('node', ['scripts/generate-atlas.mjs'], {
   cwd: root, stdio: 'inherit'

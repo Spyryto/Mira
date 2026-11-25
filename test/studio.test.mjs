@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.34.0');
+  assert.equal(bridge.version, '0.35.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.34.0');
+  assert.equal(bridge.version,'0.35.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -850,4 +850,12 @@ test('0.34 ledger compiles on both targets and is bundled offline',()=>{
   }
   assert.match(read('index.html'),/href="\.\/persistent-ledger.html"/);
   assert.equal(bridge.compile('result = collect: [1], if: (_ > 0);','js').ok,false);
+});
+
+test('effects pilot is built and offline-cacheable',()=>{
+  for(const asset of ['effects.js','effects-demo.mira','effects-demo.js','effects-demo.html','effects-demo-program.js']){
+    assert.ok(existsSync(resolve(site,asset)));
+    assert.ok(read('sw.js').includes("'./"+asset+"'"));
+  }
+  assert.match(read('index.html'),/href="\.\/effects-demo\.html"/);
 });

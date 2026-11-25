@@ -1,0 +1,28 @@
+import "lib/gui.mira";
+
+# A transition describes work; it never invokes a service.
+transition: model, message: msg = if (msg ~ type == "load") then (
+  {model: (update: model, with: {request: (model ~ request + 1), status: "Caricamento…"}),
+   effects: [{service: "greeting", id: (model ~ request + 1), reply: "loaded",
+              payload: {fail: (msg ~ fail), request: (model ~ request + 1)}}]}
+) else (if (msg ~ type == "increment") then (
+  {model: (update: model, with: {count: (model ~ count + 1)}), effects: []}
+) else (if (msg ~ type == "loaded") then (
+  if (msg ~ id == model ~ request) then (
+    {model: (update: model, with: {status: (if (msg ~ ok) then (msg ~ value ~ message) else (msg ~ error))}),
+     effects: []}
+  ) else {model: model, effects: []}
+) else {model: model, effects: []}));
+
+view: model = column: [
+  title: "Effetti asincroni",
+  text: (model ~ status),
+  button: "Richiesta riuscita", on click: {| send ({type: "load", fail: false})},
+  button: "Richiesta fallita", on click: {| send ({type: "load", fail: true})},
+  text: "Il modello resta interattivo durante la richiesta",
+  text: (model ~ count),
+  button: "Incrementa", on click: {| send ({type: "increment"})}
+];
+
+start ({initial: {request: 0, count: 0, status: "Pronto"}, view: (view: _),
+        update: (transition: _, message: _)});

@@ -1,0 +1,2 @@
+# Pure PHP-target service. The host owns HTTP, JSON and validation.
+greet: request = {id: (request ~ id), message: (request ~ name)};

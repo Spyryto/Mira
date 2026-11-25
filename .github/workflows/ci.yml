@@ -22,7 +22,7 @@ jobs:
       - name: Generate reference and documentation provenance
         run: npm run docs
       - name: Execute correctness and example tests
-        run: node --test test/mira.test.mjs test/catalog.test.mjs test/documentation-origin.test.mjs
+        run: node --test test/mira.test.mjs test/catalog.test.mjs test/documentation-origin.test.mjs test/effects.test.mjs
       - name: Verify generated JavaScript and PHP
         run: |
           node dist/mira.cjs examples/arithmetic.mira js > /tmp/mira-generated.mjs

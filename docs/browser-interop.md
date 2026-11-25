@@ -298,3 +298,52 @@ Il renderer generico accetta un callback host opzionale onRootCommit, invocato d
 L'adapter browser MiraPersistentState.open(storage,key,version,initial,validate) legge/scrive un envelope JSON {version,data} e distingue assenza da errore. Max 262144 unità UTF-16 per envelope; formato/versione sconosciuti o errore di lettura bloccano le scritture, senza sovrascrivere il dato esistente. Errori di scrittura sono mostrati senza annullare il commit GUI; un nuovo aggiornamento può riprovare. Reset esplicito, nessuna migrazione automatica. Nessuna capability storage nell'editor o nell'iframe arbitrario.
 
 Il programma pilota è compilato durante la build da studio/persistent-ledger.mira, con un solo host callable render. L'adapter è JS browser, non una primitiva Mira o PHP. Il codice della view e le transizioni sono Mira, e il sorgente viene anche compilato su PHP per verifica; la persistenza server non è implementata.
+
+## Mira 0.35: effetti asincroni (pilota)
+
+Una transizione riceve modello e messaggio e restituisce un record
+`{model, effects}`. Un effetto è un record JSON con `service` (nome di
+una capability registrata dall'host), `id` (stringa o intero sicuro),
+`reply` (tipo del messaggio di risposta) e `payload`. Il runtime
+`MiraEffects.createApp` valida tutti gli effetti prima del commit e
+li avvia solo dopo un commit riuscito del renderer generico. Le operazioni
+partono in concorrenza; non si garantisce ordine di completamento.
+Un completamento genera `{type,id,ok:true,value}` oppure
+`{type,id,ok:false,error}`, applicato al modello corrente. Il pilota
+confronta l'id con quello atteso per ignorare risposte obsolete.
+Il runtime non impone tale politica: applicazioni con richieste indipendenti
+possono invece elaborare tutte le risposte.
+
+Il modello è separato dai valori JSON inviati e ricevuti, copiati alla
+frontiera. Nessuna keyword, Promise esposta a Mira o modifica al compilatore.
+La purezza resta una convenzione, non un controllo statico. Massimo 32 effetti
+per transizione, 64 pendenti; stop annulla i segnali e ignora le risposte.
+Un mount sostituito ignora i completamenti, ma l'host deve chiamare stop
+per interrompere le operazioni pendenti. Nessun retry, timeout o rollback
+dell'operazione remota automatico. La libreria JSON POST si lega a un URL
+scelto dall'host, senza credenziali e senza redirect. Non è ancora un
+protocollo RPC tipizzato né una capability di rete dell'editor sandboxed.
+La demo usa un servizio simulato, non un backend PHP pubblico.
+
+### Collegamento HTTP JS/PHP
+
+`examples/greeting-service.mira` contiene una funzione pura compilabile
+su PHP; `examples/php/greeting.php` è un adattatore HTTP minimale che
+convalida il JSON in ingresso. Per provarlo localmente:
+
+```sh
+npm run build
+node dist/mira.cjs examples/greeting-service.mira php > examples/php/greeting-program.php
+php -S 127.0.0.1:8080 -t examples/php
+```
+
+Un host JS può registrare
+`MiraEffects.jsonService("http://127.0.0.1:8080/greeting.php")`
+come servizio. Il browser richiede stessa origine o CORS esplicitamente
+configurato: il pilota non abilita CORS, autenticazione o accesso pubblico.
+Il test di integrazione usa un server PHP locale e la vera fetch di Node.
+L'endpoint restituisce JSON, non codice eseguibile. La demo Studio rimane
+offline e simulata. Non si presume che ogni record Mira sia serializzabile:
+funzioni e altri valori host non sono ammessi nei payload; PHP distingue
+con difficoltà record vuoti e sequenze vuote, quindi il protocollo generale
+deve ancora definirne la rappresentazione.
