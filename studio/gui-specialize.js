@@ -227,7 +227,8 @@
   const slotValue=(slot,value)=>slot.kind==='style'
     ? global.MiraUiHost.resolveStyles(value) : slot.kind==='control'
       ? global.MiraUiHost.controlValue(slot.type,value,slot.options) : String(value??'');
-  function mount(compiled,target,initial,onError=error=>{throw new Error(error);}){
+  function mount(compiled,target,initial,onError=error=>{throw new Error(error);},textMode='content'){
+    if(!['content','data'].includes(textMode))fail('text mode');
     if(!data(initial))fail('data state');
     const {plan,program}=compiled;
     let state=initial,bindings=[],mountedRoot=null;
@@ -247,7 +248,8 @@
         }else if(plan.slots[i].kind==='control'){
           binding.control.sync(value);
         }else if(binding.value!==value){
-          binding.node.textContent=value;
+          if(binding.textNode)binding.textNode.data=value;
+          else binding.node.textContent=value;
         }
         binding.value=value;
       }
@@ -281,6 +283,13 @@
       let node=root;
       for(const index of slot.path)node=node.children[index];
       const binding={node,value:values[i]};
+      if(slot.kind==='text'&&textMode==='data'){
+        // An empty initial string produces no Text child in the browser.
+        // Install exactly one text node and retain it, including empty values.
+        const text=node.ownerDocument.createTextNode(node.textContent);
+        node.replaceChildren(text);
+        binding.textNode=text;
+      }
       if(slot.kind==='control'){
         binding.control=controls.get(node.children[1]);
         binding.control.slot=binding;

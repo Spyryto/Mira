@@ -169,6 +169,13 @@ test('GUI benchmark runs in a real Chromium DOM and checks all strategies',t=>{
     assert.ok(Number.isFinite(row[strategy].medianMs)&&row[strategy].medianMs>=0);
     assert.ok(row[strategy].p95Ms>=row[strategy].medianMs);
   }
+  assert.equal(result.textExperiment.samples,9);
+  assert.equal(result.textExperiment.steps,120);
+  assert.equal(result.textExperiment.results.length,4);
+  for(const row of result.textExperiment.results)for(const key of ['content','data']){
+    assert.ok(Number.isFinite(row[key].medianMs)&&row[key].medianMs>=0);
+    assert.ok(row[key].p95Ms>=row[key].medianMs);
+  }
   t.diagnostic('GUI_BROWSER_BENCHMARK '+JSON.stringify(result));
 });
 

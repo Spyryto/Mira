@@ -261,6 +261,53 @@
     return results;
   }
 
+
+  // Isolate the text-writing strategy: same compiled view, state transition,
+  // renderer, events, DOM structure, warmup and checks. Only Text.data varies.
+  function runTextExperiment(compiler,mount){
+    const samplesPerCase=9,steps=120;
+    const results=[];
+    for(const density of ['sparse','dense']){
+      const compiled=global.MiraGuiSpecialize.compile(compiler,source(density),'bench view:');
+      for(const flush of [false,true]){
+        const samples={content:[],data:[]};
+        for(let round=0;round<samplesPerCase;round++){
+          for(const mode of round%2?['data','content']:['content','data']){
+            global.MiraGuiSpecialize.mount(compiled,mount,0,error=>{throw new Error(error);},mode);
+            const button=mount.querySelector('button');
+            const labels=[...mount.querySelectorAll('p')];
+            const first=labels[0].firstChild;
+            for(let i=0;i<warmup;i++)button.click();
+            layout(mount);
+            const start=performance.now();
+            for(let i=0;i<steps;i++){
+              button.click();
+              if(flush)layout(mount);
+            }
+            samples[mode].push((performance.now()-start)/steps);
+            verify(mount,density,warmup+steps);
+            if(labels[0]!==mount.querySelector('p'))throw new Error('Text element identity');
+            if((labels[0].firstChild===first)!==(mode==='data'))throw new Error('Text node identity');
+            layout(mount);
+          }
+        }
+        results.push({density,flush,content:stats(samples.content),data:stats(samples.data)});
+      }
+    }
+    // Empty -> literal markup -> empty, all with the same text node.
+    const special=global.MiraGuiSpecialize.compile(compiler,
+      'view: n = {type: "column", children: [{type: "text", text: (if (n % 2 == 0) then "" else "<b>test</b>")}, {type: "button", label: "Next", update: {old | old + 1}}]};','view:');
+    global.MiraGuiSpecialize.mount(special,mount,0,error=>{throw new Error(error);},'data');
+    const p=mount.querySelector('p'),text=p.firstChild,button=mount.querySelector('button');
+    if(!text||text.nodeType!==3||p.textContent!=='')throw new Error('Empty text node');
+    button.click();
+    if(p.firstChild!==text||p.textContent!=='<b>test</b>'||p.children.length)throw new Error('Literal text safety');
+    button.click();
+    if(p.firstChild!==text||p.textContent!=='')throw new Error('Empty text identity');
+    mount.replaceChildren();
+    return {samples:samplesPerCase,steps,results};
+  }
+
   function run(compiler,mount) {
     if (!mount.isConnected) throw new Error('Benchmark requires connected DOM');
     const results=[];
@@ -283,7 +330,8 @@
     mount.replaceChildren();
     const form=runForm(compiler,mount);
     const hybrid=runHybrid(compiler,mount);
-    return {ok:true,rows,updates,rounds,warmup,form,hybrid,version:compiler.version,
+    const textExperiment=runTextExperiment(compiler,mount);
+    return {ok:true,rows,updates,rounds,warmup,form,hybrid,textExperiment,version:compiler.version,
       userAgent:navigator.userAgent,results};
   }
 
