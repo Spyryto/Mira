@@ -45,6 +45,17 @@ class Compiler
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L10)
 
+<a id="api-mira-compiler-check"></a>
+### `mira.Compiler.check`
+
+**method** · Facade riutilizzata da CLI e Mira Studio; espone parsing, traspilazione e ispezione lessicale.
+
+```haxe
+public static function check(source:String, ?host:HostEnvironment, ?readModule:String->Null<String>, ?entry:String):Array<Dynamic>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L35)
+
 <a id="api-mira-compiler-inspecttokens"></a>
 ### `mira.Compiler.inspectTokens`
 
@@ -54,7 +65,7 @@ class Compiler
 public static function inspectTokens(source:String):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L34)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L40)
 
 <a id="api-mira-compiler-parse"></a>
 ### `mira.Compiler.parse`
@@ -796,7 +807,18 @@ class Bridge
 public static function ast(source:String, ?hostJson:String, ?modulesJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L64)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L72)
+
+<a id="api-mira-studio-bridge-check"></a>
+### `mira.studio.Bridge.check`
+
+**method** · Interfaccia JavaScript esposta dal compilatore Haxe nel browser.
+
+```haxe
+public static function check(source:String, ?hostJson:String, ?modulesJson:String):Dynamic
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L61)
 
 <a id="api-mira-studio-bridge-compile"></a>
 ### `mira.studio.Bridge.compile`
@@ -807,7 +829,7 @@ public static function ast(source:String, ?hostJson:String, ?modulesJson:String)
 public static function compile(source:String, targetName:String, ?hostJson:String, ?withLocations:Bool = false, ?modulesJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L43)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L44)
 
 <a id="api-mira-studio-bridge-main"></a>
 ### `mira.studio.Bridge.main`
@@ -829,7 +851,7 @@ public static function main():Void
 public static function tokens(source:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L60)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L68)
 
 <a id="api-mira-studio-bridge-trace"></a>
 ### `mira.studio.Bridge.trace`
@@ -840,7 +862,7 @@ public static function tokens(source:String):Dynamic
 public static function trace(source:String, ?hostJson:String, ?modulesJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L96)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L104)
 
 <a id="api-mira-syntax-definition"></a>
 ### `mira.syntax.Definition`
@@ -1338,4 +1360,125 @@ Php
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Target.hx#L6)
+
+<a id="api-mira-types-type"></a>
+### `mira.types.Type`
+
+**enum** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+enum Type
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L3)
+
+<a id="api-mira-types-type-booleantype"></a>
+### `mira.types.Type.BooleanType`
+
+**variant** · Membro pubblico di mira.types.Type.
+
+```haxe
+BooleanType
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L7)
+
+<a id="api-mira-types-type-functiontype"></a>
+### `mira.types.Type.FunctionType`
+
+**variant** · Membro pubblico di mira.types.Type.
+
+```haxe
+FunctionType(parameters:Array<Type>, result:Type)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L10)
+
+<a id="api-mira-types-type-listtype"></a>
+### `mira.types.Type.ListType`
+
+**variant** · Membro pubblico di mira.types.Type.
+
+```haxe
+ListType(item:Type)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L9)
+
+<a id="api-mira-types-type-numbertype"></a>
+### `mira.types.Type.NumberType`
+
+**variant** · Membro pubblico di mira.types.Type.
+
+```haxe
+NumberType
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L5)
+
+<a id="api-mira-types-type-recordtype"></a>
+### `mira.types.Type.RecordType`
+
+**variant** · Membro pubblico di mira.types.Type.
+
+```haxe
+RecordType(fields:Map<String, Type>, tail:Null<Type>)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L11)
+
+<a id="api-mira-types-type-texttype"></a>
+### `mira.types.Type.TextType`
+
+**variant** · Membro pubblico di mira.types.Type.
+
+```haxe
+TextType
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L6)
+
+<a id="api-mira-types-type-variable"></a>
+### `mira.types.Type.Variable`
+
+**variant** · Membro pubblico di mira.types.Type.
+
+```haxe
+Variable(id:Int)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L8)
+
+<a id="api-mira-types-typechecker"></a>
+### `mira.types.TypeChecker`
+
+**class** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+class TypeChecker
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L8)
+
+<a id="api-mira-types-typechecker-check"></a>
+### `mira.types.TypeChecker.check`
+
+**method** · Membro pubblico di mira.types.TypeChecker.
+
+```haxe
+public function check(program:Array<Definition>):Array<Dynamic>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L19)
+
+<a id="api-mira-types-typechecker-new"></a>
+### `mira.types.TypeChecker.new`
+
+**constructor** · Membro pubblico di mira.types.TypeChecker.
+
+```haxe
+public function new()
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L17)
 

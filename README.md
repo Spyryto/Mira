@@ -78,6 +78,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Registro full-stack Mira JS/PHP con SQLite | `0.36` | [Dettagli](docs/studio.md#registro-full-stack-036) |
 | ✅ | Servizi RPC JSON riutilizzabili tra JS e PHP | `0.37` | [Dettagli](docs/browser-interop.md#mira-037-rpc-json) |
 | ✅ | Contratti RPC dichiarativi Mira e registrazioni generate | `0.38` | [Dettagli](docs/browser-interop.md#mira-038-contratti-di-servizio) |
+| ✅ | Inferenza strutturale sperimentale, opt-in | `0.39` | [Dettagli](docs/type-checker.md) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
