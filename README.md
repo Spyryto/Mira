@@ -234,6 +234,11 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Laboratory in Mira Studio](https://spyryto.github.io/Mira/laboratory.html) raccoglie l'evoluzione 0.15–0.34, i benchmark CI e le misure dell'autore su iPhone e smart TV. [Rapporto tecnico](docs/gui-rendering.md) · [Archivio JSON](catalog/laboratory/gui-rendering.json). Il rapporto storico è statico e separato dal benchmark eseguibile.
 
+## Mira 0.44: firme host
+
+Firme opzionali nel manifest host, convertite nella stessa algebra
+dei tipi del checker. [Dettagli](docs/type-checker.md#044-firme-host).
+
 ## Mira 0.43: diagnostica delle espressioni
 
 Ancore sorgente per operazioni, diagnostica JSON e selezione del
