@@ -1012,7 +1012,7 @@ test('0.32 native lists preserve originals, order, duplicates and callback captu
 });
 test('0.32 aliases and empty lists are portable',()=>{
   for(const target of ['js','php']){
-    for(const selector of ['filter:with:','select:with:','select:if:','collect:if:']){
+    for(const selector of ['filter:with:','select:with:','select:if:']){
       const [first,second]=selector.split(':');
       assert.deepEqual(JSON.parse(run('result = '+first+': [1, 2, 3], '+second+': (_ > 1);',target)),[2,3]);
     }
@@ -1033,5 +1033,14 @@ test('0.32 list runtime diagnostics and native selector conflicts',()=>{
       assert.notEqual(p.status,0);assert.match(p.stderr,pattern);
     }
     assert.match(compileError('append: item, to: items = items;',target).stderr,/Duplicate or conflicting selector/);
+  }
+});
+
+
+test('select filters and collect transforms; removed collect:if: is not native',()=>{
+  for(const target of ['js','php']){
+    assert.deepEqual(JSON.parse(run('result = select: [1, 2, 3], if: (_ > 1);',target)),[2,3]);
+    assert.deepEqual(JSON.parse(run('result = collect: [1, 2, 3], with: (_ * 2);',target)),[2,4,6]);
+    assert.notEqual(compileError('result = collect: [1, 2, 3], if: (_ > 1);',target).status,0);
   }
 });

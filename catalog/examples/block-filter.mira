@@ -3,4 +3,4 @@ lessons = [
   {student: "Eva", hours: 0.5},
   {student: "Lia", hours: 2}
 ];
-result = collect: lessons, if: ({_ | (_ ~ hours) >= 1});
+result = select: lessons, if: ({_ | (_ ~ hours) >= 1});

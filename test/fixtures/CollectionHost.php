@@ -26,7 +26,6 @@ function makeCollectionHost(): array {
         'filter:with:' => $filter,
         'select:with:' => $filter,
         'select:if:' => $filter,
-        'collect:if:' => $filter,
         'map:with:' => $map,
         'collect:with:' => $map,
         'fold:with:from:' => static function($items, $callback, $seed) {

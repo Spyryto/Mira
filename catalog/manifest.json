@@ -267,7 +267,7 @@
       "id": "filtering",
       "title": "Filtri con predicati Mira",
       "summary": "`filter: list, with: (predicate: _)` filtrando con funzioni Mira.",
-      "details": "Il predicato è scritto in Mira; l'host esegue solo l'iterazione limitata delle liste. `filter:with:`, `select:with:`, `select:if:` e `collect:if:` sono alias di filtraggio: conservano l'ordine e restituiscono una lista reindicizzata su JS/PHP. `collect:if:` significa «raccogli se», distinto da `collect:with:` che trasforma come il `collect:` di Smalltalk.",
+      "details": "Il predicato Mira seleziona gli elementi. filter:with:, select:with: e select:if: filtrano; collect:with: trasforma, secondo la semantica Smalltalk. Ordine preservato e lista reindicizzata su JS/PHP.",
       "api": "mira.HostEnvironment",
       "examples": [
         "filter-numbers",
@@ -439,7 +439,7 @@
       "id": "native-sequences",
       "title": "Operazioni native sulle sequenze",
       "summary": "Append, rimozione, trasformazione, filtro e riduzione immutabili senza host.",
-      "details": "append:to: aggiunge un elemento; remove:if: elimina tutti quelli per cui il predicato è true. collect:with:/map:with:, collect:if:/filter:with:/select:if:/select:with: e fold:with:from: sono native per default. Le vecchie capability possono essere ancora dichiarate esplicitamente per compatibilità (es. fold dell'AST). Ordine stabile, liste dense, predicato Boolean, nessuna mutazione degli operandi; PHP usa array_is_list. Il renderer generico supporta le liste variabili, ancora con identità posizionale.",
+      "details": "append:to: aggiunge un elemento; remove:if: elimina tutti quelli per cui il predicato è true. collect:with:/map:with:, filter:with:/select:if:/select:with: e fold:with:from: sono native per default. Le vecchie capability possono essere ancora dichiarate esplicitamente per compatibilità (es. fold dell'AST). Ordine stabile, liste dense, predicato Boolean, nessuna mutazione degli operandi; PHP usa array_is_list. Il renderer generico supporta le liste variabili, ancora con identità posizionale.",
       "api": "mira.resolve.Symbols",
       "examples": [
         "sequence-edit",
@@ -1101,8 +1101,8 @@
     {
       "id": "collect-if-lessons",
       "feature": "filtering",
-      "title": "Collect if: selezionare lezioni",
-      "description": "`collect:if:` filtra usando un predicato Mira, senza introdurre un secondo algoritmo.",
+      "title": "Select if: selezionare lezioni",
+      "description": "select:if: filtra usando un predicato Mira.",
       "path": "catalog/examples/collect-if-lessons.mira",
       "host": "studio/host.json",
       "expect": {

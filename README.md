@@ -495,7 +495,7 @@ lo stesso parametro, anziché un nuovo placeholder.
 I blocchi funzionano nelle pipeline `>>` e come callback:
 
 ```mira
-result = collect: lessons, if: ({_ | (_ ~ hours) >= 1});
+result = select: lessons, if: ({_ | (_ ~ hours) >= 1});
 ```
 
 Questa prima versione supporta un parametro e una sola espressione.

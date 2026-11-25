@@ -166,7 +166,7 @@ fee = {_ | (_ ~ hours) * (_ ~ rate)};
 result = lesson >> fee;
 
 # Passare un blocco come predicato
-result = collect: lessons, if: ({_ | (_ ~ hours) >= 1});
+result = select: lessons, if: ({_ | (_ ~ hours) >= 1});
 ```
 
 `{parametro | espressione}` costruisce una funzione con un parametro.

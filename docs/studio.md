@@ -181,7 +181,7 @@ nella build e incluso nella cache offline del service worker.
 ## Colori nell'editor Mira
 
 La syntax highlighting riconosce i commenti `#`, stringhe, numeri, booleani,
-placeholder `_`, selettori come `collect:` / `if:` e operatori come
+placeholder `_`, selettori come `select:` / `if:` e operatori come
 `~` e `>>`. È un overlay DOM non editabile sincronizzato con il `textarea`:
 tastiera mobile, selezione, undo e inserimento restano nativi. Il sorgente
 viene inserito come nodi di testo, non come HTML; non ci sono dipendenze CDN.
@@ -197,7 +197,7 @@ compilatore Haxe, non del coloratore.
 Il preset **Blocchi · 0.8** mostra una funzione unaria con parametro
 `_` esplicito, utilizzato più volte:
 `fee = {_ | (_ ~ hours) * (_ ~ rate)};`. La funzione può essere
-applicata con `>>` o passata come callback a `collect:if:`.
+applicata con `>>` o passata come callback a `select:if:`.
 L'Inspector mostra il nodo AST `Block` con parametro e corpo.
 
 Dalla versione 0.9 i blocchi possono avere più parametri, pur mantenendo

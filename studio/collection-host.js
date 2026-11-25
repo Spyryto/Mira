@@ -22,10 +22,8 @@ export function collectionHost() {
   };
 
   // Shared implementations: select filters; collect:with: transforms.
-  // collect:if: is the explicit "collect if" filtering spelling.
   api['select:with:'] = api['filter:with:'];
   api['select:if:'] = api['filter:with:'];
-  api['collect:if:'] = api['filter:with:'];
 
   api['map:with:'] = (items, callback) => {
     if (!Array.isArray(items) || typeof callback !== 'function' ||
