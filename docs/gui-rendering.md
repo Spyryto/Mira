@@ -123,3 +123,7 @@ La roadmap sopra documenta lo stato storico della 0.22. La 0.23 introduce un esp
 ## Aggiornamento 0.24: riconoscimento automatico
 
 La selezione avviene da un unico selettore unario. Specializzazione completa se possibile, partizione conservativa di una colonna radice con figli chiamati sullo stesso modello, altrimenti fallback generico. Il benchmark ibrido ora usa questa API. La partizione ricorsiva e l'integrazione nell'anteprima generale restano da progettare. Vedi [interop browser](browser-interop.md#mira-024-selezione-automatica-del-renderer).
+
+## Aggiornamento 0.25: anteprima e ispettore
+
+La selezione automatica è disponibile nell'anteprima ordinaria per render finali riconoscibili; il pannello espone regioni, slot e motivi di fallback, tempi di preparazione e montaggio. La modalità generica resta selezionabile. Nessun cambiamento di grammatica. Vedi [interop browser](browser-interop.md#mira-025-anteprima-e-ispettore).

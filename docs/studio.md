@@ -325,3 +325,7 @@ Bench → DOM Performance Lab → Monta demo ibrida. Due regioni condividono il 
 ## Selezione automatica (0.24)
 
 Bench → DOM Performance Lab → Monta demo ibrida automatica. Il laboratorio passa un singolo selettore e il pass riconosce le regioni della colonna radice. Se la view non è riconoscibile usa il renderer generico senza cambiarne la struttura. Nessuna modifica all'anteprima ordinaria.
+
+## Anteprima e ispettore (0.25)
+
+Anteprima UI → Renderer Automatico/Generico. Il riepilogo nel frame è espandibile: piano statico, slot, motivi e tempi di preparazione e montaggio. Cambiare modalità resetta lo stato. Il pass è eseguito nel frame sandboxed; sorgenti non riconosciuti continuano a usare il renderer ordinario. Gli esempi del DOM Performance Lab restano disponibili per misure ripetibili.

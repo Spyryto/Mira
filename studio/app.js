@@ -358,7 +358,10 @@ function runUiPreview() {
     if (state.uiFrame !== frame) return;
     frame.contentWindow.postMessage({
       type: 'mira-ui:run',
-      code: state.output
+      code: state.output,
+      source: ui.source.value,
+      hostJson: state.hostJson,
+      mode: $('previewRenderer').value
     }, '*');
   });
 }
@@ -469,6 +472,7 @@ function wireEvents() {
 
   $('compile').addEventListener('click', () => compile(true));
   ui.previewButton.addEventListener('click', runUiPreview);
+  $('previewRenderer').addEventListener('change', () => { if (state.uiFrame) runUiPreview(); });
   ui.runButton.addEventListener('click', runJavaScript);
   $('saveSource').addEventListener('click', saveSource);
   $('saveOutput').addEventListener('click', saveOutput);
