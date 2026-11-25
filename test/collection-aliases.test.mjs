@@ -131,3 +131,20 @@ test('multi-expression reducer blocks run on both JS and PHP',()=>{
     assert.deepEqual(runPhp(php.output),expected,'PHP '+source);
   }
 });
+
+test('0.12 local immutable values work in collection reducers and mappers on JS/PHP',()=>{
+  const cases=[
+    ['numbers = [1,2,3]; result = collect: numbers, with: {value | doubled = value * 2; doubled + 1};',[3,5,7]],
+    ['numbers = [1,2,3]; result = fold: numbers, with: {sum, value | doubled = value * 2; sum + doubled}, from: 0;',12],
+    ['factor = 2; numbers = [1,2,3]; result = fold: numbers, with: {sum, item | scaled = item * factor; sum + scaled}, from: 0;',12]
+  ];
+  for (const [source,expected] of cases) {
+    const js=compiler.compile(source,'js',hostJson);
+    const php=compiler.compile(source,'php',hostJson);
+    assert.equal(js.ok,true,js.message+' / JS '+source);
+    assert.equal(php.ok,true,php.message+' / PHP '+source);
+    const actualJs=new Function('__miraHost',js.output+'\nreturn result;')(collectionHost());
+    assert.deepEqual(actualJs,expected,'JS '+source);
+    assert.deepEqual(runPhp(php.output),expected,'PHP '+source);
+  }
+});
