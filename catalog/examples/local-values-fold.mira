@@ -1,0 +1,7 @@
+numbers = [1, 2, 3];
+result = fold: numbers,
+  with: {sum, item |
+    doubled = item * 2;
+    sum + doubled
+  },
+  from: 0;
