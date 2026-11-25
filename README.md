@@ -203,6 +203,15 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
 
 
+## Mira 0.16: GUI incrementali
+
+I nodi DOM compatibili conservano la loro identità durante gli aggiornamenti
+dello stato. Le callback vengono aggiornate; gli state annidati conservano
+il valore, oppure si resettano con una nuova chiave esplicita.
+Il confronto è posizionale, non un algoritmo generale di riordino.
+Due esempi in Guida → **DOM incrementale e stato indipendente**:
+contatori indipendenti e nuova sessione.
+
 ## Mira 0.15: libreria GUI
 
 `lib/gui.mira` è una piccola libreria di normali funzioni Mira. Non
