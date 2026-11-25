@@ -588,9 +588,9 @@ test('0.12.2 Studio validates named-function parameter hygiene for JS/PHP', () =
   const php = bridge.compile(valid, 'php');
   assert.equal(js.ok, true, js.message);
   assert.equal(php.ok, true, php.message);
-  assert.equal(runInNewContext(js.output + '\\nresult', {}), 6);
+  assert.equal(runInNewContext(js.output + '\nresult', {}), 6);
   const executed = spawnSync('php', ['-r',
-    php.output.replace(/^<\\?php/, '') + '\\necho $result;'], { encoding: 'utf8' });
+    php.output.replace(/^<\?php/, '') + '\necho $result;'], { encoding: 'utf8' });
   assert.equal(executed.status, 0, executed.stderr);
   assert.equal(executed.stdout, '6');
 });
