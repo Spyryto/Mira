@@ -13,7 +13,7 @@ class Symbols {
     // (the AST inspector folds trees). Ordinary programs use native lists.
     public static function collectionSelectors():Array<String> {
         return ["append:to:", "remove:if:", "map:with:", "collect:with:",
-            "filter:with:", "select:with:", "select:if:", "collect:if:", "fold:with:from:"];
+            "filter:with:", "select:with:", "select:if:", "fold:with:from:"];
     }
 
     public static function nativeSelectors():Array<String> {

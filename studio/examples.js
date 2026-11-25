@@ -67,11 +67,11 @@ result = lesson ~ total hours;`
   },
   {
     id: 'collect-if',
-    name: 'Collect if · collezioni',
-    source: `# collect:if: filtra; collect:with: trasforma.
+    name: 'Select if · collezioni',
+    source: `# select:if: filtra; collect:with: trasforma.
 lessons = [{student: "Ada", hours: 1.5}, {student: "Eva", hours: 0.5}];
 billable: lesson = (lesson ~ hours) >= 1;
-result = collect: lessons, if: (billable: _);`
+result = select: lessons, if: (billable: _);`
   },
   {
     id: 'natural-if',

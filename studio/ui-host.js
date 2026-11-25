@@ -82,7 +82,7 @@
     return sync;
   }
 
-  function createUiHost(doc, mount, onError = () => {}, bindControl = connectControl) {
+  function createUiHost(doc, mount, onError = () => {}, bindControl = connectControl, onRootCommit = () => {}) {
     const MAX_NODES = 1000;
     const MAX_DEPTH = 24;
     const uiHost = Object.create(null);
@@ -243,11 +243,13 @@
       const next = transition(instance.state);
       if (instance.hybrid) {
         updateHybrid(instance, next);
+        if (instance === mounted) onRootCommit(instance.state);
         return;
       }
       const plan = prepare(instance.source, instance, instance.parentState,
         {nodes: 0}, instance.depth, {value: next});
       commit(plan);
+      if (instance === mounted) onRootCommit(instance.state);
     }
 
     function syncControl(instance) {

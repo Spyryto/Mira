@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.33.0');
+  assert.equal(bridge.version, '0.34.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.33.0');
+  assert.equal(bridge.version,'0.34.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -807,4 +807,39 @@ test('0.32 native collection resolution and explicit legacy host override',()=>{
   assert.equal(JSON.parse(bridge.ast(source,host).output).definitions.at(-1).body.kind,'HostCall');
   const conflict=bridge.compile('result = append: 1, to: [];','js',JSON.stringify({selectors:['append:to:']}));
   assert.equal(conflict.ok,false);assert.match(conflict.message,/Reserved native selector/);
+});
+
+
+test('0.34 persistence adapter restores JSON, preserves corrupt data and reports write errors',()=>{
+  const sandbox={};runInNewContext(read('persistent-state.js'),sandbox);
+  const open=sandbox.MiraPersistentState.open;
+  const memory=new Map(),storage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,v),removeItem:k=>memory.delete(k)};
+  const valid=v=>v&&Number.isSafeInteger(v.count)&&v.count>=0;
+  const a=open(storage,'test',1,{count:0},valid);
+  assert.equal(a.save({count:2}),true);
+  assert.equal(open(storage,'test',1,{count:0},valid).initial.count,2);
+  assert.equal(a.save({count:-1}),false);
+  assert.equal(open(storage,'test',1,{count:0},valid).initial.count,2);
+  memory.set('test','broken JSON');
+  const b=open(storage,'test',1,{count:0},valid);
+  assert.equal(b.status().blocked,true);assert.equal(b.save({count:4}),false);
+  assert.equal(memory.get('test'),'broken JSON');
+  assert.equal(b.reset(),true);assert.equal(b.save({count:4}),true);
+  const wrongVersion=open(storage,'test',2,{count:0},valid);
+  assert.equal(wrongVersion.status().blocked,true);
+  const denied=open({...storage,setItem(){throw Error('quota');}},'test',1,{count:0},valid);
+  assert.equal(denied.save({count:5}),false);assert.match(denied.status().message,/quota/);
+});
+test('0.34 ledger compiles on both targets and is bundled offline',()=>{
+  const source=read('persistent-ledger.mira'),host=JSON.stringify({callables:['render']});
+  for(const target of ['js','php'])assert.equal(bridge.compile(source,target,host).ok,true,bridge.compile(source,target,host).message);
+  const sandbox={};runInNewContext(read('persistent-ledger-program.js'),sandbox);
+  let spec;sandbox.MiraLessonLedgerProgram({render:v=>{spec=v;}});
+  assert.equal(spec.type,'state');assert.equal(spec.initial['next id'],1);
+  assert.ok(spec.view(spec.initial).children.length>0);
+  for(const asset of ['persistent-ledger.html','persistent-ledger.css','persistent-state.js','persistent-ledger.js','persistent-ledger-program.js','persistent-ledger.mira']){
+    assert.ok(existsSync(resolve(site,asset)));assert.ok(read('sw.js').includes('./'+asset));
+  }
+  assert.match(read('index.html'),/href="\.\/persistent-ledger.html"/);
+  assert.equal(bridge.compile('result = collect: [1], if: (_ > 0);','js').ok,false);
 });

@@ -32,6 +32,12 @@ const ASSETS = [
   './worker.js',
   './ui-preview.html',
   './ui-host.js',
+  './persistent-state.js',
+  './persistent-ledger.html',
+  './persistent-ledger.css',
+  './persistent-ledger.js',
+  './persistent-ledger.mira',
+  './persistent-ledger-program.js',
   './ui-preview.js',
   './manifest.webmanifest',
   './icon.svg',
@@ -78,7 +84,8 @@ self.addEventListener('fetch', event => {
           .then(hit => hit || fetch(request))));
       return;
     }
-    const page = url.pathname.endsWith('/gui-benchmark.html') ? './gui-benchmark.html'
+    const page = url.pathname.endsWith('/persistent-ledger.html') ? './persistent-ledger.html'
+      : url.pathname.endsWith('/gui-benchmark.html') ? './gui-benchmark.html'
       : url.pathname.endsWith('/ui-preview.html') ? './ui-preview.html' : './index.html';
     event.respondWith(
       fetch(request).then(response => {

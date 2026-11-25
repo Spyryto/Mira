@@ -112,19 +112,19 @@ La semantica è uniforme su JS e PHP, con lo stesso limite di 10.000 elementi.
 
 | Operazione | Selettori equivalenti |
 | --- | --- |
-| Filtrare una lista | `filter:with:`, `select:with:`, `select:if:`, `collect:if:` |
+| Filtrare una lista | `filter:with:`, `select:with:`, `select:if:` |
 | Trasformare gli elementi | `map:with:`, `collect:with:` |
 
 L'esempio richiesto si può scrivere direttamente:
 
 ```mira
 billable: lesson = (lesson ~ hours) >= 1;
-result = collect: lessons, if: (billable: _);
+result = select: lessons, if: (billable: _);
 ```
 
 Per mantenere la distinzione con Smalltalk, `collect:with:` trasforma
 ogni elemento (come `collect:` in Smalltalk), mentre la forma discorsiva
-`collect:if:` seleziona gli elementi per cui il predicato è vero.
+`select:if:` seleziona gli elementi per cui il predicato è vero.
 Gli alias riutilizzano le implementazioni esistenti: niente duplicazione
 dei cicli di iterazione e nessuna modifica al parser di Mira.
 
@@ -231,7 +231,7 @@ I tre esempi del catalogo mostrano aggiornamento, sezioni e form con binding.
 | `append: item, to: items` | Nuova lista con l'elemento aggiunto in coda, anche se è una lista |
 | `remove: items, if: predicate` | Rimuove tutti gli elementi per cui il predicato restituisce true |
 | `collect: items, with: f` / `map:with:` | Trasforma ogni elemento |
-| `collect:if:` / `filter:with:` / `select:if:` / `select:with:` | Seleziona gli elementi per cui il predicato è true |
+| `filter:with:` / `select:if:` / `select:with:` | Seleziona gli elementi per cui il predicato è true |
 | `fold: items, with: reducer, from: seed` | Riduzione da sinistra, callback binaria (accumulatore, elemento) |
 
 Gli operandi non vengono mutati, le copie sono superficiali e l'ordine degli elementi è preservato. Liste vuote: trasformazione e filtro restituiscono una lista vuota, fold restituisce il seed. Predicati nativi devono restituire Boolean, non valori truthy: JS/PHP hanno regole diverse. Gli operandi devono essere liste (Array JS, array_is_list PHP); il record PHP vuoto resta indistinguibile da una lista vuota. Le callback sono funzioni Mira (closure su PHP). Nessuna dipendenza host e nessun nuovo nodo AST. Il codice usa le operazioni native di JS e PHP con controlli runtime; richiede PHP 8.1+ per array_is_list. Non introduce un limite numerico arbitrario per le liste native; valgono i limiti di memoria/tempo dell'host.
@@ -240,4 +240,8 @@ Compatibilità: i selettori di collezione già esistenti come capability possono
 
 La lista GUI dinamica del nuovo esempio usa il renderer generico: i figli sono ancora riconciliati per posizione. Identità stabile, riordinamento e conservazione dello stato locale dei figli saranno il prossimo passo.
 
-Dalla 0.33, la libreria GUI aggiunge `each:identified by:view:` per produrre liste con identità stabile. `collect` rimane un'operazione di trasformazione generica; i suoi alias precedenti sono invariati in questa iterazione. Vedi [interop GUI](browser-interop.md#mira-033-identità-delle-liste-gui).
+Dalla 0.33, la libreria GUI aggiunge `each:identified by:view:` per produrre liste con identità stabile. `collect` rimane un'operazione di trasformazione generica. Vedi [interop GUI](browser-interop.md#mira-033-identità-delle-liste-gui).
+
+## Coerenza Smalltalk (0.34)
+
+Rimosso il selettore nativo e la capability standard `collect:if:`. Usare `select:if:` per filtrare, `collect:with:` per trasformare. Gli alias map/filter/select già coerenti rimangono. Le applicazioni che dichiarano esplicitamente un proprio selettore host o utente sono libere di definirlo; non è più fornito dalla libreria standard.

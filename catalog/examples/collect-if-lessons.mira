@@ -4,4 +4,4 @@ lessons = [
   {student: "Lia", hours: 2}
 ];
 billable: lesson = (lesson ~ hours) >= 1;
-result = collect: lessons, if: (billable: _);
+result = select: lessons, if: (billable: _);

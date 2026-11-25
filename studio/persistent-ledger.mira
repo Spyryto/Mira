@@ -1,0 +1,46 @@
+import "lib/gui.mira";
+
+add lesson: model = if (model ~ draft == "") then model else (
+  update: model, with: {
+    lessons: (append: {id: (model ~ next id), student: (model ~ draft), hours: 1, paid: false}, to: (model ~ lessons)),
+    next id: (model ~ next id + 1),
+    draft: ""
+  }
+);
+
+change hours: item, for: identity = if (item ~ id == identity) then (
+  update: item, with: {hours: (item ~ hours + 1)}
+) else item;
+
+toggle paid: item, for: identity = if (item ~ id == identity) then (
+  update: item, with: {paid: (if (item ~ paid) then false else true)}
+) else item;
+
+lesson row: item = styled: (column: [
+  title: (item ~ student),
+  text: (item ~ hours),
+  text: (if (item ~ paid) then "Saldato" else "Da saldare"),
+  row: [
+    button: "+1 ora", update: {old |
+      update: old, with: {lessons: (collect: (old ~ lessons), with: (change hours: _, for: (item ~ id)))}
+    },
+    button: "Saldato / non saldato", update: {old |
+      update: old, with: {lessons: (collect: (old ~ lessons), with: (toggle paid: _, for: (item ~ id)))}
+    },
+    button: "Rimuovi", update: {old |
+      update: old, with: {lessons: (remove: (old ~ lessons), if: {other | other ~ id == item ~ id})}
+    }
+  ]
+]), with: [{background: "#fff7db", padding: 12, radius: 10, gap: 8}];
+
+view: model = column: [
+  title: "Registro lezioni",
+  text input: "Allievo", value: (model ~ draft),
+    update: {old, entered | update: old, with: {draft: entered}},
+  button: "Aggiungi lezione", update: (add lesson: _),
+  title: "Compenso totale (€)",
+  text: (fold: (model ~ lessons), with: {sum, item | sum + (item ~ hours * 30)}, from: 0),
+  column: (each: (model ~ lessons), identified by: (_ ~ id), view: (lesson row: _))
+];
+
+render (state: {draft: "", next id: 1, lessons: []}, view: (view: _));
