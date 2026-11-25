@@ -293,3 +293,26 @@ test('0.23 hybrid classification uses ordinary library and compiles on both targ
   assert.match(compiled.regions[1].reason,/Unsupported specialized view/);
   assert.throws(()=>sandbox.MiraGuiSpecialize.compileHybrid(bridge,source,['missing:']),/unary region selector/);
 });
+
+
+test('0.24 automatic partition is conservative and has no privileged constructor names',()=>{
+  const sandbox={};
+  runInNewContext(read('gui-specialize.js'),sandbox);runInNewContext(read('gui-benchmark.js'),sandbox);
+  const auto=source=>sandbox.MiraGuiSpecialize.compileAuto(bridge,source,'view:');
+  const parts='fixed: n = {type: "text", text: n};\n'+
+    'changing: n = if (n == 0) then {type: "title", text: n} else {type: "text", text: n};\n';
+  for(const source of [
+    parts+'view: n = {type: "column", children: [fixed: n, changing: n]};',
+    parts+'custom: items = {type: "column", children: items}; view: n = custom: [fixed: n, changing: n];'
+  ]){
+    assert.equal(auto(source).mode,'hybrid');
+    for(const target of ['js','php'])assert.equal(bridge.compile(source,target).ok,true);
+  }
+  for(const source of [
+    parts+'view: n = {type: "column", children: [fixed: (n + 1), changing: n]};',
+    parts+'view: n = {type: "column", children: [changing: n, changing: n]};',
+    parts+'view: n = {type: "styled", view: {type: "column", children: [fixed: n, changing: n]}, styles: [{padding: 8}]};',
+    parts+'view: n = {type: "column", children: [fixed: n, (if (n == 0) then {type: "text", text: n} else {type: "title", text: n})]};'
+  ])assert.equal(auto(source).mode,'generic');
+  assert.throws(()=>auto('view: n = missing: n;'));
+});

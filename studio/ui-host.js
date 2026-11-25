@@ -340,6 +340,13 @@
       return spec;
     };
 
+    // Generic fallback keeps the same root shape and state owner.
+    uiHost.renderState = (view, initial) => {
+      uiHost.render({type: 'state', initial, view});
+      const owner = mounted;
+      return {getState: () => owner.state};
+    };
+
     // Hybrid roots use the ordinary state owner and reconciliation for
     // generic regions. Specialized regions retain instance references.
     function regionSize(instance) {
