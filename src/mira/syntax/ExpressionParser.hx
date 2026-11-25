@@ -346,7 +346,7 @@ class ExpressionParser {
         }
         for (_ in parameters) localNames.shift();
         requireSymbol("}");
-        final body = expressions.length == 1 ? expressions[0] : Steps(expressions);
+        final body:Expr = expressions.length == 1 ? expressions[0] : Expr.Steps(expressions);
         return Block(parameters, body);
     }
 
