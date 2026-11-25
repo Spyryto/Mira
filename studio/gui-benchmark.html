@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mira · DOM Benchmark</title>
+<style>
+:root{font-family:system-ui,sans-serif;background:#fffdf7;color:#202629}
+body{margin:0 auto;max-width:760px;padding:20px}
+a{color:inherit} h1{letter-spacing:-.04em;font-size:clamp(26px,7vw,42px)}
+button{font:inherit;font-weight:700;border:2px solid #202629;border-radius:8px;padding:12px;background:#ff965f;color:#202629;cursor:pointer}
+section.result{margin:14px 0;padding:14px;background:#fff;border:2px solid #202629;border-radius:12px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}
+td,th{padding:7px 4px;border-bottom:1px solid #ddd;text-align:right} td:first-child,th:first-child{text-align:left}
+#mount{height:180px;overflow:auto;border:1px dashed #777;padding:8px}
+.mira-ui-column{display:grid;gap:12px}
+.mira-ui-text{margin:0;font-size:16px;line-height:1.5;overflow-wrap:anywhere}
+.mira-ui-button{font-size:14px}
+small{display:block;line-height:1.5}
+</style>
+</head>
+<body>
+<a href="./#/benchmark">← Mira Studio · Bench</a>
+<h1>DOM Performance Lab</h1>
+<p>100 elementi di testo, aggiornamenti sparsi (1 su 100) e densi (100 su 100). La view e la transizione vengono compilate da Mira.</p>
+<button id="run" type="button">Avvia benchmark GUI</button>
+<p id="status" role="status">Pronto. Misurazioni locali, nessun invio di dati.</p>
+<div id="results"></div>
+<small>5 campioni da 30 aggiornamenti, 5 warmup per campione. Mediana e P95 del tempo medio per aggiornamento nel campione, in ms. Compilazione esclusa. Layout forzato: lettura della geometria a ogni aggiornamento; senza layout forzato: scritture sincrone, layout finale fuori dal timer. Non misura paint, frame rate o memoria. Incrementale, specializzato e diretto passano da click(); ricostruzione invoca direttamente render. Il pass specializzato accetta solo view di struttura fissa e testi dinamici. DOM diretto è un riferimento scritto a mano.</small>
+<h2>Area DOM reale</h2>
+<div id="mount" aria-label="Area di misura collegata al documento"></div>
+<pre id="machine" hidden></pre>
+<script src="./compiler.js"></script>
+<script src="./ui-host.js"></script>
+<script src="./gui-specialize.js"></script>
+<script src="./gui-benchmark.js"></script>
+<script>
+(function(){
+  const byId=id=>document.getElementById(id);
+  const button=byId('run'), status=byId('status'), results=byId('results');
+  const element=(tag,value)=>{const node=document.createElement(tag);node.textContent=value;return node;};
+  function execute(){
+    button.disabled=true;results.replaceChildren();byId('machine').textContent='';
+    status.textContent='Misurazione in corso…';
+    try {
+      const data=MiraGuiBench.run(MiraStudioCompiler,byId('mount'));
+      byId('machine').textContent=JSON.stringify(data);
+      for(const row of data.results){
+        const card=document.createElement('section');card.className='result';
+        card.append(element('h2',(row.density==='sparse'?'1 su 100':'100 su 100')+' · '+(row.flush?'layout forzato':'scritture sincrone')));
+        const table=document.createElement('table');
+        const head=document.createElement('tr');
+        for(const title of ['Metodo','Mediana ms','P95 ms'])head.append(element('th',title));
+        table.append(head);
+        for(const [key,name] of [['view','Solo view Mira'],['incremental','Mira incrementale'],['rebuild','Mira ricostruzione'],['specialized','Mira specializzato'],['direct','DOM diretto']]){
+          const tr=document.createElement('tr');
+          tr.append(element('td',name),element('td',row[key].medianMs.toFixed(3)),element('td',row[key].p95Ms.toFixed(3)));
+          table.append(tr);
+        }
+        card.append(element('p','Slot dinamici: '+row.dynamicSlots),table);results.append(card);
+      }
+      status.textContent='Completato · Mira '+data.version+' · '+data.rounds+' campioni per caso';
+    }catch(error){
+      byId('machine').textContent=JSON.stringify({ok:false,message:String(error.message??error)});
+      status.textContent='Errore: '+String(error.message??error);
+    }finally{button.disabled=false;}
+  }
+  button.addEventListener('click',()=>{
+    button.disabled=true;status.textContent='Preparazione…';
+    setTimeout(execute,20);
+  });
+  if(new URLSearchParams(location.search).get('auto')==='1')execute();
+})();
+</script>
+</body></html>

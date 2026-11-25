@@ -1,5 +1,5 @@
 {
-  "version": "0.16.0",
+  "version": "0.19.0",
   "features": [
     {
       "id": "values",
@@ -409,6 +409,18 @@
         "gui-reset"
       ],
       "since": "0.16"
+    },
+    {
+      "id": "styled-gui",
+      "title": "Stili GUI componibili e griglia",
+      "summary": "Record di stile riutilizzabili, applicabili a qualunque view, e layout a griglia.",
+      "details": "styled:with: costruisce un record decoratore senza creare nodi DOM. I record successivi prevalgono sui precedenti, gli stili esterni su quelli interni. Il renderer accetta un vocabolario di proprietà CSS validate e aggiorna soltanto proprietà cambiate, rimuovendo quelle assenti. grid:children: produce una griglia da 1 a 6 colonne. Nessuna nuova sintassi; PHP esegue i costruttori ma non il DOM. Il benchmark sintetico conta allocazioni di elementi e scritture stile su DOM simulato, non layout o paint del browser.",
+      "api": "mira.HostEnvironment",
+      "examples": [
+        "gui-dashboard",
+        "gui-style-toggle"
+      ],
+      "since": "0.17"
     }
   ],
   "examples": [
@@ -1409,6 +1421,32 @@
         "kind": "ui",
         "description": "Anteprima interattiva nel browser"
       }
+    },
+    {
+      "id": "gui-dashboard",
+      "feature": "styled-gui",
+      "title": "Dashboard musicale · stili componibili",
+      "description": "Schede metriche, griglia, colori e pulsante reattivo.",
+      "path": "catalog/examples/gui-dashboard.mira",
+      "library": "lib/gui.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "ui",
+        "description": "Anteprima interattiva nel browser"
+      }
+    },
+    {
+      "id": "gui-style-toggle",
+      "feature": "styled-gui",
+      "title": "Tema dinamico",
+      "description": "Cambia i colori della stessa view senza rimontarla.",
+      "path": "catalog/examples/gui-style-toggle.mira",
+      "library": "lib/gui.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "ui",
+        "description": "Anteprima interattiva nel browser"
+      }
     }
   ],
   "additionalCapabilities": [
@@ -1429,6 +1467,18 @@
       "title": "Interop: riferimenti a funzioni/valori dell'host",
       "since": "0.3",
       "doc": "docs/dogfooding.md#che-cosa-contiene-il-manifest"
+    },
+    {
+      "id": "gui-browser-benchmark",
+      "title": "Benchmark GUI sul DOM reale",
+      "since": "0.18",
+      "doc": "docs/browser-interop.md#mira-018-misure-sul-dom-reale"
+    },
+    {
+      "id": "gui-specialization",
+      "title": "Specializzazione sperimentale GUI su AST",
+      "since": "0.19",
+      "doc": "docs/browser-interop.md#mira-019-specializzazione-sperimentale-di-view-fisse"
     }
   ]
 }
