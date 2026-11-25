@@ -367,20 +367,36 @@ async function chromiumEvaluate(t,filename,expression,width=800){
       ws.addEventListener('open',()=>{clearTimeout(timeout);ok();},{once:true});
       ws.addEventListener('error',()=>{clearTimeout(timeout);fail(new Error('CDP socket error'));},{once:true});
     });
-    const experiment=await new Promise((ok,fail)=>{
-      const timeout=setTimeout(()=>fail(new Error('Browser evaluation timeout')),60000);
-      ws.addEventListener('message',event=>{
-        const message=JSON.parse(event.data);
-        if(message.id!==1)return;
-        clearTimeout(timeout);
-        if(message.error||message.result.exceptionDetails)fail(new Error(JSON.stringify(message.error??message.result.exceptionDetails)));
-        else ok(message.result.result.value);
+    let nextId=10;
+    function rpc(method,params={},ms=5000){
+      const id=nextId++;
+      return new Promise((ok,fail)=>{
+        const cleanup=()=>{clearTimeout(timer);ws.removeEventListener('message',receive);};
+        const receive=event=>{
+          const message=JSON.parse(event.data);
+          if(message.id!==id)return;
+          cleanup();
+          if(message.error||message.result?.exceptionDetails)fail(new Error(JSON.stringify(message.error??message.result.exceptionDetails)));
+          else ok(message.result);
+        };
+        const timer=setTimeout(()=>{cleanup();fail(new Error('CDP timeout: '+method));},ms);
+        ws.addEventListener('message',receive);
+        ws.send(JSON.stringify({id,method,params}));
       });
-      ws.send(JSON.stringify({id:1,method:'Runtime.evaluate',params:{
-        expression,
-        awaitPromise:true,returnByValue:true
-      }}));
-    });
+    }
+    await rpc('Emulation.setDeviceMetricsOverride',{width,height:800,deviceScaleFactor:1,mobile:false});
+    const selector=filename==='laboratory.html'?'main.lab-page':'#mount';
+    let ready=false;
+    for(let i=0;i<50&&!ready;i++){
+      try{
+        const r=await rpc('Runtime.evaluate',{expression:'document.readyState==="complete" && document.URL==='+JSON.stringify(url)+' && !!document.querySelector('+JSON.stringify(selector)+')',returnByValue:true},2000);
+        ready=r.result.value===true;
+      }catch(error){if(i===49)throw error;}
+      if(!ready)await delay(100);
+    }
+    assert.ok(ready,'Expected report document did not load: '+filename);
+    const response=await rpc('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true},60000);
+    const experiment=response.result.value;
     return experiment;
   }finally{
     // Ask Chrome to close its own profile cleanly before deleting it.
@@ -536,6 +552,7 @@ test('0.29 real Laboratory keeps navigation, details and remembered variable hei
         auto:{resize:stats(times.auto),reveal:stats(reveals.auto)}};
     }.toString()+')()',width);
     if(!result)return;
+    assert.equal(result.width,width);
     assert.ok(result.cards>20);assert.ok(result.details>0);
     for(const mode of ['normal','auto'])for(const k of ['resize','reveal']){
       assert.ok(Number.isFinite(result[mode][k].medianMs)&&result[mode][k].medianMs>=0);
