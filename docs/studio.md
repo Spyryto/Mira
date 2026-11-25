@@ -317,3 +317,7 @@ Bench → DOM Performance Lab → Monta form usa la libreria reale gui.mira e se
 ## Archivio Laboratory · evoluzione GUI
 
 La pagina Laboratory è un rapporto statico offline, generato al build da catalog/laboratory/gui-rendering.json, senza caricare il compilatore. Contiene cronologia 0.15–0.22, grafici, tutti i risultati storici CI recuperati (mediana/P95), prove iPhone/TV trascritte dall'autore, limiti e roadmap. Il DOM Performance Lab resta separato e misura il dispositivo corrente. Vedi [rapporto tecnico](gui-rendering.md).
+
+## Rendering ibrido (0.23)
+
+Bench → DOM Performance Lab → Monta demo ibrida. Due regioni condividono il modello; Avanti modifica un testo specializzato e cambia la struttura di una regione generica. La pagina include sorgente e confronto incrementale/ibrido. I confini sono espliciti nell'API browser, non una partizione automatica. Vedi browser-interop.md.

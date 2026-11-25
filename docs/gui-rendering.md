@@ -115,3 +115,7 @@ Altri esperimenti proposti: raggruppare gli aggiornamenti, mantenere Text node e
 ## Riproducibilità e CI
 
 Bench → DOM Performance Lab esegue la versione corrente sul dispositivo. Laboratory è l'archivio statico generato da JSON, non esegue nuovi benchmark quando si apre. In locale: `npm run build:studio`, poi aprire `dist/studio/laboratory.html`; il benchmark GUI è in `dist/studio/gui-benchmark.html`. Le verifiche automatiche usano `test/benchmark-ui.test.mjs`, `test/ui-host.test.mjs` e `test/studio.test.mjs`. La 0.22 ha registrato 86 test Studio e 97 verifiche degli esempi, entrambe le CI verdi.
+
+## Aggiornamento 0.23: primo esperimento ibrido
+
+La roadmap sopra documenta lo stato storico della 0.22. La 0.23 introduce un esperimento a confini espliciti: selettori unari sorelli, classificazione per regione, owner dello stato condiviso, preparazione di tutte le regioni prima del commit, riconciliazione ordinaria del fallback. La partizione automatica e la specializzazione dello stato annidato restano da fare. Vedi [interop browser](browser-interop.md#mira-023-rendering-ibrido). Il dataset storico 0.15–0.22 resta immutato.

@@ -234,3 +234,11 @@ Il form del Performance Lab ora usa la libreria reale inclusa dal build e due se
 ## Rapporto sperimentale e roadmap
 
 Vedi [Evoluzione del rendering GUI 0.15–0.22](gui-rendering.md) e [Laboratory di Mira Studio](https://spyryto.github.io/Mira/laboratory.html) per cronologia, misure CI, prove dell'autore su iPhone e smart TV, decisioni e roadmap. Il dataset completo è in [catalog/laboratory/gui-rendering.json](../catalog/laboratory/gui-rendering.json). Il prossimo esperimento proposto è il rendering ibrido; non è ancora implementato.
+
+## Mira 0.23: rendering ibrido
+
+Primo esperimento opt-in a regioni sorelle. L'host riceve una lista esplicita di selettori unari che descrivono le regioni di una colonna fissa. compileHybrid usa il compilatore ordinario per tutte le view e prova il pass di specializzazione per ogni selettore; soltanto un rifiuto esplicito del sottoinsieme specializzabile produce una regione generica. Errori di compilazione non vengono nascosti. Non c'è nuova sintassi Mira né partizione automatica di alberi arbitrari.
+
+Un unico owner mantiene lo stato radice e riceve le transizioni da tutte le regioni. Il montaggio iniziale usa l'host ordinario. Agli aggiornamenti, le regioni specializzate conservano riferimenti alle istanze e valutano soltanto gli slot; quelle generiche preparano la nuova view con la riconciliazione esistente. Tutte le regioni vengono validate prima delle scritture DOM, con budget condiviso. Una transizione rifiutata per errore di validazione lascia stato e view invariati; non si garantisce rollback di effetti esterni o di errori DOM inattesi durante il commit. I controlli usano gli stessi handler e i componenti state annidati nelle regioni generiche mantengono la loro identità e il proprio stato. Non sono specializzati gli state annidati.
+
+Il benchmark ibrido usa una regione fissa di 100 testi (uno dinamico) e una regione generica con pulsante e ramo alternato tra titolo e testo. Confronta il medesimo sorgente Mira compilato, in modalità incrementale e ibrida; verifica risultato, tipo del ramo e identità dei nodi persistenti in Chromium. Compilazione e montaggio esclusi. I test DOM simulato controllano transizioni da entrambe le regioni, stato annidato, binding e rollback. Il renderer dell'anteprima ordinaria non cambia.

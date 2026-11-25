@@ -164,6 +164,11 @@ test('GUI benchmark runs in a real Chromium DOM and checks all strategies',t=>{
     assert.ok(Number.isFinite(row[strategy].medianMs)&&row[strategy].medianMs>=0);
     assert.ok(row[strategy].p95Ms>=row[strategy].medianMs);
   }
+  assert.equal(result.hybrid.length,2);
+  for(const row of result.hybrid)for(const strategy of ['incremental','hybrid']){
+    assert.ok(Number.isFinite(row[strategy].medianMs)&&row[strategy].medianMs>=0);
+    assert.ok(row[strategy].p95Ms>=row[strategy].medianMs);
+  }
   t.diagnostic('GUI_BROWSER_BENCHMARK '+JSON.stringify(result));
 });
 
@@ -274,4 +279,17 @@ test('0.22 rejects recursion, eager discarded reads and unsafe component capture
     'view: n = {type: "text", text: n}; render view: 0;'
   ];
   for(const source of bad)assert.throws(()=>sandbox.MiraGuiSpecialize.compile(bridge,source,'view:'));
+});
+
+
+test('0.23 hybrid classification uses ordinary library and compiles on both targets',()=>{
+  const sandbox={};
+  runInNewContext(read('gui-specialize.js'),sandbox);runInNewContext(read('gui-benchmark.js'),sandbox);
+  const source=sandbox.MiraGuiBench.hybridSource(2);
+  for(const target of ['js','php'])assert.equal(bridge.compile(source,target).ok,true);
+  const compiled=sandbox.MiraGuiSpecialize.compileHybrid(bridge,source,['fixed panel:','changing panel:']);
+  assert.equal(compiled.regions[0].specialized.slots.length,1);
+  assert.equal(compiled.regions[1].specialized,null);
+  assert.match(compiled.regions[1].reason,/Unsupported specialized view/);
+  assert.throws(()=>sandbox.MiraGuiSpecialize.compileHybrid(bridge,source,['missing:']),/unary region selector/);
 });
