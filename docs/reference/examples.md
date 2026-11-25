@@ -1168,3 +1168,42 @@ result = collect: numbers, with: {_ | _ * 2};
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/bare-collect-map)
 
+<a id="example-block-steps-last"></a>
+## Il blocco restituisce l'ultima espressione
+
+Due espressioni separate da `;`; il risultato della prima viene valutato ma non restituito.
+
+Feature: [Blocchi con espressioni in sequenza](language.md#feature-block-steps)
+
+```mira
+result = 4 >> {n |
+  n + 1;
+  n * 3
+};
+```
+
+**Risultato:** result = 12
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/block-steps-last)
+
+<a id="example-block-steps-fold"></a>
+## Più espressioni nel riduttore
+
+Un blocco binario con due espressioni viene invocato da `fold` senza parentesi aggiuntive.
+
+Feature: [Blocchi con espressioni in sequenza](language.md#feature-block-steps)
+
+```mira
+numbers = [1, 2, 3];
+result = fold: numbers,
+  with: {sum, item |
+    item + 10;
+    sum + (item * 2)
+  },
+  from: 0;
+```
+
+**Risultato:** result = 12
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/block-steps-fold)
+

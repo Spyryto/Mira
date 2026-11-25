@@ -1,4 +1,4 @@
-# Guida a Mira 0.10.0
+# Guida a Mira 0.11.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -355,7 +355,7 @@ API collegata: [`mira.syntax.Expr.FieldGet`](api.md#api-mira-syntax-expr-fieldge
 
 `{ value | expression }` crea una funzione lessicale applicabile con `>>`.
 
-Un blocco è `{parametro | espressione}` con cattura lessicale, distinto dal record `{campo: valore}`. Il parametro può essere un nome composto o `_`; tutte le occorrenze di `_` nel blocco si riferiscono allo stesso argomento. Dalla 0.9 la stessa grammatica ammette anche più parametri separati da virgole (`{total, item | total + item}`), utili come callback di `fold:with:from:`. I blocchi sono closure native JS/PHP. Per ora una sola espressione per corpo.
+Un blocco è `{parametro | espressione}` con cattura lessicale, distinto dal record `{campo: valore}`. Il parametro può essere un nome composto o `_`; tutte le occorrenze di `_` nel blocco si riferiscono allo stesso argomento. Dalla 0.9 la stessa grammatica ammette anche più parametri separati da virgole (`{total, item | total + item}`), utili come callback di `fold:with:from:`. I blocchi sono closure native JS/PHP. Dalla 0.11 il corpo ammette più espressioni separate da `;`, con il valore dell'ultima come risultato.
 
 API collegata: [`mira.syntax.Expr.Block`](api.md#api-mira-syntax-expr-block)
 
@@ -403,4 +403,18 @@ API collegata: [`mira.resolve.SelectorResolver.match`](api.md#api-mira-resolve-s
 
 - [Fold compensi con blocco diretto](examples.md#example-bare-fold-fees) — result = 120
 - [Trasformare una lista con un blocco diretto](examples.md#example-bare-collect-map) — result = [2,4,6]
+
+<a id="feature-block-steps"></a>
+## Blocchi con espressioni in sequenza
+
+**Disponibile dalla versione 0.11**
+
+`{item | step1; step2}` esegue in ordine e restituisce il valore finale.
+
+In Mira 0.11 un blocco può contenere più espressioni separate da punto e virgola. Il risultato è il valore dell'ultima; un `;` finale è facoltativo. Per un solo corpo l'AST resta `Block(parameters, body)` con il nodo originale; per più corpi un nuovo nodo `Steps` mantiene l'ordine. Il compilatore genera closure JS/PHP native e conserva scoping e cattura. Non sono ancora implementate dichiarazioni locali, assegnazioni o return espliciti nei blocchi.
+
+API collegata: [`mira.syntax.Expr.Steps`](api.md#api-mira-syntax-expr-steps)
+
+- [Il blocco restituisce l'ultima espressione](examples.md#example-block-steps-last) — result = 12
+- [Più espressioni nel riduttore](examples.md#example-block-steps-fold) — result = 12
 
