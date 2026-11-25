@@ -66,7 +66,7 @@ test('two-parameter reducer blocks execute identically on JavaScript and PHP',()
   const cases = [
     ['numbers = [1,2,3,4]; result = fold: numbers, with: ({total, item | total + item}), from: 0;',10],
     ['numbers = [1,2,3]; result = fold: numbers, with: ({a running total, each item | a running total + each item}), from: 5;',11],
-    ['multiplier = 2; numbers = [1,2,3]; result = fold: numbers, with: ({sum, item | sum + item * multiplier}), from: 0;',12],
+    ['multiplier = 2; numbers = [1,2,3]; result = fold: numbers, with: ({sum, item | sum + (item * multiplier)}), from: 0;',12],
     ['numbers = [1,2,3]; result = fold: numbers, with: ({_, item | _ + item}), from: 0;',6],
     ['numbers = [1,2,3]; reducer = {total, item | total + item}; result = fold: numbers, with: (reducer), from: 0;',6],
     ['numbers = []; result = fold: numbers, with: ({total, item | total + item}), from: 9;',9]
@@ -76,7 +76,7 @@ test('two-parameter reducer blocks execute identically on JavaScript and PHP',()
     const php=compiler.compile(source,'php',hostJson);
     assert.equal(js.ok,true,js.message+' / JS '+source);
     assert.equal(php.ok,true,php.message+' / PHP '+source);
-    const actualJs=new Function('__miraHost',js.output+'\\nreturn result;')(collectionHost());
+    const actualJs=new Function('__miraHost',js.output+'\nreturn result;')(collectionHost());
     assert.equal(actualJs,expected,'JS '+source);
     assert.equal(runPhp(php.output),expected,'PHP '+source);
   }
