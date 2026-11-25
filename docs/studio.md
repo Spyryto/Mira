@@ -426,3 +426,11 @@ conflitti di revisione e validazione. Produce screenshot e campioni di
 latenza HTTP di lettura sequenziale (30 dopo 5 warmup), non throughput
 concorrente o prestazioni del browser; nessuna soglia prestazionale.
 Il sito Pages resta statico: il bundle server non viene pubblicato.
+
+## Servizi del registro (0.37)
+
+Il comando di avvio locale è invariato. L'endpoint ledger.php ora usa
+l'adapter RPC condiviso e accetta ledger.command e ledger.quote.
+Il primo conserva il contratto di revisione e persistenza del registro;
+il secondo è un calcolo stateless. Non occorre un nuovo endpoint PHP
+per ciascun metodo. Vedi [protocollo e limiti](browser-interop.md#mira-037-rpc-json).
