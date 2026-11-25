@@ -1022,3 +1022,40 @@ result = if (1 < 2), then: ("valid"), else: ("invalid");
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/conditional-optional-commas)
 
+<a id="example-block-fee"></a>
+## Calcolo della tariffa con un blocco
+
+Lo stesso parametro `_` viene riutilizzato per leggere due campi e calcolare il compenso.
+
+Feature: [Blocchi funzione con parametro](language.md#feature-blocks)
+
+```mira
+lesson = {hours: 2, rate: 30};
+fee = {_ | (_ ~ hours) * (_ ~ rate)};
+result = lesson >> fee;
+```
+
+**Risultato:** result = 60
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/block-fee)
+
+<a id="example-block-filter"></a>
+## Filtrare lezioni con un blocco
+
+Il blocco `{ _ | (_ ~ hours) >= 1 }` evita una funzione nominata e viene passato direttamente al filtro.
+
+Feature: [Blocchi funzione con parametro](language.md#feature-blocks)
+
+```mira
+lessons = [
+  {student: "Ada", hours: 1.5},
+  {student: "Eva", hours: 0.5},
+  {student: "Lia", hours: 2}
+];
+result = collect: lessons, if: ({_ | (_ ~ hours) >= 1});
+```
+
+**Risultato:** result = [{"student":"Ada","hours":1.5},{"student":"Lia","hours":2}]
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/block-filter)
+

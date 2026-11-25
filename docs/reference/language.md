@@ -1,4 +1,4 @@
-# Guida a Mira 0.7.1
+# Guida a Mira 0.8.0
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -340,11 +340,25 @@ API collegata: [`mira.syntax.ExpressionParser.parse`](api.md#api-mira-syntax-exp
 
 `record ~ field` legge un campo senza dichiarare accessor.
 
-Il nome dopo `~` è un campo letterale: una o più parole consecutive, oppure una stringa tra virgolette. Un operatore o delimitatore termina il nome, che non viene cercato tra le variabili. Gli accessi si concatenano e i campi mancanti producono lo stesso errore su JS/PHP. `(_ ~ total hours)` è una sezione unaria; le espressioni complesse attendono i blocchi.
+Il nome dopo `~` è un campo letterale: una o più parole consecutive, oppure una stringa tra virgolette. Un operatore o delimitatore termina il nome, che non viene cercato tra le variabili. Gli accessi si concatenano e i campi mancanti producono lo stesso errore su JS/PHP. `(_ ~ total hours)` è una sezione unaria; le espressioni complesse possono ora usare `{ _ | (_ ~ hours) >= 1 }` (0.8); le sezioni implicite più complesse non sono ancora implementate.
 
 API collegata: [`mira.syntax.Expr.FieldGet`](api.md#api-mira-syntax-expr-fieldget)
 
 - [Navigazione di record annidati](examples.md#example-record-field-path) — result = "Padova"
 - [Campo con spazi](examples.md#example-record-field-quoted) — result = 3
 - [Campo con nome composto, senza virgolette](examples.md#example-record-field-words) — result = 3
+
+<a id="feature-blocks"></a>
+## Blocchi funzione con parametro
+
+**Disponibile dalla versione 0.8**
+
+`{ value | expression }` crea una funzione lessicale applicabile con `>>`.
+
+I blocchi con un parametro e una sola espressione usano `{ nome | corpo }`, distinti dai record `{campo: valore}`. Il parametro può essere un nome composto o `_`: dentro `{ _ | ... }` tutte le occorrenze di `_` sono la stessa variabile, anziché nuovi placeholder indipendenti. Supportano cattura lessicale, annidamento e passaggio come callback in JS e PHP. Più parametri e più istruzioni saranno valutati in seguito.
+
+API collegata: [`mira.syntax.Expr.Block`](api.md#api-mira-syntax-expr-block)
+
+- [Calcolo della tariffa con un blocco](examples.md#example-block-fee) — result = 60
+- [Filtrare lezioni con un blocco](examples.md#example-block-filter) — result = [{"student":"Ada","hours":1.5},{"student":"Lia","hours":2}]
 

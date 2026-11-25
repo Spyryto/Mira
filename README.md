@@ -47,6 +47,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Filtri con predicati Mira | `0.4` | [Dettagli](docs/reference/language.md#feature-filtering) |
 | ✅ | Sezioni di operatori | `0.5` | [Dettagli](docs/reference/language.md#feature-operator-sections) |
 | ✅ | Accesso diretto ai campi `~` | `0.6` | [Dettagli](docs/reference/language.md#feature-field-get) |
+| ✅ | Blocchi funzione con parametro | `0.8` | [Dettagli](docs/reference/language.md#feature-blocks) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
