@@ -1,8 +1,8 @@
 {
-  "schema": 1,
+  "schema": 2,
   "id": "gui-rendering",
   "title": "Quanto costa aggiornare una GUI?",
-  "source": "Trascrizione del rapporto Chromium in CI condiviso nella conversazione Mira il 25 novembre 2026. Commit, versione esatta e campioni originali non disponibili.",
+  "source": "Rapporto storico 0.19: trascrizione arrotondata, ora verificata nel log CI del 25 novembre 2026 (job 139345575366). I valori a piena precisione e i P95 sono nell'archivio ci.",
   "environment": "Chromium in CI",
   "rows": 100,
   "workload": "Aggiornamento sparso",
@@ -27,6 +27,1071 @@
         "specialized": 150,
         "direct": 150
       }
+    }
+  ],
+  "version": "0.19.0",
+  "ci": [
+    {
+      "version": "0.17.0",
+      "date": "2026-11-25",
+      "pr": 36,
+      "commit": "12bf0a7a9f4f8f42da925011f6253b2051f380ee",
+      "jobId": 139332713093,
+      "source": "https://github.com/Spyryto/Mira/actions/runs/45650310415/job/139332713093",
+      "studioTests": 74,
+      "documentedChecks": 97,
+      "synthetic": {
+        "updates": 100,
+        "viewNodes": 103,
+        "incremental": 0,
+        "full": 10300,
+        "incrementalStyleWrites": 0,
+        "fullStyleWrites": 10000,
+        "incrementalMs": 44.668954000000014,
+        "fullMs": 34.68135000000001,
+        "environment": "simulated DOM"
+      },
+      "browser": null
+    },
+    {
+      "version": "0.18.0",
+      "date": "2026-11-25",
+      "pr": 37,
+      "commit": "98dd7324c12c0c66a076fa27da82785ab89db8e6",
+      "jobId": 139339365008,
+      "source": "https://github.com/Spyryto/Mira/actions/runs/45652195733/job/139339365008",
+      "studioTests": 76,
+      "documentedChecks": 97,
+      "synthetic": {
+        "updates": 100,
+        "viewNodes": 103,
+        "incremental": 0,
+        "full": 10300,
+        "incrementalStyleWrites": 0,
+        "fullStyleWrites": 10000,
+        "incrementalMs": 69.65323899999999,
+        "fullMs": 57.15170999999998,
+        "environment": "simulated DOM"
+      },
+      "browser": {
+        "ok": true,
+        "rows": 100,
+        "updates": 30,
+        "rounds": 5,
+        "warmup": 5,
+        "version": "0.18.0",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+        "results": [
+          {
+            "density": "sparse",
+            "flush": false,
+            "view": {
+              "medianMs": 0.01333333333338184,
+              "p95Ms": 0.08333333333333333
+            },
+            "incremental": {
+              "medianMs": 0.45,
+              "p95Ms": 2.426666666666521
+            },
+            "rebuild": {
+              "medianMs": 0.47666666666652113,
+              "p95Ms": 0.5699999999999515
+            },
+            "direct": {
+              "medianMs": 0.0033333333332848268,
+              "p95Ms": 0.006666666666812186
+            }
+          },
+          {
+            "density": "sparse",
+            "flush": true,
+            "view": {
+              "medianMs": 0.01333333333338184,
+              "p95Ms": 0.08333333333333333
+            },
+            "incremental": {
+              "medianMs": 0.32666666666652117,
+              "p95Ms": 0.35666666666656965
+            },
+            "rebuild": {
+              "medianMs": 1.1900000000001456,
+              "p95Ms": 4.936666666666619
+            },
+            "direct": {
+              "medianMs": 0.19666666666671517,
+              "p95Ms": 0.21666666666666667
+            }
+          },
+          {
+            "density": "dense",
+            "flush": false,
+            "view": {
+              "medianMs": 0.0066666666665696536,
+              "p95Ms": 0.016666666666666666
+            },
+            "incremental": {
+              "medianMs": 0.1699999999999515,
+              "p95Ms": 0.23999999999990299
+            },
+            "rebuild": {
+              "medianMs": 0.25333333333352737,
+              "p95Ms": 0.3333333333333333
+            },
+            "direct": {
+              "medianMs": 0.03333333333333333,
+              "p95Ms": 0.03666666666661816
+            }
+          },
+          {
+            "density": "dense",
+            "flush": true,
+            "view": {
+              "medianMs": 0.0066666666665696536,
+              "p95Ms": 0.016666666666666666
+            },
+            "incremental": {
+              "medianMs": 0.6233333333334788,
+              "p95Ms": 0.8866666666666182
+            },
+            "rebuild": {
+              "medianMs": 0.8233333333334788,
+              "p95Ms": 1.0566666666665696
+            },
+            "direct": {
+              "medianMs": 0.5133333333333818,
+              "p95Ms": 0.5166666666666667
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "0.19.0",
+      "date": "2026-11-25",
+      "pr": 38,
+      "commit": "85e9bb92a3b9a160468ce6158471e27dd047be83",
+      "jobId": 139345575366,
+      "source": "https://github.com/Spyryto/Mira/actions/runs/45653973429/job/139345575366",
+      "studioTests": 77,
+      "documentedChecks": 97,
+      "synthetic": {
+        "updates": 100,
+        "viewNodes": 103,
+        "incremental": 0,
+        "full": 10300,
+        "incrementalStyleWrites": 0,
+        "fullStyleWrites": 10000,
+        "incrementalMs": 60.614787999999976,
+        "fullMs": 43.45611500000001,
+        "environment": "simulated DOM"
+      },
+      "browser": {
+        "ok": true,
+        "rows": 100,
+        "updates": 30,
+        "rounds": 5,
+        "warmup": 5,
+        "version": "0.19.0",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+        "results": [
+          {
+            "density": "sparse",
+            "flush": false,
+            "view": {
+              "medianMs": 0.0066666666665696536,
+              "p95Ms": 0.110000000000097
+            },
+            "dynamicSlots": 1,
+            "incremental": {
+              "medianMs": 0.13999999999990298,
+              "p95Ms": 0.29333333333318784
+            },
+            "rebuild": {
+              "medianMs": 0.3099999999998545,
+              "p95Ms": 0.3766666666667637
+            },
+            "specialized": {
+              "medianMs": 0.0033333333332848268,
+              "p95Ms": 0.003333333333527359
+            },
+            "direct": {
+              "medianMs": 0.0033333333332848268,
+              "p95Ms": 0.003333333333527359
+            }
+          },
+          {
+            "density": "sparse",
+            "flush": true,
+            "view": {
+              "medianMs": 0.0066666666665696536,
+              "p95Ms": 0.110000000000097
+            },
+            "dynamicSlots": 1,
+            "incremental": {
+              "medianMs": 0.31666666666666665,
+              "p95Ms": 2.55666666666657
+            },
+            "rebuild": {
+              "medianMs": 0.9099999999998545,
+              "p95Ms": 6.4
+            },
+            "specialized": {
+              "medianMs": 0.15,
+              "p95Ms": 0.17333333333323633
+            },
+            "direct": {
+              "medianMs": 0.15,
+              "p95Ms": 0.160000000000097
+            }
+          },
+          {
+            "density": "dense",
+            "flush": false,
+            "view": {
+              "medianMs": 0.0066666666665696536,
+              "p95Ms": 0.013333333333139307
+            },
+            "dynamicSlots": 100,
+            "incremental": {
+              "medianMs": 0.10333333333328483,
+              "p95Ms": 0.14333333333318782
+            },
+            "rebuild": {
+              "medianMs": 0.29666666666671515,
+              "p95Ms": 1.4466666666667152
+            },
+            "specialized": {
+              "medianMs": 0.02666666666676368,
+              "p95Ms": 0.03333333333333333
+            },
+            "direct": {
+              "medianMs": 0.023333333333478853,
+              "p95Ms": 0.02666666666676368
+            }
+          },
+          {
+            "density": "dense",
+            "flush": true,
+            "view": {
+              "medianMs": 0.0066666666665696536,
+              "p95Ms": 0.013333333333139307
+            },
+            "dynamicSlots": 100,
+            "incremental": {
+              "medianMs": 0.4800000000000485,
+              "p95Ms": 0.5300000000000485
+            },
+            "rebuild": {
+              "medianMs": 0.6699999999999515,
+              "p95Ms": 0.9699999999999515
+            },
+            "specialized": {
+              "medianMs": 0.4166666666666667,
+              "p95Ms": 0.520000000000194
+            },
+            "direct": {
+              "medianMs": 0.4099999999998545,
+              "p95Ms": 0.5300000000000485
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "0.20.0",
+      "date": "2026-11-25",
+      "pr": 39,
+      "commit": "6e79b1419273d0d92dfa92901e2a8c3fbcfeb1cc",
+      "jobId": 139354719005,
+      "source": "https://github.com/Spyryto/Mira/actions/runs/45656562890/job/139354719005",
+      "studioTests": 79,
+      "documentedChecks": 97,
+      "synthetic": {
+        "updates": 100,
+        "viewNodes": 103,
+        "incremental": 0,
+        "full": 10300,
+        "incrementalStyleWrites": 0,
+        "fullStyleWrites": 10000,
+        "incrementalMs": 42.68178600000002,
+        "fullMs": 33.978129000000024,
+        "environment": "simulated DOM"
+      },
+      "browser": {
+        "ok": true,
+        "rows": 100,
+        "updates": 30,
+        "rounds": 5,
+        "warmup": 5,
+        "version": "0.20.0",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+        "results": [
+          {
+            "density": "sparse",
+            "flush": false,
+            "view": {
+              "medianMs": 0.010000000000097013,
+              "p95Ms": 0.04666666666695771
+            },
+            "dynamicSlots": 1,
+            "incremental": {
+              "medianMs": 0.11333333333362437,
+              "p95Ms": 0.15
+            },
+            "rebuild": {
+              "medianMs": 0.35666666666656965,
+              "p95Ms": 0.4733333333337214
+            },
+            "specialized": {
+              "medianMs": 0.003333333333042295,
+              "p95Ms": 0.0066666666665696536
+            },
+            "direct": {
+              "medianMs": 0.003333333333527359,
+              "p95Ms": 0.003333333333527359
+            }
+          },
+          {
+            "density": "sparse",
+            "flush": true,
+            "view": {
+              "medianMs": 0.010000000000097013,
+              "p95Ms": 0.04666666666695771
+            },
+            "dynamicSlots": 1,
+            "incremental": {
+              "medianMs": 0.21000000000009703,
+              "p95Ms": 0.34666666666647267
+            },
+            "rebuild": {
+              "medianMs": 0.7333333333333333,
+              "p95Ms": 1.3033333333335273
+            },
+            "specialized": {
+              "medianMs": 0.15333333333352736,
+              "p95Ms": 0.2133333333331393
+            },
+            "direct": {
+              "medianMs": 0.11666666666666667,
+              "p95Ms": 0.160000000000097
+            }
+          },
+          {
+            "density": "dense",
+            "flush": false,
+            "view": {
+              "medianMs": 0.0066666666665696536,
+              "p95Ms": 0.010000000000097013
+            },
+            "dynamicSlots": 100,
+            "incremental": {
+              "medianMs": 0.10666666666656965,
+              "p95Ms": 0.15999999999961195
+            },
+            "rebuild": {
+              "medianMs": 0.16333333333313932,
+              "p95Ms": 0.17333333333323633
+            },
+            "specialized": {
+              "medianMs": 0.02666666666676368,
+              "p95Ms": 0.03333333333333333
+            },
+            "direct": {
+              "medianMs": 0.02666666666676368,
+              "p95Ms": 0.02666666666676368
+            }
+          },
+          {
+            "density": "dense",
+            "flush": true,
+            "view": {
+              "medianMs": 0.0066666666665696536,
+              "p95Ms": 0.010000000000097013
+            },
+            "dynamicSlots": 100,
+            "incremental": {
+              "medianMs": 0.45,
+              "p95Ms": 0.5066666666665697
+            },
+            "rebuild": {
+              "medianMs": 0.5766666666667637,
+              "p95Ms": 0.7833333333333333
+            },
+            "specialized": {
+              "medianMs": 0.34333333333343036,
+              "p95Ms": 0.610000000000097
+            },
+            "direct": {
+              "medianMs": 0.35333333333352734,
+              "p95Ms": 0.48333333333333334
+            }
+          },
+          {
+            "density": "styled",
+            "flush": false,
+            "view": {
+              "medianMs": 0.003333333333527359,
+              "p95Ms": 0.00999999999961195
+            },
+            "dynamicSlots": 2,
+            "incremental": {
+              "medianMs": 0.07666666666676368,
+              "p95Ms": 0.110000000000097
+            },
+            "rebuild": {
+              "medianMs": 0.17666666666676367,
+              "p95Ms": 0.25333333333352737
+            },
+            "specialized": {
+              "medianMs": 0.0066666666665696536,
+              "p95Ms": 0.006666666667054718
+            },
+            "direct": {
+              "medianMs": 0,
+              "p95Ms": 0.003333333333527359
+            }
+          },
+          {
+            "density": "styled",
+            "flush": true,
+            "view": {
+              "medianMs": 0.003333333333527359,
+              "p95Ms": 0.00999999999961195
+            },
+            "dynamicSlots": 2,
+            "incremental": {
+              "medianMs": 0.15666666666656964,
+              "p95Ms": 0.189999999999903
+            },
+            "rebuild": {
+              "medianMs": 0.6233333333332364,
+              "p95Ms": 0.7166666666666667
+            },
+            "specialized": {
+              "medianMs": 0.1133333333331393,
+              "p95Ms": 0.11666666666666667
+            },
+            "direct": {
+              "medianMs": 0.1133333333331393,
+              "p95Ms": 0.11666666666666667
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "0.21.0",
+      "date": "2026-11-25",
+      "pr": 41,
+      "commit": "e03fbd7977b9b098ee45a657bda519219755ecda",
+      "jobId": 139373836889,
+      "source": "https://github.com/Spyryto/Mira/actions/runs/45661952585/job/139373836889",
+      "studioTests": 83,
+      "documentedChecks": 97,
+      "synthetic": {
+        "updates": 100,
+        "viewNodes": 103,
+        "incremental": 0,
+        "full": 10300,
+        "incrementalStyleWrites": 0,
+        "fullStyleWrites": 10000,
+        "incrementalMs": 89.428539,
+        "fullMs": 75.562206,
+        "environment": "simulated DOM"
+      },
+      "browser": {
+        "ok": true,
+        "rows": 100,
+        "updates": 30,
+        "rounds": 5,
+        "warmup": 5,
+        "form": [
+          {
+            "flush": false,
+            "incremental": {
+              "medianMs": 0.05999999999985448,
+              "p95Ms": 0.09666666666671517
+            },
+            "specialized": {
+              "medianMs": 0.010000000000097013,
+              "p95Ms": 0.010000000000097013
+            }
+          },
+          {
+            "flush": true,
+            "incremental": {
+              "medianMs": 0.2833333333333333,
+              "p95Ms": 0.3
+            },
+            "specialized": {
+              "medianMs": 0.20666666666656966,
+              "p95Ms": 0.22333333333347885
+            }
+          }
+        ],
+        "version": "0.21.0",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+        "results": [
+          {
+            "density": "sparse",
+            "flush": false,
+            "view": {
+              "medianMs": 0.016666666666666666,
+              "p95Ms": 1.089999999999903
+            },
+            "dynamicSlots": 1,
+            "incremental": {
+              "medianMs": 0.18666666666661816,
+              "p95Ms": 0.23999999999990299
+            },
+            "rebuild": {
+              "medianMs": 0.4166666666666667,
+              "p95Ms": 0.5666666666666667
+            },
+            "specialized": {
+              "medianMs": 0.003333333333527359,
+              "p95Ms": 0.006666666666812186
+            },
+            "direct": {
+              "medianMs": 0,
+              "p95Ms": 0.0033333333332848268
+            }
+          },
+          {
+            "density": "sparse",
+            "flush": true,
+            "view": {
+              "medianMs": 0.016666666666666666,
+              "p95Ms": 1.089999999999903
+            },
+            "dynamicSlots": 1,
+            "incremental": {
+              "medianMs": 0.37666666666652115,
+              "p95Ms": 0.39333333333343035
+            },
+            "rebuild": {
+              "medianMs": 1.1699999999999515,
+              "p95Ms": 4.646666666666715
+            },
+            "specialized": {
+              "medianMs": 0.20333333333328482,
+              "p95Ms": 0.3566666666668122
+            },
+            "direct": {
+              "medianMs": 0.2,
+              "p95Ms": 0.21666666666666667
+            }
+          },
+          {
+            "density": "dense",
+            "flush": false,
+            "view": {
+              "medianMs": 0.013333333333139307,
+              "p95Ms": 0.023333333333478853
+            },
+            "dynamicSlots": 100,
+            "incremental": {
+              "medianMs": 0.17333333333323633,
+              "p95Ms": 0.24333333333318782
+            },
+            "rebuild": {
+              "medianMs": 0.29666666666671515,
+              "p95Ms": 0.4366666666666182
+            },
+            "specialized": {
+              "medianMs": 0.040000000000145516,
+              "p95Ms": 0.06666666666666667
+            },
+            "direct": {
+              "medianMs": 0.03666666666661816,
+              "p95Ms": 0.06333333333313931
+            }
+          },
+          {
+            "density": "dense",
+            "flush": true,
+            "view": {
+              "medianMs": 0.013333333333139307,
+              "p95Ms": 0.023333333333478853
+            },
+            "dynamicSlots": 100,
+            "incremental": {
+              "medianMs": 0.6566666666668122,
+              "p95Ms": 0.6933333333334304
+            },
+            "rebuild": {
+              "medianMs": 0.8699999999999515,
+              "p95Ms": 1.1166666666666667
+            },
+            "specialized": {
+              "medianMs": 0.5333333333333333,
+              "p95Ms": 0.7366666666666182
+            },
+            "direct": {
+              "medianMs": 0.5233333333332363,
+              "p95Ms": 0.6533333333332848
+            }
+          },
+          {
+            "density": "styled",
+            "flush": false,
+            "view": {
+              "medianMs": 0.0033333333332848268,
+              "p95Ms": 0.010000000000097013
+            },
+            "dynamicSlots": 2,
+            "incremental": {
+              "medianMs": 0.1,
+              "p95Ms": 0.17333333333323633
+            },
+            "rebuild": {
+              "medianMs": 0.260000000000097,
+              "p95Ms": 0.31000000000009703
+            },
+            "specialized": {
+              "medianMs": 0.0066666666665696536,
+              "p95Ms": 0.010000000000097013
+            },
+            "direct": {
+              "medianMs": 0.003333333333527359,
+              "p95Ms": 0.0066666666665696536
+            }
+          },
+          {
+            "density": "styled",
+            "flush": true,
+            "view": {
+              "medianMs": 0.0033333333332848268,
+              "p95Ms": 0.010000000000097013
+            },
+            "dynamicSlots": 2,
+            "incremental": {
+              "medianMs": 0.289999999999903,
+              "p95Ms": 0.33666666666661815
+            },
+            "rebuild": {
+              "medianMs": 0.9133333333333818,
+              "p95Ms": 1.1
+            },
+            "specialized": {
+              "medianMs": 0.21333333333338184,
+              "p95Ms": 0.24666666666671516
+            },
+            "direct": {
+              "medianMs": 0.19666666666671517,
+              "p95Ms": 0.20666666666656966
+            }
+          }
+        ]
+      }
+    },
+    {
+      "version": "0.22.0",
+      "date": "2026-11-25",
+      "pr": 42,
+      "commit": "2feacb48afdce3471ed11b1298973b349df1382b",
+      "jobId": 139377247685,
+      "source": "https://github.com/Spyryto/Mira/actions/runs/45662914743/job/139377247685",
+      "studioTests": 86,
+      "documentedChecks": 97,
+      "synthetic": {
+        "updates": 100,
+        "viewNodes": 103,
+        "incremental": 0,
+        "full": 10300,
+        "incrementalStyleWrites": 0,
+        "fullStyleWrites": 10000,
+        "incrementalMs": 53.638238,
+        "fullMs": 42.98738500000002,
+        "environment": "simulated DOM"
+      },
+      "browser": {
+        "ok": true,
+        "rows": 100,
+        "updates": 30,
+        "rounds": 5,
+        "warmup": 5,
+        "form": [
+          {
+            "flush": false,
+            "incremental": {
+              "medianMs": 0.03999999999990299,
+              "p95Ms": 0.07333333333323631
+            },
+            "specialized": {
+              "medianMs": 0.006666666666812186,
+              "p95Ms": 0.010000000000097013
+            }
+          },
+          {
+            "flush": true,
+            "incremental": {
+              "medianMs": 0.2,
+              "p95Ms": 0.23666666666661815
+            },
+            "specialized": {
+              "medianMs": 0.15,
+              "p95Ms": 0.160000000000097
+            }
+          }
+        ],
+        "version": "0.22.0",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+        "results": [
+          {
+            "density": "sparse",
+            "flush": false,
+            "view": {
+              "medianMs": 0.003333333333406093,
+              "p95Ms": 0.04666666666659391
+            },
+            "dynamicSlots": 1,
+            "incremental": {
+              "medianMs": 0.13333333333333333,
+              "p95Ms": 0.39333333333330905
+            },
+            "rebuild": {
+              "medianMs": 0.3466666666667152,
+              "p95Ms": 0.45
+            },
+            "specialized": {
+              "medianMs": 0.0033333333332848268,
+              "p95Ms": 0.013333333333139307
+            },
+            "direct": {
+              "medianMs": 0.0033333333332848268,
+              "p95Ms": 0.003333333333527359
+            }
+          },
+          {
+            "density": "sparse",
+            "flush": true,
+            "view": {
+              "medianMs": 0.003333333333406093,
+              "p95Ms": 0.04666666666659391
+            },
+            "dynamicSlots": 1,
+            "incremental": {
+              "medianMs": 0.22999999999980597,
+              "p95Ms": 0.2766666666665211
+            },
+            "rebuild": {
+              "medianMs": 0.8800000000000485,
+              "p95Ms": 3.226666666666764
+            },
+            "specialized": {
+              "medianMs": 0.15333333333328483,
+              "p95Ms": 0.17666666666652114
+            },
+            "direct": {
+              "medianMs": 0.15333333333328483,
+              "p95Ms": 0.16333333333338185
+            }
+          },
+          {
+            "density": "dense",
+            "flush": false,
+            "view": {
+              "medianMs": 0.010000000000097013,
+              "p95Ms": 0.016666666666666666
+            },
+            "dynamicSlots": 100,
+            "incremental": {
+              "medianMs": 0.14333333333318782,
+              "p95Ms": 0.2066666666668122
+            },
+            "rebuild": {
+              "medianMs": 0.19666666666671517,
+              "p95Ms": 0.2699999999999515
+            },
+            "specialized": {
+              "medianMs": 0.03333333333333333,
+              "p95Ms": 0.040000000000145516
+            },
+            "direct": {
+              "medianMs": 0.030000000000048505,
+              "p95Ms": 0.03333333333333333
+            }
+          },
+          {
+            "density": "dense",
+            "flush": true,
+            "view": {
+              "medianMs": 0.010000000000097013,
+              "p95Ms": 0.016666666666666666
+            },
+            "dynamicSlots": 100,
+            "incremental": {
+              "medianMs": 0.5300000000000485,
+              "p95Ms": 0.579999999999806
+            },
+            "rebuild": {
+              "medianMs": 0.6800000000000485,
+              "p95Ms": 0.8699999999999515
+            },
+            "specialized": {
+              "medianMs": 0.42333333333347883,
+              "p95Ms": 0.55
+            },
+            "direct": {
+              "medianMs": 0.4166666666666667,
+              "p95Ms": 0.5366666666666181
+            }
+          },
+          {
+            "density": "styled",
+            "flush": false,
+            "view": {
+              "medianMs": 0.0033333333332848268,
+              "p95Ms": 0.010000000000097013
+            },
+            "dynamicSlots": 2,
+            "incremental": {
+              "medianMs": 0.07333333333323631,
+              "p95Ms": 0.12333333333323632
+            },
+            "rebuild": {
+              "medianMs": 0.19333333333343033,
+              "p95Ms": 0.24333333333343035
+            },
+            "specialized": {
+              "medianMs": 0.0033333333332848268,
+              "p95Ms": 0.0066666666665696536
+            },
+            "direct": {
+              "medianMs": 0.003333333333527359,
+              "p95Ms": 0.006666666666812186
+            }
+          },
+          {
+            "density": "styled",
+            "flush": true,
+            "view": {
+              "medianMs": 0.0033333333332848268,
+              "p95Ms": 0.010000000000097013
+            },
+            "dynamicSlots": 2,
+            "incremental": {
+              "medianMs": 0.21666666666666667,
+              "p95Ms": 0.2833333333333333
+            },
+            "rebuild": {
+              "medianMs": 0.7099999999998545,
+              "p95Ms": 0.789999999999903
+            },
+            "specialized": {
+              "medianMs": 0.1566666666668122,
+              "p95Ms": 0.2
+            },
+            "direct": {
+              "medianMs": 0.14333333333318782,
+              "p95Ms": 0.15666666666656964
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "devices": [
+    {
+      "version": "0.19.0",
+      "date": "2026-11-25",
+      "device": "iPhone",
+      "browser": null,
+      "model": null,
+      "source": "Screenshot fornito dall'autore nella conversazione Mira, IMG_8493.png; trascrizione manuale dei due scenari visibili. Modello e browser non dichiarati.",
+      "rows": 100,
+      "rounds": 5,
+      "updates": 30,
+      "warmup": 5,
+      "results": [
+        {
+          "density": "dense",
+          "flush": false,
+          "dynamicSlots": 100,
+          "view": {
+            "medianMs": 0.033,
+            "p95Ms": 0.2
+          },
+          "incremental": {
+            "medianMs": 0.133,
+            "p95Ms": 0.167
+          },
+          "rebuild": {
+            "medianMs": 0.333,
+            "p95Ms": 0.367
+          },
+          "specialized": {
+            "medianMs": 0.033,
+            "p95Ms": 0.067
+          },
+          "direct": {
+            "medianMs": 0.033,
+            "p95Ms": 0.067
+          }
+        },
+        {
+          "density": "dense",
+          "flush": true,
+          "dynamicSlots": 100,
+          "view": {
+            "medianMs": 0.033,
+            "p95Ms": 0.2
+          },
+          "incremental": {
+            "medianMs": 1.4,
+            "p95Ms": 1.467
+          },
+          "rebuild": {
+            "medianMs": 2.067,
+            "p95Ms": 2.567
+          },
+          "specialized": {
+            "medianMs": 1.233,
+            "p95Ms": 1.267
+          },
+          "direct": {
+            "medianMs": 1.267,
+            "p95Ms": 1.267
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.19.0",
+      "date": "2026-11-25",
+      "device": "Smart TV",
+      "browser": null,
+      "model": null,
+      "source": "Foto fornita dall'autore nella conversazione Mira, IMG_8494.jpeg; trascrizione manuale dei due scenari visibili. Modello e browser non dichiarati.",
+      "rows": 100,
+      "rounds": 5,
+      "updates": 30,
+      "warmup": 5,
+      "results": [
+        {
+          "density": "dense",
+          "flush": false,
+          "dynamicSlots": 100,
+          "view": {
+            "medianMs": 0.257,
+            "p95Ms": 0.613
+          },
+          "incremental": {
+            "medianMs": 5.993,
+            "p95Ms": 6.173
+          },
+          "rebuild": {
+            "medianMs": 9.353,
+            "p95Ms": 9.687
+          },
+          "specialized": {
+            "medianMs": 3.13,
+            "p95Ms": 3.263
+          },
+          "direct": {
+            "medianMs": 2.713,
+            "p95Ms": 2.787
+          }
+        },
+        {
+          "density": "dense",
+          "flush": true,
+          "dynamicSlots": 100,
+          "view": {
+            "medianMs": 0.257,
+            "p95Ms": 0.613
+          },
+          "incremental": {
+            "medianMs": 28.947,
+            "p95Ms": 29.24
+          },
+          "rebuild": {
+            "medianMs": 39.57,
+            "p95Ms": 45.407
+          },
+          "specialized": {
+            "medianMs": 26.29,
+            "p95Ms": 29.783
+          },
+          "direct": {
+            "medianMs": 25.967,
+            "p95Ms": 28.19
+          }
+        }
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "version": "0.15",
+      "pr": 34,
+      "title": "Libreria GUI",
+      "detail": "Record e selettori ordinari, layout column/row, controlli nativi, state e transizioni immutabili. Ricostruzione del sottoalbero con ripristino del focus."
+    },
+    {
+      "version": "0.16",
+      "pr": 35,
+      "title": "DOM incrementale e stato indipendente",
+      "detail": "Identità per posizione e tipo, validazione prima del commit, callback correnti, stato figlio preservato, chiave esplicita per reset. Nessun riordino keyed."
+    },
+    {
+      "version": "0.17",
+      "pr": 36,
+      "title": "Stili componibili e griglia",
+      "detail": "Decoratori senza wrapper, record di stile validati, aggiornamento delle sole proprietà cambiate. Benchmark sintetico di allocazioni e scritture CSS."
+    },
+    {
+      "version": "0.18",
+      "pr": 37,
+      "title": "DOM Performance Lab",
+      "detail": "Misure Chromium reale: sola view, incrementale, ricostruzione, DOM diretto; carico sparso e denso, con e senza layout forzato."
+    },
+    {
+      "version": "0.19",
+      "pr": 38,
+      "title": "Specializzazione delle view fisse",
+      "detail": "Pass separato sull'AST risolto: estrae slot testuali, ricompila le espressioni con Mira, monta via renderer generico e aggiorna i nodi senza attraversare l'albero. Le versioni 0.17–0.19 sono integrate cumulativamente."
+    },
+    {
+      "version": "0.20",
+      "pr": 39,
+      "title": "Record e stili dinamici",
+      "detail": "Accessi ai campi e condizioni; validazione CSS condivisa; tutti gli slot validati prima delle scritture. Forma delle decorazioni fissa."
+    },
+    {
+      "version": "0.21",
+      "pr": 41,
+      "title": "Binding dei controlli",
+      "detail": "Input, checkbox, select a opzioni statiche; transizioni chiuse, gestione eventi e IME comune; verifica focus e cursore in Chromium, rollback e reset."
+    },
+    {
+      "version": "0.22",
+      "pr": 42,
+      "title": "Componenti componibili",
+      "detail": "Espansione lessicale dei selettori ordinari e costanti di dati letterali; la libreria GUI reale viene inclusa nel form. Dashboard e scheda lezione canoniche testate senza riscriverne le view."
+    }
+  ],
+  "roadmap": [
+    {
+      "title": "Rendering ibrido",
+      "status": "proposta prioritaria",
+      "detail": "Sottoalberi specializzabili insieme a sottoalberi generici; definire identità, ownership dello stato, eventi e fallback prima di ampliare il pass."
+    },
+    {
+      "title": "Stato annidato e struttura dinamica",
+      "status": "da progettare",
+      "detail": "Componenti con stato indipendente, liste e rami condizionali; opzioni dinamiche, closure con catture e integrazione automatica nell'anteprima restano da verificare."
+    },
+    {
+      "title": "Costo reale dei frame",
+      "status": "esperimenti proposti",
+      "detail": "Raggruppamento degli aggiornamenti, Text.data persistente, CSS containment/content-visibility. Misurare paint, frame, memoria e latenza su dispositivi reali prima di scegliere."
+    },
+    {
+      "title": "Metodologia benchmark",
+      "status": "miglioramento proposto",
+      "detail": "Più campioni, durata adattiva, risoluzione timer, costi iniziali di compilazione/espansione/montaggio; separare ambiente e workload."
     }
   ]
 }

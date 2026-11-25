@@ -64,6 +64,10 @@
     "docs/mira04.md": {
       "kind": "ai_assisted",
       "note": "Spiegazione delle nuove feature 0.4 redatta con assistenza IA; esempi e risultati vengono verificati dal tooling."
+    },
+    "docs/gui-rendering.md": {
+      "kind": "ai_assisted",
+      "note": "Sintesi della storia GUI e delle decisioni; dati CI recuperati dai log e risultati iPhone/TV trascritti dalle immagini fornite dall'autore. L'archivio JSON conserva i dati."
     }
   },
   "generatedSections": {
@@ -81,7 +85,8 @@
   "extraSources": [
     "catalog/manifest.json",
     "catalog/api-notes.json",
-    "catalog/examples/*.mira"
+    "catalog/examples/*.mira",
+    "catalog/laboratory/gui-rendering.json"
   ],
   "scope": "README.md e tutti i Markdown sotto docs/, escluso il report stesso. File JSON e programmi Mira sono sorgenti non conteggiate come pagine di documentazione."
 }
