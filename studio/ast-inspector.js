@@ -39,6 +39,7 @@ function labelOf(node) {
     case 'Record': return 'Record · ' + (node.fields?.length ?? 0) + ' campi';
     case 'Block': return 'Blocco · ' + (node.parameters ?? []).join(', ');
     case 'Steps': return 'Espressioni · ' + (node.expressions?.length ?? 0);
+    case 'Local': return 'Valore locale · ' + node.name;
     default: return String(node.kind ?? '?');
   }
 }

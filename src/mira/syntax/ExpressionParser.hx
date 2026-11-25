@@ -337,17 +337,62 @@ class ExpressionParser {
         if (current().isSymbol("}")) {
             throw new MiraError("A block needs at least one expression", current());
         }
-        expressions.push(expression());
-        while (current().isSymbol(";")) {
-            consume();
-            // A single trailing ';' is allowed after the final expression.
-            if (current().isSymbol("}")) break;
-            expressions.push(expression());
+        final bindings:Array<String> = [];
+        final taken = emitted.copy();
+        while (true) {
+            final nameEnd = localAssignmentEnd();
+            if (nameEnd >= 0) {
+                final nameToken = current();
+                final nameParts:Array<String> = [];
+                while (position < nameEnd) nameParts.push(consume().value);
+                final name = nameParts.join(" ");
+                final symbol = Mangle.name(name);
+                if (symbol == "__miraHost") {
+                    throw new MiraError("Reserved local name __miraHost", nameToken);
+                }
+                if (taken.indexOf(symbol) >= 0 || localNames.indexOf(name) >= 0
+                    || symbols.globals.indexOf(name) >= 0) {
+                    throw new MiraError("Duplicate or shadowed local name " + name, nameToken);
+                }
+                consume(); // =
+                if (current().isSymbol(";") || current().isSymbol("}")) {
+                    throw new MiraError("Expected value for local " + name, current());
+                }
+                // The initializer is resolved before this name comes into scope.
+                final value = expression();
+                expressions.push(Expr.Local(name, value));
+                taken.push(symbol);
+                localNames.unshift(name);
+                bindings.push(name);
+                if (!current().isSymbol(";")) {
+                    throw new MiraError("Expected ; after local " + name, current());
+                }
+                consume();
+                if (current().isSymbol("}")) {
+                    throw new MiraError("A block must end with a value expression", current());
+                }
+            } else {
+                expressions.push(expression());
+                if (!current().isSymbol(";")) break;
+                consume();
+                // A single trailing ';' is allowed after the final expression.
+                if (current().isSymbol("}")) break;
+            }
         }
+        for (_ in bindings) localNames.shift();
         for (_ in parameters) localNames.shift();
         requireSymbol("}");
         final body:Expr = expressions.length == 1 ? expressions[0] : Expr.Steps(expressions);
         return Block(parameters, body);
+    }
+
+    // Recognize only an initial sequence of words immediately followed
+    // by '='. Comparisons '==' and calls remain ordinary expressions.
+    function localAssignmentEnd():Int {
+        var cursor = position;
+        if (tokens[cursor].kind != Word) return -1;
+        while (tokens[cursor].kind == Word) cursor++;
+        return tokens[cursor].isSymbol("=") ? cursor : -1;
     }
 
     function record():Expr {
