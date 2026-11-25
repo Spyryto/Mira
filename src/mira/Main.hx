@@ -63,7 +63,8 @@ class Main {
                 final code = Compiler.transpile(source, parseTarget(args[1]), host, locations, readModule, entry);
                 output = haxe.Json.stringify({output: code, locations: locations}, null, "  ") + "\n";
             } else {
-                output = args[1] == "--tokens" ? Compiler.inspectTokens(source) + "\n"
+                output = args[1] == "--check" ? haxe.Json.stringify(Compiler.check(source,host,readModule,entry), null, "  ") + "\n"
+                    : args[1] == "--tokens" ? Compiler.inspectTokens(source) + "\n"
                     : Compiler.transpile(source, parseTarget(args[1]), host, null, readModule, entry);
             }
 
@@ -88,7 +89,7 @@ class Main {
 
     static function usage(nodeProcess:Dynamic):Void {
         nodeProcess.stderr.write(
-            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens> [output] [--host manifest.json] [--locations]\n"
+            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens|--check> [output] [--host manifest.json] [--locations]\n"
         );
         nodeProcess.exitCode = 2;
     }
