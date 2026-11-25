@@ -329,3 +329,5 @@ Bench → DOM Performance Lab → Monta demo ibrida automatica. Il laboratorio p
 ## Anteprima e ispettore (0.25)
 
 Anteprima UI → Renderer Automatico/Generico. Il riepilogo nel frame è espandibile: piano statico, slot, motivi e tempi di preparazione e montaggio. Cambiare modalità resetta lo stato. Il pass è eseguito nel frame sandboxed; sorgenti non riconosciuti continuano a usare il renderer ordinario. Gli esempi del DOM Performance Lab restano disponibili per misure ripetibili.
+
+L'archivio Laboratory ora comprende anche 0.23–0.25, inclusi tutti i casi ibridi e la storia dell'ispettore. I costi iniziali sono visibili nella preview, non ancora archiviati come misure ripetibili.

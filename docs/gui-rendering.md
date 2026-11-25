@@ -1,4 +1,4 @@
-# Evoluzione del rendering GUI (Mira 0.15–0.22)
+# Evoluzione del rendering GUI (Mira 0.15–0.25)
 
 **Stato al 25 novembre 2026.** Rapporto storico, non specifica definitiva.
 
@@ -118,7 +118,7 @@ Bench → DOM Performance Lab esegue la versione corrente sul dispositivo. Labor
 
 ## Aggiornamento 0.23: primo esperimento ibrido
 
-La roadmap sopra documenta lo stato storico della 0.22. La 0.23 introduce un esperimento a confini espliciti: selettori unari sorelli, classificazione per regione, owner dello stato condiviso, preparazione di tutte le regioni prima del commit, riconciliazione ordinaria del fallback. La partizione automatica e la specializzazione dello stato annidato restano da fare. Vedi [interop browser](browser-interop.md#mira-023-rendering-ibrido). Il dataset storico 0.15–0.22 resta immutato.
+La roadmap sopra documenta lo stato storico della 0.22. La 0.23 introduce un esperimento a confini espliciti: selettori unari sorelli, classificazione per regione, owner dello stato condiviso, preparazione di tutte le regioni prima del commit, riconciliazione ordinaria del fallback. La partizione automatica e la specializzazione dello stato annidato restano da fare. Vedi [interop browser](browser-interop.md#mira-023-rendering-ibrido). Il dataset storico conserva i risultati precedenti e viene esteso con i nuovi log.
 
 ## Aggiornamento 0.24: riconoscimento automatico
 
@@ -127,3 +127,15 @@ La selezione avviene da un unico selettore unario. Specializzazione completa se 
 ## Aggiornamento 0.25: anteprima e ispettore
 
 La selezione automatica è disponibile nell'anteprima ordinaria per render finali riconoscibili; il pannello espone regioni, slot e motivi di fallback, tempi di preparazione e montaggio. La modalità generica resta selezionabile. Nessun cambiamento di grammatica. Vedi [interop browser](browser-interop.md#mira-025-anteprima-e-ispettore).
+
+## Archivio CI aggiornato: 0.23–0.25
+
+I log originali dei job 139391850171, 139399014945, 139404483141 sono archiviati integralmente come risultati strutturati nel JSON. Mediane in µs, cinque campioni da trenta aggiornamenti; costi iniziali esclusi.
+
+| Versione | Sincrono incrementale | Sincrono ibrido | Layout incrementale | Layout ibrido |
+| --- | ---: | ---: | ---: | ---: |
+| 0.23.0 | 43.3 | 6.7 | 296.7 | 276.7 |
+| 0.24.0 | 50.0 | 6.7 | 506.7 | 456.7 |
+| 0.25.0 | 70.0 | 10.0 | 490.0 | 453.3 |
+
+Il confronto è interno a ciascun run, non una regressione controllata tra versioni. La 0.25 misura preparazione e montaggio nell'ispettore, ma non archivia ancora questi tempi. Il prossimo esperimento è Text.data; nessuna adozione automatica prima di misure comparabili.
