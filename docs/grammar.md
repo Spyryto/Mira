@@ -1,4 +1,4 @@
-# Mira 0.12.1: executable subset and grammar boundaries
+# Mira 0.14: executable subset and grammar boundaries
 
 This file documents the parser's **implemented** boundaries. It is a readable
 grammar sketch, not a separate parser generator or a promise of accepted syntax.
@@ -33,7 +33,8 @@ expression bodies are resolved.
 ## Expression layer (simplified)
 
 ```ebnf
-expression      = field-access, { binary-operator, field-access } ;
+expression      = (field-access | "(", ")", ">>", field-access),
+                  { binary-operator, field-access } ;
 field-access    = application, { "~", (name | string) } ;
 application     = primary, { primary } ; (* when callable *)
 primary         = number | string | name | "(", expression, ")"
@@ -165,6 +166,25 @@ dell'ultima espressione. Le riassegnazioni, la mutabilità e
 `return` esplicito non sono ancora previsti.
 
 `{hours: 2}` è un record; `{item | item + 1}` è un blocco.
+
+## Blocchi senza parametri (0.14)
+
+`{| espressione}` crea una closure senza parametri: il corpo non viene
+eseguito finché non viene applicato tramite `() >> action`.
+Anche qui valgono cattura lessicale, valori locali e risultato finale.
+```mira
+action = {| base = 21; base * 2};
+result = () >> action;
+```
+
+`()` non è un valore, una lista o una tupla: è ammesso esclusivamente
+all'inizio di un'espressione seguito da `>>`. Il nodo `Block([], body)`
+è già sufficiente; `Apply(callee, null)` rappresenta l'assenza di un
+argomento nell'AST (non un valore null di Mira). Le applicazioni con
+argomento mantengono la forma precedente. L'arità dei blocchi e delle
+sezioni esplicite è verificata; quella dei valori nominati non è ancora
+inferita staticamente. Per usare un'applicazione nullaria come operando
+a destra, racchiuderla in parentesi: `2 + (() >> {| 40})`.
 
 ## Record fields in 0.6
 

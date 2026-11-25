@@ -140,6 +140,17 @@ result = 4 >> {value |
 };`
   },
   {
+    id: 'nullary-block',
+    name: 'Blocchi senza parametri · 0.14',
+    source: `# Il blocco viene eseguito soltanto da () >>.
+action = {|
+  log "hey";
+  amount = 21;
+  amount * 2
+};
+result = () >> action;`
+  },
+  {
     id: 'runtime-location',
     name: 'Errore runtime · 0.13',
     source: `# Compila, poi esegui: il campo richiesto manca.

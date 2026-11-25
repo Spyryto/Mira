@@ -1,5 +1,5 @@
 {
-  "version": "0.13.0",
+  "version": "0.14.0",
   "features": [
     {
       "id": "values",
@@ -137,7 +137,7 @@
       "id": "pipelines",
       "title": "Pipeline `>>`",
       "summary": "Applicazione funzionale esplicita da sinistra a destra.",
-      "details": "`x >> f` applica `f` a `x` e si associa a sinistra; `>>` sostituisce il precedente `~` (0.2–0.5). Le sezioni a due placeholder non sono applicabili direttamente.",
+      "details": "`x >> f` applica `f` a `x` e si associa a sinistra; `>>` sostituisce il precedente `~` (0.2–0.5). Le sezioni a due placeholder non sono applicabili direttamente. Dalla 0.14, `() >> f` applica f senza argomenti.",
       "api": "mira.syntax.Expr",
       "examples": [
         "recording-level",
@@ -373,6 +373,18 @@
         "local-values-fold"
       ],
       "since": "0.12"
+    },
+    {
+      "id": "nullary-blocks",
+      "title": "Blocchi senza parametri",
+      "summary": "`{| ...}` crea una computazione differita e `() >> action` la esegue.",
+      "details": "Il corpo non viene valutato alla creazione della closure. Cattura lessicale, passi e valori locali funzionano come nei blocchi unari. `()` non rappresenta un valore; è sintassi dell'applicazione nullaria. L'AST riusa Block con parametri vuoti e Apply con argument null. I backend emettono chiamate native; l'arità dei blocchi espliciti è controllata, ma non viene inferita per valori nominati.",
+      "api": "mira.syntax.Expr.Block",
+      "examples": [
+        "nullary-value",
+        "nullary-closure"
+      ],
+      "since": "0.14"
     }
   ],
   "examples": [
@@ -1298,6 +1310,28 @@
       "expect": {
         "kind": "result",
         "value": 6
+      }
+    },
+    {
+      "id": "nullary-value",
+      "feature": "nullary-blocks",
+      "title": "Computazione differita",
+      "description": "Un blocco creato ma non chiamato non valuta il proprio corpo.",
+      "path": "catalog/examples/nullary-value.mira",
+      "expect": {
+        "kind": "result",
+        "value": 42
+      }
+    },
+    {
+      "id": "nullary-closure",
+      "feature": "nullary-blocks",
+      "title": "Cattura lessicale senza argomenti",
+      "description": "Una closure senza parametri cattura un valore locale del blocco esterno.",
+      "path": "catalog/examples/nullary-closure.mira",
+      "expect": {
+        "kind": "result",
+        "value": 42
       }
     }
   ],

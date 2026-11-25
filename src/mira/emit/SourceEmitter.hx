@@ -179,7 +179,7 @@ class SourceEmitter {
 
             case Apply(callee, arg):
                 "(" + expression(callee, target, scope, reservedHostNames)
-                    + ")(" + expression(arg, target, scope, reservedHostNames) + ")";
+                    + ")(" + (arg == null ? "" : expression(arg, target, scope, reservedHostNames)) + ")";
 
             case Placeholder:
                 throw new MiraError("A placeholder cannot be emitted outside a selector section");
@@ -219,10 +219,12 @@ class SourceEmitter {
                 for (item in items) referencedNames(item, bound, names);
             case Record(_, values):
                 for (item in values) referencedNames(item, bound, names);
-            case Binary(_, left, right) | OperatorSection(_, left, right)
-                | Apply(left, right):
+            case Binary(_, left, right) | OperatorSection(_, left, right):
                 referencedNames(left, bound, names);
                 referencedNames(right, bound, names);
+            case Apply(callee, argument):
+                referencedNames(callee, bound, names);
+                if (argument != null) referencedNames(argument, bound, names);
             case Block(parameters, body):
                 referencedNames(body, parameters.concat(bound), names);
             default:
