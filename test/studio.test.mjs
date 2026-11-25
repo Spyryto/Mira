@@ -580,7 +580,7 @@ test('0.12.2 Studio validates named-function parameter hygiene for JS/PHP', () =
     for (const target of ['js', 'php']) {
       const compiled = bridge.compile(source, target);
       assert.equal(compiled.ok, false, source + ' / ' + target);
-      assert.match(compiled.message, /(Generated-name collision|Reserved function parameter).*at 1:\\d+/);
+      assert.match(compiled.message, /(Generated-name collision|Reserved function parameter).*at 1:\d+/);
     }
   }
   const valid = 'x = 100; increment: x = x + 1; result = increment: 5;';
