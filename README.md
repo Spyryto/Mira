@@ -85,6 +85,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Diagnostica dei tipi con ancore sorgente e JSON | `0.43` | [Dettagli](docs/type-checker.md#043-diagnostica-delle-espressioni) |
 | ✅ | Firme host strutturali e verifica delle chiamate | `0.44` | [Dettagli](docs/type-checker.md#044-firme-host) |
 | ✅ | Schemi strutturati dei tipi e specializzazione | `0.45` | [Dettagli](docs/type-checker.md#045-esportazione-dei-tipi) |
+| ✅ | Validazione runtime dei contratti inferiti JS/PHP | `0.46` | [Dettagli](docs/type-checker.md#046-validazione-runtime-rpc) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
