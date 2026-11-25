@@ -395,5 +395,64 @@
     const host=global.MiraUiHost.createUiHost(target.ownerDocument,target,onError);
     return host.renderState(compiled.view,initial);
   }
-  global.MiraGuiSpecialize=Object.freeze({analyze,compile,mount,compileHybrid,mountHybrid,compileAuto,mountAuto});
+
+  // Preview eligibility is deliberately narrower than compileAuto. Prove a
+  // single final render of a plain state record with a unary section and
+  // literal initial data. Never execute an arbitrary program to discover it.
+  function previewPlan(compiler,source,hostJson){
+    const generic=reason=>({mode:'generic',reason,regions:[]});
+    const parsed=compiler.ast(source,hostJson);
+    if(!parsed.ok)return generic('Analisi non disponibile: '+parsed.message);
+    const defs=JSON.parse(parsed.output).definitions;
+    const last=defs.at(-1),prefix=defs.slice(0,-1);
+    if(last?.kind!=='ExpressionStatement'||last.body?.kind!=='Apply'||
+       last.body.callee?.kind!=='HostRef'||last.body.callee.name!=='render'||
+       prefix.some(d=>d.kind!=='Function'&&(d.kind!=='Value'||!literalData(d.body))))
+      return generic('Serve un solo render finale e definizioni senza effetti iniziali.');
+    let state=last.body.argument;
+    if(state?.kind==='Call'){
+      const def=prefix.find(d=>d.kind==='Function'&&d.selector===state.selector);
+      if(!def||def.parameters.length!==2||state.arguments.length!==2||
+         def.body?.kind!=='Record'||def.body.fields.length!==3)
+        return generic('Costruttore state non riconosciuto.');
+      const f=new Map(def.body.fields.map(x=>[x.key,x.value]));
+      if(f.get('type')?.kind!=='Text'||f.get('type').value!=='state'||
+         f.get('initial')?.kind!=='Name'||f.get('initial').value!==def.parameters[0]||
+         f.get('view')?.kind!=='Name'||f.get('view').value!==def.parameters[1])
+        return generic('Il costruttore non restituisce uno state semplice.');
+      state={kind:'Record',fields:[{key:'type',value:f.get('type')},
+        {key:'initial',value:state.arguments[0]},{key:'view',value:state.arguments[1]}]};
+    }
+    if(state?.kind!=='Record'||state.fields.length!==3)return generic('Render non basato su uno state semplice.');
+    const f=new Map(state.fields.map(x=>[x.key,x.value]));
+    const section=f.get('view');
+    if(f.get('type')?.kind!=='Text'||f.get('type').value!=='state'||
+       !literalData(f.get('initial'))||section?.kind!=='Section'||
+       section.arguments.length!==1||section.arguments[0].kind!=='Placeholder')
+      return generic('Servono modello iniziale letterale e sezione unaria della view.');
+    const lines=source.split('\n');
+    const head=lines.slice(0,last.line-1).concat((lines[last.line-1]??'').slice(0,last.column-1)).join('\n');
+    // Host-dependent definitions stay with the original compiled program.
+    const plain=compiler.ast(head);
+    if(!plain.ok)return generic('Definizioni con dipendenze host o non isolabili.');
+    if(JSON.parse(plain.output).definitions.length!==prefix.length)
+      return generic('Confine del render non isolabile.');
+    try{return {...compileAuto(compiler,head,section.selector),selector:section.selector};}
+    catch(error){return generic('Piano sperimentale non disponibile: '+String(error.message??error));}
+  }
+
+  function describe(compiled){
+    const out={mode:compiled.mode,selector:compiled.selector??null,reason:compiled.reason??null,regions:[]};
+    const slots=plan=>plan.map(s=>({kind:s.kind,path:s.path,source:s.source}));
+    if(compiled.mode==='specialized'){
+      out.regions.push({selector:compiled.selector??'view',mode:'specialized',path:[],
+        slots:slots(compiled.specialized.plan.slots),expandedCalls:compiled.specialized.plan.expandedCalls});
+    }else if(compiled.mode==='hybrid'){
+      out.regions=compiled.regions.map((region,i)=>({selector:region.selector,path:[i],
+        mode:region.specialized?'specialized':'generic',reason:region.reason,
+        slots:region.specialized?slots(region.specialized.slots):[]}));
+    }
+    return out;
+  }
+  global.MiraGuiSpecialize=Object.freeze({analyze,compile,mount,compileHybrid,mountHybrid,compileAuto,mountAuto,previewPlan,describe});
 })(globalThis);

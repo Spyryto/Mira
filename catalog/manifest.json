@@ -1,5 +1,5 @@
 {
-  "version": "0.24.0",
+  "version": "0.25.0",
   "features": [
     {
       "id": "values",
@@ -1509,6 +1509,12 @@
       "title": "Riconoscimento automatico delle regioni GUI",
       "since": "0.24",
       "doc": "docs/browser-interop.md#mira-024-selezione-automatica-del-renderer"
+    },
+    {
+      "id": "gui-preview-inspector",
+      "title": "Anteprima GUI automatica e ispettore di specializzazione",
+      "since": "0.25",
+      "doc": "docs/browser-interop.md#mira-025-anteprima-e-ispettore"
     }
   ]
 }

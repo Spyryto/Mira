@@ -216,6 +216,10 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Laboratory in Mira Studio](https://spyryto.github.io/Mira/laboratory.html) raccoglie l'evoluzione 0.15–0.22, i benchmark CI e le misure dell'autore su iPhone e smart TV. [Rapporto tecnico](docs/gui-rendering.md) · [Archivio JSON](catalog/laboratory/gui-rendering.json). Il rapporto storico è statico e separato dal benchmark eseguibile.
 
+## Mira 0.25: anteprima automatica e ispettore
+
+L'anteprima UI sceglie il renderer in modo conservativo e mostra il piano, gli slot, il motivo del fallback e i tempi iniziali. Modalità generica selezionabile. [Metodo e limiti](docs/browser-interop.md#mira-025-anteprima-e-ispettore).
+
 ## Mira 0.24: riconoscimento automatico delle regioni
 
 Il Performance Lab passa una normale view unaria; il pass sceglie specializzazione completa, ibrido a regioni radice riconosciute o fallback generico. [Metodo e limiti](docs/browser-interop.md#mira-024-selezione-automatica-del-renderer).

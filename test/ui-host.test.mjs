@@ -774,3 +774,65 @@ test('0.24 automatic fully specialized mode preserves root shape',()=>{
   assert.equal(app.getState(),1);assert.equal(findAll(root,'p')[0].textContent,'1');
   assert.deepEqual(errors,[]);
 });
+
+
+test('0.25 preview automatically specializes canonical examples and preserves ordinary fallback',()=>{
+  const sandbox={};
+  runInNewContext(read('gui-specialize.js'),sandbox);
+  for(const [id,mode] of [['gui-dashboard','specialized'],['gui-lesson','specialized'],['gui-independent','generic'],['gui-style-toggle','generic'],['browser-alert','generic']]){
+    const plan=sandbox.MiraGuiSpecialize.previewPlan(compiler,demo(id).source,manifest);
+    assert.equal(plan.mode,mode,id+': '+plan.reason);
+    const description=sandbox.MiraGuiSpecialize.describe(plan);
+    assert.equal(description.mode,mode);
+    if(mode==='specialized')assert.ok(description.regions[0].slots.length>0);
+  }
+  const library=readFileSync(resolve(root,'lib/gui.mira'),'utf8');
+  const source=library+'\nfixed: n = text: n; changing: n = if (n == 0) then (title: n) else (text: n); view: n = column: [fixed: n, changing: n]; render (state: 0, view: (view: _));';
+  const plan=sandbox.MiraGuiSpecialize.previewPlan(compiler,source,manifest);
+  assert.equal(plan.mode,'hybrid',plan.reason);
+  const description=sandbox.MiraGuiSpecialize.describe(plan);
+  assert.equal(description.regions[0].mode,'specialized');
+  assert.equal(description.regions[1].mode,'generic');
+  assert.ok(description.regions[1].reason);
+});
+
+test('0.25 preview plans reject effects, multiple renders, keyed state and disguised constructors',()=>{
+  const sandbox={};runInNewContext(read('gui-specialize.js'),sandbox);
+  const library=readFileSync(resolve(root,'lib/gui.mira'),'utf8');
+  const tail='view: n = text: n; render (state: 0, view: (view: _));';
+  for(const source of [
+    library+'\nlog "hello"; '+tail,
+    library+'\nvalue = 1 + 2; '+tail,
+    library+'\nview: n = text: n; render (state: 0, key: "x", view: (view: _));',
+    library+'\nview: n = text: n; render (state: 0, view: (view: _)); render (state: 1, view: (view: _));',
+    'state: initial, view: factory = {type: "state", initial: 10, view: factory}; view: n = {type: "text", text: n}; render (state: 0, view: (view: _));',
+    library+'\nview: n = text: n; render (state: (1 + 2), view: (view: _));'
+  ])assert.equal(sandbox.MiraGuiSpecialize.previewPlan(compiler,source,manifest).mode,'generic',source);
+});
+
+test('0.25 iframe protocol executes actual generated program and reports strategy and slots',()=>{
+  const {root:mount,document}=setup();
+  const nodes={ 'mira-root':mount, errors:document.createElement('div'),
+    'renderer-status':document.createElement('summary'),'renderer-plan':document.createElement('pre')};
+  document.getElementById=id=>nodes[id];
+  let handler;const messages=[];
+  const parent={postMessage(message){messages.push(message);}};
+  const sandbox={document,window:{parent,addEventListener(type,fn){if(type==='message')handler=fn;}},
+    performance:{now:()=>0}};
+  for(const file of ['compiler.js','ui-host.js','gui-specialize.js','ui-preview.js'])runInNewContext(read(file),sandbox);
+  const example=demo('gui-dashboard');
+  const compiled=compiler.compile(example.source,'js',manifest);
+  const send=mode=>handler({source:parent,data:{type:'mira-ui:run',source:example.source,code:compiled.output,hostJson:manifest,mode}});
+  send('auto');
+  assert.equal(nodes['renderer-status'].textContent,'Renderer: Specializzato');
+  assert.match(nodes['renderer-plan'].textContent,/Slot dinamici/);
+  assert.match(nodes['renderer-plan'].textContent,/Montaggio/);
+  findButtons(mount)[0].click();
+  assert.deepEqual(findAll(mount,'h2').map(n=>n.textContent),['Studio musicale','3','90']);
+  send('generic');
+  assert.equal(nodes['renderer-status'].textContent,'Renderer: Generico');
+  findButtons(mount)[0].click();
+  assert.deepEqual(findAll(mount,'h2').map(n=>n.textContent),['Studio musicale','3','90']);
+  assert.ok(messages.some(m=>m.type==='mira-ui:ready'));
+  assert.equal(messages.filter(m=>m.type==='mira-ui:error').length,0);
+});
