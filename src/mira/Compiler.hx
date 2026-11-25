@@ -5,18 +5,19 @@ import mira.lex.Token;
 import mira.resolve.Symbols;
 import mira.syntax.Definition;
 import mira.syntax.ExpressionParser;
+import mira.syntax.ExpressionOrigins;
 import mira.emit.JsEmitter;
 import mira.emit.PhpEmitter;
 import mira.emit.SourceLocations.GeneratedLocation;
 
 class Compiler {
     public static function parse(source:String, ?host:HostEnvironment,
-        ?readModule:String->Null<String>, ?entry:String):Array<Definition> {
+        ?readModule:String->Null<String>, ?entry:String, ?origins:ExpressionOrigins):Array<Definition> {
         final definitions = Modules.collect(source, readModule, entry);
         final symbols = new Symbols(definitions, host);
         for (definition in definitions) {
             final locals = definition.isFunction() ? definition.parameters : [];
-            definition.body = new ExpressionParser(definition.bodyTokens, symbols, locals).parse();
+            definition.body = new ExpressionParser(definition.bodyTokens, symbols, locals, false, null, origins).parse();
         }
         return definitions;
     }
@@ -34,7 +35,8 @@ class Compiler {
     // Checking is opt-in while the type system is experimental.
     public static function check(source:String, ?host:HostEnvironment,
         ?readModule:String->Null<String>, ?entry:String):Array<Dynamic> {
-        return new mira.types.TypeChecker().check(parse(source,host,readModule,entry));
+        final origins = new ExpressionOrigins();
+        return new mira.types.TypeChecker(origins).check(parse(source,host,readModule,entry,origins));
     }
 
     public static function inspectTokens(source:String):String {
