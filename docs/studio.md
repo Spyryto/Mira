@@ -339,3 +339,7 @@ Nel DOM Performance Lab, quattro nuove tabelle Text node confrontano textContent
 ## Raggruppamento dei commit (0.27)
 
 DOM Performance Lab → Benchmark aggiornamenti raggruppati. Confronta immediato, microtask e requestAnimationFrame con raffiche di 1 o 10 eventi e carichi sparsi/densi. Mantieni la pagina visibile; non è un test FPS. Preview predefinita invariata.
+
+## CSS containment (0.28)
+
+DOM Performance Lab → Benchmark CSS containment. Confronto su pannelli lunghi, con aggiornamenti in viewport e fuori viewport; reveal misurato separatamente. Supporto CSS rilevato nel browser. Renderer predefinito invariato. Laboratory conserva anche i dati 0.26–0.27.

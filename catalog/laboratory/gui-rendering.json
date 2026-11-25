@@ -1580,6 +1580,824 @@
           }
         ]
       }
+    },
+    {
+      "version": "0.26.0",
+      "date": "2026-11-25",
+      "pr": 49,
+      "commit": "f20976ae47afefe0b445cc2bb7d5f8c7fa535312",
+      "jobId": 139409972419,
+      "source": "https://github.com/Spyryto/Mira/actions/runs/45672143137/job/139409972419",
+      "studioTests": 98,
+      "documentedChecks": 97,
+      "browser": {
+        "ok": true,
+        "rows": 100,
+        "updates": 30,
+        "rounds": 5,
+        "warmup": 5,
+        "form": [
+          {
+            "flush": false,
+            "incremental": {
+              "medianMs": 0.04333333333343035,
+              "p95Ms": 0.06666666666666667
+            },
+            "specialized": {
+              "medianMs": 0.006666666666812186,
+              "p95Ms": 0.010000000000097013
+            }
+          },
+          {
+            "flush": true,
+            "incremental": {
+              "medianMs": 0.21000000000009703,
+              "p95Ms": 0.3466666666667152
+            },
+            "specialized": {
+              "medianMs": 0.15,
+              "p95Ms": 0.16333333333338185
+            }
+          }
+        ],
+        "hybrid": [
+          {
+            "flush": false,
+            "incremental": {
+              "medianMs": 0.05666666666656965,
+              "p95Ms": 0.09666666666647264
+            },
+            "hybrid": {
+              "medianMs": 0.0066666666665696536,
+              "p95Ms": 0.009999999999854481
+            }
+          },
+          {
+            "flush": true,
+            "incremental": {
+              "medianMs": 0.3933333333331878,
+              "p95Ms": 0.4233333333332363
+            },
+            "hybrid": {
+              "medianMs": 0.35666666666656965,
+              "p95Ms": 0.3733333333332363
+            }
+          }
+        ],
+        "textExperiment": {
+          "samples": 9,
+          "steps": 120,
+          "results": [
+            {
+              "density": "sparse",
+              "flush": false,
+              "content": {
+                "medianMs": 0.0025000000000242532,
+                "p95Ms": 0.00333333333334546
+              },
+              "data": {
+                "medianMs": 0.0016666666667030465,
+                "p95Ms": 0.004166666666666667
+              }
+            },
+            {
+              "density": "sparse",
+              "flush": true,
+              "content": {
+                "medianMs": 0.14166666666666666,
+                "p95Ms": 0.1700000000000121
+              },
+              "data": {
+                "medianMs": 0.1391666666666424,
+                "p95Ms": 0.19583333333333333
+              }
+            },
+            {
+              "density": "dense",
+              "flush": false,
+              "content": {
+                "medianMs": 0.04500000000001213,
+                "p95Ms": 0.06749999999998788
+              },
+              "data": {
+                "medianMs": 0.02749999999996362,
+                "p95Ms": 0.04416666666669092
+              }
+            },
+            {
+              "density": "dense",
+              "flush": true,
+              "content": {
+                "medianMs": 0.47333333333329697,
+                "p95Ms": 0.5375
+              },
+              "data": {
+                "medianMs": 0.4166666666666667,
+                "p95Ms": 0.5558333333333091
+              }
+            }
+          ]
+        },
+        "version": "0.26.0",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+        "results": [
+          {
+            "density": "sparse",
+            "flush": false,
+            "view": {
+              "medianMs": 0.006666666666812186,
+              "p95Ms": 0.9533333333332848
+            },
+            "dynamicSlots": 1,
+            "incremental": {
+              "medianMs": 0.14666666666671518,
+              "p95Ms": 0.23333333333333334
+            },
+            "rebuild": {
+              "medianMs": 0.3533333333332848,
+              "p95Ms": 2.0433333333334303
+            },
+            "specialized": {
+              "medianMs": 0.003333333333527359,
+              "p95Ms": 0.006666666666812186
+            },
+            "direct": {
+              "medianMs": 0.0033333333332848268,
+              "p95Ms": 0.003333333333527359
+            }
+          },
+          {
+            "density": "sparse",
+            "flush": true,
+            "view": {
+              "medianMs": 0.006666666666812186,
+              "p95Ms": 0.9533333333332848
+            },
+            "dynamicSlots": 1,
+            "incremental": {
+              "medianMs": 0.2266666666667637,
+              "p95Ms": 0.31666666666666665
+            },
+            "rebuild": {
+              "medianMs": 0.9199999999999515,
+              "p95Ms": 3.210000000000097
+            },
+            "specialized": {
+              "medianMs": 0.15666666666656964,
+              "p95Ms": 0.16333333333338185
+            },
+            "direct": {
+              "medianMs": 0.15333333333328483,
+              "p95Ms": 0.16666666666666666
+            }
+          },
+          {
+            "density": "dense",
+            "flush": false,
+            "view": {
+              "medianMs": 0.010000000000097013,
+              "p95Ms": 0.016666666666666666
+            },
+            "dynamicSlots": 100,
+            "incremental": {
+              "medianMs": 0.19666666666671517,
+              "p95Ms": 0.23333333333333334
+            },
+            "rebuild": {
+              "medianMs": 0.19666666666671517,
+              "p95Ms": 0.20333333333328482
+            },
+            "specialized": {
+              "medianMs": 0.03333333333333333,
+              "p95Ms": 0.03666666666661816
+            },
+            "direct": {
+              "medianMs": 0.030000000000048505,
+              "p95Ms": 0.03333333333333333
+            }
+          },
+          {
+            "density": "dense",
+            "flush": true,
+            "view": {
+              "medianMs": 0.010000000000097013,
+              "p95Ms": 0.016666666666666666
+            },
+            "dynamicSlots": 100,
+            "incremental": {
+              "medianMs": 0.5300000000000485,
+              "p95Ms": 0.6
+            },
+            "rebuild": {
+              "medianMs": 0.6766666666667637,
+              "p95Ms": 0.8433333333331878
+            },
+            "specialized": {
+              "medianMs": 0.42666666666652114,
+              "p95Ms": 0.6066666666668122
+            },
+            "direct": {
+              "medianMs": 0.4300000000000485,
+              "p95Ms": 0.5466666666667152
+            }
+          },
+          {
+            "density": "styled",
+            "flush": false,
+            "view": {
+              "medianMs": 0.006666666666812186,
+              "p95Ms": 0.009999999999854481
+            },
+            "dynamicSlots": 2,
+            "incremental": {
+              "medianMs": 0.0800000000000485,
+              "p95Ms": 0.1300000000000485
+            },
+            "rebuild": {
+              "medianMs": 0.19666666666671517,
+              "p95Ms": 0.23999999999990299
+            },
+            "specialized": {
+              "medianMs": 0.0033333333332848268,
+              "p95Ms": 0.0033333333332848268
+            },
+            "direct": {
+              "medianMs": 0.0033333333332848268,
+              "p95Ms": 0.006666666666812186
+            }
+          },
+          {
+            "density": "styled",
+            "flush": true,
+            "view": {
+              "medianMs": 0.006666666666812186,
+              "p95Ms": 0.009999999999854481
+            },
+            "dynamicSlots": 2,
+            "incremental": {
+              "medianMs": 0.2133333333331393,
+              "p95Ms": 0.2833333333333333
+            },
+            "rebuild": {
+              "medianMs": 0.75,
+              "p95Ms": 0.9099999999998545
+            },
+            "specialized": {
+              "medianMs": 0.15333333333328483,
+              "p95Ms": 0.16666666666666666
+            },
+            "direct": {
+              "medianMs": 0.14666666666671518,
+              "p95Ms": 0.16333333333338185
+            }
+          }
+        ]
+      },
+      "batch": null
+    },
+    {
+      "version": "0.27.0",
+      "date": "2026-11-25",
+      "pr": 50,
+      "commit": "5f0a7be02af442527d1f62ca3df37e6cfaffc314",
+      "jobId": 139425561403,
+      "source": "https://github.com/Spyryto/Mira/actions/runs/45676566187/job/139425561403",
+      "studioTests": 101,
+      "documentedChecks": 97,
+      "browser": {
+        "ok": true,
+        "rows": 100,
+        "updates": 30,
+        "rounds": 5,
+        "warmup": 5,
+        "form": [
+          {
+            "flush": false,
+            "incremental": {
+              "medianMs": 0.05999999999985448,
+              "p95Ms": 0.10333333333328483
+            },
+            "specialized": {
+              "medianMs": 0.0066666666665696536,
+              "p95Ms": 0.016666666666666666
+            }
+          },
+          {
+            "flush": true,
+            "incremental": {
+              "medianMs": 0.27000000000019403,
+              "p95Ms": 0.3400000000001455
+            },
+            "specialized": {
+              "medianMs": 0.18666666666661816,
+              "p95Ms": 0.19333333333343033
+            }
+          }
+        ],
+        "hybrid": [
+          {
+            "flush": false,
+            "incremental": {
+              "medianMs": 0.06333333333338184,
+              "p95Ms": 0.10666666666681218
+            },
+            "hybrid": {
+              "medianMs": 0.010000000000097013,
+              "p95Ms": 0.01333333333338184
+            }
+          },
+          {
+            "flush": true,
+            "incremental": {
+              "medianMs": 0.4866666666668607,
+              "p95Ms": 0.5066666666668121
+            },
+            "hybrid": {
+              "medianMs": 0.4233333333332363,
+              "p95Ms": 0.43999999999990297
+            }
+          }
+        ],
+        "textExperiment": {
+          "samples": 9,
+          "steps": 120,
+          "results": [
+            {
+              "density": "sparse",
+              "flush": false,
+              "content": {
+                "medianMs": 0.0025000000000242532,
+                "p95Ms": 0.0049999999999878735
+              },
+              "data": {
+                "medianMs": 0.0025000000000242532,
+                "p95Ms": 0.004166666666666667
+              }
+            },
+            {
+              "density": "sparse",
+              "flush": true,
+              "content": {
+                "medianMs": 0.175,
+                "p95Ms": 0.2116666666666788
+              },
+              "data": {
+                "medianMs": 0.16583333333334546,
+                "p95Ms": 0.25499999999998785
+              }
+            },
+            {
+              "density": "dense",
+              "flush": false,
+              "content": {
+                "medianMs": 0.05,
+                "p95Ms": 0.052500000000024256
+              },
+              "data": {
+                "medianMs": 0.03416666666665454,
+                "p95Ms": 0.07000000000001212
+              }
+            },
+            {
+              "density": "dense",
+              "flush": true,
+              "content": {
+                "medianMs": 0.626666666666703,
+                "p95Ms": 0.6941666666666303
+              },
+              "data": {
+                "medianMs": 0.535833333333297,
+                "p95Ms": 0.6141666666666424
+              }
+            }
+          ]
+        },
+        "version": "0.27.0",
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+        "results": [
+          {
+            "density": "sparse",
+            "flush": false,
+            "view": {
+              "medianMs": 0.006666666666812186,
+              "p95Ms": 0.05666666666656965
+            },
+            "dynamicSlots": 1,
+            "incremental": {
+              "medianMs": 0.2,
+              "p95Ms": 0.2800000000000485
+            },
+            "rebuild": {
+              "medianMs": 0.40666666666681217,
+              "p95Ms": 1.9633333333333818
+            },
+            "specialized": {
+              "medianMs": 0.0033333333332848268,
+              "p95Ms": 0.009999999999854481
+            },
+            "direct": {
+              "medianMs": 0.0033333333332848268,
+              "p95Ms": 0.003333333333527359
+            }
+          },
+          {
+            "density": "sparse",
+            "flush": true,
+            "view": {
+              "medianMs": 0.006666666666812186,
+              "p95Ms": 0.05666666666656965
+            },
+            "dynamicSlots": 1,
+            "incremental": {
+              "medianMs": 0.33000000000004853,
+              "p95Ms": 0.410000000000097
+            },
+            "rebuild": {
+              "medianMs": 1.0699999999999514,
+              "p95Ms": 3.536666666666618
+            },
+            "specialized": {
+              "medianMs": 0.18666666666661816,
+              "p95Ms": 0.20999999999985447
+            },
+            "direct": {
+              "medianMs": 0.1800000000000485,
+              "p95Ms": 0.19000000000014552
+            }
+          },
+          {
+            "density": "dense",
+            "flush": false,
+            "view": {
+              "medianMs": 0.01333333333338184,
+              "p95Ms": 0.020000000000194026
+            },
+            "dynamicSlots": 100,
+            "incremental": {
+              "medianMs": 0.15666666666656964,
+              "p95Ms": 0.24333333333343035
+            },
+            "rebuild": {
+              "medianMs": 0.2699999999999515,
+              "p95Ms": 0.4099999999998545
+            },
+            "specialized": {
+              "medianMs": 0.05,
+              "p95Ms": 0.05666666666656965
+            },
+            "direct": {
+              "medianMs": 0.03999999999990299,
+              "p95Ms": 0.04333333333343035
+            }
+          },
+          {
+            "density": "dense",
+            "flush": true,
+            "view": {
+              "medianMs": 0.01333333333338184,
+              "p95Ms": 0.020000000000194026
+            },
+            "dynamicSlots": 100,
+            "incremental": {
+              "medianMs": 0.6966666666667152,
+              "p95Ms": 0.7099999999998545
+            },
+            "rebuild": {
+              "medianMs": 0.9266666666667637,
+              "p95Ms": 1.3066666666665696
+            },
+            "specialized": {
+              "medianMs": 0.5800000000000485,
+              "p95Ms": 0.8266666666667637
+            },
+            "direct": {
+              "medianMs": 0.560000000000097,
+              "p95Ms": 0.8766666666667636
+            }
+          },
+          {
+            "density": "styled",
+            "flush": false,
+            "view": {
+              "medianMs": 0.0066666666665696536,
+              "p95Ms": 0.009999999999854481
+            },
+            "dynamicSlots": 2,
+            "incremental": {
+              "medianMs": 0.10333333333328483,
+              "p95Ms": 0.18333333333333332
+            },
+            "rebuild": {
+              "medianMs": 0.2633333333333818,
+              "p95Ms": 0.32333333333347886
+            },
+            "specialized": {
+              "medianMs": 0.006666666666812186,
+              "p95Ms": 0.010000000000097013
+            },
+            "direct": {
+              "medianMs": 0.003333333333527359,
+              "p95Ms": 0.010000000000097013
+            }
+          },
+          {
+            "density": "styled",
+            "flush": true,
+            "view": {
+              "medianMs": 0.0066666666665696536,
+              "p95Ms": 0.009999999999854481
+            },
+            "dynamicSlots": 2,
+            "incremental": {
+              "medianMs": 0.3066666666668122,
+              "p95Ms": 0.3900000000001455
+            },
+            "rebuild": {
+              "medianMs": 0.9633333333333819,
+              "p95Ms": 1.1733333333332363
+            },
+            "specialized": {
+              "medianMs": 0.19333333333343033,
+              "p95Ms": 0.27333333333347887
+            },
+            "direct": {
+              "medianMs": 0.18333333333333332,
+              "p95Ms": 0.19333333333343033
+            }
+          }
+        ]
+      },
+      "batch": {
+        "ok": true,
+        "version": "0.27.0",
+        "bursts": 7,
+        "results": [
+          {
+            "density": "sparse",
+            "events": 1,
+            "modes": {
+              "immediate": {
+                "submit": {
+                  "medianMs": 0.09999999999854481,
+                  "p95Ms": 0.10000000000582077
+                },
+                "first": {
+                  "medianMs": 0.09999999999854481,
+                  "p95Ms": 0.10000000000582077
+                },
+                "last": {
+                  "medianMs": 0.09999999999854481,
+                  "p95Ms": 0.10000000000582077
+                },
+                "total": {
+                  "medianMs": 0.09999999999854481,
+                  "p95Ms": 0.20000000000436557
+                },
+                "commits": 7,
+                "writes": 7
+              },
+              "microtask": {
+                "submit": {
+                  "medianMs": 0,
+                  "p95Ms": 0.09999999999854481
+                },
+                "first": {
+                  "medianMs": 0,
+                  "p95Ms": 0.19999999999708962
+                },
+                "last": {
+                  "medianMs": 0,
+                  "p95Ms": 0.10000000000582077
+                },
+                "total": {
+                  "medianMs": 0,
+                  "p95Ms": 0.20000000000436557
+                },
+                "commits": 7,
+                "writes": 7
+              },
+              "frame": {
+                "submit": {
+                  "medianMs": 0.09999999999854481,
+                  "p95Ms": 0.4000000000014552
+                },
+                "first": {
+                  "medianMs": 15,
+                  "p95Ms": 15.400000000001455
+                },
+                "last": {
+                  "medianMs": 15,
+                  "p95Ms": 15.400000000001455
+                },
+                "total": {
+                  "medianMs": 15,
+                  "p95Ms": 15.400000000001455
+                },
+                "commits": 7,
+                "writes": 7
+              }
+            }
+          },
+          {
+            "density": "sparse",
+            "events": 10,
+            "modes": {
+              "immediate": {
+                "submit": {
+                  "medianMs": 0.09999999999854481,
+                  "p95Ms": 0.20000000000436557
+                },
+                "first": {
+                  "medianMs": 0.09999999999854481,
+                  "p95Ms": 0.20000000000436557
+                },
+                "last": {
+                  "medianMs": 0,
+                  "p95Ms": 0.09999999999854481
+                },
+                "total": {
+                  "medianMs": 0.09999999999854481,
+                  "p95Ms": 0.20000000000436557
+                },
+                "commits": 70,
+                "writes": 70
+              },
+              "microtask": {
+                "submit": {
+                  "medianMs": 0.09999999999854481,
+                  "p95Ms": 0.09999999999854481
+                },
+                "first": {
+                  "medianMs": 0.09999999999854481,
+                  "p95Ms": 0.09999999999854481
+                },
+                "last": {
+                  "medianMs": 0,
+                  "p95Ms": 0
+                },
+                "total": {
+                  "medianMs": 0.09999999999854481,
+                  "p95Ms": 0.09999999999854481
+                },
+                "commits": 7,
+                "writes": 7
+              },
+              "frame": {
+                "submit": {
+                  "medianMs": 0.09999999999854481,
+                  "p95Ms": 0.10000000000582077
+                },
+                "first": {
+                  "medianMs": 15.200000000004366,
+                  "p95Ms": 15.599999999998545
+                },
+                "last": {
+                  "medianMs": 15.099999999998545,
+                  "p95Ms": 15.599999999998545
+                },
+                "total": {
+                  "medianMs": 15.200000000004366,
+                  "p95Ms": 15.599999999998545
+                },
+                "commits": 7,
+                "writes": 7
+              }
+            }
+          },
+          {
+            "density": "dense",
+            "events": 1,
+            "modes": {
+              "immediate": {
+                "submit": {
+                  "medianMs": 0.19999999999708962,
+                  "p95Ms": 0.5999999999985448
+                },
+                "first": {
+                  "medianMs": 0.19999999999708962,
+                  "p95Ms": 0.5
+                },
+                "last": {
+                  "medianMs": 0.19999999999708962,
+                  "p95Ms": 0.5
+                },
+                "total": {
+                  "medianMs": 0.19999999999708962,
+                  "p95Ms": 0.5999999999985448
+                },
+                "commits": 7,
+                "writes": 700
+              },
+              "microtask": {
+                "submit": {
+                  "medianMs": 0,
+                  "p95Ms": 0.09999999999854481
+                },
+                "first": {
+                  "medianMs": 0.19999999999708962,
+                  "p95Ms": 0.20000000000436557
+                },
+                "last": {
+                  "medianMs": 0.19999999999708962,
+                  "p95Ms": 0.20000000000436557
+                },
+                "total": {
+                  "medianMs": 0.19999999999708962,
+                  "p95Ms": 0.20000000000436557
+                },
+                "commits": 7,
+                "writes": 700
+              },
+              "frame": {
+                "submit": {
+                  "medianMs": 0.09999999999854481,
+                  "p95Ms": 0.10000000000582077
+                },
+                "first": {
+                  "medianMs": 15,
+                  "p95Ms": 15.5
+                },
+                "last": {
+                  "medianMs": 15,
+                  "p95Ms": 15.5
+                },
+                "total": {
+                  "medianMs": 15,
+                  "p95Ms": 15.5
+                },
+                "commits": 7,
+                "writes": 700
+              }
+            }
+          },
+          {
+            "density": "dense",
+            "events": 10,
+            "modes": {
+              "immediate": {
+                "submit": {
+                  "medianMs": 0.5999999999985448,
+                  "p95Ms": 0.9000000000014552
+                },
+                "first": {
+                  "medianMs": 0.5999999999985448,
+                  "p95Ms": 0.9000000000014552
+                },
+                "last": {
+                  "medianMs": 0.09999999999854481,
+                  "p95Ms": 0.10000000000582077
+                },
+                "total": {
+                  "medianMs": 0.6000000000058208,
+                  "p95Ms": 0.9000000000014552
+                },
+                "commits": 70,
+                "writes": 7000
+              },
+              "microtask": {
+                "submit": {
+                  "medianMs": 0.09999999999854481,
+                  "p95Ms": 0.20000000000436557
+                },
+                "first": {
+                  "medianMs": 0.19999999999708962,
+                  "p95Ms": 0.2999999999956344
+                },
+                "last": {
+                  "medianMs": 0.09999999999854481,
+                  "p95Ms": 0.19999999999708962
+                },
+                "total": {
+                  "medianMs": 0.19999999999708962,
+                  "p95Ms": 0.2999999999956344
+                },
+                "commits": 7,
+                "writes": 700
+              },
+              "frame": {
+                "submit": {
+                  "medianMs": 0.09999999999854481,
+                  "p95Ms": 0.10000000000582077
+                },
+                "first": {
+                  "medianMs": 15.10000000000582,
+                  "p95Ms": 15.400000000001455
+                },
+                "last": {
+                  "medianMs": 15,
+                  "p95Ms": 15.30000000000291
+                },
+                "total": {
+                  "medianMs": 15.10000000000582,
+                  "p95Ms": 15.400000000001455
+                },
+                "commits": 7,
+                "writes": 700
+              }
+            }
+          }
+        ]
+      }
     }
   ],
   "devices": [
@@ -1778,6 +2596,18 @@
       "pr": 46,
       "title": "Anteprima e ispettore",
       "detail": "Automatico predefinito e modalità generica selezionabile nell'iframe sandboxed. Piano statico con regioni, slot, motivi di fallback, preparazione e montaggio. Cambio modalità resetta lo stato; tempi iniziali non ancora archiviati come benchmark."
+    },
+    {
+      "version": "0.26",
+      "pr": 49,
+      "title": "Text node persistenti",
+      "detail": "Confronto controllato textContent/Text.data a parità di renderer specializzato, 9 campioni da 120 aggiornamenti. Identità dei nodi e testo letterale verificati, nessun cambio predefinito."
+    },
+    {
+      "version": "0.27",
+      "pr": 50,
+      "title": "Raggruppamento dei commit",
+      "detail": "Transizioni e validazione sincrone, commit immediati o accorpati con microtask/rAF, esperimento limitato ai testi. Event loop reale, raffiche di 1 o 10 eventi, conteggi e latenza. Default invariato."
     }
   ],
   "roadmap": [
@@ -1789,7 +2619,7 @@
     {
       "title": "Costo reale dei frame",
       "status": "esperimenti proposti",
-      "detail": "Text.data persistente, raggruppamento degli aggiornamenti, CSS containment/content-visibility. Misurare paint, frame, memoria e latenza prima di adottarli."
+      "detail": "Text.data e raggruppamento misurati in Chromium, non ancora adottati. CSS containment/content-visibility è il prossimo esperimento; confrontare costo degli aggiornamenti e reveal, poi paint, memoria e dispositivi reali."
     },
     {
       "title": "Metodologia e punto di pareggio",

@@ -25,6 +25,7 @@ small{display:block;line-height:1.5}
 <p>100 elementi di testo, aggiornamenti sparsi (1 su 100) e densi (100 su 100), più un record di stato con stile dinamico. La view e la transizione vengono compilate da Mira.</p>
 <button id="run" type="button">Avvia benchmark GUI</button>
 <button id="batch-run" type="button">Benchmark aggiornamenti raggruppati</button>
+<button id="contain-run" type="button">Benchmark CSS containment</button>
 <p id="status" role="status">Pronto. Misurazioni locali, nessun invio di dati.</p>
 <div id="results"></div>
 <small>5 campioni da 30 aggiornamenti, 5 warmup per campione. Mediana e P95 del tempo medio per aggiornamento nel campione, in ms. Compilazione esclusa. Layout forzato: lettura della geometria a ogni aggiornamento; senza layout forzato: scritture sincrone, layout finale fuori dal timer. Non misura paint, frame rate o memoria. Incrementale, specializzato e diretto passano da click(); ricostruzione invoca direttamente render. Il pass specializzato accetta view di struttura fissa, testi e valori degli stili dinamici. DOM diretto è un riferimento scritto a mano.</small>
@@ -37,7 +38,7 @@ small{display:block;line-height:1.5}
 <details><summary>Sorgente Mira del form (con libreria)</summary><pre id="form-source" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></details>
 <h2>Rendering ibrido</h2><p>Il pass sceglie automaticamente le regioni dalla view Mira: una specializzata e una generica condividono il contatore. Avanti cambia anche la struttura del secondo componente. <button id="hybrid-start" type="button">Monta demo ibrida automatica</button></p><div id="hybrid-demo"></div><details><summary>Sorgente Mira</summary><pre id="hybrid-source" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></details><h2>Area DOM reale</h2>
 <div id="mount" aria-label="Area di misura collegata al documento"></div>
-<pre id="machine" hidden></pre><pre id="batch-machine" hidden></pre>
+<pre id="machine" hidden></pre><pre id="batch-machine" hidden></pre><pre id="contain-machine" hidden></pre>
 <script src="./compiler.js"></script>
 <script src="./ui-host.js"></script>
 <script src="./gui-specialize.js"></script>
@@ -48,7 +49,7 @@ small{display:block;line-height:1.5}
   const button=byId('run'), status=byId('status'), results=byId('results');
   const element=(tag,value)=>{const node=document.createElement(tag);node.textContent=value;return node;};
   function execute(){
-    button.disabled=true;byId('batch-run').disabled=true;results.replaceChildren();byId('machine').textContent='';
+    button.disabled=true;byId('batch-run').disabled=true;byId('contain-run').disabled=true;results.replaceChildren();byId('machine').textContent='';
     status.textContent='Misurazione in corso…';
     try {
       const data=MiraGuiBench.run(MiraStudioCompiler,byId('mount'));
@@ -111,7 +112,7 @@ small{display:block;line-height:1.5}
     }catch(error){
       byId('machine').textContent=JSON.stringify({ok:false,message:String(error.message??error)});
       status.textContent='Errore: '+String(error.message??error);
-    }finally{button.disabled=false;byId('batch-run').disabled=false;}
+    }finally{button.disabled=false;byId('batch-run').disabled=false;byId('contain-run').disabled=false;}
   }
   byId('demo-start').addEventListener('click',()=>{
     try{
@@ -132,7 +133,7 @@ small{display:block;line-height:1.5}
   });
   const batchButton=byId('batch-run');
   async function executeBatch(){
-    button.disabled=true;batchButton.disabled=true;results.replaceChildren();
+    button.disabled=true;batchButton.disabled=true;byId('contain-run').disabled=true;results.replaceChildren();
     byId('batch-machine').textContent='';
     status.textContent='Misurazione raggruppamento… tieni la pagina visibile.';
     try{
@@ -157,9 +158,41 @@ small{display:block;line-height:1.5}
     }catch(error){
       byId('batch-machine').textContent=JSON.stringify({ok:false,message:String(error.message??error)});
       status.textContent='Errore: '+String(error.message??error);
-    }finally{button.disabled=false;batchButton.disabled=false;}
+    }finally{button.disabled=false;batchButton.disabled=false;byId('contain-run').disabled=false;}
   }
   batchButton.addEventListener('click',executeBatch);
+  const containButton=byId('contain-run');
+  containButton.addEventListener('click',async()=>{
+    button.disabled=batchButton.disabled=containButton.disabled=true;
+    results.replaceChildren();byId('contain-machine').textContent='';
+    status.textContent='Misurazione CSS containment… mantieni la pagina visibile.';
+    try{
+      const data=await MiraGuiBench.runContainmentExperiment(MiraStudioCompiler,byId('mount'));
+      byId('contain-machine').textContent=JSON.stringify(data);
+      for(const row of data.results){
+        const card=element('section','');card.className='result';
+        card.append(element('h2',row.workload==='all'?'Tutti i pannelli':'Solo ultimo pannello, fuori viewport'));
+        const table=element('table',''),head=element('tr','');
+        for(const title of ['CSS','Update + layout ms','Reveal ms','Skip / campioni'])head.append(element('th',title));
+        table.append(head);
+        for(const [key,m] of Object.entries(row.modes)){
+          const tr=element('tr','');
+          tr.append(element('td',({normal:'Nessuno',contain:'contain: layout paint',auto:'content-visibility: auto'})[key]),
+            element('td',m.update.medianMs.toFixed(3)),element('td',m.reveal.medianMs.toFixed(3)),
+            element('td',m.skippedSamples===null?'n/d':m.skippedSamples+'/'+data.samples));
+          table.append(tr);
+        }
+        card.append(table,element('p',data.panels+' pannelli × '+data.rows+' testi; '+data.samples+' campioni da '+data.steps+' aggiornamenti. Reveal: scroll e lettura geometrica, non paint.'));
+        results.append(card);
+      }
+      status.textContent='Completato · Mira '+data.version+
+        (!data.supported.auto?' · content-visibility non supportato':'')+
+        (!data.supported.contain?' · contain non supportato':'');
+    }catch(error){
+      byId('contain-machine').textContent=JSON.stringify({ok:false,message:String(error.message??error)});
+      status.textContent='Errore: '+String(error.message??error);
+    }finally{button.disabled=batchButton.disabled=containButton.disabled=false;}
+  });
   button.addEventListener('click',()=>{
     button.disabled=true;status.textContent='Preparazione…';
     setTimeout(execute,20);
