@@ -1,5 +1,5 @@
 {
-  "version": "0.46.0",
+  "version": "0.47.0",
   "features": [
     {
       "id": "values",
@@ -1824,6 +1824,12 @@
       "title": "Validazione runtime dei contratti inferiti JS/PHP",
       "since": "0.46",
       "doc": "docs/type-checker.md#046-validazione-runtime-rpc"
+    },
+    {
+      "id": "type-annotations",
+      "title": "Annotazioni esplicite per parametri, valori e risultati",
+      "since": "0.47",
+      "doc": "docs/type-checker.md#047-annotazioni-esplicite"
     }
   ]
 }
