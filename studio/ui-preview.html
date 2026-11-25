@@ -8,6 +8,15 @@
     :root { font-family: system-ui, sans-serif; color: #1e2529; background: #fffdf7; }
     body { margin: 0; padding: 15px; }
     .mira-ui-column { display: grid; gap: 12px; }
+    .mira-ui-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .mira-ui-control { display: grid; gap: 5px; min-width: 0; }
+    .mira-ui-label { font-size: 14px; font-weight: 700; }
+    .mira-ui-input { box-sizing: border-box; width: 100%; min-width: 0;
+      border: 2px solid #1e2529; border-radius: 8px; background: #fff;
+      padding: 10px; font: inherit; font-size: 16px; color: inherit; }
+    .mira-ui-input:focus-visible { outline: 3px solid #2a8875; outline-offset: 2px; }
+    .mira-ui-check { display: flex; align-items: center; gap: 12px; }
+    .mira-ui-check input { width: 22px; height: 22px; accent-color: #2a8875; }
     .mira-ui-title { margin: 0; font-size: 22px; letter-spacing: -.03em; }
     .mira-ui-text { margin: 0; font-size: 16px; line-height: 1.5; overflow-wrap: anywhere; }
     .mira-ui-button { background: #ff965f; border: 2px solid #1e2529; border-radius: 8px;
