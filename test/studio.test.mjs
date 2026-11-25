@@ -437,7 +437,7 @@ test('0.8 Studio AST exposes Block and resolves repeated _ as one lexical name',
   const parsed = JSON.parse(ast.output).definitions;
   const block = parsed[1].body;
   assert.equal(block.kind,'Block');
-  assert.equal(block.parameter,'_');
+  assert.deepEqual(block.parameters,['_']);
   assert.equal(block.body.kind,'Binary');
   assert.equal(block.body.left.kind,'FieldGet');
   assert.equal(block.body.left.record.kind,'Name');
@@ -449,4 +449,20 @@ test('0.8 Studio AST exposes Block and resolves repeated _ as one lexical name',
   assert.equal(js.ok,true,js.message);
   assert.equal(php.ok,true,php.message);
   assert.equal(runInNewContext(js.output+'\nresult',{}),60);
+});
+
+test('0.9 AST exposes multiple block parameters and preserves prior unary blocks', () => {
+  const source='numbers = [1,2,3]; reducer = {total, item | total + item}; result = 0;';
+  const ast=bridge.ast(source);
+  assert.equal(ast.ok,true,ast.message);
+  const block=JSON.parse(ast.output).definitions[1].body;
+  assert.equal(block.kind,'Block');
+  assert.deepEqual(block.parameters,['total','item']);
+  assert.equal(block.body.kind,'Binary');
+  assert.equal(block.body.left.kind,'Name');
+  assert.equal(block.body.right.kind,'Name');
+  for (const target of ['js','php']) {
+    const compiled=bridge.compile(source,target);
+    assert.equal(compiled.ok,true,compiled.message);
+  }
 });

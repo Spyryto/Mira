@@ -633,3 +633,31 @@ test('block parameters are locally bound, while unbound variables remain errors'
     assert.match(error.stderr, expected,source);
   }
 });
+
+test('multi-parameter blocks remain distinct from records, preserve closure capture and reject unary pipeline use', () => {
+  const success = [
+    ['a value = {left: 2, right: 3}; result = a value ~ left;', '2'],
+    ['result = 5 >> {_ | _ * 2};', '10'],
+    ['result = 10 >> {outer | outer >> {inner | inner + outer}};', '20'],
+    ['result = 2 >> {_ | _ + _};', '4'],
+    ['result = 5 >> {value | value + 1};', '6']
+  ];
+  for (const [source, expected] of success)
+    for (const target of ['js','php'])
+      assert.equal(run(source,target),expected,source+' / '+target);
+
+  const errors = [
+    ['result = 5 >> {left, right | left + right};', /Pipeline needs a unary block/],
+    ['result = {a, a | a};', /Duplicate or conflicting block parameter/],
+    ['result = {a b, aB | a b + aB};', /Duplicate or conflicting block parameter/],
+    ['result = {__, __ | __};', /Duplicate or conflicting block parameter/],
+    ['result = {__miraHost, value | value};', /Reserved block parameter/],
+    ['result = {a, b | a + unknown};', /Unknown identifier|Unbound/],
+    ['result = {a, b | a + b; };', /Expected }/]
+  ];
+  for (const [source, diagnostic] of errors) {
+    const failure = compileError(source);
+    assert.notEqual(failure.status,0,source);
+    assert.match(failure.stderr,diagnostic,source);
+  }
+});
