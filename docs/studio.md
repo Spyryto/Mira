@@ -434,3 +434,13 @@ l'adapter RPC condiviso e accetta ledger.command e ledger.quote.
 Il primo conserva il contratto di revisione e persistenza del registro;
 il secondo è un calcolo stateless. Non occorre un nuovo endpoint PHP
 per ciascun metodo. Vedi [protocollo e limiti](browser-interop.md#mira-037-rpc-json).
+
+## Dichiarazione dei servizi (0.38)
+
+Il registro full-stack usa `examples/fullstack/services.mira` come unica
+fonte delle registrazioni RPC. `npm run build:fullstack` genera
+`public/rpc-bindings.js` e `private/rpc-methods.php`. Il pulsante
+Calcola preventivo usa il secondo servizio direttamente da Mira, senza
+modificare il modello persistente. La CI verifica anche i contratti
+invalidi e la determinazione dell'output.
+Vedi [contratti RPC](browser-interop.md#mira-038-contratti-di-servizio).
