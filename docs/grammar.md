@@ -1,4 +1,4 @@
-# Mira 0.11: executable subset and grammar boundaries
+# Mira 0.12: executable subset and grammar boundaries
 
 This file documents the parser's **implemented** boundaries. It is a readable
 grammar sketch, not a separate parser generator or a promise of accepted syntax.
@@ -160,7 +160,8 @@ più espressioni compare `Steps(expressions)` sotto `Block`.
 Le espressioni precedenti vengono valutate e scartate:
 il valore dell'ultima è il risultato del blocco.
 Il codice generato usa funzioni native JS/PHP e mantiene
-la cattura lessicale. Definizioni locali, assegnazioni e
+la cattura lessicale. Da Mira 0.12 sono possibili definizioni locali immutabili prima
+dell'ultima espressione. Le riassegnazioni, la mutabilità e
 `return` esplicito non sono ancora previsti.
 
 `{hours: 2}` è un record; `{item | item + 1}` è un blocco.
@@ -234,3 +235,27 @@ Vedi [i casi d'uso verificati](structured-data.md).
   predicato Mira su ogni elemento della collezione.
 
 [Language Tour 0.4](mira04.md).
+
+## Valori locali immutabili (Mira 0.12)
+
+Un blocco accetta definizioni seguite da un'espressione finale:
+
+```mira
+result = 4 >> {x |
+  doubled = x * 2;
+  doubled + x
+};
+```
+
+Sintassi: `nome = espressione;` dentro il corpo del blocco,
+seguita da almeno un'espressione finale. L'inizializzatore si
+risolve prima che il nome diventi visibile. Ogni valore locale è
+visibile soltanto nel proprio blocco, nelle espressioni successive
+e nei blocchi annidati. Non sono ammesse riassegnazioni o
+ridefinizioni di nomi già visibili.
+
+Il nodo `Local(name,value)` è contenuto in `Steps`.
+Il compilatore genera `const` su JS e variabili PHP ordinarie
+con regole d'immutabilità verificate nel frontend. Il calcolo
+delle catture nelle closure PHP considera l'ordine delle
+definizioni locali, preservando lo scoping lessicale.

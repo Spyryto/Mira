@@ -52,6 +52,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Accesso `~` prima dell'aritmetica | `0.10` | [Dettagli](docs/reference/language.md#feature-field-precedence) |
 | ✅ | Blocchi diretti negli argomenti dei selettori | `0.10` | [Dettagli](docs/reference/language.md#feature-bare-block-arguments) |
 | ✅ | Blocchi con espressioni in sequenza | `0.11` | [Dettagli](docs/reference/language.md#feature-block-steps) |
+| ✅ | Valori locali immutabili nei blocchi | `0.12` | [Dettagli](docs/reference/language.md#feature-local-values) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
@@ -65,7 +66,7 @@ Nessuna versione è assegnata finché non esiste un'implementazione verificata.
 
 | Stato | Funzionalità | Prima versione | Documentazione |
 | :---: | --- | :---: | --- |
-| ⬜ | Blocchi con più istruzioni e definizioni locali | — | [Decisioni aperte](docs/decisions.md#open-questions) |
+| ⬜ | Mutazione e assegnazioni successive nei blocchi | — | [Decisioni aperte](docs/decisions.md#open-questions) |
 | ⬜ | Currying completo e applicazione parziale generalizzata | — | [Decisioni aperte](docs/decisions.md#open-questions) |
 | ⬜ | Tipi dichiarati, record tipizzati e type checker | — | [Proposta di sintassi](docs/syntax.md#proposed-type-declarations-and-mvu-records) |
 | ⬜ | Pattern matching e confronti booleani nel nucleo | — | [Limiti attuali](docs/structured-data.md#limiti-conosciuti) |
@@ -199,6 +200,27 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Documentazione ed esempi di Mira 0.4](docs/mira04.md).
 
+## Mira 0.12: valori locali immutabili nei blocchi
+
+```mira
+result = 4 >> {value |
+  doubled = value * 2;
+  doubled >> {inner | inner + doubled}
+};
+```
+
+Il risultato è **16**. `doubled` viene definito una volta,
+esiste soltanto dentro il blocco ed è catturato dalla closure
+interna. Sono ammessi nomi composti e più definizioni consecutive.
+
+Un nome è visibile solo dopo il proprio inizializzatore. Non sono
+permesse riassegnazioni, duplicati o ridefinizioni di nomi
+già visibili: gli ambiti rimangono espliciti e coerenti tra JS e PHP.
+L'ultima istruzione del blocco deve essere un'espressione di valore.
+Il compilatore emette `const` su JS e verifica staticamente
+l'assenza di riassegnazioni su PHP, dove la variabile è ordinaria.
+Non c'è mutabilità né `return` esplicito.
+
 ## Mira 0.11: più espressioni nello stesso blocco
 
 ```mira
@@ -217,8 +239,8 @@ Un nuovo nodo AST `Steps` rappresenta **soltanto** le sequenze
 con più espressioni. JavaScript e PHP generano funzioni native,
 senza introdurre una VM o una sintassi speciale per il ritorno.
 
-Non ci sono ancora assegnazioni o definizioni locali dentro
-i blocchi: ne progetteremo la semantica separatamente.
+Da Mira 0.12 sono ammesse definizioni locali immutabili.
+Non sono introdotte riassegnazioni o variabili mutabili.
 
 ## Mira 0.10: campi e blocchi con meno parentesi
 
