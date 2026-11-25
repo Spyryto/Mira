@@ -266,3 +266,12 @@ L'anteprima UI nell'iframe, i timeout, gli errori di sintassi JS e
 l'esecuzione PHP nel browser non sono coperti. PHP resta eseguibile
 esternamente: si può confrontare la riga indicata dal suo stack con
 la mappa CLI. Il codice emesso con e senza mappa è identico.
+
+
+## Blocchi senza parametri (Mira 0.14)
+
+Il preset **Blocchi senza parametri · 0.14** crea una closure che
+registra un messaggio solo al momento di `() >> action`, poi restituisce
+42. L'Inspector mostra **Blocco · 0 parametri** e **Apply · 0 argomenti**.
+I blocchi possono contenere più espressioni e valori locali; il compilatore
+emette chiamate native JS/PHP, senza parametri fittizi o runtime aggiuntivo.
