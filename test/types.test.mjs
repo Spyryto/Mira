@@ -45,7 +45,7 @@ test('types: invalid programs are rejected, not coerced',()=>{
     ['xs = select: [1, 2], with: {x | x + 1};',/expected Boolean, got Number/],
     ['x = x;',/recursive value dependency not supported/],
     ['f: x = x >> x;',/infinite type/],
-    ['x = 2;\ny = x + "a";',/at 2:1/]
+    ['x = 2;\ny = x + "a";',/at 2:7/]
   ])assert.throws(()=>check(source),pattern,source);
   assert.throws(()=>check('log 1;',{callables:['log']}),/host type signature required/);
 });
@@ -143,4 +143,43 @@ test('types: scalar constraints resolve through arithmetic and recursive groups'
   assert.equal(result['first:with:'],"('a, 'a) -> Boolean where 'a: ScalarEq");
   assert.equal(result['second:with:'],"('a, 'a) -> Boolean where 'a: ScalarEq");
   assert.equal(result.n,'Boolean');
+});
+
+test('types: CLI reports expression anchors with machine-readable token ranges',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-diagnostics-'));
+  try {
+    const input=join(dir,'program.mira');
+    const cases=[
+      ['x = 1;\ny = x + "a";',2,7,8],
+      ['x = [1, "a"];',1,9,12],
+      ['x = if (1) then 2 else 3;',1,9,10],
+      ['x = if (true) then 1 else "a";',1,27,30],
+      ['x = {a: 1} ~ missing;',1,14,21],
+      ['x = () >> {|\n  a = 2;\n  a + "x"\n};',3,5,6],
+      ['f: x = x;\ny = f: (1 + "a");',2,11,12],
+      ['f = (_ + "a");',1,8,9],
+      ['a = 1 + 2;\nb = 1 + "x";',2,7,8]
+    ];
+    for(const [source,line,column,endColumn] of cases){
+      writeFileSync(input,source);
+      const r=spawnSync('node',['dist/mira.cjs',input,'--check-json'],{encoding:'utf8'});
+      assert.equal(r.status,1,source+' '+r.stderr);
+      const report=JSON.parse(r.stdout);
+      assert.equal(report.ok,false);
+      const d=report.diagnostics[0];
+      assert.equal(d.code,'type_error');
+      assert.deepEqual([d.line,d.column,d.endLine,d.endColumn],[line,column,line,endColumn],source);
+    }
+    writeFileSync(input,'import "bad.mira";\nx = 1;');
+    writeFileSync(join(dir,'bad.mira'),'f: x = x + "a";');
+    let r=spawnSync('node',['dist/mira.cjs',input,'--check-json'],{encoding:'utf8'});
+    assert.equal(r.status,1);
+    const imported=JSON.parse(r.stdout).diagnostics[0];
+    assert.equal(imported.file,'bad.mira');assert.equal(imported.column,10);
+    writeFileSync(input,'x = 1;');
+    r=spawnSync('node',['dist/mira.cjs',input,'--check-json'],{encoding:'utf8'});
+    assert.equal(r.status,0);
+    assert.equal(JSON.parse(r.stdout).types[0].type,'Number');
+    assert.deepEqual(JSON.parse(r.stdout).diagnostics,[]);
+  } finally {rmSync(dir,{recursive:true,force:true});}
 });
