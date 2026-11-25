@@ -920,3 +920,20 @@ test('typed host signatures are available in Studio and keep diagnostics',()=>{
   const invalid=bridge.check('x = 1;',JSON.stringify({types:{fake:'Number'}}));
   assert.equal(invalid.ok,false);assert.equal(invalid.diagnostic.code,'host_type_error');
 });
+
+test('Studio exports deterministic schemas and specializes functions without executing them',()=>{
+  const source='quote: p = {hours: (p ~ hours), total: (p ~ hours * 30)};';
+  const report=bridge.check(source);
+  assert.equal(report.ok,true,report.message);
+  const open=JSON.parse(report.output)[0].schema;
+  assert.equal(open.parameters[0].tail.row,true);
+  assert.deepEqual(open.parameters[0].tail.lacks,['hours']);
+  const args=JSON.stringify([{record:{hours:'Number'}}]);
+  const specialized=bridge.specialize(source,'quote:',args);
+  assert.equal(specialized.ok,true,specialized.message);
+  const sig=JSON.parse(specialized.output).schema;
+  assert.equal(sig.parameters[0].tail,null);
+  assert.deepEqual(sig.result,{kind:'Record',fields:[{name:'hours',type:{kind:'Number'}},{name:'total',type:{kind:'Number'}}],tail:null});
+  assert.equal(bridge.specialize(source,'quote:',JSON.stringify([{record:{hours:'Text'}}])).ok,false);
+  assert.equal(bridge.specialize(source,'missing:',args).ok,false);
+});
