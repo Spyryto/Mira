@@ -324,3 +324,26 @@ dell'operazione remota automatico. La libreria JSON POST si lega a un URL
 scelto dall'host, senza credenziali e senza redirect. Non è ancora un
 protocollo RPC tipizzato né una capability di rete dell'editor sandboxed.
 La demo usa un servizio simulato, non un backend PHP pubblico.
+
+### Collegamento HTTP JS/PHP
+
+`examples/greeting-service.mira` contiene una funzione pura compilabile
+su PHP; `examples/php/greeting.php` è un adattatore HTTP minimale che
+convalida il JSON in ingresso. Per provarlo localmente:
+
+```sh
+npm run build
+node dist/mira.cjs examples/greeting-service.mira php > examples/php/greeting-program.php
+php -S 127.0.0.1:8080 -t examples/php
+```
+
+Un host JS può registrare
+`MiraEffects.jsonService("http://127.0.0.1:8080/greeting.php")`
+come servizio. Il browser richiede stessa origine o CORS esplicitamente
+configurato: il pilota non abilita CORS, autenticazione o accesso pubblico.
+Il test di integrazione usa un server PHP locale e la vera fetch di Node.
+L'endpoint restituisce JSON, non codice eseguibile. La demo Studio rimane
+offline e simulata. Non si presume che ogni record Mira sia serializzabile:
+funzioni e altri valori host non sono ammessi nei payload; PHP distingue
+con difficoltà record vuoti e sequenze vuote, quindi il protocollo generale
+deve ancora definirne la rappresentazione.
