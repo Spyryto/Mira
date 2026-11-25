@@ -1,5 +1,5 @@
 {
-  "version": "0.41.0",
+  "version": "0.42.0",
   "features": [
     {
       "id": "values",
@@ -1794,6 +1794,12 @@
       "title": "Polimorfismo locale e aggiornamento strutturale dei record",
       "since": "0.41",
       "doc": "docs/type-checker.md#041-polimorfismo-locale-e-aggiornamenti"
+    },
+    {
+      "id": "scalar-equality-constraint",
+      "title": "Inferenza vincolata ScalarEq per uguaglianza generica",
+      "since": "0.42",
+      "doc": "docs/type-checker.md#042-vincoli-di-tipo"
     }
   ]
 }
