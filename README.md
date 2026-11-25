@@ -48,6 +48,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Sezioni di operatori | `0.5` | [Dettagli](docs/reference/language.md#feature-operator-sections) |
 | ✅ | Accesso diretto ai campi `~` | `0.6` | [Dettagli](docs/reference/language.md#feature-field-get) |
 | ✅ | Blocchi funzione con parametro | `0.8` | [Dettagli](docs/reference/language.md#feature-blocks) |
+| ✅ | Blocchi con più parametri | `0.9` | [Dettagli](docs/reference/language.md#feature-block-parameters) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
@@ -61,7 +62,7 @@ Nessuna versione è assegnata finché non esiste un'implementazione verificata.
 
 | Stato | Funzionalità | Prima versione | Documentazione |
 | :---: | --- | :---: | --- |
-| ⬜ | Funzioni anonime generali con parametri arbitrari | — | [Decisioni aperte](docs/decisions.md#open-questions) |
+| ⬜ | Blocchi con più istruzioni e definizioni locali | — | [Decisioni aperte](docs/decisions.md#open-questions) |
 | ⬜ | Currying completo e applicazione parziale generalizzata | — | [Decisioni aperte](docs/decisions.md#open-questions) |
 | ⬜ | Tipi dichiarati, record tipizzati e type checker | — | [Proposta di sintassi](docs/syntax.md#proposed-type-declarations-and-mvu-records) |
 | ⬜ | Pattern matching e confronti booleani nel nucleo | — | [Limiti attuali](docs/structured-data.md#limiti-conosciuti) |

@@ -1,5 +1,5 @@
 {
-  "version": "0.8.0",
+  "version": "0.9.0",
   "features": [
     {
       "id": "values",
@@ -300,13 +300,25 @@
       "id": "blocks",
       "title": "Blocchi funzione con parametro",
       "summary": "`{ value | expression }` crea una funzione lessicale applicabile con `>>`.",
-      "details": "I blocchi con un parametro e una sola espressione usano `{ nome | corpo }`, distinti dai record `{campo: valore}`. Il parametro può essere un nome composto o `_`: dentro `{ _ | ... }` tutte le occorrenze di `_` sono la stessa variabile, anziché nuovi placeholder indipendenti. Supportano cattura lessicale, annidamento e passaggio come callback in JS e PHP. Più parametri e più istruzioni saranno valutati in seguito.",
+      "details": "Un blocco è `{parametro | espressione}` con cattura lessicale, distinto dal record `{campo: valore}`. Il parametro può essere un nome composto o `_`; tutte le occorrenze di `_` nel blocco si riferiscono allo stesso argomento. Dalla 0.9 la stessa grammatica ammette anche più parametri separati da virgole (`{total, item | total + item}`), utili come callback di `fold:with:from:`. I blocchi sono closure native JS/PHP. Per ora una sola espressione per corpo.",
       "api": "mira.syntax.Expr.Block",
       "examples": [
         "block-fee",
         "block-filter"
       ],
       "since": "0.8"
+    },
+    {
+      "id": "block-parameters",
+      "title": "Blocchi con più parametri",
+      "summary": "`{total, item | total + item}` è una callback binaria per `fold:with:from:`.",
+      "details": "Una lista di parametri espliciti separati da virgole precede `|`. I nomi possono avere più parole e catturano lessicalmente lo scope esterno. Il parser vieta duplicati, collisioni dopo il mangling e parametri riservati. Il nodo AST Block contiene un array di parametri. Non si introduce currying: `>>` resta applicazione unaria e rifiuta un blocco multi-parametro; i selettori host possono invocarlo con l'arità appropriata.",
+      "api": "mira.syntax.Expr.Block",
+      "examples": [
+        "block-fold-numbers",
+        "block-fold-fees"
+      ],
+      "since": "0.9"
     }
   ],
   "examples": [
@@ -1046,6 +1058,30 @@
             "hours": 2
           }
         ]
+      }
+    },
+    {
+      "id": "block-fold-numbers",
+      "feature": "block-parameters",
+      "title": "Somma di numeri con un blocco binario",
+      "description": "`fold` riceve direttamente `{total, item | total + item}` senza dichiarare un selettore riduttore.",
+      "path": "catalog/examples/block-fold-numbers.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "result",
+        "value": 10
+      }
+    },
+    {
+      "id": "block-fold-fees",
+      "feature": "block-parameters",
+      "title": "Ridurre il compenso di più lezioni",
+      "description": "Un blocco con due parametri accede a due campi del record e accumula il compenso.",
+      "path": "catalog/examples/block-fold-fees.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "result",
+        "value": 120
       }
     }
   ],
