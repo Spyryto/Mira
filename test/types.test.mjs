@@ -920,7 +920,7 @@ test('types: generic sums preserve native representation and typed match on both
   const dir=mkdtempSync(join(tmpdir(),'mira-parametric-sum-'));
   try{
     const input=join(dir,'program.mira');
-    const src='Result (T, E) :: Ok (T) | Err (E); Option (T) :: Some (T) | None; a (Result (Number, Text)) = Ok: 42; b (Result (Number, Text)) = Err: "bad"; empty (Option (Number)) = None; present = Some: 7; read result: r (Result (Number, Text)) = match: r {ok: {n | n}, err: {e | 0}}; read option: o (Option (Number)) = match: o {some: {n | n}, none: {| 0}}; result = [(read result: a), (read result: b), (read option: empty), (read option: present)];';
+    const src='Result (Success Type, Failure Type) :: Ok (Success Type) | Err (Failure Type); Option (element type) :: Some (element type) | None; a (Result (Number, Text)) = Ok: 42; b (Result (Number, Text)) = Err: "bad"; empty (Option (Number)) = None; present = Some: 7; read result: r (Result (Number, Text)) = match: r {ok: {n | n}, err: {e | 0}}; read option: o (Option (Number)) = match: o {some: {n | n}, none: {| 0}}; result = [(read result: a), (read result: b), (read option: empty), (read option: present)];';
     writeFileSync(input,src);
     for(const target of ['js','php']){
       const r=spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
@@ -932,4 +932,22 @@ test('types: generic sums preserve native representation and typed match on both
       assert.deepEqual(JSON.parse(executed.stdout),[{tag:'Ok',value:42},{tag:'Err',value:'bad'},{tag:'None'},{tag:'Some',value:7},[42,0,0,7]]);
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('types: discursive type parameters use ordinary names and declaration-local slots',()=>{
+  const src='Result (Success Type, failure type) :: Ok (Success Type) | Err (failure type); Option (element type) :: Some (element type) | None; Envelope (element type) :: Wrapped (Option (element type)) | Missing; Pair (item type) :: Both ({left: item type, right: item type}) | Neither; a (Result (Number, Text)) = Ok: 42; b (Result (Number, Text)) = Err: "bad"; wrapped = Wrapped: (Some: 3); pair = Both: {left: 1, right: 2}; result = match: a {ok: {n | n}, err: {e | 0}};';
+  const t=check(src);
+  assert.equal(t.a,'Result (Number, Text)');
+  assert.equal(t.b,'Result (Number, Text)');
+  assert.equal(t.wrapped,'Envelope (Number)');
+  assert.equal(t.pair,'Pair (Number)');
+  assert.equal(t.result,'Number');
+  for(const [extra,pattern] of [
+    ['Duplicate (item type, item type) :: One (item type) | Other;',/Invalid or duplicate type parameter/],
+    ['Invalid (item where type) :: One (Number) | Other;',/Invalid or duplicate type parameter/],
+    ['Invalid (Result) :: One (Number) | Other;',/Invalid or duplicate type parameter/],
+    ['Invalid (item type,) :: One (Number) | Other;',/Empty final selector segment/],
+    ['bad (item type) = 1;',/Unknown annotation type item type/],
+    ['bad (Result (Number, Text)) = Err: 1;',/expected Text, got Number/]
+  ])assert.throws(()=>check(src+extra),pattern,extra);
 });
