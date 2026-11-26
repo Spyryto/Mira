@@ -703,7 +703,10 @@ class ExpressionParser {
         if (first.kind == Text) return consume().value;
         if (first.kind != Word) throw new MiraError(diagnostic, first);
         final words:Array<String> = [];
-        while (current().kind == Word) words.push(consume().value);
+        while (current().kind == Word) {
+            if (current().value.indexOf(".") >= 0) throw new MiraError("Quote a record field containing a dot",current());
+            words.push(consume().value);
+        }
         return words.join(" ");
     }
 
