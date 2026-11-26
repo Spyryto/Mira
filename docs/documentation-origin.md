@@ -7,11 +7,11 @@
 
 | Categoria | Parole | Quota | Documenti coinvolti |
 | --- | ---: | ---: | ---: |
-| Generata automaticamente dal tooling | 20.163 | 40,9% | 4 |
-| Redatta con assistenza IA (dichiarata) | 24.291 | 49,3% | 11 |
+| Generata automaticamente dal tooling | 20.163 | 39,5% | 4 |
+| Redatta con assistenza IA (dichiarata) | 25.850 | 50,7% | 12 |
 | Redazione umana dichiarata | 0 | 0,0% | 0 |
-| Provenienza non verificata | 4834 | 9,8% | 3 |
-| **Totale** | **49.288** | **100%** | **17** |
+| Provenienza non verificata | 5006 | 9,8% | 3 |
+| **Totale** | **51.019** | **100%** | **18** |
 
 I documenti coinvolti **non sono sommabili**: per esempio il README contiene
 una sezione generata dal tooling e altre sezioni editoriali. Le percentuali
@@ -24,9 +24,10 @@ arrotondamenti).
 | --- | --- | --- | ---: | --- |
 | [`docs/atlas.md`](../docs/atlas.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 921 | — |
 | [`docs/browser-interop.md`](../docs/browser-interop.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 5295 | — |
-| [`docs/decisions.md`](../docs/decisions.md) | Intero documento | Provenienza non verificata | 857 | — |
+| [`docs/decisions.md`](../docs/decisions.md) | Intero documento | Provenienza non verificata | 916 | — |
+| [`docs/design-notes.md`](../docs/design-notes.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 1439 | — |
 | [`docs/dogfooding.md`](../docs/dogfooding.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 652 | — |
-| [`docs/grammar.md`](../docs/grammar.md) | Intero documento | Provenienza non verificata | 2139 | — |
+| [`docs/grammar.md`](../docs/grammar.md) | Intero documento | Provenienza non verificata | 2252 | — |
 | [`docs/gui-rendering.md`](../docs/gui-rendering.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 2154 | — |
 | [`docs/mira04.md`](../docs/mira04.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 699 | — |
 | [`docs/performance.md`](../docs/performance.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 698 | — |
@@ -37,8 +38,8 @@ arrotondamenti).
 | [`docs/structured-data.md`](../docs/structured-data.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 1617 | — |
 | [`docs/studio.md`](../docs/studio.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 3819 | — |
 | [`docs/syntax.md`](../docs/syntax.md) | Intero documento | Provenienza non verificata | 1838 | — |
-| [`docs/type-checker.md`](../docs/type-checker.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 4219 | — |
-| [`README.md`](../README.md) | Resto del documento | Redatta con assistenza IA (dichiarata) | 4056 | — |
+| [`docs/type-checker.md`](../docs/type-checker.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 4314 | — |
+| [`README.md`](../README.md) | Resto del documento | Redatta con assistenza IA (dichiarata) | 4081 | — |
 | [`README.md`](../README.md) | Sezione generata | Generata automaticamente dal tooling | 886 | `scripts/generate-reference.mjs` |
 
 ## Come interpretare le cifre
@@ -80,5 +81,5 @@ npm run docs
 node scripts/generate-documentation-origin.mjs --check
 ```
 
-Dimensione totale classificata: **368.902 byte UTF-8**,
-in **17 documenti** e **18 sezioni attribuite**.
+Dimensione totale classificata: **381.949 byte UTF-8**,
+in **18 documenti** e **19 sezioni attribuite**.
