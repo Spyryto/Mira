@@ -19,7 +19,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.66.0"
+            version: "0.67.0"
         });
     }
 
@@ -39,7 +39,10 @@ class Bridge {
                 files.set(name, value);
             }
         }
-        return function(name) return files.get(name);
+        return function(name) {
+            if (files.exists(name)) return files.get(name);
+            return files.get(name.split(" / ").join("/") + ".mira");
+        };
     }
 
     public static function compile(source:String, targetName:String, ?hostJson:String,
