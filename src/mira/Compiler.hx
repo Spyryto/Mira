@@ -12,11 +12,12 @@ import mira.emit.SourceLocations.GeneratedLocation;
 
 class Compiler {
     public static function parse(source:String, ?host:HostEnvironment,
-        ?readModule:String->Null<String>, ?entry:String, ?origins:ExpressionOrigins, ?visibility:mira.types.TypeVisibility, ?providers:mira.resolve.ProviderBindings, allowContracts:Bool = false, allowUnbound:Bool = false):Array<Definition> {
+        ?readModule:String->Null<String>, ?entry:String, ?origins:ExpressionOrigins, ?visibility:mira.types.TypeVisibility, ?providers:mira.resolve.ProviderBindings, allowContracts:Bool = false, allowUnbound:Bool = false, ?interfaceData:mira.types.InterfaceReport):Array<Definition> {
         final types = new Map<String,mira.types.Type>();
         final moduleTypes = new Map<String,Map<String,mira.types.Type>>();
         final bindings = new Map<String,Array<mira.resolve.ImportBinding>>();
-        final definitions = Modules.collect(source, readModule, entry,types,moduleTypes,null,bindings,visibility,null,null,providers,allowContracts,allowUnbound);
+        final definitions = Modules.collect(source, readModule, entry,types,moduleTypes,interfaceData == null ? null : interfaceData.publicTypes,bindings,visibility,interfaceData == null ? null : interfaceData.reexports,interfaceData == null ? null : interfaceData.edges,providers,allowContracts,allowUnbound);
+        if (interfaceData != null) interfaceData.moduleTypes = moduleTypes;
         final groups = new Map<String,Array<Definition>>();
         for (definition in definitions) {
             final key = definition.modulePath == null ? "" : definition.modulePath;
@@ -69,6 +70,16 @@ class Compiler {
         final origins = new ExpressionOrigins();
         final visibility = new mira.types.TypeVisibility();
         return new mira.types.TypeChecker(origins,host == null ? HostEnvironment.empty() : host,null,visibility).check(parse(source,host,readModule,entry,origins,visibility,providers,true,true));
+    }
+
+    public static function interfaces(source:String,?host:HostEnvironment,?readModule:String->Null<String>,?entry:String,?providers:mira.resolve.ProviderBindings):Dynamic {
+        final origins = new ExpressionOrigins();
+        final visibility = new mira.types.TypeVisibility();
+        final data = new mira.types.InterfaceReport();
+        final program = parse(source,host,readModule,entry,origins,visibility,providers,true,true,data);
+        final checker = new mira.types.TypeChecker(origins,host == null ? HostEnvironment.empty() : host,null,visibility);
+        final rows = checker.check(program);
+        return data.build(rows,checker,providers);
     }
 
     public static function specialize(source:String,name:String,args:Array<mira.types.Type>,?host:HostEnvironment,

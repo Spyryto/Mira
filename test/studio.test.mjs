@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.76.0');
+  assert.equal(bridge.version, '0.77.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.76.0');
+  assert.equal(bridge.version,'0.77.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1583,4 +1583,28 @@ test('0.76 Studio reports stable generic contract identities across linking and 
     const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
     assert.equal(JSON.stringify(runInNewContext(linked.output+'\n'+name,{})),provider.endsWith('Record Box')?'{"item":7}':'[7]');
   }
+});
+
+
+test('0.77 interface fingerprints are stable across unbound and linked contracts',()=>{
+  const contract='module Services / Box; interface Box (T); Envelope (T) :: {box: Box (T)}; box (T): :: (T) -> Box (T);';
+  const files=JSON.stringify({
+    'Services / Box':contract,
+    'Providers / Record Box':'module Providers / Record Box; implements Services / Box; implementation Box (T) :: {item: T}; box: x = {item: x};',
+    'Providers / List Box':'module Providers / List Box; implements Services / Box; implementation Box (T) :: [T]; box: x = [x];'
+  });
+  const source='module App; interface result; import Services / Box {Box; Envelope; box: ;}; implementation result (Box (Number)) = box: 7;';
+  const snapshot=bindings=>{
+    const r=bridge.interfaces(source,null,files,bindings);
+    assert.equal(r.ok,true,r.message);return JSON.parse(r.output).interfaces;
+  };
+  const a=snapshot();
+  for(const provider of ['Providers / Record Box','Providers / List Box']){
+    const b=snapshot(JSON.stringify({'Services / Box':{provider}}));
+    assert.deepEqual(b.map(x=>[x.module,x.fingerprint,x.canonical]),a.map(x=>[x.module,x.fingerprint,x.canonical]));
+    assert.equal(b.find(x=>x.module==='Services / Box').resolvedModule,provider);
+  }
+  assert.equal(bridge.interfaces(source+' bad = result ~ item;',null,files).ok,false);
+  assert.match(read('module-explorer.html'),/id="interface-snapshot"/);
+  assert.match(read('module-explorer.js'),/MiraStudioCompiler\.interfaces/);
 });

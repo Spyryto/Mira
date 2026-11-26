@@ -664,3 +664,11 @@ qualificazione nominale, con un grant esclusivo per il provider selezionato.
 Il resolver dei valori non cambia; provider non selezionati mantengono
 identità proprie. Test di uguaglianza degli schemi pubblici, isolamento
 tra provider e verifica JS/PHP. Nessuna cache persistente ancora.
+
+## 0.77 — superficie pubblica canonica
+
+InterfaceReport raccoglie i metadati dal resolver durante Compiler.parse,
+usa gli schemi del checker per le firme e per i tipi pubblici e serializza
+solo dati semantici versionati con ordinamento deterministico. SHA-256
+è un'impronta della superficie tipizzata, non una chiave di cache di
+compilazione. L'analisi resta completa; il confronto Studio è in memoria.

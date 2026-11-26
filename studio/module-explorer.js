@@ -146,6 +146,28 @@
   });
   by('provider-js').addEventListener('click',()=>compileProvider('js'));
   by('provider-php').addEventListener('click',()=>compileProvider('php'));
+  let previousSurface=null;
+  by('interface-snapshot').addEventListener('click',()=>{
+    const out=by('interface-fingerprints'),details=by('interface-json');
+    const response=MiraStudioCompiler.interfaces(by('source').value,by('host').value.trim()||null,by('modules').value.trim()||null,by('bindings').value.trim()||null);
+    out.replaceChildren();details.textContent='';
+    if(!response.ok){out.textContent=response.message;return;}
+    const report=JSON.parse(response.output);
+    const next=new Map(report.interfaces.map(m=>[m.module,m]));
+    for(const m of report.interfaces){
+      const previous=previousSurface?.get(m.module);
+      const status=!previousSurface?'Prima analisi':!previous?'Nuova':previous.canonical===m.canonical?'Invariata':'Modificata';
+      const row=append(out,'div',null,'symbol');
+      append(row,'strong',m.module);
+      append(row,'span',status,'tag');
+      append(row,'small',m.fingerprint);
+      if(m.module!==m.resolvedModule)append(row,'small','Provider: '+m.resolvedModule);
+    }
+    if(previousSurface)for(const [name] of previousSurface)if(!next.has(name))append(out,'p',name+' · Rimossa','muted');
+    details.textContent=JSON.stringify(report,null,2);
+    previousSurface=next;
+  });
+  by('interface-reset').addEventListener('click',()=>{previousSurface=null;by('interface-fingerprints').replaceChildren();by('interface-json').textContent='';});
   by('benchmark').addEventListener('click',benchmark);
   by('analyze').addEventListener('click',analyze);
   by('example').addEventListener('click',example);

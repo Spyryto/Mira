@@ -75,10 +75,13 @@ class Main {
             };
             if (checkedFlag >= 0 && args[1] != "js" && args[1] != "php")
                 throw new MiraError("--checked requires a js or php target");
-            if (providers != null && checkedFlag < 0 && args[1] != "--check" && args[1] != "--check-json")
+            if (providers != null && checkedFlag < 0 && args[1] != "--check" && args[1] != "--check-json" && args[1] != "--interfaces")
                 throw new MiraError("--bindings requires --checked or --check/--check-json");
             var output:String;
-            if (args[1] == "--check-json") {
+            if (args[1] == "--interfaces") {
+                if (locationFlag >= 0) throw new MiraError("--locations is not applicable to --interfaces");
+                output = haxe.Json.stringify(Compiler.interfaces(source,host,readModule,entry,providers),null,"  ") + "\n";
+            } else if (args[1] == "--check-json") {
                 if (locationFlag >= 0) throw new MiraError("--locations is not applicable to --check-json");
                 try {
                     output = haxe.Json.stringify({ok:true, types:Compiler.check(source,host,readModule,entry,providers), diagnostics:[]}, null, "  ") + "\n";
@@ -119,7 +122,7 @@ class Main {
 
     static function usage(nodeProcess:Dynamic):Void {
         nodeProcess.stderr.write(
-            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens|--check|--check-json> [output] [--host manifest.json] [--locations] [--checked] [--tree-shake] [--bindings bindings.json]\n"
+            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens|--check|--check-json|--interfaces> [output] [--host manifest.json] [--locations] [--checked] [--tree-shake] [--bindings bindings.json]\n"
         );
         nodeProcess.exitCode = 2;
     }

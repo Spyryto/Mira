@@ -948,6 +948,10 @@ class TypeChecker {
 
     // Canonical, JSON-compatible representation, independent of pretty printing.
     // Variable ids are allocated in traversal order, scoped to one signature.
+    // Public type templates, including unused exported declarations, use the
+    // same schema and opacity rules as checked value/selector signatures.
+    public function publicSchema(type:Type):Dynamic return describe(visibility.view(type,null,prune));
+
     function describe(type:Type, ?ids:Map<Int,Int>):Dynamic {
         final seen = ids == null ? new Map<Int,Int>() : ids;
         return switch (prune(type)) {

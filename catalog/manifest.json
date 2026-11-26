@@ -1,5 +1,5 @@
 {
-  "version": "0.76.0",
+  "version": "0.77.0",
   "features": [
     {
       "id": "values",
@@ -2034,6 +2034,12 @@
       "title": "Identità nominali persistenti dei contratti",
       "since": "0.76",
       "doc": "docs/grammar.md#mira-076-identita-nominali-persistenti-dei-contratti"
+    },
+    {
+      "id": "interface-fingerprints",
+      "title": "Interfacce elaborate e impronte semantiche",
+      "since": "0.77",
+      "doc": "docs/grammar.md#mira-077-impronte-semantiche-delle-interfacce"
     }
   ]
 }
