@@ -70,6 +70,7 @@ class Dependencies {
             case HostCall(_,args) | HostSection(_,args) | Sequence(args) | Record(_,args):
                 for (arg in args) walk(arg,locals,found);
             case FieldGet(receiver,_): walk(receiver,locals,found);
+            case Variant(_,_,payload): if (payload != null) walk(payload,locals,found);
             case Validate(value,_,success,failure):
                 walk(value,locals,found); walk(success,locals,found); walk(failure,locals,found);
             case Conditional(predicate,yes,no):

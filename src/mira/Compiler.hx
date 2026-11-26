@@ -17,6 +17,7 @@ class Compiler {
         final definitions = Modules.collect(source, readModule, entry,types);
         final symbols = new Symbols(definitions, host);
         for (definition in definitions) {
+            if (definition.body != null) continue; // synthesized sum constructor
             final locals = definition.isFunction() ? definition.parameters : [];
             definition.body = new ExpressionParser(definition.bodyTokens, symbols, locals, false, null, origins,types).parse();
         }

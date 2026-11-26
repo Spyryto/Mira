@@ -788,3 +788,43 @@ test('types: fallible numeric validation runs only the selected handler on JS an
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('types: closed nominal sums synthesize typed constructors',()=>{
+  const src='Session :: {user: Text}; Connection :: Disconnected | Connecting | Connected (Session) | Failed (Text); session (Session) = {user: "Ada"}; initial = Disconnected; active connection = Connected: session; failure = Failed: "timeout"; states = [initial, active connection, failure]; identity connection: c (Connection) -> Connection = c; result = identity connection: active connection;';
+  const t=check(src);
+  assert.equal(t.Disconnected,'Connection');
+  assert.equal(t['Connected:'],'(Session) -> Connection');
+  assert.equal(t['Failed:'],'(Text) -> Connection');
+  assert.equal(t.states,'[Connection]');
+  assert.equal(t.result,'Connection');
+  assert.equal(check('Only :: | Single; value = Single;').value,'Only');
+  for(const [extra,pattern] of [
+    ['bad = Connected: "wrong";',/expected Session/],
+    ['bad (Connection) = {tag: "Connected", value: session};',/expected Connection/],
+    ['Other :: Unrelated | Unknown; bad (Connection) = Unrelated;',/expected Connection/],
+    ['bad = active connection ~ tag;',/expected Connection, got \{tag:/],
+    ['Duplicate :: Same | Same;',/Duplicate sum alternative/],
+    ['Empty :: A |;',/Empty sum alternative/],
+    ['Lower :: a | B;',/uppercase/],
+    ['Duplicate Value :: Disconnected | Something;',/Duplicate or conflicting value/],
+    ['Connected: x = x;',/Duplicate or conflicting selector/],
+    ['Tree :: Leaf (Tree) | Empty;',/Unknown annotation type/]
+  ])assert.throws(()=>check(src+extra),pattern,extra);
+});
+test('types: native tagged sum representations agree on JS and PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-sum-'));
+  try{
+    const input=join(dir,'program.mira');
+    const src='Session :: {user: Text}; Connection :: Disconnected | Connected (Session) | Failed (Text); session (Session) = {user: "Ada"}; active connection = Connected: session; failure = Failed: "timeout"; result = [Disconnected, active connection, failure];';
+    writeFileSync(input,src);
+    for(const target of ['js','php']){
+      const r=spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,r.stdout+(target==='js'?'\nconsole.log(JSON.stringify(result));':'\necho json_encode($result);'));
+      const executed=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(executed.status,0,executed.stderr);
+      assert.deepEqual(JSON.parse(executed.stdout),[{tag:'Disconnected'},{tag:'Connected',value:{user:'Ada'}},{tag:'Failed',value:'timeout'}]);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

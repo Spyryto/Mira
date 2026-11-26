@@ -1,5 +1,5 @@
 {
-  "version": "0.57.0",
+  "version": "0.58.0",
   "features": [
     {
       "id": "values",
@@ -1896,6 +1896,12 @@
       "title": "Validazione numerica fallibile con handler tipizzati",
       "since": "0.57",
       "doc": "docs/type-checker.md#057-validazione-fallibile"
+    },
+    {
+      "id": "nominal-sum-types",
+      "title": "Tipi somma nominali chiusi e costruttori",
+      "since": "0.58",
+      "doc": "docs/type-checker.md#058-tipi-somma-nominali"
     }
   ]
 }

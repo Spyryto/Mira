@@ -332,3 +332,56 @@ inlining delle continuazioni solo dopo prove di equivalenza
 (effetti, ordine e singola valutazione). Nessuna promessa di
 zero overhead per casi dinamici. Applicazioni naturali:
 Result, Option, stati di connessione, messaggi ed effetti MVU.
+
+
+## Match — regola di disambiguazione concordata
+
+La graffa a livello zero dopo lo scrutinee di match: apre
+le alternative del costrutto speciale. Una graffa racchiusa
+nelle parentesi dell'argomento appartiene all'espressione
+ordinaria. La decisione deve essere grammaticale, non guidata
+dai tipi inferiti. Esempi:
+
+```mira
+match: connection;
+match: connection, with: handlers;
+match: connection { disconnected: {| 0}, connected: {s | 1} };
+match: (get connection: server) { disconnected: {| 0}, connected: {s | 1} };
+match: (process {connected: {| 1}, disconnected: {| 0}});
+```
+
+Le prime due e l'ultima sono chiamate utente; la terza e
+la quarta sono eliminazioni algebriche. Questa è la regola
+concordata da verificare quando si implementerà match.
+Resta da definire il comportamento per uno scrutinee che
+sia esso stesso un record non parentetizzato e per le
+chiamate con label successive a un argomento complesso.
+
+## 0.58 — primo incremento dei tipi somma
+
+Partiamo da tipi somma nominali chiusi, senza generici o
+ricorsione. Le dichiarazioni con | a livello zero
+sintetizzano costruttori ordinari: una variante senza
+payload è un valore globale, una con payload è un
+selettore unario. Non si introduce un secondo sistema
+di risoluzione dei nomi o un registro runtime.
+
+```mira
+Session :: {user: Text};
+Connection :: Disconnected | Connecting | Connected (Session) | Failed (Text);
+session (Session) = {user: "Ada"};
+initial = Disconnected;
+active connection = Connected: session;
+failure = Failed: "Timeout";
+```
+
+Scelta sperimentale: costruttori con iniziale maiuscola
+e namespace ordinario dei valori/selettori. Il tipo somma
+non è un record strutturale, anche se gli emitter producono
+un record nativo con tag e, se presente, value. Non si può
+costruire un Connection annotando un record arbitrario.
+Questa rappresentazione è una prima scelta interna, non
+un contratto wire stabile. Il prossimo incremento è
+l'eliminazione esaustiva. Qualificazione dei costruttori,
+payload multipli, generici, ricorsione, ottimizzazione e
+collisioni dei nomi nativi PHP restano temi aperti.
