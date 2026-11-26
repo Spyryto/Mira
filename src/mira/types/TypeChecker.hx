@@ -870,7 +870,7 @@ class TypeChecker {
 
     function render(type:Type,names:Map<Int,String>,order:Array<Int>):String {
         return switch (prune(type)) {
-            case NamedType(name,_): name;
+            case NamedType(name,_) | SumType(name,_): name;
             case RefinedType(base,range): render(base,names,order) + " where " + range.predicate();
             case StructuralType(name,_): "~ " + name;
             case NumberType: "Number";
