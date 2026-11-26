@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.52.0');
+  assert.equal(bridge.version, '0.53.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.52.0');
+  assert.equal(bridge.version,'0.53.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1022,4 +1022,14 @@ test('design notebook is generated from project documentation and available offl
   assert.match(notebook,/a \+ b ha tipo Number e intervallo \[0,200\]/);
   assert.ok(notebook.includes('Percentage :: Number where _ &gt;= 0 AND _ &lt;= 100;'));
   assert.ok(notebook.includes('non implementata'));
+});
+
+test('Studio supports portable Integer and its bounded arithmetic proofs',()=>{
+  const src='Retry Count :: Integer where _ >= 0 AND _ <= 3; r (Retry Count) = 2; result (Integer) = r + 1;';
+  const report=bridge.check(src);assert.equal(report.ok,true,report.message);
+  const entries=JSON.parse(report.output);
+  assert.equal(entries.find(x=>x.name==='result').type,'Integer');
+  assert.equal(entries.find(x=>x.name==='result').schema.kind,'Integer');
+  assert.equal(bridge.check(src+'bad (Integer) = 1 / 2;').ok,false);
+  for(const target of ['js','php'])assert.equal(bridge.compile(src,target).ok,true);
 });
