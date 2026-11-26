@@ -452,3 +452,13 @@ Nessuna nuova keyword Result o Option. Il passo futuro
 verso la validazione materializzata dovrà riutilizzare
 questi tipi, senza duplicare le continuazioni o la
 logica dei predicati. Vedi type-checker.md.
+
+
+## 0.60.1 — parametri di tipo discorsivi
+
+Decisione: i parametri di tipo sono identificatori ordinari,
+anche composti da più parole, senza imposizione di PascalCase.
+La virgola delimita i nomi; lo scope resta quello della dichiarazione.
+Si riutilizzano readWords, la separazione delle parti e il parser
+delle annotazioni. Nessuna modifica alla IR o al runtime.
+Il problema generale del mangling dei nomi host resta separato.
