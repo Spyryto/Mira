@@ -13,6 +13,7 @@ typedef ExportReference = {
 // and are handled by the existing definition and expression parsers.
 class ModuleSections {
     public final references:Array<ExportReference> = [];
+    public final signatures:Array<Array<Token>> = [];
     public final typeTokens:Array<Token> = [];
     public final imports:Array<Token> = [];
     public final bodyOffset:Int;
@@ -58,6 +59,8 @@ class ModuleSections {
             if (marker >= 0 && !selector && anchor.kind == Word) {
                 // Nominal definitions in the interface reuse DefinitionParser.
                 for (token in tokens.slice(begin,cursor)) typeTokens.push(token);
+            } else if (marker >= 0 || DefinitionParser.topLevel(item,"(") >= 0) {
+                signatures.push(item);
             } else {
                 final name = reference(item);
                 if (seen.exists(name)) throw new MiraError("Duplicate interface export " + name,anchor);
@@ -76,7 +79,7 @@ class ModuleSections {
             else if (token.isSymbol(":") && words.length > 0) {
                 labels.push(words.join(" "));
                 words = [];
-            } else throw new MiraError("Expected an unannotated export name or selector; explicit signatures are not implemented yet",token);
+            } else throw new MiraError("Expected an unannotated export name or selector",token);
         }
         if (labels.length == 0 && words.length > 0) return words.join(" ");
         if (labels.length > 0 && words.length == 0) return labels.join(":") + ":";
