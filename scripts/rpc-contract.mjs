@@ -38,7 +38,7 @@ const phpArray=value=>{
 };
 // RPC wire subset: closed, first-order data only. The checker, not this
 // generator, specializes and unifies the actual function signature.
-function requirePortable(schema,depth=0){
+export function requirePortable(schema,depth=0){
   if(!schema||depth>30)fail('RPC type exceeds wire depth');
   switch(schema.kind){
     case 'Number': case 'Text': case 'Boolean': return;

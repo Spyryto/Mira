@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { runInNewContext } from 'node:vm';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {generateJsonDecoder} from './json-contract.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const destination = resolve(root, 'dist/studio');
@@ -137,6 +138,15 @@ console.log(`Mira Studio Haxe browser bundle built in ${(performance.now() - sta
 // Compile the fixed, repository-owned pilot; no evaluation of editor code here.
 const context={};
 runInNewContext(readFileSync(resolve(destination,'compiler.js'),'utf8'),context);
+// Generate the decoder schema and host signature from the unbound Mira contract.
+const jsonFile=path=>readFileSync(resolve(root,'lib/json',path),'utf8');
+const jsonSource=jsonFile('App.mira'),jsonModules=JSON.stringify({'Services / Json':jsonFile('Services/Json.mira'),'Providers / Json Native':jsonFile('Providers/Json Native.mira')});
+const jsonReport=context.MiraStudioCompiler.interfaces(jsonSource,null,jsonModules);
+if(!jsonReport.ok)throw Error(jsonReport.message);
+const jsonGenerated=generateJsonDecoder(JSON.parse(jsonReport.output),JSON.parse(jsonFile('decoder.json')));
+const jsonData={source:jsonSource,modules:jsonModules,host:JSON.stringify(jsonGenerated.host,null,2),bindings:JSON.stringify(jsonGenerated.bindings,null,2),decoder:jsonGenerated.decoder};
+writeFileSync(resolve(destination,'json-module-data.js'),'globalThis.MiraJsonModuleData = '+JSON.stringify(jsonData)+';\n');
+copyFileSync(resolve(root,'lib/json/json-host.js'),resolve(destination,'json-host.js'));
 const ledger=context.MiraStudioCompiler.compile(
   readFileSync(resolve(root,'studio/persistent-ledger.mira'),'utf8'),'js',
   JSON.stringify({callables:['render']}));

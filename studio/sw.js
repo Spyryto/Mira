@@ -49,6 +49,8 @@ const ASSETS = [
   './text-module-lab.js',
   './text-module-data.js',
   './text-host.js',
+  './json-module-data.js',
+  './json-host.js',
   './module-explorer.html',
   './module-explorer.js',
   './interface-impact.js',

@@ -1,0 +1,7 @@
+module App;
+interface
+result;
+import Services / Json { decode lesson: ; };
+implementation
+lesson = decode lesson: "{\"name\":\"Ada\",\"hours\":2,\"paid\":false,\"tags\":[\"chitarra\"]}";
+result = {name: (lesson ~ name), total: (lesson ~ hours * 30), paid: (lesson ~ paid), tags: (lesson ~ tags)};

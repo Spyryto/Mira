@@ -1,0 +1,12 @@
+import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
+import {spawnSync} from 'node:child_process';
+import {resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {generateJsonDecoder} from './json-contract.mjs';
+const root=fileURLToPath(new URL('../',import.meta.url));
+const run=spawnSync('node',['dist/mira.cjs','lib/json/App.mira','--interfaces'],{cwd:root,encoding:'utf8'});
+if(run.status!==0)throw Error(run.stderr||String(run.error));
+const config=JSON.parse(readFileSync(resolve(root,'lib/json/decoder.json'),'utf8'));
+const generated=generateJsonDecoder(JSON.parse(run.stdout),config);
+const dest=resolve(root,'dist/json-service');mkdirSync(dest,{recursive:true});
+for(const [name,data] of Object.entries(generated))writeFileSync(resolve(dest,name+'.json'),JSON.stringify(data,null,2)+'\n');

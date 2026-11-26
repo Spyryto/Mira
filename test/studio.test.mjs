@@ -1857,3 +1857,46 @@ test('0.83 Text adapters agree on Unicode scalar values, empty needles and exact
   const invalid=spawnSync('php',['-r','$h=require $argv[1];try{$h["native code points"](hex2bin("eda080"));exit(1);}catch(InvalidArgumentException $e){echo $e->getMessage();}',adapter],{encoding:'utf8'});
   assert.equal(invalid.status,0,invalid.stderr);assert.match(invalid.stdout,/valid Unicode Text/);
 });
+
+test('0.84 generated JSON decoder uses the real contract and validates JS/PHP inputs',async()=>{
+  const ctx={TextEncoder};runInNewContext(read('json-module-data.js'),ctx);
+  const d=ctx.MiraJsonModuleData;
+  const {generateJsonDecoder}=await import('../scripts/json-contract.mjs');
+  const report=bridge.interfaces(d.source,null,d.modules);
+  assert.equal(report.ok,true,report.message);
+  const config=JSON.parse(readFileSync(resolve(root,'lib/json/decoder.json'),'utf8'));
+  const generated=generateJsonDecoder(JSON.parse(report.output),config);
+  assert.deepEqual(JSON.parse(d.host),generated.host);
+  assert.deepEqual(JSON.parse(JSON.stringify(d.decoder)),generated.decoder);
+  const changed=bridge.interfaces(d.source,null,d.modules.replace('hours: Number','hours: Text'));
+  // App uses hours in arithmetic: the real checker must reject this change.
+  assert.equal(changed.ok,false);
+  const valid={name:'Ada',hours:2,paid:false,tags:['chitarra']};
+  const cases=[JSON.stringify(valid),JSON.stringify({...valid,hours:'2'}),JSON.stringify({...valid,extra:true}),JSON.stringify({...valid,tags:[1]}),JSON.stringify({...valid,tags:{}}),JSON.stringify({...valid,tags:[]}),JSON.stringify({...valid,hours:9007199254740992}),JSON.stringify({...valid,name:'\uD800'}),'not json','null','[]','{}',' '.repeat(16385)];
+  runInNewContext(read('effects.js'),ctx);runInNewContext(read('json-host.js'),ctx);
+  const decode=ctx.MiraJsonDecoder.host(d.decoder)[d.decoder.capability];
+  const js=cases.map(raw=>{try{return {ok:true,value:decode(raw)}}catch(e){return {ok:false,error:e.message}}});
+  assert.deepEqual(js.map(x=>x.ok),[true,false,false,false,false,true,false,false,false,false,false,false,false]);
+  const adapter=resolve(root,'lib/json/json-host.php');
+  const code='require $argv[1];$binding=json_decode($argv[2],true,512,JSON_THROW_ON_ERROR);$decode=\\Mira\\Json\\host($binding)[$binding["capability"]];$out=[];foreach(json_decode($argv[3],true,512,JSON_THROW_ON_ERROR) as $raw){try{$out[]=["ok"=>true,"value"=>$decode($raw)];}catch(InvalidArgumentException $e){$out[]=["ok"=>false,"error"=>$e->getMessage()];}}echo json_encode($out,JSON_THROW_ON_ERROR);';
+  const php=spawnSync('php',['-r',code,adapter,JSON.stringify(d.decoder),JSON.stringify(cases)],{encoding:'utf8'});
+  assert.equal(php.status,0,php.stderr);assert.deepEqual(JSON.parse(php.stdout),JSON.parse(JSON.stringify(js)));
+  for(const target of ['js','php']){
+    const out=bridge.compile(d.source,target,d.host,false,d.modules,true,true,d.bindings);assert.equal(out.ok,true,out.message);
+    const name='__miraModule_v_417070202F20726573756C74';
+    const expected={name:'Ada',total:60,paid:false,tags:['chitarra']};
+    if(target==='js'){
+      let response;
+      const worker={TextEncoder,self:{postMessage(v){response=v;}}};
+      worker.importScripts=(...files)=>files.forEach(file=>runInNewContext(read(file.replace('./','')),worker));
+      runInNewContext(read('host-module-worker.js'),worker);worker.self.onmessage({data:{code:out.output,service:'json'}});
+      assert.equal(response.ok,true,response.message);assert.deepEqual(JSON.parse(response.output),expected);
+    }else{
+      const program=out.output.replace(/^<\?php/,'').replace('declare(strict_types=1);','declare(strict_types=1);require $argv[1];$GLOBALS["__miraHost"]=\\Mira\\Json\\host(json_decode($argv[2],true));')+'\necho json_encode($'+name+');';
+      const run=spawnSync('php',['-r',program,adapter,JSON.stringify(d.decoder)],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);assert.deepEqual(JSON.parse(run.stdout),expected);
+    }
+  }
+  const bad=d.source+'\nleak = native decode lesson "x";';assert.equal(bridge.check(bad,d.host,d.modules,d.bindings).ok,false);
+  for(const asset of ['json-module-data.js','json-host.js'])assert.ok(read('sw.js').includes('./'+asset));
+});

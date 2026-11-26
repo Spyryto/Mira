@@ -1,0 +1,6 @@
+{
+  "service": "Services / Json",
+  "selector": "decode lesson:",
+  "provider": "Providers / Json Native",
+  "capability": "native decode lesson"
+}
