@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
 import {mkdtempSync,writeFileSync,rmSync, mkdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
-import {join} from 'node:path';
+import {join,resolve} from 'node:path';
+import {pathToFileURL} from 'node:url';
 function check(source,host){
   const dir=mkdtempSync(join(tmpdir(),'mira-types-'));
   try {
@@ -1855,5 +1856,23 @@ test('0.81 scoped typed host capabilities support statically selected native ada
     }
     writeFileSync(manifest,JSON.stringify({...host,types:{}}));
     assert.notEqual(run('result = 1;',['--check']).status,0);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('0.83 Text service runs on both CLI targets using the reusable native adapters',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-text-'));
+  try{
+    const expected={points:7,contains:true,starts:true,ends:true};
+    const result='__miraModule_v_417070202F20726573756C74';
+    for(const target of ['js','php']){
+      const r=spawnSync('node',['dist/mira.cjs','lib/text/App.mira',target,'--checked','--tree-shake','--host','lib/text/host.json','--bindings','lib/text/bindings.json'],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      const file=join(dir,target==='js'?'out.mjs':'out.php');
+      const js='await import('+JSON.stringify(pathToFileURL(resolve('lib/text/text-host.js')).href)+');\nconst __miraHost=globalThis.MiraTextHost;\n'+r.stdout+'\nconsole.log(JSON.stringify('+result+'));';
+      const php=r.stdout.replace('declare(strict_types=1);','declare(strict_types=1);\n$GLOBALS["__miraHost"]=require $argv[1];')+'\necho json_encode($'+result+');';
+      writeFileSync(file,target==='js'?js:php);
+      const executed=spawnSync(target==='js'?'node':'php',target==='js'?[file]:[file,'lib/text/text-host.php'],{encoding:'utf8'});
+      assert.equal(executed.status,0,executed.stderr);assert.deepEqual(JSON.parse(executed.stdout),expected);
+    }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });

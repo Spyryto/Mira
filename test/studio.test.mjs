@@ -1807,7 +1807,7 @@ test('0.82 Host Module Lab assets, offline navigation and controls are connected
   assert.match(node('status').textContent,/Type check riuscito/);
 });
 
-test('0.83 Text library compiles in CLI and Studio and runs with the actual JS/PHP adapters',()=>{
+test('0.83 Text library compiles in Studio and runs with the actual JS/PHP adapters',()=>{
   const env={};runInNewContext(read('text-module-data.js'),env);const data=env.MiraTextModuleData;
   assert.equal(data.source,readFileSync(resolve(root,'lib/text/App.mira'),'utf8'));
   const expected={points:7,contains:true,starts:true,ends:true};
@@ -1816,8 +1816,6 @@ test('0.83 Text library compiles in CLI and Studio and runs with the actual JS/P
   for(const target of ['js','php']){
     const out=bridge.compile(data.source,target,data.host,false,data.modules,true,true,data.bindings);
     assert.equal(out.ok,true,out.message);
-    const cli=spawnSync('node',['dist/mira.cjs','lib/text/App.mira',target,'--checked','--tree-shake','--host','lib/text/host.json','--bindings','lib/text/bindings.json'],{cwd:root,encoding:'utf8'});
-    assert.equal(cli.status,0,cli.stderr);assert.equal(cli.stdout,out.output);
     if(target==='js'){
       let response;
       const ctx={self:{postMessage(v){response=v;}}};
