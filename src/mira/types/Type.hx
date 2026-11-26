@@ -7,6 +7,7 @@ enum Type {
     // A read-only structural requirement; additional fields are unknown.
     StructuralType(name:String,fields:Map<String,Type>);
     NumberType;
+    IntegerType;
     TextType;
     BooleanType;
     Variable(id:Int);
