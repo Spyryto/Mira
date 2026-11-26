@@ -409,3 +409,12 @@ Per ora tutte le closure sono create; l'inlining e la fusione
 con i costruttori richiedono prove successive di equivalenza.
 La sintassi e il runtime sono distinti dall'eventuale futuro
 match di ML. Vedi type-checker.md; CI richiesta prima del merge.
+
+La prima PR 0.59 è stata sostituita dopo lo squash della
+0.58 perché la base non era integrabile senza conflitti.
+Il nome match è inoltre una keyword PHP 8: non va riservato
+in Mira, ma tradotto deterministicamente nel mangler.
+Il selettore match:with: non richiede una modifica.
+Il test di convivenza deve eseguire il codice effettivo,
+non limitarsi all'inferenza. Questo è un intervento mirato,
+non una soluzione generale ai nomi riservati dei target.
