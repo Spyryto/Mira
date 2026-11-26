@@ -879,7 +879,7 @@ class TypeChecker {
     function describe(type:Type, ?ids:Map<Int,Int>):Dynamic {
         final seen = ids == null ? new Map<Int,Int>() : ids;
         return switch (prune(type)) {
-            case SumType(name,alternatives):
+            case SumType(name,alternatives,arguments):
                 final tags = [for (tag in alternatives.keys()) tag];
                 tags.sort(Reflect.compare);
                 final schema:Dynamic = {kind:"Sum",name:name,alternatives:[for (tag in tags) {
