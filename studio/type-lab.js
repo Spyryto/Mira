@@ -31,6 +31,16 @@
   }
   document.getElementById('checked-js').addEventListener('click',()=>compileChecked('js'));
   document.getElementById('checked-php').addEventListener('click',()=>compileChecked('php'));
+  document.getElementById('reexport-example').addEventListener('click',()=>{
+    host.value='';
+    modules.value=JSON.stringify({
+      'Math / Integer Math':'module Math / Integer Math;\ninterface\nsquare: ;\nadd: by: ;\nimplementation\nsquare: x = x * x;\nadd: x, by: y = x + y;',
+      'Math / API':'module Math / API;\ninterface\nexport Math / Integer Math {\n  square: ;\n  add: by: => somma: a: ;\n};\nimplementation'
+    },null,2);
+    modules.closest('details').open=true;
+    source.value='module App;\n\nimport Math / API {\n  square: ;\n  somma: a: ;\n};\n\nresult = somma: (square: 3), a: 2;';
+    check();
+  });
   document.getElementById('parametric-opaque-example').addEventListener('click',()=>{
     host.value='';
     modules.value=JSON.stringify({'Data / Box':'module Data / Box;\ninterface\nBox (Element Type);\nEnvelope (T) :: {box: Box (T)};\nbox (T): :: (T) -> Box (T);\nitem (T): :: (Box (T)) -> T;\nimplementation\nBox (U) :: {item: U};\nbox: x = {item: x};\nitem: b = b ~ item;'},null,2);
