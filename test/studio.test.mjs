@@ -1356,7 +1356,7 @@ test('0.70.1 Studio compiles optimized virtual modules and reports actual remove
     const b=bridge.compile(src,target,null,true,modules,true,true);
     assert.equal(a.ok,true,a.message);assert.equal(b.ok,true,b.message);
     assert.equal(b.optimization.before,5);assert.equal(b.optimization.after,3);
-    assert.deepEqual(b.optimization.removed,['Core / dead','Core / unused:']);
+    assert.deepEqual(Array.from(b.optimization.removed),['Core / dead','Core / unused:']);
     assert.ok(b.optimization.optimizationMs>=0);
     assert.ok(b.output.length<a.output.length);
     if(target==='js'){
