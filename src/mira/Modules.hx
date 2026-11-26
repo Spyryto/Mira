@@ -67,6 +67,10 @@ class Modules {
             var sections:Null<ModuleSections> = null;
             var publicEnd = -1;
             var inheritedContract:Null<String> = null;
+            // Only the selected provider realizes the contract's nominal identities.
+            // Other concrete implementations retain distinct private instances.
+            var interfaceIdentity:Null<String> = modulePath;
+            final implementationIdentities = new Map<String,String>();
             final publicAliases = new Map<String,mira.types.Type>();
             final privateAliases = new Map<String,mira.types.Type>();
             final imported:Array<ImportBinding> = [];
@@ -100,6 +104,9 @@ class Modules {
                         }
                         sections = contractSections.get(inheritedContract);
                         implementedContracts.set(modulePath,inheritedContract);
+                        final selection = providers == null ? null : providers.get(inheritedContract);
+                        if (selection != null && selection.signatures == null && selection.provider == modulePath)
+                            interfaceIdentity = inheritedContract;
                         // The inherited interface has no import directives yet.
                         offset = declaration.next + 1;
                         if (moduleEdges != null) moduleEdges.push({from:modulePath,to:inheritedContract,kind:"implements",phase:"interface",line:anchor.line,column:anchor.column,file:anchor.file});
@@ -265,8 +272,10 @@ class Modules {
                         throw new MiraError("Opaque type parameter count mismatch for " + name,origin);
                     opaque.set(name,arity);
                     opaqueOrigins.set(name,origin);
-                    final identity = ModuleIdentity.qualify(modulePath,name);
+                    final identity = ModuleIdentity.qualify(interfaceIdentity,name);
+                    implementationIdentities.set(name,identity);
                     visibility.markOpaque(identity);
+                    if (interfaceIdentity != modulePath) visibility.grantRepresentation(identity,modulePath);
                     localTypes.set(name,OpaqueType(identity,[for (i in 0...arity) Variable(-i-1)]));
                 }
                 if (inheritedContract != null) {
@@ -293,14 +302,14 @@ class Modules {
                     explicitSignatures.push(item);
                 }
                 }
-                final constructors = DefinitionParser.parse(sections.typeTokens,localTypes,modulePath);
+                final constructors = DefinitionParser.parse(sections.typeTokens,localTypes,interfaceIdentity);
                 for (name in localTypes.keys()) if (!publicAliases.exists(name) || forwardedTypes.indexOf(name) >= 0) publicTypes.get(modulePath).push(name);
                 publicTypes.get(modulePath).sort(Reflect.compare);
                 signatureTypes = localTypes.copy();
                 // A direct representation alias through a forward opaque reference
                 // can form a cycle. Nested record/list/sum references are finite.
                 for (name in publicTypes.get(modulePath)) switch (localTypes.get(name)) {
-                    case NamedType(_,OpaqueType(other,_)) if (ModuleIdentity.owner(other) == modulePath):
+                    case NamedType(_,OpaqueType(other,_)) if (visibility.ownerOf(other) == modulePath):
                         throw new MiraError("Direct public representation alias to local opaque type is not supported: " + name,tokens[offset]);
                     default:
                 }
@@ -314,7 +323,7 @@ class Modules {
                 if (localTypes.exists(name)) throw new MiraError("Imported type conflicts with local type " + name,tokens[offset]);
                 localTypes.set(name,type);
             }
-            for (d in DefinitionParser.parse(implementation,localTypes,modulePath))
+            for (d in DefinitionParser.parse(implementation,localTypes,modulePath,implementationIdentities))
                 local.push(d);
             if (sections != null) {
                 final byName = new Map<String,Definition>();
@@ -323,7 +332,7 @@ class Modules {
                     if (byName.exists(name)) throw new MiraError("Ambiguous value or type export " + name,opaqueOrigins.get(name));
                     final type = localTypes.get(name);
                     if (type == null) throw new MiraError("Missing opaque type implementation " + name,opaqueOrigins.get(name));
-                    visibility.defineOpaque(ModuleIdentity.qualify(modulePath,name),type);
+                    visibility.defineOpaque(implementationIdentities.get(name),type);
                     signatureTypes.set(name,type);
                 }
                 for (reference in sections.references) {

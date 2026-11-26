@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.75.0');
+  assert.equal(bridge.version, '0.76.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.75.0');
+  assert.equal(bridge.version,'0.76.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1552,4 +1552,35 @@ test('0.75 Module Explorer checks the same consumer before and after selecting a
   const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
   assert.equal(runInNewContext(linked.output+'\n'+name,{}),'db');
   assert.match(read('module-explorer.html'),/id="contract-unbind"/);
+});
+
+
+test('0.76 Studio reports stable generic contract identities across linking and direct selected imports',()=>{
+  const contract='module Services / Box; interface Box (T); Envelope (T) :: {box: Box (T)}; box (T): :: (T) -> Box (T); identity (T): :: (Box (T)) -> Box (T);';
+  const files=JSON.stringify({
+    'Services / Box':contract,
+    'Providers / Record Box':'module Providers / Record Box; implements Services / Box; implementation Box (T) :: {item: T}; box: x = {item: x}; identity: b = b;',
+    'Providers / List Box':'module Providers / List Box; implements Services / Box; implementation Box (T) :: [T]; box: x = [x]; identity: b = b;'
+  });
+  const source='module App; import Services / Box {Box; Envelope; box: ; identity: ;}; n (Box (Number)) = box: 7; e (Envelope (Number)) = {box: n}; result = identity: (e ~ box);';
+  const report=bindings=>{
+    const r=bridge.check(source,null,files,bindings);assert.equal(r.ok,true,r.message);
+    return JSON.parse(r.output).filter(x=>x.module==='App').map(x=>({name:x.name,type:x.type,schema:x.schema}));
+  };
+  const before=report();
+  for(const provider of ['Providers / Record Box','Providers / List Box']){
+    const bindings=JSON.stringify({'Services / Box':{provider}});
+    assert.deepEqual(report(bindings),before);
+    const explored=bridge.exploreModules(source,null,files,bindings);assert.equal(explored.ok,true,explored.message);
+    const info=JSON.parse(explored.output).interfaces.find(x=>x.module===provider);
+    assert.ok(info.typeIdentities.some(x=>x.identity==='Services / Box / Box'&&x.opaque&&x.arity===1));
+    assert.ok(info.opaqueTypes.includes('Box'));
+    const direct=bridge.check(source.replace('import Services / Box','import '+provider),null,files,bindings);
+    assert.equal(direct.ok,true,direct.message);
+    assert.equal(JSON.parse(direct.output).find(x=>x.name==='App / n').schema.name,'Services / Box / Box');
+    assert.equal(bridge.check(source+' invalid (Box (Text)) = n;',null,files,bindings).ok,false);
+    const linked=bridge.compile(source,'js',null,false,files,true,true,bindings);assert.equal(linked.ok,true,linked.message);
+    const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+    assert.equal(JSON.stringify(runInNewContext(linked.output+'\n'+name,{})),provider.endsWith('Record Box')?'{"item":7}':'[7]');
+  }
 });

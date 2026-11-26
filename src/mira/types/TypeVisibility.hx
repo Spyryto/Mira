@@ -11,12 +11,23 @@ class TypeVisibility {
     public final opaqueNames = new Map<String,Bool>();
     var hasOpaque = false;
     final representations = new Map<String,Type>();
+    final representationOwners = new Map<String,String>();
 
     public function new() {}
 
     public function markOpaque(name:String):Void {
         opaqueNames.set(name,true);
         hasOpaque = true;
+    }
+
+    public function ownerOf(name:String):Null<String> {
+        return representationOwners.exists(name) ? representationOwners.get(name) : ModuleIdentity.owner(name);
+    }
+
+    public function grantRepresentation(name:String,owner:String):Void {
+        if (representationOwners.exists(name) && representationOwners.get(name) != owner)
+            throw new MiraError("Conflicting representation owner for " + name);
+        representationOwners.set(name,owner);
     }
 
     public function defineOpaque(name:String,type:Type):Void {
@@ -28,7 +39,7 @@ class TypeVisibility {
     // Do not recursively expand records/sums: nominal recursion stays finite.
     public function reveal(type:Type,owner:Null<String>):Type {
         return switch (type) {
-            case OpaqueType(name,args) if (ModuleIdentity.owner(name) == owner && representations.exists(name)):
+            case OpaqueType(name,args) if (ownerOf(name) == owner && representations.exists(name)):
                 final template = representations.get(name);
                 args.length == 0 ? template : TypeTemplates.apply(template,args);
             default: type;
@@ -40,9 +51,9 @@ class TypeVisibility {
         final t = resolve == null ? type : resolve(type);
         function child(value:Type):Type return view(value,owner,resolve);
         return switch (t) {
-            case NamedType(name,_) if (opaqueNames.exists(name) && ModuleIdentity.owner(name) != owner): OpaqueType(name,[]);
+            case NamedType(name,_) if (opaqueNames.exists(name) && ownerOf(name) != owner): OpaqueType(name,[]);
             case ParametricNamedType(name,_,args) | SumType(name,_,args) | SumReference(name,_,args)
-                if (opaqueNames.exists(name) && ModuleIdentity.owner(name) != owner): OpaqueType(name,[for (a in args) child(a)]);
+                if (opaqueNames.exists(name) && ownerOf(name) != owner): OpaqueType(name,[for (a in args) child(a)]);
             case OpaqueType(name,args): OpaqueType(name,[for (a in args) child(a)]);
             case NamedType(name,base): NamedType(name,child(base));
             case ParametricNamedType(name,base,args): ParametricNamedType(name,child(base),[for (a in args) child(a)]);
