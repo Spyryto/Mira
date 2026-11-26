@@ -45,6 +45,7 @@ class Symbols {
             hostNames.push(Mangle.name(name));
         }
         for (selector in this.environment.selectors) {
+            if (StringTools.startsWith(selector,"validate:")) throw new MiraError("Reserved validation selector " + selector);
             if (seenSelectors.exists(selector)) throw new MiraError("Reserved native selector " + selector);
             seenSelectors.set(selector, true);
             hostNames.push(Mangle.selector(selector.substr(0, selector.length - 1).split(":")));
@@ -62,6 +63,7 @@ class Symbols {
                 ? Mangle.selector(definition.labels) : Mangle.name(definition.name);
 
             if (definition.isFunction()) {
+                if (definition.labels[0] == "validate") throw new MiraError("Reserved validation selector " + identifier,definition.origin);
                 if (seenSelectors.exists(identifier)) {
                     throw new MiraError("Duplicate or conflicting selector " + identifier, definition.origin);
                 }
