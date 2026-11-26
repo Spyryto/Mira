@@ -6,7 +6,6 @@ import mira.lex.Token.TokenKind;
 import mira.syntax.Definition;
 import mira.syntax.DefinitionParser;
 import mira.syntax.ModuleSections;
-import mira.resolve.ModuleIdentity;
 
 // File resolution belongs to the host. The compiler never accesses the
 // filesystem or network, and each source retains its own token coordinates.
