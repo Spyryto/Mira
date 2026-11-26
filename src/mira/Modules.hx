@@ -8,6 +8,9 @@ import mira.syntax.DefinitionParser;
 import mira.syntax.ModuleSections;
 import mira.syntax.ModuleImport;
 import mira.syntax.PublicSignature;
+import mira.types.TypeVisibility;
+import mira.types.Type;
+import mira.resolve.ModuleIdentity;
 import mira.resolve.ImportBinding;
 
 // File resolution belongs to the host. The compiler never accesses the
@@ -16,11 +19,12 @@ class Modules {
     public static function collect(source:String, ?read:String->Null<String>,
         ?entry:String, ?types:Map<String,mira.types.Type>,
         ?moduleTypes:Map<String,Map<String,mira.types.Type>>,
-        ?publicTypes:Map<String,Array<String>>, ?bindings:Map<String,Array<ImportBinding>>):Array<Definition> {
+        ?publicTypes:Map<String,Array<String>>, ?bindings:Map<String,Array<ImportBinding>>, ?visibility:TypeVisibility):Array<Definition> {
         if (types == null) types = new Map<String,mira.types.Type>();
         if (moduleTypes == null) moduleTypes = new Map<String,Map<String,mira.types.Type>>();
         if (publicTypes == null) publicTypes = new Map<String,Array<String>>();
         if (bindings == null) bindings = new Map<String,Array<ImportBinding>>();
+        if (visibility == null) visibility = new TypeVisibility();
         final complete = new Map<String,Array<Definition>>();
         final loaded = new Map<String, Bool>();
         final stack:Array<String> = entry == null ? [] : [entry];
@@ -124,7 +128,7 @@ class Modules {
                         if (isType) {
                             if (["Number","Integer","Text","Boolean"].indexOf(item.alias) >= 0)
                                 throw new MiraError("Reserved imported type name " + item.alias,item.origin);
-                            (isPublic ? publicAliases : privateAliases).set(item.alias,moduleTypes.get(path).get(item.name));
+                            (isPublic ? publicAliases : privateAliases).set(item.alias,visibility.view(moduleTypes.get(path).get(item.name),modulePath));
                         } else {
                             imported.push(new ImportBinding(item.alias,d,item.origin));
                         }
@@ -160,12 +164,13 @@ class Modules {
             final localTypes = modulePath == null ? types : moduleTypes.get(modulePath);
             final local:Array<Definition> = [];
             final signatures:Array<PublicSignature> = [];
+            var signatureTypes:Map<String,Type> = null;
             for (name => type in publicAliases) localTypes.set(name,type);
             if (sections != null) {
                 final constructors = DefinitionParser.parse(sections.typeTokens,localTypes,modulePath);
                 for (name in localTypes.keys()) if (!publicAliases.exists(name)) publicTypes.get(modulePath).push(name);
                 publicTypes.get(modulePath).sort(Reflect.compare);
-                for (tokens in sections.signatures) signatures.push(PublicSignature.read(tokens,localTypes));
+                signatureTypes = localTypes.copy();
                 for (d in constructors) {
                     d.isExported = true;
                     local.push(d);
@@ -184,12 +189,26 @@ class Modules {
                     final d = byName.get(reference.name);
                     if (localTypes.exists(reference.name)) {
                         if (d != null) throw new MiraError("Ambiguous value or type export " + reference.name,reference.origin);
-                        throw new MiraError("Opaque type exports are not implemented yet: " + reference.name,reference.origin);
+                        if (publicAliases.exists(reference.name) || privateAliases.exists(reference.name))
+                            throw new MiraError("Cannot re-export imported type " + reference.name,reference.origin);
+                        if (publicTypes.get(modulePath).indexOf(reference.name) >= 0)
+                            throw new MiraError("Duplicate interface export " + reference.name,reference.origin);
+                        final type = localTypes.get(reference.name);
+                        switch (type) {
+                            case NamedType(_,_) | SumType(_,_,[]):
+                            default: throw new MiraError("Opaque exports currently require a non-parametric nominal type",reference.origin);
+                        }
+                        visibility.markOpaque(ModuleIdentity.qualify(modulePath,reference.name));
+                        publicTypes.get(modulePath).push(reference.name);
+                        signatureTypes.set(reference.name,type);
+                        continue;
                     }
                     if (d == null) throw new MiraError("Unknown interface export " + reference.name,reference.origin);
                     if (d.isExported) throw new MiraError("Duplicate interface export " + reference.name,reference.origin);
                     d.isExported = true;
                 }
+                publicTypes.get(modulePath).sort(Reflect.compare);
+                for (tokens in sections.signatures) signatures.push(PublicSignature.read(tokens,signatureTypes));
                 for (signature in signatures) {
                     final d = byName.get(signature.name);
                     if (localTypes.exists(signature.name))
@@ -201,6 +220,9 @@ class Modules {
                 }
             }
             if (modulePath != null) {
+                for (name in localTypes.keys())
+                    if (!publicAliases.exists(name) && !privateAliases.exists(name) && publicTypes.get(modulePath).indexOf(name) < 0)
+                        visibility.privateNames.set(ModuleIdentity.qualify(modulePath,name),true);
                 for (d in local) if (!d.isStatement && aliasNames.exists(d.isFunction() ? d.selector() : d.name))
                     throw new MiraError("Imported name conflicts with local declaration " + (d.isFunction() ? d.selector() : d.name),d.origin);
                 // Type aliases and local type declarations cannot silently collide with imported values.
