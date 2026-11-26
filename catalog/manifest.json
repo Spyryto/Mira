@@ -1,5 +1,5 @@
 {
-  "version": "0.75.0",
+  "version": "0.76.0",
   "features": [
     {
       "id": "values",
@@ -2028,6 +2028,12 @@
       "title": "Verifica statica dei contratti senza provider",
       "since": "0.75",
       "doc": "docs/grammar.md#mira-075-verifica-di-contratti-senza-provider"
+    },
+    {
+      "id": "persistent-contract-type-identities",
+      "title": "Identità nominali persistenti dei contratti",
+      "since": "0.76",
+      "doc": "docs/grammar.md#mira-076-identità-nominali-persistenti-dei-contratti"
     }
   ]
 }
