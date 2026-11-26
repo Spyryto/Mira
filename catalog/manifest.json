@@ -1,5 +1,5 @@
 {
-  "version": "0.60.2",
+  "version": "0.61.0",
   "features": [
     {
       "id": "values",
@@ -1926,6 +1926,12 @@
       "title": "Protezione statica dei nomi nativi dei target",
       "since": "0.60.2",
       "doc": "docs/type-checker.md#0602-protezione-dei-nomi-host"
+    },
+    {
+      "id": "explicit-generic-functions",
+      "title": "Funzioni parametriche esplicite con nomi discorsivi",
+      "since": "0.61",
+      "doc": "docs/type-checker.md#061-funzioni-parametriche-esplicite"
     }
   ]
 }

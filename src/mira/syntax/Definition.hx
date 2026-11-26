@@ -11,6 +11,7 @@ class Definition {
     public final origin:Token;
     public final parameterOrigins:Array<Token>;
     public final isStatement:Bool;
+    public var typeParameters:Array<String> = [];
     public var parameterAnnotations:Array<Null<Type>> = [];
     public var resultAnnotation:Null<Type> = null;
     public var resultAnnotationOrigin:Null<Token> = null;
