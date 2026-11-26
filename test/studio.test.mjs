@@ -1662,3 +1662,42 @@ test('0.78 provider swap changes linking metadata without changing the contract 
   assert.deepEqual(impact.affected,[]);
   assert.equal(impact.incomplete,false);
 });
+
+test('0.79 separates source changes, public interfaces and selected links',()=>{
+  const env={};runInNewContext(read('interface-impact.js'),env);
+  const compare=(a,b,ac,bc)=>JSON.parse(JSON.stringify(env.MiraInterfaceImpact.compare(a,b,ac,bc)));
+  const contract='module Services / Storage; interface read: :: (Number) -> Number;';
+  const files={
+    'Services / Storage':contract,
+    'Providers / Memory':'module Providers / Memory; implements Services / Storage; implementation read: x = x + 1;',
+    'Providers / Native':'module Providers / Native; implements Services / Storage; implementation read: x = x + 2;',
+    'Unused':'module Unused; unused = 1;'
+  };
+  const source='module App; interface result; import Services / Storage {read: ;}; implementation result = read: 1;';
+  const binding=provider=>JSON.stringify({'Services / Storage':{provider}});
+  const snapshot=(src,modules,provider)=>{
+    const r=bridge.interfaces(src,null,JSON.stringify(modules),binding(provider));assert.equal(r.ok,true,r.message);
+    return JSON.parse(r.output);
+  };
+  const a=snapshot(source,files,'Providers / Memory');
+  assert.deepEqual(a.sourceInputs.reads.map(x=>x.path).sort(),['Providers / Memory','Services / Storage']);
+  assert.match(a.sourceInputs.entry,/^[a-f0-9]{64}$/);
+  const unused=snapshot(source,{...files,Unused:'module Unused; unused = 2;'},'Providers / Memory');
+  assert.deepEqual(compare(a,unused).sources,{entryChanged:false,changed:[],added:[],removed:[]});
+  const b=snapshot(source,{...files,'Providers / Memory':files['Providers / Memory'].replace('x + 1','x + 9')},'Providers / Memory');
+  assert.deepEqual(compare(a,b).changed,[]);
+  assert.deepEqual(compare(a,b).sources.changed,['Providers / Memory']);
+  assert.deepEqual(compare(a,b).linking,[]);
+  const entry=snapshot(source.replace('read: 1','read: 4'),files,'Providers / Memory');
+  assert.equal(compare(a,entry).sources.entryChanged,true);
+  assert.deepEqual(compare(a,entry).changed,[]);
+  const c=snapshot(source,files,'Providers / Native');
+  const delta=compare(a,c,{host:null,bindings:binding('Providers / Memory')},{host:'{}',bindings:binding('Providers / Native')});
+  assert.deepEqual(delta.changed,[]);
+  assert.deepEqual(delta.linking,['Services / Storage']);
+  assert.deepEqual(delta.sources.added,['Providers / Native']);
+  assert.deepEqual(delta.sources.removed,['Providers / Memory']);
+  assert.equal(delta.hostChanged,true);
+  assert.equal(delta.bindingsChanged,true);
+  assert.equal(compare(null,a).sources,null);
+});

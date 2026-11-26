@@ -76,10 +76,21 @@ class Compiler {
         final origins = new ExpressionOrigins();
         final visibility = new mira.types.TypeVisibility();
         final data = new mira.types.InterfaceReport();
-        final program = parse(source,host,readModule,entry,origins,visibility,providers,true,true,data);
+        // Observe actual resolver reads, including inherited contracts and
+        // legacy files. No second read, file access or new cache.
+        final reads:Array<{path:String,fingerprint:String}> = [];
+        var trackedRead:String->Null<String> = null;
+        if (readModule != null) trackedRead = function(path:String):Null<String> {
+            final text = readModule(path);
+            if (text != null) reads.push({path:path,fingerprint:haxe.crypto.Sha256.encode(text)});
+            return text;
+        };
+        final program = parse(source,host,trackedRead,entry,origins,visibility,providers,true,true,data);
         final checker = new mira.types.TypeChecker(origins,host == null ? HostEnvironment.empty() : host,null,visibility);
         final rows = checker.check(program);
-        return data.build(rows,checker,providers);
+        final report:Dynamic = data.build(rows,checker,providers);
+        report.sourceInputs = {entry:haxe.crypto.Sha256.encode(source),reads:reads};
+        return report;
     }
 
     public static function specialize(source:String,name:String,args:Array<mira.types.Type>,?host:HostEnvironment,

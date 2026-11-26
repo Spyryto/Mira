@@ -1766,3 +1766,24 @@ test('0.77 canonical public interface fingerprints ignore private changes and de
     assert.equal(facade.surface.symbols[0].schema.result.kind,'Text');
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('0.79 interface reports hash the entry and the exact resolver reads independently of public surfaces',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-interface-inputs-'));
+  try{
+    const input=join(dir,'program.mira');
+    const source='module App; interface result; import Core {rate;}; implementation result = rate;';
+    const core='module Core; interface rate (Number); implementation rate = 2;';
+    const hash=text=>createHash('sha256').update(text).digest('hex');
+    writeFileSync(input,source);writeFileSync(join(dir,'Core.mira'),core);
+    writeFileSync(join(dir,'Unused.mira'),'module Unused; x = 3;');
+    const run=()=>{const r=spawnSync('node',['dist/mira.cjs',input,'--interfaces'],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);return JSON.parse(r.stdout);};
+    const first=run();
+    assert.deepEqual(first.sourceInputs,{entry:hash(source),reads:[{path:'Core',fingerprint:hash(core)}]});
+    const changed=core.replace('rate = 2','rate = 9');
+    writeFileSync(join(dir,'Core.mira'),changed);
+    const second=run();
+    assert.equal(second.sourceInputs.reads[0].fingerprint,hash(changed));
+    assert.deepEqual(second.interfaces.map(x=>x.fingerprint),first.interfaces.map(x=>x.fingerprint));
+    assert.equal(second.sourceInputs.entry,first.sourceInputs.entry);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

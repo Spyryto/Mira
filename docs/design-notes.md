@@ -689,3 +689,7 @@ La correttezza prevale sulle ottimizzazioni. Ogni incremento: test positivi e ne
 ## 0.78 — impatto potenziale delle modifiche pubbliche
 
 Il report delle interfacce espone anche le direttive di dipendenza già raccolte dal resolver, fuori dalla superficie hashata. Studio confronta due report riusciti, distingue aggiunte, rimozioni, modifiche di schema e cambio di provider, e percorre gli archi inversi logici di entrambi i grafi. I consumatori raggiunti sono candidati conservativi alla riverifica, non una decisione di cache. Il cambio di provider è segnalato separatamente per il collegamento. Il compilatore continua a controllare tutto; modifiche private, host, sorgente e opzioni non sono coperte da una semplice impronta.
+
+## 0.79 — distinguere sorgenti, tipi e collegamento
+
+Il report avvolge il resolver già esistente solo nel percorso di introspezione, registrando l'hash del testo realmente consegnato al compilatore. L'ordine delle letture è conservato, anche per richieste ripetute. Non si confondono identità logica del contratto e chiave fisica/logica del resolver. Studio separa cambi di sorgente, impatto potenziale sui tipi e collegamenti effettivamente osservati. Il confronto testuale dei manifest nella sessione è conservativo, non parte di una chiave di cache. Prima di implementare riuso reale, misurare le fasi del compilatore e la dimensione dei progetti applicativi. Nessuna promessa di riuso per modifiche private: codegen, inizializzatori, tree shaking e specializzazione possono richiedere lavoro globale.

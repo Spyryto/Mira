@@ -146,14 +146,15 @@
   });
   by('provider-js').addEventListener('click',()=>compileProvider('js'));
   by('provider-php').addEventListener('click',()=>compileProvider('php'));
-  let previousSurface=null;
+  let previousSurface=null,previousConfig=null;
   by('interface-snapshot').addEventListener('click',()=>{
     const out=by('interface-fingerprints'),details=by('interface-json');
-    const response=MiraStudioCompiler.interfaces(by('source').value,by('host').value.trim()||null,by('modules').value.trim()||null,by('bindings').value.trim()||null);
+    const config={host:by('host').value.trim()||null,bindings:by('bindings').value.trim()||null};
+    const response=MiraStudioCompiler.interfaces(by('source').value,config.host,by('modules').value.trim()||null,config.bindings);
     out.replaceChildren();details.textContent='';
     if(!response.ok){out.textContent=response.message;return;}
     const report=JSON.parse(response.output);
-    const impact=MiraInterfaceImpact.compare(previousSurface,report);
+    const impact=MiraInterfaceImpact.compare(previousSurface,report,previousConfig,config);
     const prior=new Map((previousSurface?.interfaces||[]).map(m=>[m.module,m]));
     for(const m of report.interfaces){
       const previous=prior.get(m.module);
@@ -169,12 +170,21 @@
     if(previousSurface){
       append(out,'p','Altri consumatori potenzialmente interessati: '+(impact.affected.join(', ')||'nessuno'));
       if(impact.providers.length)append(out,'p','Provider cambiati: '+impact.providers.join(', '));
+      if(impact.sources){
+        append(out,'p','Sorgente di ingresso: '+(impact.sources.entryChanged?'modificato':'invariato'));
+        append(out,'p','Sorgenti letti modificati: '+(impact.sources.changed.join(', ')||'nessuno'));
+        if(impact.sources.added.length)append(out,'p','Nuove letture: '+impact.sources.added.join(', '));
+        if(impact.sources.removed.length)append(out,'p','Letture non più necessarie: '+impact.sources.removed.join(', '));
+      }
+      if(impact.linking?.length)append(out,'p','Collegamenti cambiati: '+impact.linking.join(', '));
+      if(impact.hostChanged)append(out,'p','Manifest host modificato: riverifica prudenziale.','muted');
+      if(impact.bindingsChanged)append(out,'p','Configurazione provider modificata: riverifica del collegamento.','muted');
     }
     if(impact.incomplete)append(out,'p','Grafo parziale: dipendenze legacy o non rappresentate.','muted');
     details.textContent=JSON.stringify(report,null,2);
-    previousSurface=report;
+    previousSurface=report;previousConfig=config;
   });
-  by('interface-reset').addEventListener('click',()=>{previousSurface=null;by('interface-fingerprints').replaceChildren();by('interface-json').textContent='';});
+  by('interface-reset').addEventListener('click',()=>{previousSurface=null;previousConfig=null;by('interface-fingerprints').replaceChildren();by('interface-json').textContent='';});
   by('benchmark').addEventListener('click',benchmark);
   by('analyze').addEventListener('click',analyze);
   by('example').addEventListener('click',example);
