@@ -1176,3 +1176,42 @@ Si rinviano alias di tipo arbitrari (es. Box (T) :: T),
 refinement parametrici, ricorsione e proiezione strutturale
 esplicita ~ di un tipo parametrico. L'accesso ai campi di
 un record nominale parametrico è già supportato.
+
+
+## 0.64: tipi somma ricorsivi
+
+```mira
+Tree (Element Type) ::
+  Leaf (Element Type) | Branch ([Tree (Element Type)]);
+
+sum tree: tree (Tree (Number)) -> Number =
+  match: tree {
+    leaf: {n | n},
+    branch: {children |
+      fold: children, with: {acc, child | acc + (sum tree: child)},
+      from: 0
+    }
+  };
+
+a = Branch: [(Leaf: 2), (Branch: [(Leaf: 3), (Leaf: 4)])];
+result = sum tree: a;
+```
+
+Una somma può riferirsi a se stessa nei payload, anche dentro
+liste o record. Per la prima iterazione è ammessa la ricorsione
+nominale diretta e regolare: una somma parametrica deve usare
+gli stessi parametri nello stesso ordine nel riferimento a sé.
+SumReference contiene nome, argomenti e riferimento alla
+tabella della dichiarazione; la tabella viene completata una
+sola volta dal parser. Il riferimento viene espanso di un
+livello solo quando match richiede le alternative. Unificazione,
+sostituzione, inferenza e descrizione JSON non attraversano
+ricorsivamente la tabella; lo schema usa un nodo SumReference
+con nome e argomenti. I payload sono ancora record nativi
+tag/value, senza metadati nominali o nuovi helper a runtime.
+I test verificano costruzioni annidate, match esaustivo,
+invarianza, ricorsione di funzioni a tipo concreto ed emissione
+JS/PHP identica tra checked e unchecked. Restano fuori ricorsione
+mutua tra dichiarazioni, ricorsione non regolare, dichiarazioni
+nominali non somma ricorsive e funzioni esplicitamente generiche
+ricorsive. Non si garantisce terminazione delle funzioni runtime.
