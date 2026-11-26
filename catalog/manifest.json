@@ -1,5 +1,5 @@
 {
-  "version": "0.60.1",
+  "version": "0.60.2",
   "features": [
     {
       "id": "values",
@@ -1920,6 +1920,12 @@
       "title": "Parametri di tipo con nomi discorsivi",
       "since": "0.60.1",
       "doc": "docs/type-checker.md#0601-parametri-di-tipo-discorsivi"
+    },
+    {
+      "id": "host-name-protection",
+      "title": "Protezione statica dei nomi nativi dei target",
+      "since": "0.60.2",
+      "doc": "docs/type-checker.md#0602-protezione-dei-nomi-host"
     }
   ]
 }
