@@ -1019,7 +1019,9 @@ test('design notebook is generated from project documentation and available offl
   assert.ok(read('sw.js').includes("'./design-notes.html'"));
   assert.match(notebook,/Quaderno di progettazione/);
   assert.match(notebook,/Moduli Mira — progetto concordato/);
-  assert.match(notebook,/Stato: progettazione delle interfacce/);
+  assert.match(notebook,/Stato: nucleo modulare, contratti indipendenti e impronte pubbliche implementati/);
+  assert.match(notebook,/Direzione dopo la 0\.77/);
+  assert.match(notebook,/0\.78 — impatto potenziale delle modifiche pubbliche/);
   assert.match(notebook,/module Music \/ Jazz Harmony;/);
   assert.match(notebook,/import Math \/ Floating Point =&gt; Float Num;/);
   assert.match(notebook,/transpose: by: =&gt; trasponi: di:/);

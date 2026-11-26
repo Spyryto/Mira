@@ -141,8 +141,12 @@ test('README feature matrix is generated from the catalog with historical versio
     assert.ok(language.includes('Disponibile dalla versione ' + feature.since),
       'Version missing from generated language tour: ' + feature.id);
   }
-  assert.match(readme, /Funzionalità non ancora implementate/);
-  assert.match(readme, /\| ⬜ \| .* \| — \|/);
+  const editorial = readme.split(end)[1];
+  assert.match(editorial, /### Limiti attuali e funzionalità aperte/);
+  for (const area of ['Tipi','Moduli','Interoperabilità','GUI','Tooling','Sintassi','Metaprogrammazione','Applicazioni']) {
+    assert.ok(editorial.includes('| ' + area + ' |'), 'Missing current limitation: ' + area);
+  }
+  assert.match(editorial, /cache incrementale e compilazione separata non implementate/);
 });
 
 test('generated reference has Haxe API source links and reverse feature references', () => {
