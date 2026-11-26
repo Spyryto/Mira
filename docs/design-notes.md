@@ -565,3 +565,12 @@ L'uguaglianza delle annotazioni ripetute è strutturale per dati anonimi,
 nominale per tipi dichiarati e confronta gli slot generici per posizione.
 Nessun nuovo nodo AST o modifica agli emitter. La verifica delle fughe di
 tipi privati resta separata, insieme all'opacità.
+
+## 0.69 — visibilità nominale e vista opaca
+
+TypeVisibility registra identità private e opache. Una vista del tipo
+attraverso il confine del modulo sostituisce le rappresentazioni opache
+con OpaqueType(name), anche in strutture annidate. Le firme pubbliche
+sono controllate dopo l'inferenza, senza esaminare la rappresentazione
+privata dietro un confine opaco. L'AST runtime e gli emitter non cambiano.
+Prima forma: tipi nominali monomorfi e somme non parametriche.

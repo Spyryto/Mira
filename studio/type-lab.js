@@ -31,6 +31,13 @@
   }
   document.getElementById('checked-js').addEventListener('click',()=>compileChecked('js'));
   document.getElementById('checked-php').addEventListener('click',()=>compileChecked('php'));
+  document.getElementById('opaque-type-example').addEventListener('click',()=>{
+    host.value='';
+    modules.value=JSON.stringify({'Music / Theory':'module Music / Theory;\ninterface\nNote;\nnote: :: (Number) -> Note;\npitch of: :: (Note) -> Number;\nimplementation\nNote :: {pitch: Number};\nnote: n = {pitch: n};\npitch of: n = n ~ pitch;'},null,2);
+    modules.closest('details').open=true;
+    source.value='module App;\n\nimport Music / Theory {\n  Note;\n  note: ;\n  pitch of: ;\n};\n\nn (Note) = note: 7;\nresult = pitch of: n;\n# Prova: leaked = n ~ pitch;';
+    check();
+  });
   document.getElementById('public-signature-example').addEventListener('click',()=>{
     host.value='';
     modules.value='';

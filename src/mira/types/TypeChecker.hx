@@ -35,9 +35,12 @@ class TypeChecker {
     final origins:ExpressionOrigins;
 
     final host:HostEnvironment;
+    final visibility:TypeVisibility;
+    var moduleOwner:Null<String> = null;
 
-    public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.ds.ObjectMap<Dynamic,NumericGuard>) {
+    public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.ds.ObjectMap<Dynamic,NumericGuard>,?visibility:TypeVisibility) {
         this.guards = guards;
+        this.visibility = visibility == null ? new TypeVisibility() : visibility;
         this.origins = origins;
         this.host = host;
     }
@@ -47,6 +50,11 @@ class TypeChecker {
             definitions.set(d.isFunction() ? d.selector() : d.name, d);
         final graph = new Dependencies(program);
         for (group in graph.ordered()) checkGroup(group,graph.recursive(group));
+        for (d in program) if (d.isExported && !d.isStatement) {
+            origin = d.origin;
+            final name = d.isFunction() ? d.selector() : d.name;
+            visibility.requirePublic(inferred.get(name),origin,prune);
+        }
     }
 
     public function check(program:Array<Definition>):Array<Dynamic> {
@@ -54,9 +62,11 @@ class TypeChecker {
         final result:Array<Dynamic> = [];
         for (d in program) {
             origin = d.origin;
+            moduleOwner = d.modulePath;
             final name = d.isStatement ? "<expression>" : d.isFunction() ? d.selector() : d.name;
             final type = d.isStatement ? infer(d.body, new Map<String, LocalScheme>()) : declaration(name);
-            final item:Dynamic = {name:name, type:show(type), schema:describe(type), line:d.origin.line, column:d.origin.column, file:d.origin.file};
+            final exposed = d.isExported ? visibility.view(type,null,prune) : type;
+            final item:Dynamic = {name:name, type:show(exposed), schema:describe(exposed), line:d.origin.line, column:d.origin.column, file:d.origin.file};
             if (d.modulePath != null) {
                 Reflect.setField(item,"module",d.modulePath);
                 Reflect.setField(item,"exported",d.isExported);
@@ -74,6 +84,7 @@ class TypeChecker {
         final d = definitions.get(name);
         if (d == null || !d.isFunction()) throw new MiraError("Unknown Mira function " + name);
         origin = d.origin;
+        moduleOwner = d.isExported ? null : d.modulePath;
         final type = declaration(name);
         final result = call(type,args);
         final signature:Type = FunctionType(args,result);
@@ -136,6 +147,7 @@ class TypeChecker {
             case [Variable(id), Variable(other)] if (rigid.exists(id) && !rigid.exists(other)): bind(other,left);
             case [Variable(id), _]: bind(id,right);
             case [_, Variable(id)]: bind(id,left);
+            case [OpaqueType(x),OpaqueType(y)] if (x == y):
             case [NamedType(x,_),NamedType(y,_)] if (x == y):
             case [SumType(x,_,xs),SumType(y,_,ys)] | [SumReference(x,_,xs),SumReference(y,_,ys)] | [SumType(x,_,xs),SumReference(y,_,ys)] | [SumReference(x,_,xs),SumType(y,_,ys)] | [ParametricNamedType(x,_,xs),ParametricNamedType(y,_,ys)] if (x == y && xs.length == ys.length):
                 for (i in 0...xs.length) unify(xs[i],ys[i]);
@@ -295,14 +307,14 @@ class TypeChecker {
     }
 
     function nominalName(type:Type):Null<String> return switch (prune(type)) {
-        case NamedType(name,_) | SumType(name,_,_) | SumReference(name,_,_) | ParametricNamedType(name,_,_): name;
+        case OpaqueType(name) | NamedType(name,_) | SumType(name,_,_) | SumReference(name,_,_) | ParametricNamedType(name,_,_): name;
         case RefinedType(base,_): nominalName(base);
         default: null;
     };
 
     function ancestor(type:Type,name:String):Bool return switch (prune(type)) {
         case NamedType(n,base): n == name || ancestor(base,name);
-        case SumType(n,_,_) | SumReference(n,_,_) | ParametricNamedType(n,_,_): n == name;
+        case OpaqueType(n) | SumType(n,_,_) | SumReference(n,_,_) | ParametricNamedType(n,_,_): n == name;
         case RefinedType(base,_): ancestor(base,name);
         default: false;
     };
@@ -472,6 +484,7 @@ class TypeChecker {
         for (name in group) {
             final d = definitions.get(name);
             origin = d.origin;
+            moduleOwner = d.modulePath;
             if (recursive && !d.isFunction()) fail("recursive value dependency not supported: " + name);
             // Each synthesized constructor gets its own fresh template instance.
             final constructor:Null<Type> = switch (d.body) {
@@ -511,6 +524,7 @@ class TypeChecker {
         for (name in group) {
             final d = definitions.get(name);
             origin = d.origin;
+            moduleOwner = d.modulePath;
             final scope = new Map<String,LocalScheme>();
             final params:Array<Type> = switch (active.get(name)) {
                 case FunctionType(args,_) if (d.isFunction()): args;
@@ -536,7 +550,7 @@ class TypeChecker {
 
     function declaration(name:String):Type {
         if (active.exists(name)) return active.get(name);
-        if (inferred.exists(name)) return instantiate(inferred.get(name));
+        if (inferred.exists(name)) return visibility.view(instantiate(inferred.get(name)),moduleOwner,prune);
         return fail("unknown declaration " + name);
     }
 
@@ -773,6 +787,10 @@ class TypeChecker {
     // A failed child keeps its own anchor in the exception. A successful
     // child restores the enclosing operator/call before unification.
     function checkValidationInput(actual:Type,required:Type):Void {
+        switch (representation(actual)) {
+            case OpaqueType(name): fail("Cannot validate opaque representation " + name);
+            default:
+        }
         // Even a Text or Boolean input may fail normally. Do not rebrand siblings.
         final identity = nominalName(actual);
         final destination = nominalName(required);
@@ -794,7 +812,7 @@ class TypeChecker {
     }
 
     function matchResult(input:Type,tags:Array<String>,handlers:Array<Expr>,scope:Map<String,LocalScheme>):Type {
-        return switch (TypeTemplates.unfold(representation(input))) {
+        return switch (visibility.view(TypeTemplates.unfold(representation(input)),moduleOwner,prune)) {
             case SumType(name,alternatives,arguments):
                 for (tag in tags) if (!alternatives.exists(tag))
                     fail("Unknown match alternative " + tag + " for " + name);
@@ -928,6 +946,7 @@ class TypeChecker {
                 }]};
                 if (arguments.length > 0) Reflect.setField(schema,"arguments",[for (arg in arguments) describe(arg,seen)]);
                 schema;
+            case OpaqueType(name): {kind:"Opaque",name:name};
             case NamedType(name,base): {kind:"Named",name:name,base:describe(base,seen)};
             case ParametricNamedType(name,base,arguments):
                 {kind:"Named",name:name,arguments:[for (arg in arguments) describe(arg,seen)],base:describe(base,seen)};
@@ -972,7 +991,7 @@ class TypeChecker {
 
     function render(type:Type,names:Map<Int,String>,order:Array<Int>):String {
         return switch (prune(type)) {
-            case NamedType(name,_): name;
+            case OpaqueType(name) | NamedType(name,_): name;
             case ParametricNamedType(name,_,arguments): name + " (" + [for (arg in arguments) render(arg,names,order)].join(", ") + ")";
             case SumType(name,_,arguments) | SumReference(name,_,arguments): name + (arguments.length == 0 ? "" : " (" + [for (arg in arguments) render(arg,names,order)].join(", ") + ")");
             case RefinedType(base,range): render(base,names,order) + " where " + range.predicate();

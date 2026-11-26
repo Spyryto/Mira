@@ -19,7 +19,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.68.0"
+            version: "0.69.0"
         });
     }
 
@@ -127,13 +127,15 @@ class Bridge {
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
             final publicTypes = new Map<String,Array<String>>();
-            final raw = [for (d in mira.Modules.collect(source, resolver(modulesJson),null,null,null,publicTypes)) d.canonical()];
+            final visibility = new mira.types.TypeVisibility();
+            final raw = [for (d in mira.Modules.collect(source, resolver(modulesJson),null,null,null,publicTypes,null,visibility)) d.canonical()];
             final moduleInterfaces:Array<Dynamic> = [];
             final paths = [for (path in publicTypes.keys()) path];
             paths.sort(Reflect.compare);
             for (path in paths) moduleInterfaces.push({
                 module:path,
                 types:publicTypes.get(path),
+                opaqueTypes:[for (name in publicTypes.get(path)) if (visibility.opaqueNames.exists(mira.resolve.ModuleIdentity.qualify(path,name))) name],
                 exports:[for (d in raw) if (d.modulePath == path && d.isExported) {
                     name:d.isFunction() ? d.selector() : d.name,
                     kind:d.isFunction() ? "selector" : "value"

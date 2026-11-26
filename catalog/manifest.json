@@ -1,5 +1,5 @@
 {
-  "version": "0.68.0",
+  "version": "0.69.0",
   "features": [
     {
       "id": "values",
@@ -1974,6 +1974,12 @@
       "title": "Firme pubbliche esplicite e inferite dei moduli",
       "since": "0.68",
       "doc": "docs/grammar.md#mira-068-firme-pubbliche-esplicite-e-inferite"
+    },
+    {
+      "id": "opaque-module-types",
+      "title": "Tipi opachi monomorfi e controllo delle firme pubbliche",
+      "since": "0.69",
+      "doc": "docs/grammar.md#mira-069-tipi-opachi-monomorfi-e-controllo-delle-firme-pubbliche"
     }
   ]
 }
