@@ -1,0 +1,6 @@
+module Providers / Storage Browser;
+implements Services / Storage;
+implementation
+read text: key = browser read text key;
+save text: value, for: key = browser save text: value, for: key;
+remove text: key = browser remove text key;

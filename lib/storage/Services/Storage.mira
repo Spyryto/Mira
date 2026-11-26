@@ -1,0 +1,5 @@
+module Services / Storage;
+interface
+read text: :: (Text) -> [Text];
+save text: for: :: (Text, Text) -> Boolean;
+remove text: :: (Text) -> Boolean;

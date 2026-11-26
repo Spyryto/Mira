@@ -1978,3 +1978,40 @@ test('0.86 native Date adapters agree independent of local timezone',()=>{
   const php=spawnSync('php',['-r',code,resolve(root,'lib/date/date-host.php'),JSON.stringify(requests)],{encoding:'utf8'});
   assert.equal(php.status,0,php.stderr);assert.deepEqual(JSON.parse(php.stdout),js);
 });
+
+test('0.87 Storage static providers and compiled browser program persist across instances',()=>{
+  const ctx={TextEncoder};for(const asset of ['storage-host.js','storage-module-data.js','storage-module-program.js'])runInNewContext(read(asset),ctx);
+  const d=ctx.MiraStorageModuleData;
+  const map=new Map(),storage={getItem:k=>map.get(k)??null,setItem:(k,v)=>map.set(k,v),removeItem:k=>map.delete(k)};
+  const a=ctx.MiraStorageProgram(ctx.MiraStorageHost.browser(storage,'test'));
+  assert.deepEqual(Array.from(a.read('note')),[]);
+  assert.equal(a.save('', 'note'),true);assert.deepEqual(Array.from(a.read('note')),['']);
+  assert.equal(a.save('Caffè 🎸','note'),true);
+  const b=ctx.MiraStorageProgram(ctx.MiraStorageHost.browser(storage,'test'));
+  assert.deepEqual(Array.from(b.read('note')),['Caffè 🎸']);
+  const other=ctx.MiraStorageProgram(ctx.MiraStorageHost.browser(storage,'other'));
+  assert.deepEqual(Array.from(other.read('note')),[]);
+  assert.equal(b.remove('note'),true);assert.equal(b.remove('note'),true);assert.deepEqual(Array.from(a.read('note')),[]);
+  for(const key of ['../x','A','a/b','a\n',''])assert.throws(()=>a.read(key),/invalid_key/);
+  assert.throws(()=>a.save('🎸'.repeat(16385),'note'),/value_too_large/);
+  assert.throws(()=>a.save('\uD800','note'),/invalid_text/);
+  const broken=ctx.MiraStorageProgram(ctx.MiraStorageHost.browser({setItem(){throw Error('quota');}},'test'));
+  assert.throws(()=>broken.save('x','note'),/storage_failure/);
+  for(const [target,binding,expected,absent] of [['js',d.browser,'browser read text','files read text'],['php',d.files,'files read text','browser read text']]){
+    const out=bridge.compile(d.source,target,d.host,false,d.modules,true,true,binding);assert.equal(out.ok,true,out.message);
+    assert.ok(out.output.includes(expected));assert.ok(!out.output.includes(absent));
+  }
+  const reportA=bridge.interfaces(d.source,d.host,d.modules,d.browser),reportB=bridge.interfaces(d.source,d.host,d.modules,d.files);
+  assert.ok(reportA.ok,reportA.message);assert.ok(reportB.ok,reportB.message);
+  const surface=r=>JSON.parse(r.output).interfaces.find(m=>m.module==='Services / Storage').fingerprint;
+  assert.equal(surface(reportA),surface(reportB));
+  assert.equal(bridge.check(d.source+'\nleak = browser read text "note";',d.host,d.modules,d.browser).ok,false);
+  for(const asset of ['storage-host.js','storage-module-data.js','storage-module-program.js','storage-module-lab.js'])assert.ok(read('sw.js').includes('./'+asset));
+  const nodes=new Map();const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',className:'',listeners:{},addEventListener(event,fn){this.listeners[event]=fn;}});return nodes.get(id);};
+  ctx.document={getElementById:node};ctx.window={localStorage:storage};
+  runInNewContext(read('storage-module-lab.js'),ctx);
+  node('storage-key').value='note';node('storage-value').value='prova';node('storage-save').listeners.click();
+  node('storage-value').value='';node('storage-read').listeners.click();
+  assert.equal(node('storage-value').value,'prova');node('storage-remove').listeners.click();node('storage-read').listeners.click();
+  assert.match(node('storage-status').textContent,/assente/);
+});

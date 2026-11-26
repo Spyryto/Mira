@@ -1,0 +1,6 @@
+module Providers / Storage Files;
+implements Services / Storage;
+implementation
+read text: key = files read text key;
+save text: value, for: key = files save text: value, for: key;
+remove text: key = files remove text key;

@@ -1,0 +1,76 @@
+{
+  "callables": [
+    "browser read text",
+    "browser remove text",
+    "files read text",
+    "files remove text"
+  ],
+  "selectors": [
+    "browser save text:for:",
+    "files save text:for:"
+  ],
+  "types": {
+    "browser read text": {
+      "parameters": [
+        "Text"
+      ],
+      "result": {
+        "list": "Text"
+      }
+    },
+    "browser save text:for:": {
+      "parameters": [
+        "Text",
+        "Text"
+      ],
+      "result": "Boolean"
+    },
+    "browser remove text": {
+      "parameters": [
+        "Text"
+      ],
+      "result": "Boolean"
+    },
+    "files read text": {
+      "parameters": [
+        "Text"
+      ],
+      "result": {
+        "list": "Text"
+      }
+    },
+    "files save text:for:": {
+      "parameters": [
+        "Text",
+        "Text"
+      ],
+      "result": "Boolean"
+    },
+    "files remove text": {
+      "parameters": [
+        "Text"
+      ],
+      "result": "Boolean"
+    }
+  },
+  "scopes": {
+    "browser read text": [
+      "Providers / Storage Browser"
+    ],
+    "browser save text:for:": [
+      "Providers / Storage Browser"
+    ],
+    "browser remove text": [
+      "Providers / Storage Browser"
+    ],
+    "files read text": [
+      "Providers / Storage Files"
+    ],
+    "files save text:for:": [
+      "Providers / Storage Files"
+    ],
+    "files remove text": [
+      "Providers / Storage Files"
+    ]
+  }
+}
