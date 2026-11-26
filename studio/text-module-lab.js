@@ -36,4 +36,5 @@
   }
   mount('text',MiraTextModuleData);
   if(globalThis.MiraJsonModuleData)mount('json',MiraJsonModuleData);
+  if(globalThis.MiraDateModuleData)mount('date',MiraDateModuleData);
 })();

@@ -10,6 +10,9 @@ self.onmessage=event=>{
     }else if(event.data?.service==='json'){
       importScripts('./effects.js','./json-host.js','./json-module-data.js');
       host=globalThis.MiraJsonDecoder.host(globalThis.MiraJsonModuleData.decoder);
+    }else if(event.data?.service==='date'){
+      importScripts('./date-host.js');
+      host=globalThis.MiraDateHost;
     }else host=Object.freeze({'native magnitude':Math.abs,'native maximum:and:':Math.max});
     const value=new Function('__miraHost','"use strict";\n'+code+'\nreturn __miraModule_v_417070202F20726573756C74;')(host);
     self.postMessage({ok:true,output:typeof value==='string'?value:JSON.stringify(value)??String(value)});

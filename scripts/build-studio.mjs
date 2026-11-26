@@ -76,6 +76,12 @@ const textData = {source:textFile('App.mira'),
 writeFileSync(resolve(destination,'text-module-data.js'),'globalThis.MiraTextModuleData = '+JSON.stringify(textData)+';\n');
 copyFileSync(resolve(root,'lib/text/text-host.js'),resolve(destination,'text-host.js'));
 
+// Same source and native adapter for CLI and the offline Date lab.
+const dateFile=path=>readFileSync(resolve(root,'lib/date',path),'utf8');
+const dateData={source:dateFile('App.mira'),modules:JSON.stringify({'Services / Date':dateFile('Services/Date.mira'),'Providers / Date Native':dateFile('Providers/Date Native.mira')}),host:dateFile('host.json'),bindings:dateFile('bindings.json')};
+writeFileSync(resolve(destination,'date-module-data.js'),'globalThis.MiraDateModuleData = '+JSON.stringify(dateData)+';\n');
+copyFileSync(resolve(root,'lib/date/date-host.js'),resolve(destination,'date-host.js'));
+
 // Publish the design notebook from its single Markdown source. It uses a
 // deliberately small, escaped subset: headings, paragraphs and fenced code.
 const notebook = ['docs/design-notes.md', 'docs/module-design.md']

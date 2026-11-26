@@ -1932,3 +1932,20 @@ test('0.85 fallible JSON schema is consistent with direct decoder and rejects di
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('0.86 Date service CLI emits portable date operations without exposing representation',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-date-'));
+  try{
+    const expected={start:'2028-02-28',finish:'2028-03-01',elapsed:2,weekday:3,leap:true,invalid:false};
+    for(const target of ['js','php']){
+      const out=spawnSync('node',['dist/mira.cjs','lib/date/App.mira',target,'--checked','--tree-shake','--host','lib/date/host.json','--bindings','lib/date/bindings.json'],{encoding:'utf8'});
+      assert.equal(out.status,0,out.stderr);
+      const name='__miraModule_v_417070202F20726573756C74',file=join(dir,target==='js'?'out.mjs':'out.php');
+      const js='await import('+JSON.stringify(pathToFileURL(resolve('lib/date/date-host.js')).href)+');\nconst __miraHost=globalThis.MiraDateHost;\n'+out.stdout+'\nconsole.log(JSON.stringify('+name+'));';
+      const php=out.stdout.replace('declare(strict_types=1);','declare(strict_types=1);\n$GLOBALS["__miraHost"]=require $argv[1];')+'\necho json_encode($'+name+');';
+      writeFileSync(file,target==='js'?js:php);
+      const actual=spawnSync(target==='js'?'node':'php',target==='js'?[file]:[file,'lib/date/date-host.php'],{encoding:'utf8'});
+      assert.equal(actual.status,0,actual.stderr);assert.deepEqual(JSON.parse(actual.stdout),expected);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

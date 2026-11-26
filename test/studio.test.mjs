@@ -1932,3 +1932,49 @@ test('0.85 fallible JSON returns typed Result and handles invalid inputs on both
   node('json-fallible').listeners.click();assert.equal(node('json-source').value,d.fallibleSource);
   assert.match(node('json-status').textContent,/Type check riuscito/);
 });
+
+test('0.86 Date opaque service runs on both targets and prevents forged dates',()=>{
+  const ctx={};runInNewContext(read('date-module-data.js'),ctx);const d=ctx.MiraDateModuleData;
+  const report=bridge.check(d.source,d.host,d.modules,d.bindings);assert.equal(report.ok,true,report.message);
+  const expected={start:'2028-02-28',finish:'2028-03-01',elapsed:2,weekday:3,leap:true,invalid:false};
+  for(const target of ['js','php']){
+    const out=bridge.compile(d.source,target,d.host,false,d.modules,true,true,d.bindings);
+    assert.equal(out.ok,true,out.message);
+    if(target==='js'){
+      let response;const worker={self:{postMessage(v){response=v;}}};
+      worker.importScripts=(...files)=>files.forEach(file=>runInNewContext(read(file.replace('./','')),worker));
+      runInNewContext(read('host-module-worker.js'),worker);worker.self.onmessage({data:{code:out.output,service:'date'}});
+      assert.equal(response.ok,true,response.message);assert.deepEqual(JSON.parse(response.output),expected);
+    }else{
+      const code=out.output.replace(/^<\?php/,'').replace('declare(strict_types=1);','declare(strict_types=1);$GLOBALS["__miraHost"]=require $argv[1];')+'\necho json_encode($__miraModule_v_417070202F20726573756C74);';
+      const run=spawnSync('php',['-r',code,resolve(root,'lib/date/date-host.php')],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);assert.deepEqual(JSON.parse(run.stdout),expected);
+    }
+  }
+  for(const bad of ['fake (Date) = {iso: "2027-02-29"};','fake = iso of: "2027-02-29";','fake = start ~ iso;','fake = native checked date "2027-02-29";']){
+    assert.equal(bridge.check(d.source+'\n'+bad,d.host,d.modules,d.bindings).ok,false,bad);
+  }
+  for(const asset of ['date-module-data.js','date-host.js'])assert.ok(read('sw.js').includes('./'+asset));
+  const nodes=new Map();const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',className:'',listeners:{},addEventListener(event,fn){this.listeners[event]=fn;}});return nodes.get(id);};
+  const ui={document:{getElementById:node},MiraStudioCompiler:bridge,TextEncoder};
+  for(const asset of ['text-module-data.js','json-module-data.js','date-module-data.js','text-module-lab.js'])runInNewContext(read(asset),ui);
+  assert.match(node('date-status').textContent,/Type check riuscito/);
+  node('date-php').listeners.click();assert.match(node('date-status').textContent,/riuscita/);
+});
+test('0.86 native Date adapters agree independent of local timezone',()=>{
+  const ctx={};runInNewContext(read('date-host.js'),ctx);const h=ctx.MiraDateHost;
+  const dates=['0001-01-01','0099-12-31','1582-10-10','1900-02-29','2000-02-29','2027-02-29','2028-02-29','9999-12-31','0000-01-01','2026-11-31','2026-1-01','2026-01-01\n','2026-01-01T00:00:00Z',''];
+  const additions=[[1,'0099-12-31'],[2,'2028-02-28'],[-1,'2028-03-01'],[0,'0001-01-01'],[-1,'0001-01-01'],[1,'9999-12-31'],[1.5,'2026-01-01'],[3652058,'0001-01-01'],[3652059,'0001-01-01'],[-3652058,'9999-12-31'],[1,'1900-02-29']];
+  const pairs=[['0001-01-01','9999-12-31'],['2028-03-01','2028-02-28'],['2026-03-29','2026-03-30'],['2026-10-25','2026-10-26']];
+  const run=(name,...args)=>{try{return {ok:true,value:h[name](...args)}}catch(e){return {ok:false,error:e.message}}};
+  const requests=[...dates.flatMap(d=>[['native valid date',d],['native weekday',d]]),...additions.map(a=>['native add days:to:',...a]),...pairs.map(a=>['native days between:and:',...a])];
+  const js=requests.map(([name,...args])=>run(name,...args));
+  assert.equal(run('native weekday','0001-01-01').value,1);
+  assert.equal(run('native add days:to:',3652058,'0001-01-01').value,'9999-12-31');
+  assert.equal(run('native days between:and:','2028-03-01','2028-02-28').value,-2);
+  assert.equal(run('native valid date','1900-02-29').value,false);
+  assert.equal(run('native valid date','2000-02-29').value,true);
+  const code='date_default_timezone_set("America/New_York");$h=require $argv[1];$out=[];foreach(json_decode($argv[2],true,512,JSON_THROW_ON_ERROR) as $req){$name=array_shift($req);try{$out[]=["ok"=>true,"value"=>$h[$name](...$req)];}catch(InvalidArgumentException $e){$out[]=["ok"=>false,"error"=>$e->getMessage()];}}echo json_encode($out,JSON_THROW_ON_ERROR);';
+  const php=spawnSync('php',['-r',code,resolve(root,'lib/date/date-host.php'),JSON.stringify(requests)],{encoding:'utf8'});
+  assert.equal(php.status,0,php.stderr);assert.deepEqual(JSON.parse(php.stdout),js);
+});
