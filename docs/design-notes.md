@@ -235,3 +235,100 @@ strutturati e localizzati, validazione di record e liste,
 composizione/accumulo degli errori, integrazione con GUI
 e confini host/RPC, eliminazione statica di controlli
 espliciti già provati. Vedi type-checker.md.
+
+
+## Selettori con argomenti statici — intuizione concordata
+
+La validazione 0.57 è stata integrata con tutti e tre i workflow
+verdi. L'utente apprezza la forma validate:as:then:else: e le
+continuazioni tipizzate: as: riceve un tipo risolto dal compilatore,
+non un oggetto tipo a runtime. Il tipo determina a sua volta il
+parametro del blocco di successo. Questa è una relazione semantica
+tra argomenti, non una semplice chiamata ordinaria.
+
+Possibile generalizzazione futura: selettori definibili dall'utente
+con argomenti statici, valori runtime e blocchi i cui parametri
+dipendono dagli argomenti statici. Esempi esplorativi, non sintassi
+implementata: decode: json, as: Person; specialize: operation,
+for: Integer; default value of: Window Size. Non introdurre
+riflessione o oggetti tipo a runtime solo per rappresentare tali
+argomenti. Studiare la dichiarazione, risoluzione e specializzazione
+dei selettori prima di scegliere un meccanismo generale.
+
+## Tipi somma e match discorsivo — proposta preferita
+
+L'esperimento con due continuazioni non esclude i tipi somma.
+Sono complementari: il consumo immediato può evitare la
+materializzazione, mentre un valore somma di prima classe
+può essere conservato, trasmesso e composto. Result e Option
+potrebbero essere definiti in libreria sopra tipi somma nominali
+generali, in futuro parametrizzati e ricorsivi. Non è ancora
+decisa la sintassi delle dichiarazioni e dei costruttori.
+
+```mira
+Connection ::
+  Disconnected |
+  Connecting |
+  Connected (Session) |
+  Failed (Text);
+```
+
+Per il consumo esaustivo l'utente propone la seguente forma,
+preferita alla sequenza di label di un selettore ordinario:
+
+```mira
+match: connection {
+  disconnected: {| show login},
+  connecting: {| show spinner},
+  connected: {session | show dashboard: session},
+  failed: {error | show error: error}
+};
+```
+
+Il blocco esterno delimita una struttura di controllo con
+alternative, non un record ordinario di callback. Le graffe
+interne sono normali blocchi Mira. L'eliminatore deve verificare
+staticamente alternative note, mancanti o duplicate, arità e
+tipi dei payload, e compatibilità dei risultati. Lo scrutinee
+è valutato una volta; si esegue soltanto il ramo selezionato.
+
+Alternativa considerata:
+
+```mira
+match: connection, with: {
+  disconnected: {| show login},
+  connecting: {| show spinner},
+  connected: {session | show dashboard: session},
+  failed: {error | show error: error}
+};
+```
+
+Questa seconda forma è indistinguibile in superficie da una
+chiamata ordinaria match:with: a cui si passa un record. La
+prima proposta preserva invece, come obiettivo di design,
+la possibilità di dichiarare sia match: sia match:with: in
+user space. Non riservare globalmente la parola match;
+riconoscere la specifica costruzione grammaticale. Non
+sostituire la normale risoluzione dei selettori.
+
+Questione grammaticale aperta: Mira ammette applicazione per
+giustapposizione anche a blocchi/record. Il parser deve quindi
+distinguere la graffa esterna dal possibile argomento di
+un'espressione callable; la forma speciale potrebbe avere
+priorità quando la graffa è a livello zero dopo lo scrutinee,
+con parentesi esplicite per disambiguare le chiamate utente e
+gli scrutinee complessi. Verificare nel Grammar Lab con il
+parser reale, non dare per risolta l'ambiguità. Anche validate:
+oggi riserva il primo label: una futura generalizzazione dei
+selettori statici potrebbe evitare tale riserva.
+
+Pattern matching ML e narrowing per varianti rimangono
+alternative o estensioni possibili, non prerequisiti del
+match discorsivo. Per la rappresentazione runtime preferire
+dati nativi con discriminante e payload quando il risultato
+deve sopravvivere; quando costruzione ed eliminazione sono
+locali, valutare fusione, eliminazione delle allocazioni e
+inlining delle continuazioni solo dopo prove di equivalenza
+(effetti, ordine e singola valutazione). Nessuna promessa di
+zero overhead per casi dinamici. Applicazioni naturali:
+Result, Option, stati di connessione, messaggi ed effetti MVU.
