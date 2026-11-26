@@ -31,6 +31,45 @@
   }
   document.getElementById('checked-js').addEventListener('click',()=>compileChecked('js'));
   document.getElementById('checked-php').addEventListener('click',()=>compileChecked('php'));
+  function compareTreeShaking(target){
+    const args=[source.value,target,host.value.trim()||null,false,modules.value.trim()||null,true];
+    const times=[[],[]];
+    let a,b;
+    // Alternate order to reduce warm-up bias. Report medians, not guarantees.
+    for(let i=0;i<7;i++){
+      for(const mode of (i%2?[1,0]:[0,1])){
+        const start=performance.now();
+        const response=MiraStudioCompiler.compile(...args,mode===1);
+        times[mode].push(performance.now()-start);
+        if(!response.ok){result.textContent=response.message;return;}
+        if(mode===0)a=response;else b=response;
+      }
+    }
+    const median=xs=>xs.slice().sort((x,y)=>x-y)[3];
+    const bytes=s=>new TextEncoder().encode(s).length;
+    const before=bytes(a.output),after=bytes(b.output);
+    const stats=b.optimization;
+    result.textContent=[
+      'Tree shaking · '+target.toUpperCase(),
+      'Dichiarazioni: '+stats.before+' → '+stats.after+' (−'+stats.removed.length+')',
+      'UTF-8: '+before+' → '+after+' byte (−'+(100*(before-after)/before).toFixed(1)+'%)',
+      'Compilazione checked, mediana 7 iterazioni: '+median(times[0]).toFixed(3)+' → '+median(times[1]).toFixed(3)+' ms',
+      'Passaggio di pruning, ultima iterazione: '+stats.optimizationMs.toFixed(3)+' ms',
+      'Eliminate: '+stats.removed.join(', '),
+      '',b.output
+    ].join('\n');
+  }
+  document.getElementById('tree-shake-js').addEventListener('click',()=>compareTreeShaking('js'));
+  document.getElementById('tree-shake-php').addEventListener('click',()=>compareTreeShaking('php'));
+  document.getElementById('tree-shake-example').addEventListener('click',()=>{
+    host.value='';
+    // Discursive names contain words, not standalone numeric tokens.
+    const names=Array.from({length:40},(_,i)=>'unused value '+String.fromCharCode(97+Math.floor(i/26))+String.fromCharCode(97+i%26)+' = '+i+';').join('\n');
+    modules.value=JSON.stringify({'Math / Library':'module Math / Library;\ninterface\nsquare: ;\nunused: ;\nimplementation\nfactor = 2;\nsquare: x = x * factor;\nunused: x = x * 42;\n'+names},null,2);
+    modules.closest('details').open=true;
+    source.value='module App;\n\nimport Math / Library {\n  square: ;\n  unused: ;\n};\n\nresult = square: 5;';
+    compareTreeShaking('js');
+  });
   document.getElementById('reexport-example').addEventListener('click',()=>{
     host.value='';
     modules.value=JSON.stringify({

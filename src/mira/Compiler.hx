@@ -49,12 +49,13 @@ class Compiler {
     // A distinct checked path preserves byte-for-byte unchecked emission
     // when all obligations are proven. The same parsed AST reaches both phases.
     public static function transpileChecked(source:String,target:Target,?host:HostEnvironment,
-        ?locations:Array<GeneratedLocation>,?readModule:String->Null<String>,?entry:String):String {
+        ?locations:Array<GeneratedLocation>,?readModule:String->Null<String>,?entry:String, ?treeShake:Bool = false, ?optimization:Dynamic):String {
         final origins = new ExpressionOrigins();
         final visibility = new mira.types.TypeVisibility();
-        final definitions = parse(source,host,readModule,entry,origins,visibility);
+        var definitions = parse(source,host,readModule,entry,origins,visibility);
         final guards = new haxe.ds.ObjectMap<Dynamic,mira.types.NumericGuard>();
         new mira.types.TypeChecker(origins,host == null ? HostEnvironment.empty() : host,guards,visibility).check(definitions);
+        if (treeShake) definitions = mira.optimize.TreeShaker.run(definitions,guards,optimization);
         final symbols = new Symbols(definitions,host);
         return switch (target) {
             case JavaScript: JsEmitter.emit(definitions,symbols,locations,guards);

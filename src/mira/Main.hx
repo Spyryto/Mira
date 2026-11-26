@@ -39,6 +39,10 @@ class Main {
             final checkedFlag = args.indexOf("--checked");
             if (checkedFlag >= 0) args.splice(checkedFlag,1);
 
+            final shakeFlag = args.indexOf("--tree-shake");
+            if (shakeFlag >= 0) args.splice(shakeFlag,1);
+            if (shakeFlag >= 0 && checkedFlag < 0) throw new MiraError("--tree-shake requires --checked");
+
             final locationFlag = args.indexOf("--locations");
             if (locationFlag >= 0) args.splice(locationFlag, 1);
 
@@ -75,13 +79,13 @@ class Main {
                 }
             } else if (locationFlag >= 0) {
                 final locations:Array<GeneratedLocation> = [];
-                final code = checkedFlag >= 0 ? Compiler.transpileChecked(source,parseTarget(args[1]),host,locations,readModule,entry)
+                final code = checkedFlag >= 0 ? Compiler.transpileChecked(source,parseTarget(args[1]),host,locations,readModule,entry,shakeFlag >= 0)
                     : Compiler.transpile(source, parseTarget(args[1]), host, locations, readModule, entry);
                 output = haxe.Json.stringify({output: code, locations: locations}, null, "  ") + "\n";
             } else {
                 output = args[1] == "--check" ? haxe.Json.stringify(Compiler.check(source,host,readModule,entry), null, "  ") + "\n"
                     : args[1] == "--tokens" ? Compiler.inspectTokens(source) + "\n"
-                    : checkedFlag >= 0 ? Compiler.transpileChecked(source,parseTarget(args[1]),host,null,readModule,entry)
+                    : checkedFlag >= 0 ? Compiler.transpileChecked(source,parseTarget(args[1]),host,null,readModule,entry,shakeFlag >= 0)
                     : Compiler.transpile(source, parseTarget(args[1]), host, null, readModule, entry);
             }
 
@@ -106,7 +110,7 @@ class Main {
 
     static function usage(nodeProcess:Dynamic):Void {
         nodeProcess.stderr.write(
-            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens|--check|--check-json> [output] [--host manifest.json] [--locations] [--checked]\n"
+            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens|--check|--check-json> [output] [--host manifest.json] [--locations] [--checked] [--tree-shake]\n"
         );
         nodeProcess.exitCode = 2;
     }

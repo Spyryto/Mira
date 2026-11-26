@@ -19,7 +19,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.70.0"
+            version: "0.70.1"
         });
     }
 
@@ -46,8 +46,9 @@ class Bridge {
     }
 
     public static function compile(source:String, targetName:String, ?hostJson:String,
-        ?withLocations:Bool = false, ?modulesJson:String, ?checked:Bool = false):Dynamic {
+        ?withLocations:Bool = false, ?modulesJson:String, ?checked:Bool = false, ?treeShake:Bool = false):Dynamic {
         final locations:Array<GeneratedLocation> = withLocations ? [] : null;
+        final optimization:Dynamic = {};
         final result = safely(function() {
             final target = switch (targetName) {
                 case "js": JavaScript;
@@ -56,10 +57,12 @@ class Bridge {
             };
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
-            return checked ? Compiler.transpileChecked(source,target,host,locations,resolver(modulesJson))
+            if (treeShake && !checked) throw new MiraError("Tree shaking requires checked compilation");
+            return checked ? Compiler.transpileChecked(source,target,host,locations,resolver(modulesJson),null,treeShake,optimization)
                 : Compiler.transpile(source, target, host, locations, resolver(modulesJson));
         });
         if (withLocations && result.ok) Reflect.setField(result, "locations", locations);
+        if (treeShake && result.ok) Reflect.setField(result,"optimization",optimization);
         return result;
     }
 

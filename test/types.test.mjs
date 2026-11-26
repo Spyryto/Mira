@@ -1486,3 +1486,51 @@ test('0.70 re-exports preserve original canonical declarations, aliases and opaq
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.70.1 checked tree shaking retains entry roots, sections, recursive dependencies and effects on JS/PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-tree-shaking-'));
+  try{
+    const input=join(dir,'program.mira'),host=join(dir,'host.json');
+    writeFileSync(host,JSON.stringify({selectors:['tick:'],types:{'tick:':{parameters:['Number'],result:'Number'}}}));
+    writeFileSync(join(dir,'Core.mira'),'module Core; interface inc: ; unused: ; even: ; implementation rate = 2; dead data = {label: "unused", items: [1,2,3]}; inc: x = x + rate; unused: x = x * 12345; even: n = if (n <= 0) then true else (odd: (n - 1)); odd: n = if (n <= 0) then false else (even: (n - 1)); effect = tick: 3;');
+    writeFileSync(join(dir,'API.mira'),'module API; interface export Core {inc: ; unused: ; even: ;}; implementation');
+    writeFileSync(join(dir,'legacy.mira'),'legacy value = 42;');
+    writeFileSync(input,'module App; import "legacy.mira"; import API {inc: ; even: ; unused: ;}; f = inc: _; result = 5 >> f; parity = even: 4;');
+    for(const target of ['js','php']){
+      const compile=(opt,loc=false)=>spawnSync('node',['dist/mira.cjs',input,target,'--checked','--host',host,...(opt?['--tree-shake']:[]),...(loc?['--locations']:[])],{encoding:'utf8'});
+      const a=compile(false),b=compile(true);
+      assert.equal(a.status,0,a.stderr);assert.equal(b.status,0,b.stderr);
+      assert.ok(b.stdout.length<a.stdout.length);
+      const m=(owner,name,kind='v')=>'__miraModule_'+kind+'_'+Buffer.from(owner+' / '+name).toString('hex').toUpperCase();
+      assert.ok(!b.stdout.includes(m('Core','dead data')));
+      assert.ok(!b.stdout.includes(m('Core','unused','s')));
+      assert.ok(b.stdout.includes(m('Core','rate')));
+      assert.ok(b.stdout.includes('legacyValue'));
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      for(const code of [a.stdout,b.stdout]){
+        const init=target==='js'?'const events=[]; const __miraHost={"tick:":x=>(events.push(x),x)};\n':'$events=[]; $GLOBALS["__miraHost"]=["tick:"=>function($x){global $events;$events[]=$x;return $x;}];\n';
+        const out=target==='js'?'\nconsole.log(JSON.stringify(['+m('App','result')+','+m('App','parity')+',events]));':'\necho json_encode([$'+m('App','result')+',$'+m('App','parity')+',$events]);';
+        writeFileSync(file,target==='js'?init+code+out:code.replace('declare(strict_types=1);','declare(strict_types=1);\n'+init)+out);
+        const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+        assert.equal(run.status,0,run.stderr);assert.deepEqual(JSON.parse(run.stdout),[7,true,[3]]);
+      }
+      const located=compile(true,true);assert.equal(located.status,0,located.stderr);
+      assert.equal(JSON.parse(located.stdout).output,b.stdout);
+    }
+    const rejected=spawnSync('node',['dist/mira.cjs',input,'js','--tree-shake'],{encoding:'utf8'});
+    assert.notEqual(rejected.status,0);assert.match(rejected.stderr,/requires --checked/);
+    // A checked numerical guard in an unused initializer must still execute.
+    writeFileSync(join(dir,'Guarded.mira'),'module Guarded; interface implementation Percentage :: Number where _ >= 0 AND _ <= 100; bad (Percentage) = tick: 101;');
+    writeFileSync(input,'module App; import Guarded { * }; result = 1;');
+    for(const target of ['js','php']){
+      const g=spawnSync('node',['dist/mira.cjs',input,target,'--checked','--tree-shake','--host',host],{encoding:'utf8'});
+      assert.equal(g.status,0,g.stderr);assert.match(g.stdout,/__miraNumericValue/);
+    }
+    // Checking precedes pruning: unused invalid code cannot disappear.
+    writeFileSync(join(dir,'Broken.mira'),'module Broken; interface implementation bad: x (Number) -> Text = x;');
+    writeFileSync(input,'module App; import Broken { * }; result = 1;');
+    const bad=spawnSync('node',['dist/mira.cjs',input,'js','--checked','--tree-shake'],{encoding:'utf8'});
+    assert.notEqual(bad.status,0);assert.match(bad.stderr,/Type check/);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

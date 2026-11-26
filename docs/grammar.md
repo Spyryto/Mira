@@ -618,3 +618,27 @@ Le interfacce senza implementazione propria mantengono il delimitatore
 implementation, anche quando la sezione è vuota. Nessuna modifica agli
 emitter. Il tree shaking è rinviato alla 0.70.1: la riesportazione non
 elimina ancora dichiarazioni o inizializzatori caricati.
+
+## Mira 0.70.1: tree shaking conservativo
+
+`node dist/mira.cjs app.mira js --checked --tree-shake` (anche php).
+L'ottimizzazione è opt-in e richiede checked: prima si risolve e controlla
+l'intero programma, poi si filtra l'AST, mantenendo l'ordine originale.
+Le radici sono le dichiarazioni del sorgente di ingresso, tutti i moduli
+legacy senza header, gli statement e ogni inizializzatore di un modulo
+importato che non sia provatamente innocuo. La whitelist comprende
+letterali, liste/record di espressioni innocue e costruttori Variant
+senza effetti; guard numeriche, letture, chiamate, blocchi con capture,
+aritmetica e ogni altra forma restano conservativamente radici.
+Il grafo scope-aware segue anche sezioni, closure e gruppi ricorsivi.
+I simboli esportati di librerie importate possono essere eliminati se
+irraggiungibili: il flag assume un programma chiuso, senza accessi host
+esterni ai nomi generati delle librerie. Non usare il flag per produrre
+una libreria destinata a invocazioni esterne arbitrarie. Gli import
+rimangono risolti e tutti i tipi controllati; il pruning non nasconde
+codice errato. Le globali importate eliminate sono rimosse dallo scope
+emesso; nessun nuovo meccanismo runtime. Source locations preservate.
+Studio: Type Lab → Tree shaking: esempio / Confronta JS / Confronta PHP.
+Mostra conteggi effettivi, byte UTF-8, mediana di 7 compilazioni alternate
+per variante e durata del pruning nell'ultima iterazione. Sono misure
+locali del browser, non benchmark di esecuzione del codice generato.
