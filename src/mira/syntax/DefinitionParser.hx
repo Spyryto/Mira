@@ -41,9 +41,21 @@ class DefinitionParser {
                         if (topLevel(rhs,"|") >= 0) {
                             declareSum(name,rhs,names,definitions,header.parameters);
                         } else {
-                            if (header.parameters.length > 0) throw new MiraError("Type parameters currently require a sum declaration",segment[0]);
-                            final base = new TypeParser(rhs,segment[marker+1],names,false).parse();
-                            names.set(name,NamedType(name,base));
+                            if (header.parameters.length == 0) {
+                                final base = new TypeParser(rhs,segment[marker+1],names,false).parse();
+                                names.set(name,NamedType(name,base));
+                            } else {
+                                final local = names.copy();
+                                final arguments:Array<Type> = [for (i in 0...header.parameters.length) Variable(-i-1)];
+                                for (i in 0...arguments.length) local.set(header.parameters[i],arguments[i]);
+                                final base = new TypeParser(rhs,segment[marker+1],local,false).parse();
+                                switch (base) {
+                                    case RecordType(_,null) | ListType(_):
+                                        names.set(name,ParametricNamedType(name,base,arguments));
+                                    default:
+                                        throw new MiraError("Parametric nominal types currently require a record or list base",segment[0]);
+                                }
+                            }
                         }
                     } else definitions.push(parseOne(segment,names));
                 }
