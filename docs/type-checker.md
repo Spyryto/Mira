@@ -584,3 +584,37 @@ numerici nei tipi nominali dei campi non sono rimossi.
 Passi successivi: analisi delle espressioni e propagazione
 degli intervalli (rispettando la semantica JS/PHP), predicati
 più generali, poi guardie runtime e validazione fallibile.
+
+## 0.52: prove aritmetiche
+
+```mira
+Percentage :: Number where _ >= 0 AND _ <= 100;
+half of: p (Percentage) -> Percentage = p / 2;
+complement of: p (Percentage) -> Percentage = 100 - p;
+volume (Percentage) = 50 + 30;
+result = half of: volume;
+```
+
+Il checker conserva fatti numerici per espressione in una ObjectMap
+privata, senza introdurre varianti nella rappresentazione Type o
+modificare le firme inferite dei valori Number ordinari. I letterali
+hanno intervalli puntuali; le espressioni di tipo raffinato possono
+fornire i loro limiti. +, -, *, / calcolano i limiti dai quattro
+angoli degli intervalli finiti. Gli estremi dei risultati sono chiusi
+anche quando quelli degli operandi sono aperti: l'arrotondamento
+floating point potrebbe raggiungere un estremo. Non si analizzano
+divisori che includono o sfiorano zero, risultati fuori dalla
+magnitudine degli interi sicuri JS, né modulo o intervalli illimitati.
+Il calcolo dei limiti non esegue codice host.
+
+Un fatto interamente contenuto nel vincolo prova la costruzione;
+un intervallo disgiunto prova una violazione; sovrapposizione parziale
+o assenza di fatti significa non dimostrato e viene rifiutata.
+Le espressioni non annotate mantengono il normale tipo Number:
+non si propagano automaticamente fatti attraverso variabili non
+annotate o ritorni di funzioni non annotati. Non c'è ancora narrowing
+dei rami, analisi di correlazioni (p - p), Integer, predicati
+generali o guardie runtime. Il checker resta opt-in. I contratti
+dichiarati presuppongono un ambiente host conforme.
+Nessun cambiamento al codice generato: test confrontano byte per byte
+JS e PHP con la versione priva di annotazioni, ed eseguono i risultati.

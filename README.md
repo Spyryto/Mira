@@ -244,6 +244,12 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Laboratory in Mira Studio](https://spyryto.github.io/Mira/laboratory.html) raccoglie l'evoluzione 0.15–0.34, i benchmark CI e le misure dell'autore su iPhone e smart TV. [Rapporto tecnico](docs/gui-rendering.md) · [Archivio JSON](catalog/laboratory/gui-rendering.json). Il rapporto storico è statico e separato dal benchmark eseguibile.
 
+## Mira 0.52: prove aritmetiche
+
+Il checker dimostra intervalli per espressioni limitate con +, -, *, /,
+per esempio `half of: p (Percentage) -> Percentage = p / 2;`.
+Il codice generato resta identico. [Dettagli](docs/type-checker.md#052-prove-aritmetiche).
+
 ## Mira 0.51: refinement numerici e operatori logici
 
 `Percentage :: Number where _ >= 0 AND _ <= 100`.

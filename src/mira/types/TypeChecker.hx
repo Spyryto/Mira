@@ -20,6 +20,8 @@ class TypeChecker {
     final active = new Map<String, Type>();
     final lacks = new Map<Int, Map<String,Bool>>();
     final scalarEq = new Map<Int,Bool>();
+    // Proof facts belong to expressions, not the public inference algebra.
+    final ranges = new haxe.ds.ObjectMap<Dynamic,NumericRange>();
     var nextId = 0;
     var origin:Token;
 
@@ -196,14 +198,11 @@ class TypeChecker {
     function prove(range:NumericRange,actual:Type,expr:Null<Expr>):Void {
         final known = NumericRange.ofType(prune(actual));
         if (known != null && known.implies(range)) return;
-        switch (expr) {
-            case Numeric(value) if (~/^(0|[1-9][0-9]*)(\.[0-9]+)?$/.match(value)):
-                final n = Std.parseFloat(value);
-                if (Math.isFinite(n) && Math.abs(n) <= 9007199254740991.0) {
-                    if (range.contains(n)) return;
-                    fail("refinement violated: " + range.predicate() + ", got " + value);
-                }
-            default:
+        final fact = expr == null ? null : ranges.get(expr);
+        if (fact != null) {
+            if (fact.implies(range)) return;
+            if (fact.intersect(range).empty())
+                fail("refinement violated: " + range.predicate() + ", inferred " + fact.predicate());
         }
         fail("refinement not statically proven: " + range.predicate());
     }
@@ -544,6 +543,17 @@ class TypeChecker {
         final anchor = origins.get(expr);
         if (anchor != null) origin = anchor;
         final type:Type = inferNode(expr,scope);
+        final fact:Null<NumericRange> = switch (expr) {
+            case Numeric(value): NumericRange.literal(value);
+            case Binary(symbol,left,right):
+                final a = ranges.get(left);
+                final b = ranges.get(right);
+                a == null || b == null ? null : NumericRange.arithmetic(symbol,a,b);
+            default:
+                final known = NumericRange.ofType(prune(type));
+                known != null && known.portable() ? known : null;
+        };
+        if (fact != null) ranges.set(expr,fact);
         origin = previous;
         return type;
     }

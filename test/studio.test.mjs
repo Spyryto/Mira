@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.51.0');
+  assert.equal(bridge.version, '0.52.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.51.0');
+  assert.equal(bridge.version,'0.52.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -989,7 +989,7 @@ test('Studio exports bounded refinement schemas and rejects unknown or invalid p
   const schema=JSON.parse(checked.output).find(x=>x.name==='p').schema;
   assert.deepEqual(schema,{kind:'Named',name:'Percentage',base:{kind:'Refined',base:{kind:'Number'},range:{lower:0,upper:100,lowerInclusive:true,upperInclusive:true}}});
   assert.equal(bridge.check(source+'bad (Percentage) = 101;').ok,false);
-  assert.equal(bridge.check(source+'bad (Percentage) = 20 + 30;').ok,false);
+  assert.equal(bridge.check(source+'good (Percentage) = 20 + 30;').ok,true);
   for(const target of ['js','php'])assert.equal(bridge.compile(source,target).ok,true);
 });
 
@@ -998,4 +998,16 @@ test('Studio compiles logical words and first-class operators through its real c
   const checked=bridge.check(source);assert.equal(checked.ok,true,checked.message);
   assert.deepEqual(JSON.parse(checked.output).map(x=>x.type),['Number','Boolean']);
   for(const target of ['js','php'])assert.equal(bridge.compile(source,target).ok,true);
+});
+
+test('Studio proves bounded arithmetic without introducing code generation overhead',()=>{
+  const src='Percentage :: Number where _ >= 0 AND _ <= 100; half of: p (Percentage) -> Percentage = p / 2; volume (Percentage) = 50 + 30; result = half of: volume;';
+  const report=bridge.check(src);assert.equal(report.ok,true,report.message);
+  assert.equal(JSON.parse(report.output).find(x=>x.name==='result').type,'Percentage');
+  assert.equal(bridge.check(src+'bad: p (Percentage) -> Percentage = p * 2;').ok,false);
+  for(const target of ['js','php']){
+    const checked=bridge.compile(src,target);
+    const bare=bridge.compile('half of: p = p / 2; volume = 50 + 30; result = half of: volume;',target);
+    assert.equal(checked.ok,true);assert.equal(bare.ok,true);assert.equal(checked.output,bare.output);
+  }
 });
