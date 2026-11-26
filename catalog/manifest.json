@@ -1,5 +1,5 @@
 {
-  "version": "0.53.0",
+  "version": "0.54.0",
   "features": [
     {
       "id": "values",
@@ -1872,6 +1872,12 @@
       "title": "Integer portabile e prove di integrità",
       "since": "0.53",
       "doc": "docs/type-checker.md#053-integer-portabile"
+    },
+    {
+      "id": "branch-narrowing",
+      "title": "Narrowing numerico lessicale nei condizionali",
+      "since": "0.54",
+      "doc": "docs/type-checker.md#054-narrowing-numerico"
     }
   ]
 }
