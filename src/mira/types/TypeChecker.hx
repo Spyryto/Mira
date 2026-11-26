@@ -111,6 +111,7 @@ class TypeChecker {
             case [Variable(id), _]: bind(id,right);
             case [_, Variable(id)]: bind(id,left);
             case [NamedType(x,_),NamedType(y,_)] if (x == y):
+            case [RefinedType(x,r),RefinedType(y,s)] if (r.equal(s)): unify(x,y);
             case [StructuralType(_,x),StructuralType(_,y)]: unifyRecords(RecordType(x,null),RecordType(y,null));
             case [NumberType, NumberType] | [TextType,TextType] | [BooleanType,BooleanType]:
             case [ListType(x),ListType(y)]: unify(x,y);
@@ -127,7 +128,7 @@ class TypeChecker {
     // Named data have closed representations, not inheritance of behavior.
     function representation(type:Type):Type {
         return switch (prune(type)) {
-            case NamedType(_,base): representation(base);
+            case NamedType(_,base) | RefinedType(base,_): representation(base);
             default: prune(type);
         };
     }
@@ -139,7 +140,10 @@ class TypeChecker {
             case [Variable(_),_] | [_,Variable(_)]: unify(wanted,given);
             case [NamedType(x,_),NamedType(y,_)] if (x == y):
             case [StructuralType(_,fields),_]: acceptShape(fields,given);
-            case [_,NamedType(_,base)]: accept(wanted,base);
+            case [RefinedType(base,range),_]:
+                prove(range,given,null);
+                accept(base,given);
+            case [_,NamedType(_,base)] | [_,RefinedType(base,_)]: accept(wanted,base);
             case [ListType(x),ListType(y)]: accept(x,y);
             // Records with named fields are invariant in this first increment.
             default: unify(wanted,given);
@@ -165,25 +169,54 @@ class TypeChecker {
 
     // An explicit typed declaration introduces a nominal identity. A sibling
     // is never silently rebranded; the immediate base must be compatible.
-    function construct(expected:Type,actual:Type):Void {
-        switch [prune(expected),prune(actual)] {
-            case [NamedType(_,base),Variable(_)]: unify(base,actual);
-            case [NamedType(name,base),NamedType(other,_)] if (name != other):
-                // Only an ancestor can be explicitly narrowed to a child.
-                if (ancestor(expected,other)) accept(actual,base);
-                else accept(expected,actual);
-            case [NamedType(_,base),given] if (!isNamed(given)): construct(base,given);
-            default: accept(expected,actual);
+    function construct(expected:Type,actual:Type,?expr:Expr):Void {
+        final wanted = prune(expected);
+        final given = prune(actual);
+        switch (wanted) {
+            case NamedType(name,base):
+                switch (given) {
+                    case Variable(_): unify(base,given);
+                    default:
+                        final identity = nominalName(given);
+                        if (identity == null || ancestor(wanted,identity) && !ancestor(given,name))
+                            construct(base,given,expr);
+                        else accept(wanted,given);
+                }
+            case RefinedType(base,range):
+                switch (given) {
+                    case Variable(_): unify(wanted,given);
+                    default:
+                        construct(base,given,expr);
+                        prove(range,given,expr);
+                }
+            default: accept(wanted,given);
         }
     }
 
-    function isNamed(type:Type):Bool return switch (prune(type)) {
-        case NamedType(_,_): true;
-        default: false;
+    function prove(range:NumericRange,actual:Type,expr:Null<Expr>):Void {
+        final known = NumericRange.ofType(prune(actual));
+        if (known != null && known.implies(range)) return;
+        switch (expr) {
+            case Numeric(value) if (~/^(0|[1-9][0-9]*)(\.[0-9]+)?$/.match(value)):
+                final n = Std.parseFloat(value);
+                if (Math.isFinite(n) && Math.abs(n) <= 9007199254740991.0) {
+                    if (range.contains(n)) return;
+                    fail("refinement violated: " + range.predicate() + ", got " + value);
+                }
+            default:
+        }
+        fail("refinement not statically proven: " + range.predicate());
+    }
+
+    function nominalName(type:Type):Null<String> return switch (prune(type)) {
+        case NamedType(name,_): name;
+        case RefinedType(base,_): nominalName(base);
+        default: null;
     };
 
     function ancestor(type:Type,name:String):Bool return switch (prune(type)) {
         case NamedType(n,base): n == name || ancestor(base,name);
+        case RefinedType(base,_): ancestor(base,name);
         default: false;
     };
 
@@ -364,7 +397,7 @@ class TypeChecker {
             final type:Type = d.isFunction() ? FunctionType(params,body) : body;
             if (d.resultAnnotationOrigin != null) origin = d.resultAnnotationOrigin;
             if (d.resultAnnotation != null) {
-                construct(d.resultAnnotation,body);
+                construct(d.resultAnnotation,body,d.body);
             } else unify(active.get(name),type);
         }
         for (name in group) {
@@ -413,7 +446,7 @@ class TypeChecker {
     // Unification may solve it now or propagate it to another variable.
     function requireScalarEq(type:Type):Void {
         switch (prune(type)) {
-            case NamedType(_,base): requireScalarEq(base);
+            case NamedType(_,base) | RefinedType(base,_): requireScalarEq(base);
             case NumberType | TextType | BooleanType:
             case Variable(id):
                 if (lacks.exists(id)) fail("scalar equality cannot constrain a record row");
@@ -423,6 +456,11 @@ class TypeChecker {
     }
 
     function binary(symbol:String,left:Type,right:Type):Type {
+        if (symbol == "AND" || symbol == "OR") {
+            accept(BooleanType,left);
+            accept(BooleanType,right);
+            return BooleanType;
+        }
         if (symbol == "==" || symbol == "!=") {
             unify(left,right);
             requireScalarEq(left);
@@ -561,7 +599,7 @@ class TypeChecker {
                             final previous = origin;
                             final anchor = origins.get(e);
                             if (anchor != null) origin = anchor;
-                            construct(annotations[0],type);
+                            construct(annotations[0],type,value);
                             origin = previous;
                             inner.set(name,mono(annotations[0]));
                         } else inner.set(name,localScheme(value,type,inner));
@@ -589,6 +627,7 @@ class TypeChecker {
         final seen = ids == null ? new Map<Int,Int>() : ids;
         return switch (prune(type)) {
             case NamedType(name,base): {kind:"Named",name:name,base:describe(base,seen)};
+            case RefinedType(base,range): {kind:"Refined",base:describe(base,seen),range:range.schema()};
             case StructuralType(name,fields):
                 final keys = [for (key in fields.keys()) key];
                 keys.sort(Reflect.compare);
@@ -629,6 +668,7 @@ class TypeChecker {
     function render(type:Type,names:Map<Int,String>,order:Array<Int>):String {
         return switch (prune(type)) {
             case NamedType(name,_): name;
+            case RefinedType(base,range): render(base,names,order) + " where " + range.predicate();
             case StructuralType(name,_): "~ " + name;
             case NumberType: "Number";
             case TextType: "Text";
