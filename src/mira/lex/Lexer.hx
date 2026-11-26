@@ -41,7 +41,9 @@ class Lexer {
                 while (isLetter(current()) || isDigit(current()) || current() == "_") {
                     advance();
                 }
-                tokens.push(new Token(Word, source.substring(start, offset), tokenLine, tokenColumn, file, line, column));
+                final word = source.substring(start, offset);
+                final kind:TokenKind = word == "AND" || word == "OR" || word == "NOT" ? Symbol : Word;
+                tokens.push(new Token(kind, word, tokenLine, tokenColumn, file, line, column));
                 continue;
             }
 
