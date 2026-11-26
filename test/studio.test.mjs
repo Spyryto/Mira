@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.70.0');
+  assert.equal(bridge.version, '0.70.1');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.70.0');
+  assert.equal(bridge.version,'0.70.1');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1345,4 +1345,26 @@ test('0.70 Studio traces re-exports without generating intermediate declarations
   const bad=bridge.check('module App; import API {item: ;}; result = item: 7;',null,files);
   assert.equal(bad.ok,false);assert.match(bad.message,/Symbol not exported/);
   assert.match(read('type-lab.html'),/reexport-example/);
+});
+
+
+test('0.70.1 Studio compiles optimized virtual modules and reports actual removed declarations',()=>{
+  const modules=JSON.stringify({'Core':'module Core; interface square: ; unused: ; implementation factor = 2; dead = [1,2,3]; square: x = x * factor; unused: x = x + 42;'});
+  const src='module App; import Core {square: ; unused: ;}; result = square: 4;';
+  for(const target of ['js','php']){
+    const a=bridge.compile(src,target,null,false,modules,true);
+    const b=bridge.compile(src,target,null,true,modules,true,true);
+    assert.equal(a.ok,true,a.message);assert.equal(b.ok,true,b.message);
+    assert.equal(b.optimization.before,5);assert.equal(b.optimization.after,3);
+    assert.deepEqual(b.optimization.removed,['Core / dead','Core / unused:']);
+    assert.ok(b.optimization.optimizationMs>=0);
+    assert.ok(b.output.length<a.output.length);
+    if(target==='js'){
+      const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+      assert.equal(runInNewContext(b.output+'\n'+name,{}),8);
+    }
+  }
+  const denied=bridge.compile(src,'js',null,false,modules,false,true);
+  assert.equal(denied.ok,false);
+  assert.match(read('type-lab.html'),/tree-shake-example/);
 });
