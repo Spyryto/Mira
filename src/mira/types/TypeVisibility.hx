@@ -10,6 +10,7 @@ class TypeVisibility {
     public final privateNames = new Map<String,Bool>();
     public final opaqueNames = new Map<String,Bool>();
     var hasOpaque = false;
+    final representations = new Map<String,Type>();
 
     public function new() {}
 
@@ -18,13 +19,31 @@ class TypeVisibility {
         hasOpaque = true;
     }
 
+    public function defineOpaque(name:String,type:Type):Void {
+        markOpaque(name);
+        representations.set(name,type);
+    }
+
+    // Only the declaring module can reveal a forward opaque reference.
+    // Do not recursively expand records/sums: nominal recursion stays finite.
+    public function reveal(type:Type,owner:Null<String>):Type {
+        return switch (type) {
+            case OpaqueType(name,args) if (ModuleIdentity.owner(name) == owner && representations.exists(name)):
+                final template = representations.get(name);
+                args.length == 0 ? template : TypeTemplates.apply(template,args);
+            default: type;
+        };
+    }
+
     public function view(type:Type,owner:Null<String>,?resolve:Type->Type):Type {
         if (!hasOpaque) return type;
         final t = resolve == null ? type : resolve(type);
         function child(value:Type):Type return view(value,owner,resolve);
         return switch (t) {
-            case NamedType(name,_) | SumType(name,_,_) | SumReference(name,_,_)
-                if (opaqueNames.exists(name) && ModuleIdentity.owner(name) != owner): OpaqueType(name);
+            case NamedType(name,_) if (opaqueNames.exists(name) && ModuleIdentity.owner(name) != owner): OpaqueType(name,[]);
+            case ParametricNamedType(name,_,args) | SumType(name,_,args) | SumReference(name,_,args)
+                if (opaqueNames.exists(name) && ModuleIdentity.owner(name) != owner): OpaqueType(name,[for (a in args) child(a)]);
+            case OpaqueType(name,args): OpaqueType(name,[for (a in args) child(a)]);
             case NamedType(name,base): NamedType(name,child(base));
             case ParametricNamedType(name,base,args): ParametricNamedType(name,child(base),[for (a in args) child(a)]);
             case SumType(name,alternatives,args):
@@ -52,7 +71,7 @@ class TypeVisibility {
         }
         function walk(value:Type):Void {
             switch (resolve(value)) {
-                case OpaqueType(name): checkName(name);
+                case OpaqueType(name,args): checkName(name); for (a in args) walk(a);
                 case NamedType(name,base):
                     checkName(name);
                     if (!opaqueNames.exists(name) && !seen.exists(name)) {
@@ -62,11 +81,11 @@ class TypeVisibility {
                 case ParametricNamedType(name,base,args):
                     checkName(name);
                     for (a in args) walk(a);
-                    walk(base);
+                    if (!opaqueNames.exists(name)) walk(base);
                 case SumType(name,alternatives,args):
                     checkName(name);
+                    for (a in args) walk(a);
                     if (!opaqueNames.exists(name)) {
-                        for (a in args) walk(a);
                         for (payload in alternatives) if (payload != null) walk(payload);
                     }
                 case SumReference(name,_,args):
@@ -79,7 +98,7 @@ class TypeVisibility {
                     for (field in fields) walk(field);
                 case RefinedType(base,_):
                     switch (view(base,null,resolve)) {
-                        case OpaqueType(name): throw new MiraError("Public signature exposes opaque refinement " + name,origin,"type_error");
+                        case OpaqueType(name,_): throw new MiraError("Public signature exposes opaque refinement " + name,origin,"type_error");
                         default:
                     }
                     walk(base);
