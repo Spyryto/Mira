@@ -1150,3 +1150,48 @@ test('types: recursive trees and chains use ordinary native sum records on JS an
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('types: qualified values, selectors and nominal types are distinct',()=>{
+  const src='Math.rate = 2; Billing.rate = 3; Math.scale: x (Number) -> Number = x * Math.rate; Billing.scale: x (Number) -> Number = x * Billing.rate; Math.Pair (T) :: {value: T}; Billing.Pair (T) :: {value: T}; Math.Option (T) :: Some (T) | None; Billing.Option (T) :: Some (T) | None; Math.Tree (T) :: Leaf (T) | Branch ([Math.Tree (T)]); a (Math.Pair (Number)) = {value: 42}; b (Billing.Pair (Number)) = {value: 7}; m = Math.Some: 2; n = Billing.Some: "x"; tree = Math.Branch: [(Math.Leaf: 7)]; result = match: m {some: {x | Math.scale: x}, none: {| 0}};';
+  const t=check(src);
+  assert.equal(t['Math.rate'],'Number');
+  assert.equal(t['Billing.scale:'],'(Number) -> Number');
+  assert.equal(t.a,'Math.Pair (Number)');
+  assert.equal(t.b,'Billing.Pair (Number)');
+  assert.equal(t.m,'Math.Option (Number)');
+  assert.equal(t.n,'Billing.Option (Text)');
+  assert.equal(t.tree,'Math.Tree (Number)');
+  assert.equal(t.result,'Number');
+  for(const [extra,pattern] of [
+    ['bad (Billing.Pair (Number)) = a;',/expected Billing\.Pair/],
+    ['bad (Billing.Option (Number)) = m;',/expected Billing\.Option/],
+    ['bad = Some: 2;',/Unknown identifier/],
+    ['bad = Math.missing;',/Unknown identifier/],
+    ['bad: Math.x = Math.x;',/Qualification is allowed only/],
+    ['bad: x, Math.with: y = x;',/Qualification is allowed only/],
+    ['bad = {Math.x: 1};',/Quote a record field/],
+    ['bad = a ~ Math.value;',/Quote a record field/],
+    ['Bad :: {Math.value: Number};',/Quote a record field/],
+    ['Bad (Math.T) :: [Math.T];',/Qualification is allowed only/]
+  ]) assert.throws(()=>check(src+extra),pattern,extra);
+});
+test('types: qualified imports and case-distinct selectors execute on JS and PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-qualified-'));
+  try{
+    const input=join(dir,'program.mira');
+    writeFileSync(join(dir,'math.mira'),'Math.rate = 2; Math.scale: x (Number) -> Number = x * Math.rate; Math.Scale: x (Number) -> Number = x + Math.rate; Math.Option (T) :: Some (T) | None;');
+    writeFileSync(join(dir,'billing.mira'),'Billing.rate = 3; Billing.scale: x (Number) -> Number = x * Billing.rate; Billing.Option (T) :: Some (T) | None;');
+    writeFileSync(input,'import "math.mira"; import "billing.mira"; a = Math.Some: 4; b = Billing.Some: 5; result = [(match: a {some: {x | Math.scale: x}, none: {| 0}}), (match: b {some: {x | Billing.scale: x}, none: {| 0}}), (Math.Scale: 4)];');
+    for(const target of ['js','php']){
+      const r=spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      assert.match(r.stdout,/__miraQualified_/);
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,r.stdout+(target==='js'?'\nconsole.log(JSON.stringify([a,b,result]));':'\necho json_encode([$a,$b,$result]);'));
+      const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);
+      assert.deepEqual(JSON.parse(run.stdout),[{tag:'Some',value:4},{tag:'Some',value:5},[8,15,6]]);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
