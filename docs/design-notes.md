@@ -1,6 +1,6 @@
 # Mira — Quaderno di progettazione
 
-Questo quaderno raccoglie decisioni e proposte delle discussioni fino alla 0.52. Non è una specifica eseguibile. Le indicazioni di stato distinguono ciò che è verificato dalla direzione concordata e dagli aspetti ancora aperti.
+Questo quaderno raccoglie decisioni e proposte delle discussioni sul linguaggio. Non è una specifica eseguibile. Le indicazioni di stato distinguono ciò che è verificato dalla direzione concordata e dagli aspetti ancora aperti.
 
 ## Principi — direzione concordata
 
@@ -517,3 +517,13 @@ esplicita di un solo livello serve a match; unificazione e
 schema operano sui riferimenti nominali. Riutilizzo del
 template sostitutivo, senza modifiche agli emitter. La prima
 forma è volutamente limitata a ricorsione diretta regolare.
+
+
+## Moduli — direzione concordata dopo la 0.64
+
+La sperimentazione della PR #95 sui nomi puntati non costituisce la
+grammatica ufficiale. Il fondamento sarà lo scope isolato del modulo,
+non un separatore di qualificazione. Il progetto completo, il syntax
+tour revisionato dall'autore e la roadmap sono in
+[module-design.md](module-design.md); Mira Studio include quel documento
+nel quaderno offline. Tutto il nuovo sistema è ancora pianificato.

@@ -60,7 +60,8 @@ for (const filename of assets) {
 
 // Publish the design notebook from its single Markdown source. It uses a
 // deliberately small, escaped subset: headings, paragraphs and fenced code.
-const notebook = readFileSync(resolve(root, 'docs/design-notes.md'), 'utf8');
+const notebook = ['docs/design-notes.md', 'docs/module-design.md']
+  .map(path => readFileSync(resolve(root, path), 'utf8')).join('\n\n');
 const escape = text => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 const sections = [];
 let paragraph = [];

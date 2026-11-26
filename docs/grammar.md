@@ -354,3 +354,12 @@ Le annotazioni (Type), le dichiarazioni nominali ::, la proiezione
 Precedenze configurabili, Unicode, localizzazione e dichiarazioni
 di operatori custom sono proposte, non la grammatica attuale:
 vedi [quaderno di progettazione](design-notes.md).
+
+## Direzione futura: moduli isolati (non implementata)
+
+Vedi [progetto dei moduli](module-design.md). I percorsi discorsivi con /,
+le sezioni piatte interface e implementation, gli alias => e le firme
+pubbliche inferite o esplicite sono la direzione concordata, non la
+grammatica accettata dal compilatore 0.64. Gli import statici a percorso
+file della 0.30 restano l'unica forma implementata. Il punto sperimentato
+nella PR #95 non è stato adottato.
