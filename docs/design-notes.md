@@ -385,3 +385,27 @@ un contratto wire stabile. Il prossimo incremento è
 l'eliminazione esaustiva. Qualificazione dei costruttori,
 payload multipli, generici, ricorsione, ottimizzazione e
 collisioni dei nomi nativi PHP restano temi aperti.
+
+
+## 0.59 — match contestuale esaustivo (implementazione proposta)
+
+Il nodo Match implementa la proposta concordata: match:
+value { ... } è riconosciuto sintatticamente, senza
+consultare i tipi o riservare la parola match. Le chiamate
+match: x e match: x, with: y rimangono definibili dall'utente.
+Per la scansione iniziale si rispettano i delimitatori
+annidati, e la virgola a livello zero interrompe la ricerca.
+Una graffa iniziale che è l'intero argomento non è trattata
+come lista di alternative. Parentetizzare i casi complessi.
+
+Le label delle alternative riprendono il nome del costruttore
+con la prima lettera minuscola, scelta sperimentale.
+Non si introducono pattern generali: si riutilizzano i blocchi
+e le annotazioni implicite dei payload, con controllo di
+esaustività e dei risultati. Lo scrutinee è valutato una volta
+e viene invocato un solo handler. Gli emitter usano confronti
+stretti per evitare le conversioni implicite di PHP switch.
+Per ora tutte le closure sono create; l'inlining e la fusione
+con i costruttori richiedono prove successive di equivalenza.
+La sintassi e il runtime sono distinti dall'eventuale futuro
+match di ML. Vedi type-checker.md; CI richiesta prima del merge.
