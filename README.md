@@ -128,6 +128,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Verifica statica dei contratti senza provider | `0.75` | [Dettagli](docs/grammar.md#mira-075-verifica-di-contratti-senza-provider) |
 | ✅ | Identità nominali persistenti dei contratti | `0.76` | [Dettagli](docs/grammar.md#mira-076-identita-nominali-persistenti-dei-contratti) |
 | ✅ | Interfacce elaborate e impronte semantiche | `0.77` | [Dettagli](docs/grammar.md#mira-077-impronte-semantiche-delle-interfacce) |
+| ✅ | Confronto delle interfacce e impatto sulle dipendenze | `0.78` | [Dettagli](docs/grammar.md#mira-078-confronto-delle-interfacce-e-impatto-potenziale) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
