@@ -144,7 +144,13 @@ class Bridge {
             });
             for (item in moduleInterfaces) {
                 final forwarded = reexports.get(item.module);
-                if (forwarded != null && forwarded.length > 0) Reflect.setField(item,"reexports",forwarded);
+                if (forwarded != null && forwarded.length > 0) {
+                    Reflect.setField(item,"reexports",forwarded);
+                    final opaque:Array<String> = item.opaqueTypes;
+                    for (symbol in forwarded) if (symbol.kind == "type" && symbol.opaque && opaque.indexOf(symbol.name) < 0)
+                        opaque.push(symbol.name);
+                    opaque.sort(Reflect.compare);
+                }
             }
             final symbols = new Symbols(raw, host);
             final declarations:Array<Dynamic> = [];
