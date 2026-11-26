@@ -153,7 +153,7 @@ class TypeChecker {
         final available = switch (representation(actual)) {
             case StructuralType(_,fields): fields;
             case RecordType(_,_): row(representation(actual)).fields;
-            default: return fail("structural projection requires a record, got " + show(actual));
+            default: fail("structural projection requires a record, got " + show(actual));
         };
         final keys = [for (key in required.keys()) key];
         keys.sort(Reflect.compare);
