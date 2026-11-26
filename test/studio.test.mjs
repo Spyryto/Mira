@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.60.2');
+  assert.equal(bridge.version, '0.61.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.60.2');
+  assert.equal(bridge.version,'0.61.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1140,4 +1140,15 @@ test('Studio compiles a user Error constructor without masking native Error',()=
   const js=bridge.compile(src,'js');
   assert.equal(js.ok,true);
   assert.match(js.code??js.output??JSON.stringify(js),/__miraEsc_Error/);
+});
+
+test('Studio checks explicit generic functions and preserves ordinary selector names',()=>{
+  const src='identity (Value Type): x (Value Type) -> Value Type = x; a = identity: 42; b = identity: "Ada"; result = {a: a, b: b};';
+  const report=bridge.check(src);assert.equal(report.ok,true,report.message);
+  assert.equal(JSON.parse(report.output).find(x=>x.name==='identity:').type,"('a) -> 'a");
+  assert.equal(bridge.check('bad (T): x (T) -> T = 1;').ok,false);
+  const compiled=bridge.compile(src,'js',null,false,null,true);
+  assert.equal(compiled.ok,true,compiled.message);
+  assert.match(compiled.output,/function identity\(x\)/);
+  assert.equal(runInNewContext(compiled.output+'\nresult.a',{}),42);
 });
