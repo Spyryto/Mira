@@ -6,6 +6,8 @@ import mira.lex.Token.TokenKind;
 import mira.syntax.Definition;
 import mira.syntax.DefinitionParser;
 import mira.syntax.ModuleSections;
+import mira.syntax.ModulePath;
+import mira.syntax.ContractModule;
 import mira.syntax.ModuleImport;
 import mira.syntax.PublicSignature;
 import mira.types.TypeVisibility;
@@ -20,7 +22,7 @@ class Modules {
     public static function collect(source:String, ?read:String->Null<String>,
         ?entry:String, ?types:Map<String,mira.types.Type>,
         ?moduleTypes:Map<String,Map<String,mira.types.Type>>,
-        ?publicTypes:Map<String,Array<String>>, ?bindings:Map<String,Array<ImportBinding>>, ?visibility:TypeVisibility, ?reexports:Map<String,Array<Dynamic>>, ?moduleEdges:Array<Dynamic>, ?providers:ProviderBindings):Array<Definition> {
+        ?publicTypes:Map<String,Array<String>>, ?bindings:Map<String,Array<ImportBinding>>, ?visibility:TypeVisibility, ?reexports:Map<String,Array<Dynamic>>, ?moduleEdges:Array<Dynamic>, ?providers:ProviderBindings, allowContracts:Bool = true):Array<Definition> {
         if (types == null) types = new Map<String,mira.types.Type>();
         if (moduleTypes == null) moduleTypes = new Map<String,Map<String,mira.types.Type>>();
         if (publicTypes == null) publicTypes = new Map<String,Array<String>>();
@@ -28,6 +30,8 @@ class Modules {
         if (visibility == null) visibility = new TypeVisibility();
         final exportedSymbols = new Map<String,Map<String,Definition>>();
         final contractExports = new Map<String,Map<String,Definition>>();
+        final implementedContracts = new Map<String,String>();
+        final contractSections = new Map<String,ModuleSections>();
         if (reexports == null) reexports = new Map<String,Array<Dynamic>>();
         final loaded = new Map<String, Bool>();
         final stack:Array<String> = entry == null ? [] : [entry];
@@ -51,30 +55,18 @@ class Modules {
             }
             if (header) {
                 final anchor = tokens[0];
-                final segments:Array<String> = [];
-                var words:Array<String> = [];
-                offset = 1;
-                while (tokens[offset].kind != End && !tokens[offset].isSymbol(";")) {
-                    final token = tokens[offset++];
-                    if (token.kind == Word && token.value != "_") words.push(token.value);
-                    else if (token.isSymbol("/") && words.length > 0) {
-                        segments.push(words.join(" "));
-                        words = [];
-                    } else throw new MiraError("Expected discursive module path segment",token);
-                }
-                if (words.length == 0 || !tokens[offset].isSymbol(";"))
-                    throw new MiraError("Expected module path and terminating ;",tokens[offset]);
-                segments.push(words.join(" "));
-                modulePath = segments.join(" / ");
+                final declared = ModulePath.read(tokens,1);
+                modulePath = declared.path;
+                offset = declared.next;
                 if (providers != null && providers.exists(modulePath))
                     throw new MiraError("Concrete module conflicts with configured contract path " + modulePath,anchor);
                 if (moduleTypes.exists(modulePath))
                     throw new MiraError("Duplicate module " + modulePath,anchor);
                 moduleTypes.set(modulePath,new Map<String,mira.types.Type>());
-                offset++;
             }
             var sections:Null<ModuleSections> = null;
             var publicEnd = -1;
+            var inheritedContract:Null<String> = null;
             final publicAliases = new Map<String,mira.types.Type>();
             final privateAliases = new Map<String,mira.types.Type>();
             final imported:Array<ImportBinding> = [];
@@ -84,7 +76,36 @@ class Modules {
             final forwardedInfo:Array<Dynamic> = [];
             if (modulePath != null) {
                 publicTypes.set(modulePath,[]);
-                if (tokens[offset].kind == Word && tokens[offset].value == "interface") {
+                // Recognize implements only in the header position. Ordinary
+                // discursive definitions named "implements ..." remain legal.
+                if (tokens[offset].kind == Word && tokens[offset].value == "implements"
+                    && tokens[offset+1].kind == Word) {
+                    var cursor = offset+1;
+                    while (tokens[cursor].kind != End && !tokens[cursor].isSymbol(";")) cursor++;
+                    if (tokens[cursor].isSymbol(";") && tokens[cursor+1].kind == Word
+                        && tokens[cursor+1].value == "implementation") {
+                        final anchor = tokens[offset];
+                        if (!allowContracts) throw new MiraError("Module contracts require checked compilation",anchor);
+                        final declaration = ModulePath.read(tokens,offset+1);
+                        inheritedContract = declaration.path;
+                        if (inheritedContract == modulePath) throw new MiraError("Module cannot implement itself",anchor);
+                        if (!contractSections.exists(inheritedContract)) {
+                            if (read == null) throw new MiraError("No module resolver for contract " + inheritedContract,anchor);
+                            if (++count > 128) throw new MiraError("Module graph limit exceeded",anchor);
+                            final contractSource = read(inheritedContract);
+                            if (contractSource == null) throw new MiraError("Contract module not found: " + inheritedContract,anchor);
+                            size += contractSource.length;
+                            if (size > 2000000) throw new MiraError("Module source size limit exceeded",anchor);
+                            contractSections.set(inheritedContract,ContractModule.read(contractSource,inheritedContract));
+                        }
+                        sections = contractSections.get(inheritedContract);
+                        implementedContracts.set(modulePath,inheritedContract);
+                        // The inherited interface has no import directives yet.
+                        offset = declaration.next + 1;
+                        if (moduleEdges != null) moduleEdges.push({from:modulePath,to:inheritedContract,kind:"implements",phase:"interface",line:anchor.line,column:anchor.column,file:anchor.file});
+                    }
+                }
+                if (sections == null && tokens[offset].kind == Word && tokens[offset].value == "interface") {
                     sections = new ModuleSections(tokens,offset);
                     publicEnd = offset + sections.imports.length;
                     tokens = tokens.slice(0,offset).concat(sections.imports).concat(tokens.slice(sections.bodyOffset));
@@ -123,7 +144,11 @@ class Modules {
                     }
                     var exported = exportedSymbols.get(path);
                     var availableTypes = publicTypes.get(path);
-                    if (selection != null) {
+                    if (selection != null && selection.signatures == null) {
+                        if (implementedContracts.get(path) != service)
+                            throw new MiraError("Provider " + path + " must implement contract " + service,origin);
+                        // The inherited interface is already the entire public API.
+                    } else if (selection != null) {
                         if (!contractExports.exists(service)) {
                             final restricted = new Map<String,Definition>();
                             for (signature in selection.signatures) {
@@ -226,8 +251,11 @@ class Modules {
                     visibility.markOpaque(identity);
                     localTypes.set(name,OpaqueType(identity,[for (i in 0...arity) Variable(-i-1)]));
                 }
-                for (reference in sections.references)
+                for (reference in sections.references) {
                     if (headers.exists(reference.name)) reserve(reference.name,0,reference.origin);
+                    else if (inheritedContract != null)
+                        throw new MiraError("Missing abstract type implementation " + reference.name,reference.origin);
+                }
                 for (item in sections.signatures) {
                     final opening = DefinitionParser.topLevel(item,"(");
                     if (opening > 0 && DefinitionParser.topLevel(item,"::") < 0) {
