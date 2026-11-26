@@ -141,3 +141,21 @@ la funzione Mira next:, che collide con next() nativa PHP. Il fixture
 usa ora increment retry:. La collisione di nomi con funzioni native PHP
 resta un difetto di interoperabilità da risolvere separatamente, non un
 errore nelle prove Integer. Non si modifica l'emitter in questo incremento.
+
+## 0.54 — narrowing lessicale (implementazione proposta)
+
+Una condizione non è soltanto controllo di flusso: può fornire
+informazioni utilizzabili dal checker nel ramo in cui è vera
+o falsa. Ad esempio normalize percentage: x (Number) -> Percentage
+può restituire x nel ramo x >= 0 AND x <= 100 e 0 nell'altro.
+La condizione esiste già nel programma: non aggiungiamo una guardia
+per ripetere ciò che è stato dimostrato.
+
+Conserviamo il tipo dichiarato e aggiungiamo fatti locali, copiati
+per ramo. Alla ricongiunzione un inviluppo conservativo dei risultati
+sostituisce i fatti specifici. Non assumiamo che il complemento
+di una disuguaglianza sia valido per Number senza premesse di
+finitezza: NaN e infinito richiedono attenzione. Evitiamo per ora
+un solver generale, unioni disgiunte, bottom e tipi di ramo nuovi.
+La validazione esplicita ai confini non fidati rimane un tema distinto.
+Vedi type-checker.md; stato di questa versione subordinato alla CI.
