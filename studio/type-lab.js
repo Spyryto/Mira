@@ -33,7 +33,7 @@
   document.getElementById('checked-php').addEventListener('click',()=>compileChecked('php'));
   document.getElementById('generic-sum-example').addEventListener('click',()=>{
     host.value='';
-    source.value='Result (Success Type, Failure Type) :: Ok (Success Type) | Err (Failure Type);\nOption (element type) :: Some (element type) | None;\na (Result (Number, Text)) = Ok: 42;\nb (Result (Text, Number)) = Ok: "Ada";\nnone number (Option (Number)) = None;\nresult = match: a {ok: {n | n}, err: {e | 0}};';
+    source.value='Result (Success Type, Failure Type) :: Ok (Success Type) | Err (Failure Type);\nidentity (Value Type): x (Value Type) -> Value Type = x;\nOption (element type) :: Some (element type) | None;\na (Result (Number, Text)) = Ok: (identity: 42);\nb (Result (Text, Number)) = Ok: "Ada";\nnone number (Option (Number)) = None;\nresult = match: a {ok: {n | n}, err: {e | 0}};';
     check();
   });
   document.getElementById('match-example').addEventListener('click',()=>{
