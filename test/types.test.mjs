@@ -882,3 +882,54 @@ test('types: ordinary match selectors coexist with the special form in JS and PH
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('types: parametric nominal sums instantiate independently and infer constructor arguments',()=>{
+  const src='Result (T, E) :: Ok (T) | Err (E); Option (T) :: Some (T) | None; Envelope (T) :: Wrapped (Option (T)) | Missing; Percentage :: Number where _ >= 0 AND _ <= 100; p (Percentage) = 42; a (Result (Number, Text)) = Ok: 42; b (Result (Text, Number)) = Ok: "Ada"; failure (Result (Number, Text)) = Err: "timeout"; values = [a, failure]; some number = Some: 7; some text = Some: "Mira"; none text (Option (Text)) = None; none number (Option (Number)) = None; percent (Option (Percentage)) = Some: p; wrapped (Envelope (Number)) = Wrapped: (Some: 3); inferred = Ok: 1; read result: r (Result (Number, Text)) -> Number = match: r {ok: {n | n}, err: {e | 0}}; result = read result: a;';
+  const t=check(src);
+  assert.equal(t['Ok:'],"('a) -> Result ('a, 'b)");
+  assert.equal(t['Err:'],"('a) -> Result ('b, 'a)");
+  assert.equal(t.None,"Option ('a)");
+  assert.equal(t.a,'Result (Number, Text)');
+  assert.equal(t.b,'Result (Text, Number)');
+  assert.equal(t.values,'[Result (Number, Text)]');
+  assert.equal(t['some number'],'Option (Number)');
+  assert.equal(t['some text'],'Option (Text)');
+  assert.equal(t['none text'],'Option (Text)');
+  assert.equal(t['none number'],'Option (Number)');
+  assert.equal(t.percent,'Option (Percentage)');
+  assert.equal(t.wrapped,'Envelope (Number)');
+  assert.equal(t.inferred,"Result (Number, 'a)");
+  assert.equal(t.result,'Number');
+  for(const [extra,pattern] of [
+    ['bad (Result (Number, Text)) = Ok: "wrong";',/expected Number, got Text/],
+    ['bad = [a,b];',/expected Number, got Text|expected Text, got Number/],
+    ['bad (Result) = Ok: 42;',/requires 2 type arguments/],
+    ['bad (Result (Number)) = Ok: 42;',/Expected ,/],
+    ['bad (Option (Number, Text)) = None;',/Expected \)/],
+    ['bad (T) = 42;',/Unknown annotation type T/],
+    ['Duplicate (T, T) :: One (T) | Other;',/Invalid or duplicate type parameter/],
+    ['Box (T) :: T;',/require a sum declaration/],
+    ['bad = match: a {ok: {n | n}, err: {e | e}};',/expected Number, got Text/],
+    ['Wrong :: Wrong One | Wrong Two; bad (Result (Number, Text)) = Wrong One;',/expected Result/]
+  ])assert.throws(()=>check(src+extra),pattern,extra);
+  const pair='Pair (T) :: Both ({left: T, right: T}) | Neither; good = Both: {left: 1, right: 2};';
+  assert.equal(check(pair).good,'Pair (Number)');
+  assert.throws(()=>check(pair+'bad = Both: {left: 1, right: "x"};'),/expected Number, got Text|expected Text, got Number/);
+});
+test('types: generic sums preserve native representation and typed match on both targets',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-parametric-sum-'));
+  try{
+    const input=join(dir,'program.mira');
+    const src='Result (T, E) :: Ok (T) | Err (E); Option (T) :: Some (T) | None; a (Result (Number, Text)) = Ok: 42; b (Result (Number, Text)) = Err: "bad"; empty (Option (Number)) = None; present = Some: 7; read result: r (Result (Number, Text)) = match: r {ok: {n | n}, err: {e | 0}}; read option: o (Option (Number)) = match: o {some: {n | n}, none: {| 0}}; result = [(read result: a), (read result: b), (read option: empty), (read option: present)];';
+    writeFileSync(input,src);
+    for(const target of ['js','php']){
+      const r=spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,r.stdout+(target==='js'?'\nconsole.log(JSON.stringify([a,b,empty,present,result]));':'\necho json_encode([$a,$b,$empty,$present,$result]);'));
+      const executed=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(executed.status,0,executed.stderr);
+      assert.deepEqual(JSON.parse(executed.stdout),[{tag:'Ok',value:42},{tag:'Err',value:'bad'},{tag:'None'},{tag:'Some',value:7},[42,0,0,7]]);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
