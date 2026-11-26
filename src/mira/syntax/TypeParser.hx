@@ -111,6 +111,7 @@ class TypeParser {
                         position++;
                     } else {
                         while (current() != null && current().kind == Word) {
+                            if (current().value.indexOf(".") >= 0) return fail("Quote a record field containing a dot");
                             parts.push(current().value);
                             position++;
                         }
