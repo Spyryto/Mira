@@ -10,6 +10,7 @@ import mira.lex.Token;
 private typedef LocalScheme = {
     var type:Type;
     var quantified:Map<Int,Bool>;
+    var narrowed:Null<NumericRange>;
 }
 
 // Experimental, target-independent inference. No code generation or evaluation.
@@ -350,7 +351,7 @@ class TypeChecker {
         }
     }
 
-    function mono(type:Type):LocalScheme return {type:type, quantified:new Map<Int,Bool>()};
+    function mono(type:Type):LocalScheme return {type:type, quantified:new Map<Int,Bool>(), narrowed:null};
 
     // Value restriction: generalize only non-expansive local initializers.
     // In particular a call might eventually perform an external effect.
@@ -547,6 +548,57 @@ class TypeChecker {
         origin = previous;
     }
 
+    // Facts are lexical and branch-local. A copy of the binding, rather than
+    // mutation of its type or shared scheme, prevents leaks across siblings
+    // and across shadowing bindings.
+    function branchScope(condition:Expr,truth:Bool,scope:Map<String,LocalScheme>):Map<String,LocalScheme> {
+        return switch (condition) {
+            case Binary("AND",left,right) if (truth):
+                branchScope(right,true,branchScope(left,true,scope));
+            case Binary("OR",left,right) if (!truth):
+                branchScope(right,false,branchScope(left,false,scope));
+            case Conditional(inner,BooleanLiteral(false),BooleanLiteral(true)):
+                branchScope(inner,!truth,scope);
+            case Binary(op,Name(name),Numeric(value)):
+                narrowComparison(name,op,value,truth,scope);
+            case Binary(op,Numeric(value),Name(name)):
+                final reversed = switch (op) {
+                    case ">": "<";
+                    case ">=": "<=";
+                    case "<": ">";
+                    case "<=": ">=";
+                    default: op;
+                };
+                narrowComparison(name,reversed,value,truth,scope);
+            default: scope;
+        };
+    }
+
+    function narrowComparison(name:String,op:String,value:String,truth:Bool,scope:Map<String,LocalScheme>):Map<String,LocalScheme> {
+        if ([">",">=","<","<="].indexOf(op) < 0 || !scope.exists(name)) return scope;
+        final binding = scope.get(name);
+        final type = prune(binding.type);
+        final previous = binding.narrowed == null ? NumericRange.ofType(type) : binding.narrowed;
+        final point = NumericRange.literal(value);
+        if (previous == null || point == null) return scope;
+        // The complement of a comparison is not valid for NaN. Only use
+        // false-branch complements when the prior facts establish finiteness.
+        if (!truth && !previous.portable()) return scope;
+        final comparison = truth ? op : switch (op) {
+            case ">": "<=";
+            case ">=": "<";
+            case "<": ">=";
+            default: ">";
+        };
+        var narrowed = previous.intersect(NumericRange.comparison(comparison,point.low));
+        if (NumericRange.integerType(type)) narrowed = narrowed.integerHull();
+        // Still check unreachable branches normally: no bottom-type rules yet.
+        if (narrowed.empty()) return scope;
+        final inner = scope.copy();
+        inner.set(name,{type:binding.type,quantified:binding.quantified,narrowed:narrowed});
+        return inner;
+    }
+
     function infer(expr:Expr,scope:Map<String,LocalScheme>):Type {
         final previous = origin;
         final anchor = origins.get(expr);
@@ -554,6 +606,13 @@ class TypeChecker {
         final type:Type = inferNode(expr,scope);
         final fact:Null<NumericRange> = switch (expr) {
             case Numeric(value): NumericRange.literal(value);
+            case Name(name) if (scope.exists(name) && scope.get(name).narrowed != null):
+                final narrowed = scope.get(name).narrowed;
+                narrowed.portable() ? narrowed : null;
+            case Conditional(_,yes,no):
+                final a = ranges.get(yes);
+                final b = ranges.get(no);
+                a == null || b == null ? null : new NumericRange(Math.min(a.low,b.low),Math.max(a.high,b.high),true,true);
             case Binary(symbol,left,right):
                 final a = ranges.get(left);
                 final b = ranges.get(right);
@@ -566,6 +625,7 @@ class TypeChecker {
             ranges.set(expr,fact);
             final integral = NumericRange.integerType(prune(type)) || switch (expr) {
                 case Numeric(_): fact.low == Math.ffloor(fact.low);
+                case Conditional(_,yes,no): integers.exists(yes) && integers.exists(no);
                 case Binary(symbol,left,right):
                     integers.exists(left) && integers.exists(right)
                     && (symbol == "+" || symbol == "-" || symbol == "*"
@@ -603,8 +663,8 @@ class TypeChecker {
                 FunctionType([record],projection(record,key));
             case Conditional(condition,yes,no):
                 unifyAt(BooleanType,infer(condition,scope),condition);
-                final a = infer(yes,scope);
-                unifyAt(a,infer(no,scope),no);
+                final a = infer(yes,branchScope(condition,true,scope));
+                unifyAt(a,infer(no,branchScope(condition,false,scope)),no);
                 a;
             case Sequence(items):
                 final item = fresh();
