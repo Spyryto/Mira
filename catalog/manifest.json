@@ -1,5 +1,5 @@
 {
-  "version": "0.50.0",
+  "version": "0.51.0",
   "features": [
     {
       "id": "values",
@@ -1848,6 +1848,12 @@
       "title": "Proiezione strutturale aperta ~ Tipo",
       "since": "0.50",
       "doc": "docs/type-checker.md#050-proiezione-strutturale"
+    },
+    {
+      "id": "numeric-refinements",
+      "title": "Refinement numerici where e congiunzione &",
+      "since": "0.51",
+      "doc": "docs/type-checker.md#051-refinement-numerici"
     }
   ]
 }
