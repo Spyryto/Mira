@@ -130,6 +130,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Interfacce elaborate e impronte semantiche | `0.77` | [Dettagli](docs/grammar.md#mira-077-impronte-semantiche-delle-interfacce) |
 | ✅ | Confronto delle interfacce e impatto sulle dipendenze | `0.78` | [Dettagli](docs/grammar.md#mira-078-confronto-delle-interfacce-e-impatto-potenziale) |
 | ✅ | Impronte dei sorgenti letti e confronto del collegamento | `0.79` | [Dettagli](docs/grammar.md#mira-079-impronte-dei-sorgenti-e-collegamenti) |
+| ✅ | Profilazione delle fasi di compilazione checked | `0.80` | [Dettagli](docs/performance.md#mira-080-profilazione-della-pipeline-checked) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
