@@ -591,3 +591,11 @@ originali; la tabella dei tipi pubblici include gli alias riesportati.
 ModuleImport analizza anche export. Le riesportazioni sono binding
 lessicali e pubblici, non dichiarazioni sintetizzate. Il trace espone
 la provenienza canonica. Il tree shaking resta un incremento separato.
+
+## 0.70.1 — pruning a programma chiuso
+
+TreeShaker riusa Dependencies senza richiedere il calcolo delle SCC:
+visita iterativa di raggiungibilità, filtro stabile e pulizia delle
+importedGlobals. Controllo dei tipi prima del pruning, whitelist di
+inizializzatori innocui, entry e legacy preservati, opt-in esplicito.
+Nessun sistema generale di effetti o euristica di purezza delle chiamate.
