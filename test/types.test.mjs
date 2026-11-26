@@ -908,7 +908,7 @@ test('types: parametric nominal sums instantiate independently and infer constru
     ['bad (Option (Number, Text)) = None;',/Expected \)/],
     ['bad (T) = 42;',/Unknown annotation type T/],
     ['Duplicate (T, T) :: One (T) | Other;',/Invalid or duplicate type parameter/],
-    ['Box (T) :: T;',/require a sum declaration/],
+    ['Box (T) :: T;',/require a record or list base/],
     ['bad = match: a {ok: {n | n}, err: {e | e}};',/expected Number, got Text/],
     ['Wrong :: Wrong One | Wrong Two; bad (Result (Number, Text)) = Wrong One;',/expected Result/]
   ])assert.throws(()=>check(src+extra),pattern,extra);
@@ -1062,6 +1062,50 @@ test('types: first-class validation results evaluate the input once on JS and PH
       const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
       assert.equal(run.status,0,run.stderr);
       assert.deepEqual(JSON.parse(run.stdout),[{tag:'Ok',value:42},{tag:'Err',value:'Invalid numeric value'},{tag:'Err',value:'Invalid numeric value'},{tag:'Ok',value:3},{tag:'Err',value:'Invalid Integer value'},{tag:'Err',value:'Invalid Integer value'},{tag:'Ok',value:7},3]);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('types: parametric nominal records and lists preserve their identity and arguments',()=>{
+  const src='Pair (First Type, Second Type) :: {first: First Type, second: Second Type}; Bag (Element Type) :: [Element Type]; Envelope (T) :: {pair: Pair (T, Text), items: Bag (T)}; make pair (A, B): x (A), with: y (B) -> Pair (A, B) = {first: x, second: y}; first of (T, U): p (Pair (T, U)) -> T = p ~ first; a = make pair: 42, with: "Ada"; b = make pair: "Mira", with: true; c (Bag (Number)) = [1, 2]; wrapped (Envelope (Number)) = {pair: a, items: c}; result = first of: a; other = first of: b;';
+  const t=check(src);
+  assert.equal(t.a,'Pair (Number, Text)');
+  assert.equal(t.b,'Pair (Text, Boolean)');
+  assert.equal(t.c,'Bag (Number)');
+  assert.equal(t.wrapped,'Envelope (Number)');
+  assert.equal(t.result,'Number');
+  assert.equal(t.other,'Text');
+  for(const [extra,pattern] of [
+    ['bad (Pair (Text, Number)) = a;',/expected Text, got Number/],
+    ['bad (Pair (Number, Text)) = {first: "wrong", second: "x"};',/expected Number, got Text/],
+    ['bad (Pair) = a;',/requires 2 type arguments/],
+    ['bad (Pair (Number)) = a;',/Expected , in type annotation/],
+    ['bad (Bag (Text)) = c;',/expected Text, got Number/],
+    ['Sibling (T, U) :: {first: T, second: U}; bad (Sibling (Number, Text)) = a;',/expected Sibling/],
+    ['bad = first of: {first: 1, second: "x"};',/expected Pair/],
+    ['bad (T) = 1;',/Unknown annotation type T/],
+    ['Loop (T) :: {next: Loop (T)};',/Unknown annotation type Loop/]
+  ]) assert.throws(()=>check(src+extra),pattern,extra);
+});
+test('types: nominal parametric data erase to ordinary records and lists on both targets',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-parametric-data-'));
+  try{
+    const input=join(dir,'program.mira');
+    const typed='Pair (T, U) :: {first: T, second: U}; Bag (T) :: [T]; a (Pair (Number, Text)) = {first: 42, second: "Ada"}; b (Bag (Number)) = [1, 2]; result = {a: a, b: b};';
+    const plain='a = {first: 42, second: "Ada"}; b = [1, 2]; result = {a: a, b: b};';
+    for(const target of ['js','php']){
+      writeFileSync(input,typed);
+      const r=spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      writeFileSync(input,plain);
+      const baseline=spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
+      assert.equal(baseline.status,0,baseline.stderr);
+      assert.equal(r.stdout,baseline.stdout);
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,r.stdout+(target==='js'?'\nconsole.log(JSON.stringify(result));':'\necho json_encode($result);'));
+      const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);
+      assert.deepEqual(JSON.parse(run.stdout),{a:{first:42,second:'Ada'},b:[1,2]});
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
