@@ -142,7 +142,7 @@ usa ora increment retry:. La collisione di nomi con funzioni native PHP
 resta un difetto di interoperabilità da risolvere separatamente, non un
 errore nelle prove Integer. Non si modifica l'emitter in questo incremento.
 
-## 0.54 — narrowing lessicale (implementazione proposta)
+## 0.54 — narrowing lessicale (integrato)
 
 Una condizione non è soltanto controllo di flusso: può fornire
 informazioni utilizzabili dal checker nel ramo in cui è vera
@@ -158,4 +158,24 @@ di una disuguaglianza sia valido per Number senza premesse di
 finitezza: NaN e infinito richiedono attenzione. Evitiamo per ora
 un solver generale, unioni disgiunte, bottom e tipi di ramo nuovi.
 La validazione esplicita ai confini non fidati rimane un tema distinto.
-Vedi type-checker.md; stato di questa versione subordinato alla CI.
+Vedi type-checker.md; tutti i workflow della 0.54 sono verdi.
+
+## 0.55 — overflow portabile e classificazione delle prove
+
+JavaScript Number ha interi sicuri fino a 2^53-1; PHP int su
+64 bit arriva a 2^63-1, oltre il quale passa a float. Il dominio
+Integer di Mira è comune, non coincide con l'overflow nativo.
+Le operazioni Number non sono rese modulari, saturanti o BigInt.
+Il vincolo riguarda il confine di costruzione, come per Percentage.
+
+Decisione concordata: dimostrato significa nessun costo aggiunto;
+certamente violato significa errore a compile time; indeterminato
+richiederà una guardia o una validazione esplicitamente fallibile.
+La 0.55 implementa la classificazione, non ancora le guardie.
+Le osservazioni fuori dominio non possono diventare nuove prove
+aritmetiche: un intermedio non esatto può produrre un risultato
+apparentemente valido. Prima di generare guardie occorre fissare
+la semantica dei casi di precisione perduta e divisione per zero,
+distinguere input non fidati da premesse tipizzate e scegliere
+un percorso di compilazione checked esplicito. Nessun wrapper o
+runtime aggiunto per le prove statiche. Vedi type-checker.md.
