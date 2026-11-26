@@ -137,10 +137,10 @@ class Bridge {
     }
 
     // Compose existing real trace and checked report; no source re-parsing in UI.
-    public static function exploreModules(source:String,?hostJson:String,?modulesJson:String):Dynamic {
-        final traced = Bridge.trace(source,hostJson,modulesJson);
+    public static function exploreModules(source:String,?hostJson:String,?modulesJson:String,?bindingsJson:String):Dynamic {
+        final traced = Bridge.trace(source,hostJson,modulesJson,bindingsJson);
         if (!traced.ok) return traced;
-        final checked = check(source,hostJson,modulesJson);
+        final checked = check(source,hostJson,modulesJson,bindingsJson);
         if (!checked.ok) return checked;
         return safely(function() {
             final info:Dynamic = haxe.Json.parse(traced.output);
@@ -170,16 +170,17 @@ class Bridge {
 
     // Exposes actual compiler intermediate data, not a reconstructed diagram.
     // The raw declarations are collected before expression resolution.
-    public static function trace(source:String, ?hostJson:String, ?modulesJson:String):Dynamic {
+    public static function trace(source:String, ?hostJson:String, ?modulesJson:String, ?bindingsJson:String):Dynamic {
         return safely(function() {
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
             final publicTypes = new Map<String,Array<String>>();
             final moduleTypes = new Map<String,Map<String,mira.types.Type>>();
             final moduleEdges:Array<Dynamic> = [];
+            final providers = bindingsJson == null ? null : mira.resolve.ProviderBindings.fromJson(bindingsJson);
             final reexports = new Map<String,Array<Dynamic>>();
             final visibility = new mira.types.TypeVisibility();
-            final raw = [for (d in mira.Modules.collect(source, resolver(modulesJson),null,null,moduleTypes,publicTypes,null,visibility,reexports,moduleEdges)) d.canonical()];
+            final raw = [for (d in mira.Modules.collect(source, resolver(modulesJson),null,null,moduleTypes,publicTypes,null,visibility,reexports,moduleEdges,providers)) d.canonical()];
             final exportsByModule = new Map<String,Array<Dynamic>>();
             for (d in raw) if (d.modulePath != null && d.isExported) {
                 if (!exportsByModule.exists(d.modulePath)) exportsByModule.set(d.modulePath,[]);
