@@ -54,7 +54,7 @@ class Compiler
 public static function check(source:String, ?host:HostEnvironment, ?readModule:String->Null<String>, ?entry:String):Array<Dynamic>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L65)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L66)
 
 <a id="api-mira-compiler-inspecttokens"></a>
 ### `mira.Compiler.inspectTokens`
@@ -65,7 +65,7 @@ public static function check(source:String, ?host:HostEnvironment, ?readModule:S
 public static function inspectTokens(source:String):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L78)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L81)
 
 <a id="api-mira-compiler-parse"></a>
 ### `mira.Compiler.parse`
@@ -73,7 +73,7 @@ public static function inspectTokens(source:String):String
 **method** · Genera definizioni con corpi risolti dopo la raccolta delle firme dei selettori.
 
 ```haxe
-public static function parse(source:String, ?host:HostEnvironment, ?readModule:String->Null<String>, ?entry:String, ?origins:ExpressionOrigins):Array<Definition>
+public static function parse(source:String, ?host:HostEnvironment, ?readModule:String->Null<String>, ?entry:String, ?origins:ExpressionOrigins, ?visibility:mira.types.TypeVisibility):Array<Definition>
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L14)
@@ -89,7 +89,7 @@ Feature: [Dichiarazioni successive](language.md#feature-forward)
 public static function specialize(source:String,name:String,args:Array<mira.types.Type>,?host:HostEnvironment, ?readModule:String->Null<String>,?entry:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L71)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L73)
 
 <a id="api-mira-compiler-transpile"></a>
 ### `mira.Compiler.transpile`
@@ -570,7 +570,7 @@ public function new(message:String, ?token:Token, code:String = "source_error")
 class Modules
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Modules.hx#L14)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Modules.hx#L17)
 
 <a id="api-mira-modules-collect"></a>
 ### `mira.Modules.collect`
@@ -578,10 +578,10 @@ class Modules
 **method** · Raccoglie dichiarazioni da import transitivi, una sola volta per percorso, prima del parsing delle espressioni.
 
 ```haxe
-public static function collect(source:String, ?read:String->Null<String>, ?entry:String, ?types:Map<String,mira.types.Type>, ?moduleTypes:Map<String,Map<String,mira.types.Type>>, ?publicTypes:Map<String,Array<String>>, ?bindings:Map<String,Array<ImportBinding>>):Array<Definition>
+public static function collect(source:String, ?read:String->Null<String>, ?entry:String, ?types:Map<String,mira.types.Type>, ?moduleTypes:Map<String,Map<String,mira.types.Type>>, ?publicTypes:Map<String,Array<String>>, ?bindings:Map<String,Array<ImportBinding>>, ?visibility:TypeVisibility):Array<Definition>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Modules.hx#L16)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Modules.hx#L19)
 
 <a id="api-mira-resolve-importbinding"></a>
 ### `mira.resolve.ImportBinding`
@@ -2437,7 +2437,7 @@ enum Type
 BooleanType
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L16)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L17)
 
 <a id="api-mira-types-type-functiontype"></a>
 ### `mira.types.Type.FunctionType`
@@ -2448,7 +2448,7 @@ BooleanType
 FunctionType(parameters:Array<Type>, result:Type)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L19)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L20)
 
 <a id="api-mira-types-type-integertype"></a>
 ### `mira.types.Type.IntegerType`
@@ -2459,7 +2459,7 @@ FunctionType(parameters:Array<Type>, result:Type)
 IntegerType
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L14)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L15)
 
 <a id="api-mira-types-type-listtype"></a>
 ### `mira.types.Type.ListType`
@@ -2470,7 +2470,7 @@ IntegerType
 ListType(item:Type)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L18)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L19)
 
 <a id="api-mira-types-type-namedtype"></a>
 ### `mira.types.Type.NamedType`
@@ -2492,7 +2492,18 @@ NamedType(name:String,base:Type)
 NumberType
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L13)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L14)
+
+<a id="api-mira-types-type-opaquetype"></a>
+### `mira.types.Type.OpaqueType`
+
+**variant** · Membro pubblico di mira.types.Type.
+
+```haxe
+OpaqueType(name:String)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L6)
 
 <a id="api-mira-types-type-parametricnamedtype"></a>
 ### `mira.types.Type.ParametricNamedType`
@@ -2503,7 +2514,7 @@ NumberType
 ParametricNamedType(name:String,base:Type,arguments:Array<Type>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L6)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L7)
 
 <a id="api-mira-types-type-recordtype"></a>
 ### `mira.types.Type.RecordType`
@@ -2514,7 +2525,7 @@ ParametricNamedType(name:String,base:Type,arguments:Array<Type>)
 RecordType(fields:Map<String, Type>, tail:Null<Type>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L20)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L21)
 
 <a id="api-mira-types-type-refinedtype"></a>
 ### `mira.types.Type.RefinedType`
@@ -2525,7 +2536,7 @@ RecordType(fields:Map<String, Type>, tail:Null<Type>)
 RefinedType(base:Type,range:NumericRange)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L10)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L11)
 
 <a id="api-mira-types-type-structuraltype"></a>
 ### `mira.types.Type.StructuralType`
@@ -2536,7 +2547,7 @@ RefinedType(base:Type,range:NumericRange)
 StructuralType(name:String,fields:Map<String,Type>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L12)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L13)
 
 <a id="api-mira-types-type-sumreference"></a>
 ### `mira.types.Type.SumReference`
@@ -2547,7 +2558,7 @@ StructuralType(name:String,fields:Map<String,Type>)
 SumReference(name:String,template:Map<String,Null<Type>>,arguments:Array<Type>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L9)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L10)
 
 <a id="api-mira-types-type-sumtype"></a>
 ### `mira.types.Type.SumType`
@@ -2558,7 +2569,7 @@ SumReference(name:String,template:Map<String,Null<Type>>,arguments:Array<Type>)
 SumType(name:String,alternatives:Map<String,Null<Type>>,arguments:Array<Type>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L7)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L8)
 
 <a id="api-mira-types-type-texttype"></a>
 ### `mira.types.Type.TextType`
@@ -2569,7 +2580,7 @@ SumType(name:String,alternatives:Map<String,Null<Type>>,arguments:Array<Type>)
 TextType
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L15)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L16)
 
 <a id="api-mira-types-type-variable"></a>
 ### `mira.types.Type.Variable`
@@ -2580,7 +2591,7 @@ TextType
 Variable(id:Int)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L17)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L18)
 
 <a id="api-mira-types-typechecker"></a>
 ### `mira.types.TypeChecker`
@@ -2602,7 +2613,7 @@ class TypeChecker
 public function check(program:Array<Definition>):Array<Dynamic>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L52)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L60)
 
 <a id="api-mira-types-typechecker-new"></a>
 ### `mira.types.TypeChecker.new`
@@ -2610,10 +2621,10 @@ public function check(program:Array<Definition>):Array<Dynamic>
 **constructor** · Membro pubblico di mira.types.TypeChecker.
 
 ```haxe
-public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.ds.ObjectMap<Dynamic,NumericGuard>)
+public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.ds.ObjectMap<Dynamic,NumericGuard>,?visibility:TypeVisibility)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L39)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L41)
 
 <a id="api-mira-types-typechecker-specialize"></a>
 ### `mira.types.TypeChecker.specialize`
@@ -2624,7 +2635,7 @@ public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.
 public function specialize(program:Array<Definition>,name:String,args:Array<Type>):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L72)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L82)
 
 <a id="api-mira-types-typetemplates"></a>
 ### `mira.types.TypeTemplates`
@@ -2658,4 +2669,59 @@ public static function unfold(type:Type):Type
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeTemplates.hx#L21)
+
+<a id="api-mira-types-typevisibility"></a>
+### `mira.types.TypeVisibility`
+
+**class** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+class TypeVisibility
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L8)
+
+<a id="api-mira-types-typevisibility-markopaque"></a>
+### `mira.types.TypeVisibility.markOpaque`
+
+**method** · Membro pubblico di mira.types.TypeVisibility.
+
+```haxe
+public function markOpaque(name:String):Void
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L16)
+
+<a id="api-mira-types-typevisibility-new"></a>
+### `mira.types.TypeVisibility.new`
+
+**constructor** · Membro pubblico di mira.types.TypeVisibility.
+
+```haxe
+public function new()
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L14)
+
+<a id="api-mira-types-typevisibility-requirepublic"></a>
+### `mira.types.TypeVisibility.requirePublic`
+
+**method** · Membro pubblico di mira.types.TypeVisibility.
+
+```haxe
+public function requirePublic(type:Type,origin:Token,resolve:Type->Type):Void
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L47)
+
+<a id="api-mira-types-typevisibility-view"></a>
+### `mira.types.TypeVisibility.view`
+
+**method** · Membro pubblico di mira.types.TypeVisibility.
+
+```haxe
+public function view(type:Type,owner:Null<String>,?resolve:Type->Type):Type
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L21)
 
