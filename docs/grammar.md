@@ -864,3 +864,17 @@ Il report `--interfaces` formato 1 aggiunge `dependencies`, le direttive del res
 Il report `--interfaces` aggiunge `sourceInputs.entry` (SHA-256 del testo di ingresso) e `sourceInputs.reads` (sequenza effettiva delle letture riuscite del resolver, ciascuna con path e fingerprint). Include contratti ereditati e file legacy; non include i sorgenti mai letti. Nessun accesso aggiuntivo a filesystem o rete. Le impronte pubbliche restano identiche.
 
 Studio confronta separatamente testo di ingresso, letture modificate/aggiunte/rimosse, superfici pubbliche, consumatori potenzialmente interessati e selezioni di provider osservate nelle direttive. Confronta inoltre il testo dei manifest host e binding tra analisi riuscite nella sessione; una modifica anche solo testuale è segnalata prudentemente. Il report CLI non contiene impronte dei manifest, versione del compilatore o opzioni di emissione; non è una chiave completa di cache. Commenti e spazi cambiano l'impronta del sorgente, non necessariamente il codice generato. Nessuna compilazione viene saltata; nessun nuovo costo nel programma emesso.
+
+## Mira 0.81: capability host con scope di modulo
+
+Il manifest host accetta il campo facoltativo scopes, una mappa dal nome esatto della capability (valore, callable o selettore) a una lista non vuota di percorsi logici di moduli. Una capability con scope deve essere registrata e tipizzata. I nomi non inclusi in scopes mantengono la visibilità globale storica. Nessuna nuova sintassi Mira.
+
+```json
+{
+  "callables": ["native root"],
+  "types": {"native root": {"parameters": ["Number"], "result": "Number"}},
+  "scopes": {"native root": ["Providers / Native"]}
+}
+```
+
+Il modulo concreto Providers / Native può usare native root; il consumatore importa soltanto il contratto Services / Math. Il resolver restringe l'ambiente per ogni modulo durante la risoluzione dei corpi, anche unchecked. I tipi completi restano disponibili al checker per i riferimenti host già risolti. Le capability scoped non sono visibili ai sorgenti legacy senza module; il percorso è quello concreto dichiarato, non l'identità del contratto. Gli override storici dei selettori nativi non possono essere scoped. Non si tratta di una sandbox o di un meccanismo di autorizzazione runtime. Il manifest dichiara il tipo ma non prova il comportamento della funzione esterna. I target continuano a usare __miraHost, fornito dall'applicazione; nessun registro dinamico aggiunto.

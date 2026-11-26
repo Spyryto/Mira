@@ -1724,3 +1724,22 @@ test('0.80 profiling is opt-in, checked-only and keeps diagnostics and locations
   assert.equal(bad.ok,false);
   assert.equal(bad.profile,undefined);
 });
+
+test('0.81 scoped host names are visible only in declared modules, including selector sections and values',()=>{
+  const host=JSON.stringify({values:['native rate'],selectors:['native multiply:by:'],types:{
+    'native rate':'Number','native multiply:by:':{parameters:['Number','Number'],result:'Number'}},
+    scopes:{'native rate':['Adapters / Math'],'native multiply:by:':['Adapters / Math']}});
+  const modules=JSON.stringify({'Adapters / Math':'module Adapters / Math; interface scale: :: (Number) -> Number; implementation scale: x = x >> (native multiply: _, by: native rate);'});
+  const src='module App; interface result; import Adapters / Math {scale: ;}; implementation result = scale: 7;';
+  const checked=bridge.check(src,host,modules);assert.equal(checked.ok,true,checked.message);
+  const out=bridge.compile(src,'js',host,false,modules,true,true);assert.equal(out.ok,true,out.message);
+  const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+  assert.equal(runInNewContext(out.output+'\n'+name,{__miraHost:{'native rate':3,'native multiply:by:':(x,y)=>x*y}}),21);
+  for(const bad of [src+' leak = native rate;',src+' leak = native multiply: 2, by: 3;',src+' leak = (native multiply: _, by: 3);']){
+    assert.equal(bridge.check(bad,host,modules).ok,false);
+    assert.equal(bridge.compile(bad,'js',host,false,modules).ok,false);
+    assert.equal(bridge.compile(bad,'php',host,false,modules).ok,false);
+  }
+  const global=JSON.stringify({values:['native rate'],types:{'native rate':'Number'}});
+  assert.equal(bridge.check('result = native rate;',global).ok,true);
+});

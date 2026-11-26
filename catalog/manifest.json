@@ -1,5 +1,5 @@
 {
-  "version": "0.80.0",
+  "version": "0.81.0",
   "features": [
     {
       "id": "values",
@@ -2058,6 +2058,12 @@
       "title": "Profilazione delle fasi di compilazione checked",
       "since": "0.80",
       "doc": "docs/performance.md#mira-080-profilazione-della-pipeline-checked"
+    },
+    {
+      "id": "scoped-host-capabilities",
+      "title": "Capability host tipizzate con scope di modulo",
+      "since": "0.81",
+      "doc": "docs/grammar.md#mira-081-capability-host-con-scope-di-modulo"
     }
   ]
 }

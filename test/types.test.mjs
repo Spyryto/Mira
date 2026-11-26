@@ -1807,3 +1807,53 @@ test('0.80 CLI profiles the checked pipeline without changing either emitter out
     assert.notEqual(run(['js','--profile']).status,0);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('0.81 scoped typed host capabilities support statically selected native adapters on JS and PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-host-modules-'));
+  try{
+    mkdirSync(join(dir,'Services'));mkdirSync(join(dir,'Providers'));
+    const input=join(dir,'program.mira'),manifest=join(dir,'host.json'),bindings=join(dir,'bindings.json');
+    const source='module App; interface result; import Services / Math {root: ;}; implementation result = root: 81;';
+    const contract='module Services / Math; interface root: :: (Number) -> Number;';
+    const native='module Providers / Native; implements Services / Math; implementation root: x = native root x;';
+    const pure='module Providers / Pure; implements Services / Math; implementation root: x = x / 9;';
+    writeFileSync(join(dir,'Services','Math.mira'),contract);
+    writeFileSync(join(dir,'Providers','Native.mira'),native);
+    writeFileSync(join(dir,'Providers','Pure.mira'),pure);
+    const host={callables:['native root'],types:{'native root':{parameters:['Number'],result:'Number'}},scopes:{'native root':['Providers / Native']}};
+    writeFileSync(manifest,JSON.stringify(host));
+    const bind=provider=>writeFileSync(bindings,JSON.stringify({'Services / Math':{provider}}));
+    const run=(src,flags)=>{writeFileSync(input,src);return spawnSync('node',['dist/mira.cjs',input,...flags,'--host',manifest],{encoding:'utf8'});};
+    const flags=['--bindings',bindings];
+    const resultName='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+    for(const [provider,isNative] of [['Providers / Native',true],['Providers / Pure',false]]){
+      bind(provider);
+      for(const target of ['js','php']){
+        const emitted=run(source,[target,'--checked','--tree-shake',...flags]);
+        assert.equal(emitted.status,0,emitted.stderr);
+        assert.equal(emitted.stdout.includes('native root'),isNative);
+        const file=join(dir,target==='js'?'out.mjs':'out.php');
+        const js=(isNative?'const __miraHost={"native root":Math.sqrt};\n':'')+emitted.stdout+'\nconsole.log('+resultName+');';
+        const php=(isNative?emitted.stdout.replace('declare(strict_types=1);','declare(strict_types=1);\n$GLOBALS["__miraHost"]=["native root"=>sqrt(...)];'):emitted.stdout)+'\necho $'+resultName+';';
+        writeFileSync(file,target==='js'?js:php);
+        const executed=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+        assert.equal(executed.status,0,executed.stderr);assert.equal(executed.stdout.trim(),'9');
+      }
+    }
+    bind('Providers / Native');
+    for(const bad of [source+' leak = native root 81;',source+' leak = native root;', 'result = native root 81;']){
+      for(const target of ['--check','js','php']){
+        const r=run(bad,target==='--check'?[target]:[target]);
+        assert.notEqual(r.status,0,bad);
+      }
+    }
+    writeFileSync(join(dir,'Providers','Native.mira'),native.replace('native root x','native root "bad"'));
+    const wrong=run(source,['--check',...flags]);assert.notEqual(wrong.status,0);assert.match(wrong.stderr,/expected Number, got Text/);
+    for(const scopes of [{'missing':['App']},{'native root':[]},{'native root':['../App']},{'native root':['App','App']}]) {
+      writeFileSync(manifest,JSON.stringify({...host,scopes}));
+      const invalid=run('result = 1;',['--check']);assert.notEqual(invalid.status,0);assert.match(invalid.stderr,/scope/i);
+    }
+    writeFileSync(manifest,JSON.stringify({...host,types:{}}));
+    assert.notEqual(run('result = 1;',['--check']).status,0);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

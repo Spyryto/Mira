@@ -358,3 +358,7 @@ Il report include le direttive del resolver come metadati separati. Per il confr
 ### 0.79 — tre livelli di cambiamento
 
 Superficie pubblica, testo sorgente effettivamente letto e collegamento dei provider sono informazioni distinte. Una modifica privata non implica un cambiamento dell'impronta pubblica; non certifica però la riutilizzabilità del codice emesso o degli esiti del checker. Il cambio di provider può conservare il contratto e alterare rappresentazioni, funzioni o dipendenze concrete. I manifest vengono confrontati testualmente in Studio; il report non è completo per cache o compilazione separata. Mantenere il controllo completo finché non esiste una strategia di invalidazione dimostrata e misurata.
+
+### 0.81 — adattatori host tipizzati
+
+Uno scope esplicito nel manifest restringe la risoluzione delle capability al modulo concreto del provider, prima del checker. Il contratto pubblico rimane un normale modulo Mira indipendente. Il provider alternativo può essere scritto in Mira e selezionato staticamente. La registrazione runtime __miraHost resta a carico dell'host; non aggiungiamo dispatch o wrapper automatici, né dichiariamo sicurezza contro codice host arbitrario. Vedi grammar.md.
