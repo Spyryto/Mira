@@ -118,6 +118,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Tipi opachi monomorfi e controllo delle firme pubbliche | `0.69` | [Dettagli](docs/grammar.md#mira-069-tipi-opachi-monomorfi-e-controllo-delle-firme-pubbliche) |
 | ✅ | Tipi opachi parametrici e riferimenti pubblici annidati | `0.69.1` | [Dettagli](docs/grammar.md#mira-0691-tipi-opachi-parametrici) |
 | ✅ | Riesportazione statica con alias e identità originale | `0.70` | [Dettagli](docs/grammar.md#mira-070-riesportazione-statica) |
+| ✅ | Tree shaking conservativo checked e misure in Studio | `0.70.1` | [Dettagli](docs/grammar.md#mira-0701-tree-shaking-conservativo) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
