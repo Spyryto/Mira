@@ -1,5 +1,5 @@
 {
-  "version": "0.86.0",
+  "version": "0.87.0",
   "features": [
     {
       "id": "values",
@@ -2094,6 +2094,12 @@
       "title": "Date civili opache con provider nativi",
       "since": "0.86",
       "doc": "docs/studio.md#mira-086-date-civili"
+    },
+    {
+      "id": "text-storage-service",
+      "title": "Persistenza testuale con provider Browser e Files",
+      "since": "0.87",
+      "doc": "docs/studio.md#mira-087-persistenza-chiave-valore"
     }
   ]
 }

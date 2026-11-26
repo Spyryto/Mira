@@ -1949,3 +1949,40 @@ test('0.86 Date service CLI emits portable date operations without exposing repr
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('0.87 Storage CLI providers and private filesystem persist across PHP processes',async()=>{
+  const {symlinkSync,existsSync,readFileSync}=await import('node:fs');
+  const dir=mkdtempSync(join(tmpdir(),'mira-storage-'));
+  try{
+    const store=join(dir,'private');mkdirSync(store);
+    const result='__miraModule_v_417070202F20726573756C74';
+    for(const [target,provider] of [['js','browser'],['php','files']]){
+      const out=spawnSync('node',['dist/mira.cjs','lib/storage/App.mira',target,'--checked','--tree-shake','--host','lib/storage/host.json','--bindings','lib/storage/bindings-'+provider+'.json'],{encoding:'utf8'});
+      assert.equal(out.status,0,out.stderr);
+      assert.ok(out.stdout.includes(provider+' read text'));
+      if(target==='js'){
+        const file=join(dir,'program.mjs');
+        const js='await import('+JSON.stringify(pathToFileURL(resolve('lib/storage/storage-host.js')).href)+');\nconst map=new Map();const __miraHost=globalThis.MiraStorageHost.browser({getItem:k=>map.get(k)??null,setItem:(k,v)=>map.set(k,v),removeItem:k=>map.delete(k)},"test");\n'+out.stdout+'\nconst p='+result+';console.log(JSON.stringify([p.read("note"),p.save("","note"),p.read("note"),p.save("Caffè 🎸","note"),p.read("note"),p.remove("note"),p.read("note")]));';
+        writeFileSync(file,js);const r=spawnSync('node',[file],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);assert.deepEqual(JSON.parse(r.stdout),[[],true,[''],true,['Caffè 🎸'],true,[]]);
+      }else{
+        const file=join(dir,'program.php');
+        const php=out.stdout.replace('declare(strict_types=1);','declare(strict_types=1);\nrequire $argv[1];$GLOBALS["__miraHost"]=\\Mira\\Storage\\files($argv[2]);')+'\ntry{$p=$'+result+';echo json_encode(["ok"=>true,"value"=>$p[$argv[3]](...array_slice($argv,4))],JSON_THROW_ON_ERROR);}catch(Throwable $e){echo json_encode(["ok"=>false,"error"=>$e->getMessage()]);}';
+        writeFileSync(file,php);
+        const run=(op,...args)=>{const r=spawnSync('php',[file,'lib/storage/storage-host.php',store,op,...args],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);return JSON.parse(r.stdout);};
+        const ok=value=>({ok:true,value}),error=error=>({ok:false,error});
+        assert.deepEqual(run('read','note'),ok([]));
+        assert.deepEqual(run('save','','note'),ok(true));assert.deepEqual(run('read','note'),ok(['']));
+        assert.deepEqual(run('save','Caffè 🎸','note'),ok(true));assert.deepEqual(run('read','note'),ok(['Caffè 🎸']));
+        assert.deepEqual(run('read','../note'),error('invalid_key'));
+        assert.deepEqual(run('save','x'.repeat(65537),'note'),error('value_too_large'));
+        assert.deepEqual(run('read','note'),ok(['Caffè 🎸']));
+        assert.deepEqual(run('remove','note'),ok(true));assert.deepEqual(run('remove','note'),ok(true));assert.deepEqual(run('read','note'),ok([]));
+        assert.equal(existsSync(join(store,'note.txt')),false);
+        const outside=join(dir,'outside.txt');writeFileSync(outside,'untouched');
+        symlinkSync(outside,join(store,'link.txt'));
+        assert.deepEqual(run('read','link'),error('storage_failure'));assert.deepEqual(run('save','x','link'),error('storage_failure'));assert.deepEqual(run('remove','link'),error('storage_failure'));
+        assert.equal(readFileSync(outside,'utf8'),'untouched');
+      }
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

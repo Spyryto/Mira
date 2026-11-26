@@ -1,0 +1,10 @@
+module App;
+interface
+result;
+import Services / Storage { read text: ; save text: for: ; remove text: ; };
+implementation
+result = {
+  read: {key | read text: key},
+  save: {value, key | save text: value, for: key},
+  remove: {key | remove text: key}
+};

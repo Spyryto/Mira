@@ -45,6 +45,7 @@ const assets = [
   'host-module-lab.js',
   'host-module-worker.js',
   'text-module-lab.js',
+  'storage-module-lab.js',
   'module-explorer.html',
   'module-explorer.js',
   'interface-impact.js',
@@ -153,6 +154,17 @@ const jsonGenerated=generateJsonDecoder(JSON.parse(jsonReport.output),JSON.parse
 const jsonData={source:jsonSource,fallibleSource:jsonFile('Fallible.mira'),modules:jsonModules,host:JSON.stringify(jsonGenerated.host,null,2),bindings:JSON.stringify(jsonGenerated.bindings,null,2),decoder:jsonGenerated.decoder};
 writeFileSync(resolve(destination,'json-module-data.js'),'globalThis.MiraJsonModuleData = '+JSON.stringify(jsonData)+';\n');
 copyFileSync(resolve(root,'lib/json/json-host.js'),resolve(destination,'json-host.js'));
+// Compile only the repository-owned Storage program for the main-thread
+// localStorage adapter. No evaluation of editable source in this lab.
+const storageFile=path=>readFileSync(resolve(root,'lib/storage',path),'utf8');
+const storageData={source:storageFile('App.mira'),modules:JSON.stringify({'Services / Storage':storageFile('Services/Storage.mira'),'Providers / Storage Browser':storageFile('Providers/Storage Browser.mira'),'Providers / Storage Files':storageFile('Providers/Storage Files.mira')}),host:storageFile('host.json'),browser:storageFile('bindings-browser.json'),files:storageFile('bindings-files.json')};
+const storageJS=context.MiraStudioCompiler.compile(storageData.source,'js',storageData.host,false,storageData.modules,true,true,storageData.browser);
+const storagePHP=context.MiraStudioCompiler.compile(storageData.source,'php',storageData.host,false,storageData.modules,true,true,storageData.files);
+if(!storageJS.ok||!storagePHP.ok)throw Error(storageJS.message||storagePHP.message);
+storageData.js=storageJS.output;storageData.php=storagePHP.output;
+writeFileSync(resolve(destination,'storage-module-data.js'),'globalThis.MiraStorageModuleData = '+JSON.stringify(storageData)+';\n');
+writeFileSync(resolve(destination,'storage-module-program.js'),'globalThis.MiraStorageProgram = function(__miraHost){\n'+storageJS.output+'\nreturn __miraModule_v_417070202F20726573756C74;\n};\n');
+copyFileSync(resolve(root,'lib/storage/storage-host.js'),resolve(destination,'storage-host.js'));
 const ledger=context.MiraStudioCompiler.compile(
   readFileSync(resolve(root,'studio/persistent-ledger.mira'),'utf8'),'js',
   JSON.stringify({callables:['render']}));
