@@ -574,3 +574,12 @@ con OpaqueType(name), anche in strutture annidate. Le firme pubbliche
 sono controllate dopo l'inferenza, senza esaminare la rappresentazione
 privata dietro un confine opaco. L'AST runtime e gli emitter non cambiano.
 Prima forma: tipi nominali monomorfi e somme non parametriche.
+
+## 0.69.1 — applicazioni opache e riferimenti anticipati
+
+OpaqueType conserva gli argomenti del tipo. TypeTemplates, unificazione,
+istanza e generalizzazione li trattano come gli altri tipi nominali.
+La raccolta degli header permette riferimenti opachi finiti nelle forme
+pubbliche, mantenendo le rappresentazioni in una tabella del checker.
+Alias diretti pubblici verso rappresentazioni opache locali esclusi;
+nessuna modifica del runtime.
