@@ -1084,3 +1084,31 @@ estensioni PHP arbitrarie, simboli dell'applicazione ospite e
 collisioni fra selettori che differiscono solo per maiuscole
 restano temi separati. Le normali collisioni di mangling
 continuano a essere diagnosticate.
+
+
+## 0.61: funzioni parametriche esplicite
+
+```mira
+identity (Value Type): x (Value Type) -> Value Type = x;
+singleton (Element Type): x (Element Type) -> [Element Type] = [x];
+a = identity: 42;
+b = identity: "Ada";
+```
+
+La lista di parametri di tipo, separati da virgole e anche
+composti da più parole, segue la prima etichetta del selettore.
+Non fa parte dell'identità del selettore e non compare nella
+chiamata. Tutti i parametri valore e il risultato devono avere
+un'annotazione in una funzione esplicitamente generica.
+Il checker usa variabili rigide nel corpo, per verificare che
+la funzione sia valida per qualsiasi tipo scelto dal chiamante;
+una nuova istanza flessibile della firma è creata a ogni uso.
+Non è lecito imporre aritmetica, uguaglianza scalare o una forma
+record non dichiarata a un parametro di tipo arbitrario.
+Liste, record e somme parametriche sono ammesse nella firma.
+Nessun codice dei parametri di tipo viene emesso; il test
+confronta l'output con la variante a inferenza implicita.
+In questa iterazione non sono ammessi gruppi ricorsivi con
+funzioni esplicitamente generiche, annotazioni dei parametri
+di tipo nel corpo, argomenti di tipo espliciti nelle chiamate,
+o vincoli sui parametri. L'inferenza ordinaria resta invariata.
