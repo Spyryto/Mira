@@ -72,6 +72,29 @@ class DefinitionParser {
         return definitions;
     }
 
+    // Read implementation type headers without resolving their bodies.
+    // Used only for explicitly abstract interface declarations.
+    public static function typeHeaders(tokens:Array<Token>):Map<String,Int> {
+        final result = new Map<String,Int>();
+        var start = 0;
+        var depth = 0;
+        for (i in 0...tokens.length) {
+            final t = tokens[i];
+            if (t.isSymbol("(") || t.isSymbol("[") || t.isSymbol("{")) depth++;
+            else if (t.isSymbol(")") || t.isSymbol("]") || t.isSymbol("}")) depth--;
+            else if (depth == 0 && t.isSymbol(";")) {
+                final item = tokens.slice(start,i);
+                final marker = topLevel(item,"::");
+                if (marker > 0) {
+                    final header = typeHeader(item.slice(0,marker),new Map<String,Type>());
+                    result.set(header.name,header.parameters.length);
+                }
+                start = i+1;
+            }
+        }
+        return result;
+    }
+
     // Parameter names are lexical to a sum declaration, not global type names.
     public static function typeHeader(tokens:Array<Token>,names:Map<String,Type>):{name:String,parameters:Array<String>} {
         final opening = topLevel(tokens,"(");
