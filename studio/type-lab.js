@@ -47,6 +47,7 @@
     check();
   });
   document.getElementById('validation-result-example').addEventListener('click',()=>{
+    host.value='';
     source.value='Result (Value Type, Failure Type) :: Ok (Value Type) | Err (Failure Type);\nPercentage :: Number where _ >= 0 AND _ <= 100;\na = validate: (42), as: (Percentage);\nb = validate: (120), as: (Percentage);\nresult = match: a {ok: {p | p + 0}, err: {message | 0}};';
     check();
   });
