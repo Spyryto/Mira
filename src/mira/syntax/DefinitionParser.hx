@@ -36,8 +36,13 @@ class DefinitionParser {
                         final name = readWords(segment.slice(0,marker));
                         if (["Number","Integer","Text","Boolean"].indexOf(name) >= 0 || names.exists(name))
                             throw new MiraError("Duplicate or reserved type " + name,segment[0]);
-                        final base = new TypeParser(segment.slice(marker+1),segment[marker+1],names,false).parse();
-                        names.set(name,NamedType(name,base));
+                        final rhs = segment.slice(marker+1);
+                        if (topLevel(rhs,"|") >= 0) {
+                            declareSum(name,rhs,names,definitions);
+                        } else {
+                            final base = new TypeParser(rhs,segment[marker+1],names,false).parse();
+                            names.set(name,NamedType(name,base));
+                        }
                     } else definitions.push(parseOne(segment,names));
                 }
                 start = index + 1;
@@ -50,6 +55,45 @@ class DefinitionParser {
             throw new MiraError("Expected ; after definition", tokens[index - 1]);
         }
         return definitions;
+    }
+
+    // Sum declarations synthesize ordinary constructor definitions, with a
+    // trusted canonical Variant body rather than user-forgeable records.
+    static function declareSum(name:String,tokens:Array<Token>,names:Map<String,Type>,definitions:Array<Definition>):Void {
+        final alternatives = new Map<String,Null<Type>>();
+        final tags:Array<String> = [];
+        final origins:Array<Token> = [];
+        var rest = tokens[0].isSymbol("|") ? tokens.slice(1) : tokens;
+        while (true) {
+            final separator = topLevel(rest,"|");
+            final part = separator < 0 ? rest : rest.slice(0,separator);
+            if (part.length == 0) throw new MiraError("Empty sum alternative",tokens[0]);
+            final variant = annotatedName(part,names);
+            if (!~/^[A-Z][A-Za-z0-9_]*( [A-Za-z_][A-Za-z0-9_]*)*$/.match(variant.name))
+                throw new MiraError("Sum constructor must start with an uppercase letter",part[0]);
+            if (alternatives.exists(variant.name))
+                throw new MiraError("Duplicate sum alternative " + variant.name,part[0]);
+            alternatives.set(variant.name,variant.type);
+            tags.push(variant.name);
+            origins.push(part[0]);
+            if (separator < 0) break;
+            rest = rest.slice(separator+1);
+        }
+        final sum = SumType(name,alternatives);
+        names.set(name,sum);
+        for (i in 0...tags.length) {
+            final tag = tags[i];
+            final payload = alternatives.get(tag);
+            final anchor = origins[i];
+            final d = payload == null
+                ? new Definition(tag,[],[],[],anchor)
+                : new Definition("",[tag],["payload"],[],anchor,false,[anchor]);
+            if (payload != null) d.parameterAnnotations = [payload];
+            d.resultAnnotation = sum;
+            d.resultAnnotationOrigin = anchor;
+            d.body = Variant(sum,tag,payload == null ? null : Name("payload"));
+            definitions.push(d);
+        }
     }
 
     static function parseOne(tokens:Array<Token>,names:Map<String,Type>):Definition {
