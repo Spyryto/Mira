@@ -359,7 +359,7 @@ vedi [quaderno di progettazione](design-notes.md).
 
 Vedi [progetto dei moduli](module-design.md). Le sezioni piatte interface e implementation sono introdotte nella 0.66;
 gli alias => di simboli sono introdotti nella 0.67; le firme pubbliche
-esplicite nell'interfaccia restano una direzione futura. Gli import statici a percorso
+esplicite nell'interfaccia sono introdotte nella 0.68. Gli import statici a percorso
 file della 0.30 restano l'unica forma di caricamento implementata. Il punto sperimentato
 nella PR #95 non è stato adottato.
 
@@ -474,3 +474,44 @@ I moduli devono avere un header per gli import logici. Alias dell'intero
 modulo e qualificazione nelle espressioni restano aperti. Firme esplicite,
 opacità e verifica delle fughe di tipi privati non ancora implementate:
 le annotazioni restano opt-in. Gli import non creano oggetti runtime.
+
+## Mira 0.68: firme pubbliche esplicite e inferite
+
+```mira
+module Math / Example;
+
+interface
+
+rate (Number);
+square: :: (Number) -> Number;
+identity (Value Type): :: (Value Type) -> Value Type;
+add: by: :: (Number, Number) -> Number;
+double: ;
+
+implementation
+
+rate = 2;
+square: x = x * x;
+identity: x = x;
+add: x, by: y = x + y;
+double: x = x + x;
+```
+
+Le firme esplicite vengono risolte dopo gli import e i tipi pubblici,
+prima dei tipi privati. Sono trasferite alle annotazioni della definizione
+locale: il checker esistente verifica parametri, risultato e genericità.
+Per le firme ripetute, è richiesta l'identità del tipo, non una relazione
+più permissiva di assegnabilità; i nomi dei parametri generici possono
+essere diversi purché gli slot corrispondano. Se si ripete un header
+generico nell'implementazione valgono ancora le regole della 0.61
+(annotazioni complete). Nessuna ripetizione è necessaria.
+Una funzione esportata senza firma continua a essere inferita. Il report
+checked distingue exported e explicitSignature. I consumatori degli
+import utilizzano le firme canoniche, non copie o wrapper. Controllo
+dei tipi ancora opt-in (check/checked); anche in modalità unchecked
+le firme sono analizzate e le annotazioni ripetute incompatibili rifiutate,
+ma i corpi non sono verificati. Il confronto tra output di contratti e
+annotazioni equivalenti copre entrambi i target.
+In questa fase non è ancora garantito che le firme inferite non espongano
+tipi privati; verifica delle fughe, opacità, compilazione separata e report
+indipendente delle interfacce restano incrementi successivi.
