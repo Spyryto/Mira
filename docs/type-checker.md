@@ -1058,3 +1058,29 @@ Il parser riutilizza readWords e TypeParser già riconosce
 nomi composti; rappresentazione, inferenza ed emissione sono
 invariate. I nomi dei parametri sono eliminati a compile time.
 Il Type Lab usa un esempio discorsivo; i nomi brevi restano validi.
+
+
+## 0.60.2: protezione dei nomi host
+
+Il mangler protegge le keyword JavaScript, gli identificatori
+nativi utilizzati dagli emitter e un insieme esplicito di
+nomi comuni PHP. Esempio:
+
+```mira
+Result (Success Type, Failure Type) ::
+  Ok (Success Type) | Error (Failure Type);
+failure (Result (Number, Text)) = Error: "timeout";
+```
+
+Il costruttore Error conserva il tag originale e viene emesso
+come __miraEsc_Error. Anche i nomi sorgente che iniziano con
+__mira vengono escapati, salvo il sentinel riservato __miraHost;
+match conserva la mappatura della 0.59. I nomi host espliciti
+restano chiavi originali del registro di capability. Nessuna
+modifica alla grammatica, al checker o alla rappresentazione,
+nessun costo runtime. Err rimane la convenzione degli esempi.
+La protezione non costituisce un namespace PHP completo:
+estensioni PHP arbitrarie, simboli dell'applicazione ospite e
+collisioni fra selettori che differiscono solo per maiuscole
+restano temi separati. Le normali collisioni di mangling
+continuano a essere diagnosticate.
