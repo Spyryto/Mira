@@ -27,6 +27,7 @@ class Mangle {
     }
 
     public static function name(source:String):String {
+        if (ModuleIdentity.isQualified(source)) return ModuleIdentity.mangle(source,"v");
         final words = source.split(" ");
         var result = words[0];
 
@@ -38,6 +39,7 @@ class Mangle {
     }
 
     public static function selector(labels:Array<String>):String {
+        if (ModuleIdentity.isQualified(labels[0])) return ModuleIdentity.mangle(labels.join(":"),"s");
         final names:Array<String> = [];
         for (label in labels) names.push(label.split(" ").join("_"));
         return protect(names.join("__"),true);
