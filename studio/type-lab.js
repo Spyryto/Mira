@@ -31,6 +31,11 @@
   }
   document.getElementById('checked-js').addEventListener('click',()=>compileChecked('js'));
   document.getElementById('checked-php').addEventListener('click',()=>compileChecked('php'));
+  document.getElementById('qualified-symbol-example').addEventListener('click',()=>{
+    host.value='';
+    source.value='Math.rate = 2;\nBilling.rate = 3;\nMath.scale: x (Number) -> Number = x * Math.rate;\nBilling.scale: x (Number) -> Number = x * Billing.rate;\nMath.Option (T) :: Some (T) | None;\nBilling.Option (T) :: Some (T) | None;\na = Math.Some: 5;\nb = Billing.Some: 5;\nresult = (Math.scale: 5) + (Billing.scale: 5);';
+    check();
+  });
   document.getElementById('recursive-sum-example').addEventListener('click',()=>{
     host.value='';
     source.value='Tree (Element Type) :: Leaf (Element Type) | Branch ([Tree (Element Type)]);\nsum tree: tree (Tree (Number)) -> Number = match: tree {leaf: {n | n}, branch: {children | fold: children, with: {acc, child | acc + (sum tree: child)}, from: 0}};\na = Branch: [(Leaf: 2), (Branch: [(Leaf: 3), (Leaf: 4)])];\nresult = sum tree: a;';
