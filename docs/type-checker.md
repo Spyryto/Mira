@@ -1215,3 +1215,8 @@ JS/PHP identica tra checked e unchecked. Restano fuori ricorsione
 mutua tra dichiarazioni, ricorsione non regolare, dichiarazioni
 nominali non somma ricorsive e funzioni esplicitamente generiche
 ricorsive. Non si garantisce terminazione delle funzioni runtime.
+
+Nota: il match richiede che il tipo somma dello scrutinee sia già noto.
+Nei callback generici come fold, l'inferenza è ancora bottom-up:
+se il corpo del callback contiene un match sul parametro, può servire
+un'annotazione esplicita, ad esempio child (Tree (Number)).
