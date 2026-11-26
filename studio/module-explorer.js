@@ -44,7 +44,7 @@
       if(signature)append(row,'code',signature);
       if(detail)append(row,'small',detail);
     }
-    for(const t of m.typeIdentities)symbol(t.name,t.opaque?'tipo opaco':'tipo pubblico',null,t.identity+' · arità '+t.arity);
+    for(const t of m.typeIdentities)symbol(t.name,t.opaque?'tipo opaco':'tipo pubblico',null,t.identity+' · arità '+t.arity+(t.identity.startsWith(m.module+' / ')?'':' · identità ereditata'));
     for(const s of m.exports)symbol(s.name.slice(m.module.length+3),s.signature?.explicitSignature?'firma esplicita':'firma inferita',s.signature?.type,s.name);
     for(const s of m.reexports||[])if(s.kind!=='type')symbol(s.name,'riesportato',s.signature?.type,'Origine: '+s.target);
     if(!list.children.length)append(list,'p','Nessun simbolo pubblico corrispondente.','muted');
