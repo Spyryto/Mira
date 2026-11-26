@@ -1112,3 +1112,32 @@ In questa iterazione non sono ammessi gruppi ricorsivi con
 funzioni esplicitamente generiche, annotazioni dei parametri
 di tipo nel corpo, argomenti di tipo espliciti nelle chiamate,
 o vincoli sui parametri. L'inferenza ordinaria resta invariata.
+
+
+## 0.62: validazione con Result
+
+```mira
+Result (Value Type, Failure Type) :: Ok (Value Type) | Err (Failure Type);
+Percentage :: Number where _ >= 0 AND _ <= 100;
+validation = validate: (42), as: (Percentage);
+result = match: validation {
+  ok: {p | p + 0},
+  err: {message | 0}
+};
+```
+
+La forma breve validate:as: restituisce Result (Percentage, Text)
+nel caso illustrato. Richiede una dichiarazione esplicita di Result
+con due parametri e precisamente Ok con il primo payload ed Err
+con il secondo, indipendentemente dai nomi dei parametri. Non
+introduce un tipo implicito o una prelude. La forma con then:else:
+resta disponibile senza Result. I due modi condividono la verifica
+numerica finita, i refinement, Integer e il divieto di rebranding
+nominale tra tipi estranei nei programmi controllati.
+Il nuovo nodo ValidateResult conserva il tipo richiesto e la somma
+concreta; l'emitter produce una sola funzione inline che valuta
+l'input una volta e seleziona un solo record tag/value nativo.
+Non genera chiamate ai costruttori o closure per i due rami.
+Non intercetta eccezioni durante il calcolo dell'input. Err contiene
+il messaggio Text già usato dalla forma lunga. Record, liste,
+errori strutturati e validazione ricorsiva restano futuri.
