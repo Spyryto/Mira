@@ -410,3 +410,54 @@ test('types: nominal declarations erase identically in JS and PHP',()=>{
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('types: explicit structural projection accepts unrelated nominal records and additional fields',()=>{
+  const source='Pixels :: Number; Size :: {width: Pixels, height: Pixels}; Window Size :: Size; Window :: {width: Pixels, height: Pixels, title: Text}; w (Pixels) = 12; h (Pixels) = 10; window (Window) = {width: w, height: h, title: "Mira"}; small (Window Size) = {width: w, height: h}; area of: size (~ Size) = size ~ width * size ~ height; a = area of: window; b = area of: small; c = area of: {width: w, height: h, visible: true};';
+  const result=check(source);
+  assert.equal(result['area of:'],'(~ Size) -> Number');
+  for(const key of ['a','b','c'])assert.equal(result[key],'Number');
+  assert.equal(check(source+'view (~ Window Size) = window; d = area of: view;').d,'Number');
+  for(const [extra,pattern] of [
+    ['bad = area of: {width: w};',/missing record field height/],
+    ['bad = area of: {width: 12, height: h};',/expected Pixels/],
+    ['bad = area of: 1;',/structural projection requires a record/],
+    ['bad: s (~ Size) = s ~ title;',/missing record field title/],
+    ['nominal: s (Size) = s; bad = nominal: window;',/expected Size/],
+    ['view (~ Size) = window; bad (Size) = view;',/expected/]
+  ])assert.throws(()=>check(source+extra),pattern,extra);
+});
+test('types: structural projection preserves nested nominal identities and field compatibility direction',()=>{
+  const source='Student Id :: Number; Request Id :: Number; Special Student Id :: Student Id; Student :: {id: Student Id, name: Text}; Request :: {id: Request Id, name: Text}; sid (Special Student Id) = 1; rid (Request Id) = 2; request (Request) = {id: rid, name: "a"}; read student: s (~ Student) = s ~ id; a = read student: {id: sid, name: "a", active: true};';
+  assert.equal(check(source).a,'Student Id');
+  assert.throws(()=>check(source+'bad = read student: request;'),/expected Student Id/);
+  assert.throws(()=>check(source+'bad = read student: {id: 1, name: "a"};'),/expected Student Id/);
+});
+test('types: projected annotations work in local bindings, blocks and return types without exposing extra fields',()=>{
+  const source='Size :: {width: Number}; f = {s (~ Size) | s ~ width}; view of: s (~ Size) -> ~ Size = s; result = () >> {| v (~ Size) = {width: 12, title: "a"}; v >> f};';
+  const result=check(source);
+  assert.equal(result.f,'(~ Size) -> Number');assert.equal(result['view of:'],'(~ Size) -> ~ Size');assert.equal(result.result,'Number');
+  assert.throws(()=>check(source+'v = view of: {width: 1, title: "a"}; bad = v ~ title;'),/missing record field title/);
+  for(const [src,pattern] of [
+    ['x (~ Number) = 1;',/requires a named record type/],
+    ['A :: Number; x (~ A) = 1;',/requires a named record type/],
+    ['A :: {width: Number}; B :: ~ A;',/projection is an annotation/],
+    ['A :: {width: Number}; x ([~ A]) = [];',/Expected a type annotation/]
+  ])assert.throws(()=>check(src),pattern,src);
+});
+test('types: structural views erase identically and retain extra runtime fields',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-structural-'));
+  try{
+    const input=join(dir,'program.mira');
+    const typed='Size :: {width: Number}; view of: s (~ Size) -> ~ Size = s; result = view of: {width: 12, title: "Mira"};';
+    const bare='view of: s = s; result = view of: {width: 12, title: "Mira"};';
+    assert.equal(check(typed).result,'~ Size');
+    for(const target of ['js','php']){
+      const compile=source=>{writeFileSync(input,source);const r=spawnSync('node',['dist/mira.cjs',input,target],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);return r.stdout;};
+      const output=compile(typed);assert.equal(output,compile(bare));
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,output+(target==='js'?'\nconsole.log(result.title);':'\necho $result["title"];'));
+      const r=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);assert.equal(r.stdout.trim(),'Mira');
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
