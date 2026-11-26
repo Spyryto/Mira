@@ -127,7 +127,7 @@ class Bridge {
 
     // Compose existing real trace and checked report; no source re-parsing in UI.
     public static function exploreModules(source:String,?hostJson:String,?modulesJson:String):Dynamic {
-        final traced = trace(source,hostJson,modulesJson);
+        final traced = Bridge.trace(source,hostJson,modulesJson);
         if (!traced.ok) return traced;
         final checked = check(source,hostJson,modulesJson);
         if (!checked.ok) return checked;
