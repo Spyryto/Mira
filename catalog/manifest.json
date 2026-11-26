@@ -1,5 +1,5 @@
 {
-  "version": "0.88.0",
+  "version": "0.89.0",
   "features": [
     {
       "id": "values",
@@ -2106,6 +2106,12 @@
       "title": "Effetti HTTP GET testuali con adapter nativi",
       "since": "0.88",
       "doc": "docs/studio.md#mira-088-http-testuale"
+    },
+    {
+      "id": "lesson-import-dogfood",
+      "title": "App checked di importazione e persistenza di una lezione",
+      "since": "0.89",
+      "doc": "docs/studio.md#mira-089-importa-una-lezione"
     }
   ]
 }

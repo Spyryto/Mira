@@ -1,0 +1,15 @@
+.lesson-import{max-width:720px;margin:auto;padding:1rem;display:grid;gap:1rem}
+.lesson-import section,.lesson-import header{border:2px solid #25364b;border-radius:14px;padding:1rem;background:var(--panel,#fff);color:var(--ink,#17243b)}
+.lesson-import header{background:#f8d66d;color:#202b3c}
+.lesson-import .eyebrow{font-size:.8rem;letter-spacing:.08em;font-weight:700}
+.lesson-import section[hidden]{display:none}
+.lesson-import textarea{width:100%;min-height:10rem;box-sizing:border-box;font:inherit;font-family:monospace;margin:.5rem 0}
+.lesson-import .lesson-actions{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem}
+.lesson-import button{border:2px solid #25364b;padding:.65rem .85rem;border-radius:9px;background:#dcebf8;color:#18263c;font-weight:700;cursor:pointer}
+.lesson-import button:disabled{opacity:.5;cursor:default}
+.lesson-import #save{background:#b0e4ce}
+.lesson-import .lesson-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}
+.lesson-import .lesson-stats>div{background:#eaf2ff;color:#17243b;padding:.7rem;border-radius:8px}
+.lesson-import .lesson-stats strong,.lesson-import .lesson-stats small{display:block}
+.lesson-import .lesson-stats strong{font-size:1.15rem;overflow-wrap:anywhere}
+.lesson-import pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.8rem}

@@ -2033,3 +2033,44 @@ test('0.88 HTTP lab builds checked pure Mira program and uses real adapter with 
   assert.match(node('http-status').textContent,/HTTP 200/);
   for(const asset of ['http-host.js','http-module-data.js','http-module-program.js','http-module-lab.js','http-example.txt'])assert.ok(read('sw.js').includes('./'+asset));
 });
+
+test('0.89 integrated lesson import composes checked modules and preserves the valid saved lesson',async()=>{
+  const {mkdtempSync,rmSync}=await import('node:fs');
+  const {tmpdir}=await import('node:os');
+  const ctx={TextEncoder,TextDecoder,URL,AbortController,setTimeout,clearTimeout,Intl};
+  for(const asset of ['effects.js','text-host.js','date-host.js','storage-host.js','json-host.js','http-host.js','lesson-import-data.js','lesson-import-program.js'])runInNewContext(read(asset),ctx);
+  const d=ctx.MiraLessonImportData,raw=read('lesson-import-sample.json');
+  const map=new Map(),storage={getItem:k=>map.get(k)??null,setItem:(k,v)=>map.set(k,v),removeItem:k=>map.delete(k)};
+  const h={...ctx.MiraTextHost,...ctx.MiraDateHost,...ctx.MiraJsonDecoder.host(d.decoder),...ctx.MiraStorageHost.browser(storage,'test')};
+  const p=ctx.MiraLessonImportProgram(h),plain=v=>JSON.parse(JSON.stringify(v));
+  const expected={accepted:true,student:'Ada',day:'2026-11-27',hours:1.5,weekday:5,paid:false,total:45,error:''};
+  assert.deepEqual(plain(p.inspect(raw)),expected);
+  assert.deepEqual(plain(p.accept({status:200,body:raw})),expected);
+  assert.equal(p.accept({status:404,body:raw}).error,'http_status');
+  assert.deepEqual(plain(p.save(raw)),expected);
+  const cases=[['bad','invalid_json_data'],[raw.replace('2026-11-27','2026-02-29'),'invalid_date'],[raw.replace('1.5','0'),'invalid_hours'],[raw.replace('Ada',''),'invalid_name']];
+  for(const [bad,error] of cases){assert.equal(p.save(bad).error,error);assert.deepEqual(plain(p.restore()),[raw]);}
+  assert.deepEqual(plain(p.request(3)),{service:'http text',id:3,reply:'http loaded',payload:true});
+  const dir=mkdtempSync(resolve(tmpdir(),'mira-import-'));
+  try{
+    const code=d.php.replace(/^<\?php/,'').replace('declare(strict_types=1);','declare(strict_types=1);require $argv[1];require $argv[2];$GLOBALS["__miraHost"]=array_merge(require $argv[3],require $argv[4],\\Mira\\Json\\host(json_decode($argv[5],true)),\\Mira\\Storage\\files($argv[6]));')+'\n$p=$__miraModule_v_417070202F20726573756C74;$raw=$argv[7];echo json_encode([$p["inspect"]($raw),$p["save"]($raw),$p["save"]("bad"),$p["restore"](),$p["accept"](["status"=>404,"body"=>$raw])],JSON_THROW_ON_ERROR);';
+    const args=['-r',code,resolve(root,'lib/json/json-host.php'),resolve(root,'lib/storage/storage-host.php'),resolve(root,'lib/text/text-host.php'),resolve(root,'lib/date/date-host.php'),JSON.stringify(d.decoder),dir,raw];
+    const php=spawnSync('php',args,{encoding:'utf8'});
+    assert.equal(php.status,0,php.stderr);
+    const actual=JSON.parse(php.stdout);
+    assert.deepEqual(actual,[expected,expected,plain(p.inspect('bad')),[raw],plain(p.accept({status:404,body:raw}))]);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+  assert.equal(p.remove(),true);assert.deepEqual(plain(p.restore()),[]);
+  assert.ok(d.js.includes('browser save text:for:'));assert.ok(!d.js.includes('files save text:for:'));
+  assert.ok(d.php.includes('files save text:for:'));assert.ok(!d.php.includes('browser save text:for:'));
+  const nodes=new Map();const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',hidden:false,disabled:false,listeners:{},addEventListener(event,fn){this.listeners[event]=fn;}});return nodes.get(id);};
+  ctx.document={getElementById:node};ctx.window={localStorage:storage,location:{href:'https://example.test/studio/lesson-import.html'},confirm:()=>true,addEventListener(){}};
+  ctx.fetch=async()=>new Response(raw,{status:200});
+  runInNewContext(read('lesson-import.js'),ctx);
+  await node('load').listeners.click();assert.equal(node('student').textContent,'Ada');assert.equal(node('save').disabled,false);
+  node('save').listeners.click();assert.match(node('status').textContent,/Salvata/);
+  node('raw').value='bad';node('raw').listeners.input();assert.equal(node('save').disabled,true);
+  node('restore').listeners.click();assert.equal(node('raw').value,raw);assert.match(node('status').textContent,/Recuperata/);
+  node('remove').listeners.click();node('restore').listeners.click();assert.match(node('status').textContent,/Nessuna/);
+  for(const asset of ['lesson-import.html','lesson-import.css','lesson-import.js','lesson-import-data.js','lesson-import-program.js','lesson-import-sample.json'])assert.ok(read('sw.js').includes('./'+asset));
+});

@@ -1,0 +1,5 @@
+module Services / Lesson Import;
+interface
+Result (T, E) :: Ok (T) | Err (E);
+decode imported lesson: :: (Text) -> {name: Text, date: Text, hours: Number, paid: Boolean, tags: [Text]};
+try decode imported lesson: :: (Text) -> Result ({name: Text, date: Text, hours: Number, paid: Boolean, tags: [Text]}, Text);
