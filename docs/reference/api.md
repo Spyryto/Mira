@@ -1442,7 +1442,7 @@ public static function annotatedName(tokens:Array<Token>,?names:Map<String,Type>
 **method** · Raccoglie definizioni complete e rifiuta terminatori o parentesi mancanti.
 
 ```haxe
-public static function parse(tokens:Array<Token>, ?names:Map<String,Type>, ?modulePath:String):Array<Definition>
+public static function parse(tokens:Array<Token>, ?names:Map<String,Type>, ?modulePath:String, ?typeIdentities:Map<String,String>):Array<Definition>
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L9)
@@ -2910,7 +2910,18 @@ class TypeVisibility
 public function defineOpaque(name:String,type:Type):Void
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L22)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L33)
+
+<a id="api-mira-types-typevisibility-grantrepresentation"></a>
+### `mira.types.TypeVisibility.grantRepresentation`
+
+**method** · Membro pubblico di mira.types.TypeVisibility.
+
+```haxe
+public function grantRepresentation(name:String,owner:String):Void
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L27)
 
 <a id="api-mira-types-typevisibility-markopaque"></a>
 ### `mira.types.TypeVisibility.markOpaque`
@@ -2921,7 +2932,7 @@ public function defineOpaque(name:String,type:Type):Void
 public function markOpaque(name:String):Void
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L17)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L18)
 
 <a id="api-mira-types-typevisibility-new"></a>
 ### `mira.types.TypeVisibility.new`
@@ -2932,7 +2943,18 @@ public function markOpaque(name:String):Void
 public function new()
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L15)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L16)
+
+<a id="api-mira-types-typevisibility-ownerof"></a>
+### `mira.types.TypeVisibility.ownerOf`
+
+**method** · Membro pubblico di mira.types.TypeVisibility.
+
+```haxe
+public function ownerOf(name:String):Null<String>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L23)
 
 <a id="api-mira-types-typevisibility-requirepublic"></a>
 ### `mira.types.TypeVisibility.requirePublic`
@@ -2943,7 +2965,7 @@ public function new()
 public function requirePublic(type:Type,origin:Token,resolve:Type->Type):Void
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L66)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L77)
 
 <a id="api-mira-types-typevisibility-reveal"></a>
 ### `mira.types.TypeVisibility.reveal`
@@ -2954,7 +2976,7 @@ public function requirePublic(type:Type,origin:Token,resolve:Type->Type):Void
 public function reveal(type:Type,owner:Null<String>):Type
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L29)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L40)
 
 <a id="api-mira-types-typevisibility-view"></a>
 ### `mira.types.TypeVisibility.view`
@@ -2965,5 +2987,5 @@ public function reveal(type:Type,owner:Null<String>):Type
 public function view(type:Type,owner:Null<String>,?resolve:Type->Type):Type
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L38)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L49)
 

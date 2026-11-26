@@ -124,6 +124,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Selezione statica di provider tramite contratto | `0.73` | [Dettagli](docs/grammar.md#mira-073-selezione-statica-del-provider) |
 | ✅ | Contratti come moduli e implementazione ereditata | `0.74` | [Dettagli](docs/grammar.md#mira-074-contratti-come-moduli-senza-implementazione) |
 | ✅ | Verifica statica dei contratti senza provider | `0.75` | [Dettagli](docs/grammar.md#mira-075-verifica-di-contratti-senza-provider) |
+| ✅ | Identità nominali persistenti dei contratti | `0.76` | [Dettagli](docs/grammar.md#mira-076-identita-nominali-persistenti-dei-contratti) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
