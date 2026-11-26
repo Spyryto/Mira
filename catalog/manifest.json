@@ -1914,6 +1914,12 @@
       "title": "Tipi somma parametrici e costruttori polimorfici",
       "since": "0.60",
       "doc": "docs/type-checker.md#060-tipi-somma-parametrici"
+    },
+    {
+      "id": "discursive-type-parameters",
+      "title": "Parametri di tipo con nomi discorsivi",
+      "since": "0.60.1",
+      "doc": "docs/type-checker.md#0601-parametri-di-tipo-discorsivi"
     }
   ]
 }
