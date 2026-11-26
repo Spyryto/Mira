@@ -576,3 +576,49 @@ test('types: proven arithmetic emits exactly the ordinary JS/PHP and runs at int
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('types: Integer construction, nominal refinements and portable arithmetic',()=>{
+  const src='Request Id :: Integer where _ > 0; Retry Count :: Integer where _ >= 0 AND _ <= 3; Timeout :: Integer where _ >= 100 AND _ <= 60000; Request :: {id: Request Id, timeout: Timeout, retries: Retry Count}; id (Request Id) = 7; timeout (Timeout) = 1000; retry (Retry Count) = 1; request (Request) = {id: id, timeout: timeout, retries: retry}; n (Integer) = 2 * 3; quotient (Integer) = 8 / 2; next retry: r (Retry Count) -> Integer = r + 1; consume: x (Number) = x; result = consume: n;';
+  const t=check(src);
+  assert.equal(t.id,'Request Id');assert.equal(t.timeout,'Timeout');assert.equal(t.retry,'Retry Count');assert.equal(t.request,'Request');assert.equal(t.n,'Integer');assert.equal(t.quotient,'Integer');assert.equal(t['next retry:'],'(Retry Count) -> Integer');assert.equal(t.result,'Number');
+  assert.equal(check(src+'copy (Integer) = id;').copy,'Integer');
+  assert.equal(check(src+'r (Integer) = 3.0;').r,'Integer');
+  for(const [extra,pattern] of [
+    ['bad (Integer) = 3.5;',/Integer not statically proven/],
+    ['bad (Integer) = 9 / 2;',/Integer not statically proven/],
+    ['bad (Integer) = 9007199254740992;',/Integer not statically proven/],
+    ['bad: x (Integer) -> Integer = x + 1;',/Integer not statically proven/],
+    ['bad: x (Number) -> Integer = x;',/Integer not statically proven/],
+    ['bad (Request Id) = 0;',/refinement violated/],
+    ['bad (Retry Count) = 4;',/refinement violated/],
+    ['bad (Timeout) = 1000.5;',/Integer not statically proven/],
+    ['Other Id :: Integer; other (Other Id) = 7; bad (Request Id) = other;',/expected Request Id/],
+    ['Empty :: Integer where _ > 0 AND _ < 1;',/Empty numeric refinement/],
+    ['Empty :: Integer where _ == 2.5;',/Empty numeric refinement/],
+    ['Integer :: Number;',/Duplicate or reserved type/]
+  ])assert.throws(()=>check(src+extra),pattern,extra);
+});
+test('types: discrete Integer intervals tighten open and fractional bounds',()=>{
+  const src='Small :: Integer where _ > 0 AND _ < 4; Larger :: Integer where _ > 0.5 AND _ < 4.5; one (Small) = 1; up: p (Small) -> Integer where _ >= 2 AND _ <= 4 = p + 1; down: q (Larger) -> Integer where _ >= 0 AND _ <= 3 = q - 1; result = up: one;';
+  const t=check(src);
+  assert.equal(t.result,'Integer where _ >= 2 AND _ <= 4');
+  assert.throws(()=>check(src+'bad (Small) = 4;'),/refinement violated/);
+  assert.throws(()=>check(src+'Empty :: Small where _ > 3;',),/Empty numeric refinement/);
+});
+test('types: proven Integer operations erase without overhead on JS/PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-integer-'));
+  try{
+    const input=join(dir,'program.mira');
+    const typed='Retry Count :: Integer where _ >= 0 AND _ <= 3; increment retry: r (Retry Count) -> Integer = r + 1; retry (Retry Count) = 3; result = increment retry: retry;';
+    const bare='increment retry: r = r + 1; retry = 3; result = increment retry: retry;';
+    assert.equal(check(typed).result,'Integer');
+    for(const target of ['js','php']){
+      const compile=src=>{writeFileSync(input,src);const r=spawnSync('node',['dist/mira.cjs',input,target],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);return r.stdout;};
+      const output=compile(typed);assert.equal(output,compile(bare));
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,output+(target==='js'?'\nconsole.log(result);':'\necho $result;'));
+      const r=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);assert.equal(r.stdout.trim(),'4');
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

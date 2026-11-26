@@ -120,3 +120,24 @@ Generare updater specializzati quando le dipendenze sono determinabili a compile
 Tipi: nominali, strutturali, refinement numerici e prove aritmetiche già integrati; completare le garanzie statiche e la validazione al confine. Grammatica: AND/OR/NOT e valori funzione già integrati; tabella di precedenze, Grammar Lab, Unicode, localizzazione, operatori custom e possibile overloading da sviluppare separatamente. Alternare i due filoni senza abbandonarne uno. Mira Studio è manuale, IDE, esploratore del compilatore, laboratorio di tipi e grammatica, benchmark e storia del progetto.
 
 Quaderno redatto con assistenza IA a partire dalle discussioni e dalla fonte di progetto «Mira — Principi architetturali e linee guida di sviluppo». La documentazione tecnica per le versioni implementate resta in grammar.md, type-checker.md e nelle rispettive suite di test.
+
+## 0.53 — Integer: decisione di implementazione
+
+Integer è un sottotipo numerico portabile limitato agli interi sicuri
+di JavaScript, non un wrapper né un alias del tipo int nativo PHP.
+Manteniamo Number come tipo ordinario dei letterali e delle operazioni:
+le prove di integrità si affiancano alle prove degli intervalli.
+Una costruzione Integer verifica sia l'integrità sia la magnitudine;
+una costruzione di un refinement intero verifica anche i suoi limiti.
+L'aritmetica intermedia non è automaticamente Integer. Sono state
+preferite prove conservative all'inferenza generalizzata dei tipi
+discreti. Divisione, overflow e confronti con Number non devono
+nascondere differenze fra i target. L'uguaglianza stretta numerica
+JS/PHP, i confini host, la validazione dinamica e le conversioni
+implicite rimangono temi aperti. Vedi type-checker.md.
+
+La prima CI 0.53 ha superato 227/228 test: il test di esecuzione chiamava
+la funzione Mira next:, che collide con next() nativa PHP. Il fixture
+usa ora increment retry:. La collisione di nomi con funzioni native PHP
+resta un difetto di interoperabilità da risolvere separatamente, non un
+errore nelle prove Integer. Non si modifica l'emitter in questo incremento.
