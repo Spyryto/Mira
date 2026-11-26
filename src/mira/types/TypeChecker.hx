@@ -153,7 +153,7 @@ class TypeChecker {
                 // Only an ancestor can be explicitly narrowed to a child.
                 if (ancestor(expected,other)) accept(actual,base);
                 else accept(expected,actual);
-            case [NamedType(_,base),given] if (!isNamed(given)): accept(base,given);
+            case [NamedType(_,base),given] if (!isNamed(given)): construct(base,given);
             default: accept(expected,actual);
         }
     }
