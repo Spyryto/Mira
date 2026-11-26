@@ -19,7 +19,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.67.0"
+            version: "0.68.0"
         });
     }
 
@@ -103,6 +103,7 @@ class Bridge {
                 if (definition.modulePath != null) {
                     Reflect.setField(node, "module",definition.modulePath);
                     Reflect.setField(node, "exported",definition.isExported);
+                    if (definition.hasPublicSignature) Reflect.setField(node,"explicitSignature",true);
                 }
                 if (definition.isFunction()) {
                     Reflect.setField(node, "selector", definition.selector());
