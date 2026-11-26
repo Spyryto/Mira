@@ -97,7 +97,7 @@ class Lexer {
             }
 
             final pair = character + peek(1);
-            if (["==", "!=", "<=", ">=", "&&", "||", ">>", "->", "::"].indexOf(pair) != -1) {
+            if (["==", "!=", "<=", ">=", "&&", "||", ">>", "->", "::", "=>"].indexOf(pair) != -1) {
                 advance();
                 advance();
                 tokens.push(new Token(Symbol, pair, tokenLine, tokenColumn, file, line, column));
