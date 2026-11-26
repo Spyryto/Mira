@@ -101,6 +101,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Narrowing numerico lessicale nei condizionali | `0.54` | [Dettagli](docs/type-checker.md#054-narrowing-numerico) |
 | ✅ | Diagnostica di prove numeriche e overflow certo | `0.55` | [Dettagli](docs/type-checker.md#055-esiti-delle-prove-numeriche) |
 | ✅ | Compilazione checked con guardie numeriche selettive | `0.56` | [Dettagli](docs/type-checker.md#056-guardie-numeriche) |
+| ✅ | Validazione numerica fallibile con handler tipizzati | `0.57` | [Dettagli](docs/type-checker.md#057-validazione-fallibile) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
