@@ -153,19 +153,26 @@
     out.replaceChildren();details.textContent='';
     if(!response.ok){out.textContent=response.message;return;}
     const report=JSON.parse(response.output);
-    const next=new Map(report.interfaces.map(m=>[m.module,m]));
+    const impact=MiraInterfaceImpact.compare(previousSurface,report);
+    const prior=new Map((previousSurface?.interfaces||[]).map(m=>[m.module,m]));
     for(const m of report.interfaces){
-      const previous=previousSurface?.get(m.module);
+      const previous=prior.get(m.module);
       const status=!previousSurface?'Prima analisi':!previous?'Nuova':previous.canonical===m.canonical?'Invariata':'Modificata';
       const row=append(out,'div',null,'symbol');
       append(row,'strong',m.module);
       append(row,'span',status,'tag');
       append(row,'small',m.fingerprint);
       if(m.module!==m.resolvedModule)append(row,'small','Provider: '+m.resolvedModule);
+      if(impact.providers.includes(m.module))append(row,'small','Provider modificato · verificare collegamento');
     }
-    if(previousSurface)for(const [name] of previousSurface)if(!next.has(name))append(out,'p',name+' · Rimossa','muted');
+    if(previousSurface)for(const name of impact.removed)append(out,'p',name+' · Rimossa','muted');
+    if(previousSurface){
+      append(out,'p','Altri consumatori potenzialmente interessati: '+(impact.affected.join(', ')||'nessuno'));
+      if(impact.providers.length)append(out,'p','Provider cambiati: '+impact.providers.join(', '));
+    }
+    if(impact.incomplete)append(out,'p','Grafo parziale: dipendenze legacy o non rappresentate.','muted');
     details.textContent=JSON.stringify(report,null,2);
-    previousSurface=next;
+    previousSurface=report;
   });
   by('interface-reset').addEventListener('click',()=>{previousSurface=null;by('interface-fingerprints').replaceChildren();by('interface-json').textContent='';});
   by('benchmark').addEventListener('click',benchmark);

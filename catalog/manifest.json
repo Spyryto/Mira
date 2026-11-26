@@ -1,5 +1,5 @@
 {
-  "version": "0.77.0",
+  "version": "0.78.0",
   "features": [
     {
       "id": "values",
@@ -2040,6 +2040,12 @@
       "title": "Interfacce elaborate e impronte semantiche",
       "since": "0.77",
       "doc": "docs/grammar.md#mira-077-impronte-semantiche-delle-interfacce"
+    },
+    {
+      "id": "interface-impact",
+      "title": "Confronto delle interfacce e impatto sulle dipendenze",
+      "since": "0.78",
+      "doc": "docs/grammar.md#mira-078-confronto-delle-interfacce-e-impatto-potenziale"
     }
   ]
 }

@@ -672,3 +672,20 @@ usa gli schemi del checker per le firme e per i tipi pubblici e serializza
 solo dati semantici versionati con ordinamento deterministico. SHA-256
 è un'impronta della superficie tipizzata, non una chiave di cache di
 compilazione. L'analisi resta completa; il confronto Studio è in memoria.
+
+## Direzione dopo la 0.77
+
+Roadmap concordata come ordine di priorità, non calendario né promessa di versioni.
+
+1. Consolidare contratti, identità e confronto delle interfacce. Misurare prima di introdurre cache e compilazione separata.
+2. Moduli host tipizzati e libreria standard pragmatica: riusare direttamente librerie native, estrarre astrazioni portabili solo da esigenze concrete, scegliere implementazioni a compile time quando possibile.
+3. Unificare GUI e checker: tipi di modelli, view, binding, messaggi ed effetti; updater specializzati generati quando le dipendenze sono note.
+4. Studio multifile e tooling: navigazione, tipi al cursore, diagnostica durante l'editing, workspace.
+5. Applicazioni reali: Studio progressivamente in Mira, registro lezioni, deploy PHP, MiraHost/WebView. Separare prototipi da sistemi con dati reali.
+6. Grammar Lab, operatori personalizzati e trasformazioni compile time; successivamente un eventuale backend Go motivato da casi concreti.
+
+La correttezza prevale sulle ottimizzazioni. Ogni incremento: test positivi e negativi, JS/PHP, Studio, documentazione e integrazione solo con CI verde. La 1.0 è un traguardo di usabilità applicativa, non un numero di feature.
+
+## 0.78 — impatto potenziale delle modifiche pubbliche
+
+Il report delle interfacce espone anche le direttive di dipendenza già raccolte dal resolver, fuori dalla superficie hashata. Studio confronta due report riusciti, distingue aggiunte, rimozioni, modifiche di schema e cambio di provider, e percorre gli archi inversi logici di entrambi i grafi. I consumatori raggiunti sono candidati conservativi alla riverifica, non una decisione di cache. Il cambio di provider è segnalato separatamente per il collegamento. Il compilatore continua a controllare tutto; modifiche private, host, sorgente e opzioni non sono coperte da una semplice impronta.

@@ -2,16 +2,18 @@
 
 **Discursive syntax, readable at a glance.**
 
-Mira is currently a standalone **syntax and transpiler experiment**, not a replacement for NailLang. It explores multiword identifiers and Smalltalk-inspired keyword selectors, with a deliberately small executable core.
+Mira is an evolving, standalone **discursive programming language** with a compiler written in Haxe, JavaScript/PHP targets, an opt-in static type checker, modules and contracts, and a browser GUI library. Its goal is a rich language with a small runtime. It is pre-1.0 and not a replacement for NailLang; implemented capabilities and remaining limitations are distinguished below.
+
+[Mira Studio](https://spyryto.github.io/Mira/) · [Module Explorer](https://spyryto.github.io/Mira/module-explorer.html) · [Type checker](docs/type-checker.md) · [Roadmap](docs/design-notes.md#direzione-dopo-la-077).
 
 ## Quaderno di progettazione
 
-[Decisioni, motivazioni e proposte fino alla 0.52](docs/design-notes.md) · [Leggi in Mira Studio](https://spyryto.github.io/Mira/design-notes.html).
+[Decisioni, motivazioni e proposte in evoluzione](docs/design-notes.md) · [Leggi in Mira Studio](https://spyryto.github.io/Mira/design-notes.html).
 
 ## Funzionalità e versioni
 
 La tabella distingue le feature **già implementate** (✅) da quelle
-**ancora da progettare** (⬜). La colonna *Prima versione* indica
+**ancora aperte o parziali** (⬜). La colonna *Prima versione* indica
 quando la funzionalità è stata introdotta, sulla base dello storico Git
 (`0.1` nucleo discorsivo, `0.2` sezioni e pipeline, `0.3`
 dati strutturati e interoperabilità).
@@ -133,20 +135,22 @@ la loro disponibilità dipende da un manifest e dall'ambiente di esecuzione.
 Le view interattive sono attualmente eseguite nel browser JavaScript; il
 backend PHP ne traspila il sorgente ma non fornisce un renderer DOM.
 
-### Funzionalità non ancora implementate
+### Limiti attuali e funzionalità aperte
 
-Nessuna versione è assegnata finché non esiste un'implementazione verificata.
+La tabella generata descrive funzionalità implementate entro i limiti documentati, non una garanzia generale di soundness o maturità produttiva.
 
-| Stato | Funzionalità | Prima versione | Documentazione |
-| :---: | --- | :---: | --- |
-| ⬜ | Mutazione e assegnazioni successive nei blocchi | — | [Decisioni aperte](docs/decisions.md#open-questions) |
-| ⬜ | Currying completo e applicazione parziale generalizzata | — | [Decisioni aperte](docs/decisions.md#open-questions) |
-| ⬜ | Tipi dichiarati, record tipizzati e type checker | — | [Proposta di sintassi](docs/syntax.md#proposed-type-declarations-and-mvu-records) |
-| ⬜ | Pattern matching e confronti booleani nel nucleo | — | [Limiti attuali](docs/structured-data.md#limiti-conosciuti) |
-| ⬜ | Namespace, export/private e scoping strutturato delle capability | — | [Questioni aperte](docs/dogfooding.md#limiti-e-questioni-aperte) |
-| ⬜ | Operatori definiti dall'utente | — | [Decisioni aperte](docs/decisions.md#open-questions) |
-| ⬜ | Metaprogrammazione e macro | — | [Decisioni architetturali](docs/decisions.md) |
-| ⬜ | Runtime/libreria MVU generale con lifecycle e diffing | — | [Limiti dell'host UI](docs/browser-interop.md#anteprima-e-limiti) |
+| Area | Limite / prossimo sviluppo |
+| --- | --- |
+| Tipi | Modalità checked opt-in; refinement numerici conservativi, non arbitrari; inferenza e tipi ricorsivi con limiti documentati |
+| Moduli | Contratti, opacità e provider statici presenti; cache incrementale e compilazione separata non implementate |
+| Interoperabilità | Firme host e validazione RPC presenti; moduli host tipizzati e adattatori portabili da consolidare |
+| GUI | Rendering generico e specializzato, binding e identità presenti; verifica statica completa, generazione anticipata degli updater e lifecycle generale da sviluppare |
+| Tooling | Studio e Module Explorer presenti; workspace multifile, diagnostica continua e language server da sviluppare |
+| Sintassi | Currying generalizzato, operatori personalizzati e Grammar Lab ancora aperti |
+| Metaprogrammazione | Macro e import compile time non implementati |
+| Applicazioni | Piloti locali e full-stack verificati in CI; deploy produttivo, backup e autenticazione non forniti dal pilota |
+
+Vedi il [quaderno di progettazione](docs/design-notes.md) e i [limiti dei moduli](docs/module-design.md).
 
 ## What this repository contains
 
@@ -159,6 +163,7 @@ Mira source
           └─ Symbols          collected selector signatures and names
               └─ SelectorResolver / ExpressionParser
                   └─ canonical expression AST
+                      ├─ optional TypeChecker / checked transformations
                       ├─ JsEmitter
                       └─ PhpEmitter
 ```
@@ -213,8 +218,7 @@ result = 2 >> increment >> (square: _) >> (add: _, and: 1);
 The resulting value is `10`, for both JS and PHP. See [executable example](examples/sections.mira). Sections can close over surrounding parameters in both backends. The compiler generates fresh placeholder parameter names without shadowing user symbols.
 
 **Stato completo:** consulta la [tabella delle funzionalità e versioni](#funzionalità-e-versioni).
-Gli operatori binari attuali condividono un unico livello di precedenza, con
-associatività a sinistra. Una sezione con più `_` genera una funzione di
+Nella grammatica storica 0.3 gli operatori binari condividevano un unico livello di precedenza; dalla 0.51 esistono anche gli operatori logici. Per la grammatica attuale consultare [grammar.md](docs/grammar.md) e il [quaderno](docs/design-notes.md). Una sezione con più `_` genera una funzione di
 arità corrispondente, ma non si può applicare direttamente a una pipeline unaria.
 
 See [syntax and examples](docs/syntax.md), [grammar notes](docs/grammar.md) and [design decisions](docs/decisions.md).

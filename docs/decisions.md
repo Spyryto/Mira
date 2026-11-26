@@ -58,7 +58,7 @@ Priorità immediata: interoperabilità asincrona ed effetti, errori espliciti, H
 
 Nessun ulteriore sviluppo in questa revisione documentale.
 
-## Decisioni successive (0.39–0.52)
+## Decisioni successive (dalla 0.39)
 
 Il [quaderno di progettazione](design-notes.md) raccoglie le decisioni
 concordate sui tipi, sugli operatori, sul Grammar Lab e sul principio
@@ -66,3 +66,5 @@ compile-time-first, distinguendo implementazioni verificate, proposte
 e questioni aperte. È consultabile anche da Mira Studio.
 Le sezioni storiche precedenti conservano la prospettiva delle versioni
 a cui si riferiscono, non rappresentano tutte lo stato attuale.
+
+Per lo stato corrente e le prossime priorità vedere [Direzione dopo la 0.77](design-notes.md#direzione-dopo-la-077) e [progetto dei moduli](module-design.md).

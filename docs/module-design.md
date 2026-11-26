@@ -1,6 +1,6 @@
 # Moduli Mira — progetto concordato e piano di implementazione
 
-**Stato: progettazione delle interfacce.** La 0.65 introduce il nucleo di
+**Stato: nucleo modulare, contratti indipendenti e impronte pubbliche implementati; compilazione incrementale ancora da progettare.** La 0.65 introduce il nucleo di
 identità e scope isolati; la 0.66 aggiunge sezioni piatte, export di
 valori/selettori senza annotazioni e tipi nominali pubblici completi; la 0.67 introduce import selettivi,
 import completi e alias di simboli; la 0.68 introduce firme pubbliche
@@ -259,9 +259,9 @@ make pair: first, with: second = {first: first, second: second};
   alle sole maiuscole se non già previsto dalla grammatica).
 - Esportazione selettiva dei costruttori, opacità di tipi somma,
   collisioni tra categorie, eventuali riesportazioni con alias.
-- Contratti indipendenti, selezione statica di implementazioni,
-  moduli parametrici/functor, package manager, compilazione incrementale,
-  dipendenze grammaticali: sviluppi successivi, non prerequisiti.
+- Composizione di contratti, moduli parametrici/functor, package manager,
+  compilazione incrementale e dipendenze grammaticali: sviluppi successivi.
+  Contratti indipendenti e selezione statica dei provider esistono dalla 0.72–0.76 entro i limiti descritti sotto.
 - Moduli senza interfaccia: proposta, tutti i simboli privati e punto
   d'ingresso esplicito. Precisare effetti top-level e compatibilità
   con i vecchi import a percorso file prima dell'implementazione.
@@ -278,6 +278,9 @@ make pair: first, with: second = {first: first, second: second};
 | 0.70 | Riesportazione statica |
 | 0.70.1 | Tree shaking conservativo |
 | 0.71 | Esplorazione delle interfacce elaborate in Mira Studio |
+| 0.72–0.76 | Contratti indipendenti, binding statico, opacità e identità stabili |
+| 0.77 | Impronte delle superfici pubbliche |
+| 0.78 | Confronto delle superfici e impatto potenziale sulle dipendenze |
 
 Le versioni possono cambiare se un incremento necessita di un prerequisito.
 Non dichiarare completo l'isolamento prima che tutte le vie d'accesso
@@ -346,3 +349,7 @@ per progettare invalidazione e cache: distingue cambiamenti pubblici da
 modifiche private senza saltare il controllo. Il provider è metadato di
 collegamento separato dalla superficie del contratto. Resta da definire
 la chiave completa di analisi e il riuso sicuro delle interfacce.
+
+### 0.78 — confronto e dipendenti potenziali
+
+Il report include le direttive del resolver come metadati separati. Per il confronto in Studio si normalizzano i percorsi dei provider selezionati alla superficie logica; si percorre l'unione dei grafi precedenti e successivi in direzione dipendenza → consumatore. Si escludono gli archi implements (realizzazione già rappresentata nella superficie) e i file legacy, segnalati come non coperti. Un cambio di provider a parità di impronta non è una modifica del tipo pubblico, ma richiede considerazioni di linking/codegen. Non saltare controlli sulla base di questo rapporto.

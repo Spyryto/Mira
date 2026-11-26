@@ -1019,7 +1019,9 @@ test('design notebook is generated from project documentation and available offl
   assert.ok(read('sw.js').includes("'./design-notes.html'"));
   assert.match(notebook,/Quaderno di progettazione/);
   assert.match(notebook,/Moduli Mira — progetto concordato/);
-  assert.match(notebook,/Stato: progettazione delle interfacce/);
+  assert.match(notebook,/Stato: nucleo modulare, contratti indipendenti e impronte pubbliche implementati/);
+  assert.match(notebook,/Direzione dopo la 0\.77/);
+  assert.match(notebook,/0\.78 — impatto potenziale delle modifiche pubbliche/);
   assert.match(notebook,/module Music \/ Jazz Harmony;/);
   assert.match(notebook,/import Math \/ Floating Point =&gt; Float Num;/);
   assert.match(notebook,/transpose: by: =&gt; trasponi: di:/);
@@ -1607,4 +1609,56 @@ test('0.77 interface fingerprints are stable across unbound and linked contracts
   assert.equal(bridge.interfaces(source+' bad = result ~ item;',null,files).ok,false);
   assert.match(read('module-explorer.html'),/id="interface-snapshot"/);
   assert.match(read('module-explorer.js'),/MiraStudioCompiler\.interfaces/);
+});
+
+test('0.78 impact follows real module dependencies and distinguishes public and private changes',()=>{
+  const env={};runInNewContext(read('interface-impact.js'),env);
+  const compare=(a,b)=>JSON.parse(JSON.stringify(env.MiraInterfaceImpact.compare(a,b)));
+  const src='module App; interface result (Number); import Left {left: ;}; import Right {right: ;}; implementation result = (left: 1) + (right: 2);';
+  const snapshot=core=>{
+    const modules=JSON.stringify({
+      Core:core,
+      Left:'module Left; interface left: :: (Number) -> Number; import Core {rate;}; implementation left: x = x + rate;',
+      Right:'module Right; interface right: :: (Number) -> Number; import Core {rate;}; implementation right: x = x + rate;'
+    });
+    const r=bridge.interfaces(src,null,modules);assert.equal(r.ok,true,r.message);return JSON.parse(r.output);
+  };
+  const first=snapshot('module Core; interface rate (Number); Unused :: {x: Number}; implementation rate = 1; secret = 2;');
+  const privateEdit=snapshot('module Core; interface rate (Number); Unused :: {x: Number}; implementation rate = 5; secret = 8;');
+  const publicEdit=snapshot('module Core; interface rate (Number); Unused :: {x: Text}; implementation rate = 5; secret = 8;');
+  assert.equal(compare(null,first).initial,true);
+  assert.deepEqual(compare(first,privateEdit).changed,[]);
+  assert.deepEqual(compare(first,privateEdit).affected,[]);
+  const impact=compare(first,publicEdit);
+  assert.deepEqual(impact.changed,['Core']);
+  assert.deepEqual(impact.affected,['App','Left','Right']);
+  assert.equal(impact.incomplete,false);
+  const removed=JSON.parse(JSON.stringify(publicEdit));
+  removed.interfaces=removed.interfaces.filter(m=>m.module!=='Core');
+  removed.dependencies=removed.dependencies.filter(d=>d.to!=='Core');
+  assert.deepEqual(compare(publicEdit,removed).removed,['Core']);
+  assert.deepEqual(compare(publicEdit,removed).affected,['App','Left','Right']);
+  const legacy={...first,dependencies:[...first.dependencies,{kind:'file',from:'App',to:'old.mira'}]};
+  assert.equal(compare(first,legacy).incomplete,true);
+  assert.match(read('module-explorer.html'),/interface-impact\.js/);
+});
+
+test('0.78 provider swap changes linking metadata without changing the contract surface',()=>{
+  const env={};runInNewContext(read('interface-impact.js'),env);
+  const files=JSON.stringify({
+    'Services / Storage':'module Services / Storage; interface read: :: (Number) -> Number;',
+    'Providers / Memory':'module Providers / Memory; implements Services / Storage; implementation read: x = x + 1;',
+    'Providers / Native':'module Providers / Native; implements Services / Storage; implementation read: x = x + 2;'
+  });
+  const source='module App; interface result; import Services / Storage {read: ;}; implementation result = read: 1;';
+  const snapshot=provider=>{
+    const binding=provider?JSON.stringify({'Services / Storage':{provider}}):null;
+    const r=bridge.interfaces(source,null,files,binding);assert.equal(r.ok,true,r.message);return JSON.parse(r.output);
+  };
+  const a=snapshot('Providers / Memory'), b=snapshot('Providers / Native');
+  const impact=JSON.parse(JSON.stringify(env.MiraInterfaceImpact.compare(a,b)));
+  assert.deepEqual(impact.changed,[]);
+  assert.deepEqual(impact.providers,['Services / Storage']);
+  assert.deepEqual(impact.affected,[]);
+  assert.equal(impact.incomplete,false);
 });
