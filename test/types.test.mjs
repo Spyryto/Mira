@@ -1684,3 +1684,48 @@ test('0.75 checks a consumer and a contract before a provider exists, but never 
     assert.notEqual(typo.status,0);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.76 contract type identities remain stable before linking and across different providers',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-contract-identity-'));
+  try{
+    mkdirSync(join(dir,'Services'),{recursive:true});mkdirSync(join(dir,'Providers'),{recursive:true});
+    const input=join(dir,'program.mira'),manifest=join(dir,'bindings.json');
+    writeFileSync(join(dir,'Services','Storage.mira'),'module Services / Storage; interface Storage; Envelope :: {store: Storage}; open: :: (Text) -> Storage; read: key: :: (Storage, Text) -> Text; wrap: :: (Storage) -> Envelope;');
+    const provider=(name,type,body,read)=>'module Providers / '+name+'; implements Services / Storage; implementation Storage :: '+type+'; open: x = '+body+'; read: s, key: k = '+read+'; wrap: s = {store: s};';
+    writeFileSync(join(dir,'Providers','Memory.mira'),provider('Memory','{name: Text}','{name: x}','s ~ name'));
+    writeFileSync(join(dir,'Providers','Native.mira'),provider('Native','Text','x','k'));
+    const source='module App; import Services / Storage {Storage; Envelope; open: ; read: key: ; wrap: ;}; store (Storage) = open: "memory"; envelope (Envelope) = wrap: store; result = read: (envelope ~ store), key: "native";';
+    const run=(src,flags)=>{writeFileSync(input,src);return spawnSync('node',['dist/mira.cjs',input,...flags],{encoding:'utf8'});};
+    function rows(flags){const r=run(source,['--check',...flags]);assert.equal(r.status,0,r.stderr);return JSON.parse(r.stdout).filter(x=>x.module==='App').map(x=>({name:x.name,type:x.type,schema:x.schema}));}
+    const abstract=rows([]);
+    assert.equal(abstract.find(x=>x.name==='App / store').schema.name,'Services / Storage / Storage');
+    assert.equal(abstract.find(x=>x.name==='App / envelope').schema.name,'Services / Storage / Envelope');
+    for(const [name,expected] of [['Memory','memory'],['Native','native']]){
+      writeFileSync(manifest,JSON.stringify({'Services / Storage':{provider:'Providers / '+name}}));
+      const flags=['--bindings',manifest];
+      assert.deepEqual(rows(flags),abstract);
+      const forbidden=run(source+' leaked = store ~ name;',['--check',...flags]);
+      assert.notEqual(forbidden.status,0);assert.match(forbidden.stderr,/Type check/);
+      for(const target of ['js','php']){
+        const compiled=run(source,[target,'--checked','--tree-shake',...flags]);
+        assert.equal(compiled.status,0,compiled.stderr);
+        const result='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+        const file=join(dir,target==='js'?'out.mjs':'out.php');
+        writeFileSync(file,compiled.stdout+(target==='js'?'\nconsole.log('+result+');':'\necho $'+result+';'));
+        const executed=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+        assert.equal(executed.status,0,executed.stderr);assert.equal(executed.stdout.trim(),expected);
+      }
+    }
+    writeFileSync(manifest,JSON.stringify({'Services / Storage':{provider:'Providers / Memory'}}));
+    const imports='module App; import Services / Storage {Storage; open: ; read: key: ;}; import Providers / Native {Storage => Native Storage; open: => native open: ; read: key: => native read: key: ;}; ';
+    const mixed=imports+'a (Storage) = open: "one"; b (Native Storage) = native open: "two"; result = native read: b, key: "ok";';
+    const valid=run(mixed,['--check','--bindings',manifest]);assert.equal(valid.status,0,valid.stderr);
+    const report=JSON.parse(valid.stdout);
+    assert.equal(report.find(x=>x.name==='App / b').schema.name,'Providers / Native / Storage');
+    const invalid=run(mixed+' wrong = read: b, key: "bad";',['--check','--bindings',manifest]);
+    assert.notEqual(invalid.status,0);assert.match(invalid.stderr,/Type check/);
+    const unbound=run(mixed+' wrong = read: b, key: "bad";',['--check']);
+    assert.notEqual(unbound.status,0);assert.match(unbound.stderr,/Type check/);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
