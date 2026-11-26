@@ -31,6 +31,11 @@
   }
   document.getElementById('checked-js').addEventListener('click',()=>compileChecked('js'));
   document.getElementById('checked-php').addEventListener('click',()=>compileChecked('php'));
+  document.getElementById('recursive-sum-example').addEventListener('click',()=>{
+    host.value='';
+    source.value='Tree (Element Type) :: Leaf (Element Type) | Branch ([Tree (Element Type)]);\nsum tree: tree (Tree (Number)) -> Number = match: tree {leaf: {n | n}, branch: {children | fold: children, with: {acc, child | acc + (sum tree: child)}, from: 0}};\na = Branch: [(Leaf: 2), (Branch: [(Leaf: 3), (Leaf: 4)])];\nresult = sum tree: a;';
+    check();
+  });
   document.getElementById('parametric-data-example').addEventListener('click',()=>{
     host.value='';
     source.value='Pair (First Type, Second Type) :: {first: First Type, second: Second Type};\nBag (Element Type) :: [Element Type];\nmake pair (A, B): x (A), with: y (B) -> Pair (A, B) = {first: x, second: y};\na = make pair: 42, with: "Ada";\nb (Bag (Number)) = [1, 2];\nresult = a ~ first;';
