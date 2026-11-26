@@ -833,7 +833,7 @@ test('types: exhaustive contextual match types payloads and preserves user selec
   const src='Session :: {user: Text}; Connection :: Disconnected | Connecting | Connected (Session) | Failed (Text); session (Session) = {user: "Ada"}; connection = Connected: session; describe connection: c (Connection) = match: c {disconnected: {| "offline"}, connecting: {| "waiting"}, connected: {s | s ~ user}, failed: {error | error}}; match: x = x; match: x, with: y = y; process = {handlers | handlers}; ordinary = match: 42; ordinary with = match: connection, with: 7; ordinary record = match: (process {connected: {| 1}, disconnected: {| 0}}); result = describe connection: connection; direct = match: (Connected: session) {disconnected: {| 0}, connecting: {| 1}, connected: {s | 2}, failed: {e | 3}};';
   const t=check(src);
   assert.equal(t['describe connection:'],'(Connection) -> Text');assert.equal(t.result,'Text');
-  assert.equal(t.ordinary,'Number');assert.equal(t.ordinaryWith??t['ordinary with'],'Number');assert.equal(t.direct,'Number');
+  assert.equal(t.ordinary,'Number');assert.equal(t['ordinary with'],'Number');assert.equal(t.direct,'Number');
   assert.equal(t['ordinary record'],'{connected: () -> Number, disconnected: () -> Number}');
   for(const [extra,pattern] of [
     ['bad = match: connection {disconnected: {| 0}};',/Non-exhaustive match/],
@@ -862,6 +862,23 @@ test('types: match dispatch evaluates the scrutinee once and only the selected b
       const executed=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
       assert.equal(executed.status,0,executed.stderr);
       assert.deepEqual(JSON.parse(executed.stdout),['Ada','offline','timeout','captured',1,['Ada','offline','timeout']]);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('types: ordinary match selectors coexist with the special form in JS and PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-match-selectors-'));
+  try{
+    const input=join(dir,'program.mira');
+    writeFileSync(input,'State :: Idle | Running (Number); match: x = x; match: x, with: y = y; process = {handlers | handlers}; ordinary = match: 42; ordinary with = match: 1, with: 7; ordinary record = match: (process {idle: {| 1}}); selected = match: (Running: 2) {idle: {| 0}, running: {n | n}}; result = [ordinary, ordinary with, selected];');
+    for(const target of ['js','php']){
+      const compiled=spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
+      assert.equal(compiled.status,0,compiled.stderr);
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,compiled.stdout+(target==='js'?'\nconsole.log(JSON.stringify(result));':'\necho json_encode($result);'));
+      const executed=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(executed.status,0,executed.stderr);
+      assert.deepEqual(JSON.parse(executed.stdout),[42,7,2]);
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
