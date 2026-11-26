@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.67.0');
+  assert.equal(bridge.version, '0.68.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.67.0');
+  assert.equal(bridge.version,'0.68.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1267,4 +1267,25 @@ test('0.67 Studio virtual logical imports resolve direct aliases, public types a
     ['module App; import Math / Integer Math {rate;}; rate = 2;',/Imported name conflicts/]
   ]){const x=bridge.check(source,null,files);assert.equal(x.ok,false,source);assert.match(x.message,pattern);}
   assert.match(read('type-lab.html'),/selective-import-example/);
+});
+
+
+test('0.68 public signatures in virtual projects use public imports and constrain consumers',()=>{
+  const modules=JSON.stringify({
+    'Data / Types':'module Data / Types; interface Amount :: Number; implementation',
+    'Math / Fees':'module Math / Fees; interface rate (Number); identity (Value Type): :: (Value Type) -> Value Type; fee: :: (Amount) -> Number; double: ; import Data / Types {Amount;}; implementation rate = 2; identity: x = x; fee: amount = amount * rate; double: n = n * 2;'
+  });
+  const src='module App; import Data / Types {Amount;}; import Math / Fees {fee: => costo: ; identity: ; rate; double: ;}; amount (Amount) = 3; result = costo: (identity: amount);';
+  const checked=bridge.check(src,null,modules);assert.equal(checked.ok,true,checked.message);
+  const rows=JSON.parse(checked.output);
+  assert.equal(rows.find(r=>r.name==='Math / Fees / fee:').type,'(Data / Types / Amount) -> Number');
+  assert.equal(rows.find(r=>r.name==='Math / Fees / fee:').explicitSignature,true);
+  assert.equal(rows.find(r=>r.name==='Math / Fees / double:').explicitSignature,false);
+  assert.equal(rows.find(r=>r.name==='App / result').type,'Number');
+  const js=bridge.compile(src,'js',null,false,modules,true);assert.equal(js.ok,true,js.message);
+  const result='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+  assert.equal(runInNewContext(js.output+'\n'+result,{}),6);
+  const bad=bridge.check('module App; import Math / Fees {fee: ;}; result = fee: "bad";',null,modules);
+  assert.equal(bad.ok,false);assert.match(bad.message,/Type check/);
+  assert.match(read('type-lab.html'),/public-signature-example/);
 });
