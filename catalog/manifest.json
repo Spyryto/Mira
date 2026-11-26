@@ -1,5 +1,5 @@
 {
-  "version": "0.69.0",
+  "version": "0.69.1",
   "features": [
     {
       "id": "values",
@@ -1980,6 +1980,12 @@
       "title": "Tipi opachi monomorfi e controllo delle firme pubbliche",
       "since": "0.69",
       "doc": "docs/grammar.md#mira-069-tipi-opachi-monomorfi-e-controllo-delle-firme-pubbliche"
+    },
+    {
+      "id": "parametric-opaque-types",
+      "title": "Tipi opachi parametrici e riferimenti pubblici annidati",
+      "since": "0.69.1",
+      "doc": "docs/grammar.md#mira-0691-tipi-opachi-parametrici"
     }
   ]
 }
