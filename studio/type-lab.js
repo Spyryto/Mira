@@ -8,7 +8,7 @@
   }
   function check(highlight=false){
     const response=MiraStudioCompiler.check(source.value,host.value.trim()||null,modules.value.trim()||null);
-    result.textContent=response.ok?(document.getElementById('structured').checked?response.output:JSON.parse(response.output).map(x=>(x.module?(x.exported?'[pubblico] ':'[privato] '):'')+x.name+'  :  '+x.type).join('\n')):response.message;
+    result.textContent=response.ok?(document.getElementById('structured').checked?response.output:JSON.parse(response.output).map(x=>(x.module?(x.exported?(x.explicitSignature?'[pubblico · esplicito] ':'[pubblico · inferito] '):'[privato] '):'')+x.name+'  :  '+x.type).join('\n')):response.message;
     const d=response.diagnostic;
     if(!response.ok && d?.proof){
       const label=d.proof==='violated'?'Vincolo certamente violato':'Vincolo non dimostrato';
@@ -31,6 +31,12 @@
   }
   document.getElementById('checked-js').addEventListener('click',()=>compileChecked('js'));
   document.getElementById('checked-php').addEventListener('click',()=>compileChecked('php'));
+  document.getElementById('public-signature-example').addEventListener('click',()=>{
+    host.value='';
+    modules.value='';
+    source.value='module Math / Example;\n\ninterface\n\nrate (Number);\nsquare: :: (Number) -> Number;\nidentity (Value Type): :: (Value Type) -> Value Type;\ndouble: ;\n\nimplementation\n\nrate = 2;\nsquare: x = x * x;\nidentity: x = x;\ndouble: x = x + x;\na = identity: 42;\nb = identity: "Mira";\nresult = square: rate;';
+    check();
+  });
   document.getElementById('selective-import-example').addEventListener('click',()=>{
     host.value='';
     modules.value=JSON.stringify({'Math / Integer Math':'module Math / Integer Math;\ninterface\nsquare: ;\nadd: by: ;\nimplementation\nsquare: x = x * x;\nadd: x, by: y = x + y;'},null,2);
