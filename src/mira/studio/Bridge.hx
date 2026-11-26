@@ -21,7 +21,8 @@ class Bridge {
             ast: ast,
             trace: trace,
             exploreModules: exploreModules,
-            version: "0.71.0"
+            verifyContract: verifyContract,
+            version: "0.72.0"
         });
     }
 
@@ -122,6 +123,13 @@ class Bridge {
                 tree.push(node);
             }
             return haxe.Json.stringify({kind: "Program", definitions: tree}, null, "  ");
+        });
+    }
+
+    public static function verifyContract(source:String,provider:String,contract:String,?hostJson:String,?modulesJson:String):Dynamic {
+        return safely(function() {
+            final host = hostJson == null ? HostEnvironment.empty() : HostEnvironment.fromJson(hostJson);
+            return haxe.Json.stringify(mira.types.ContractVerifier.verify(source,provider,contract,host,resolver(modulesJson)),null,"  ");
         });
     }
 

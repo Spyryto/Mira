@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.71.0');
+  assert.equal(bridge.version, '0.72.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.71.0');
+  assert.equal(bridge.version,'0.72.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1442,4 +1442,42 @@ test('0.71 module boundary consolidation: diamond and cycle diagnostics',()=>{
   const bad=bridge.exploreModules(src+' leaked = copy ~ value;',null,files);assert.equal(bad.ok,false);assert.match(bad.message,/Type check/);
   const cycle=bridge.exploreModules('module App; import A { * };',null,JSON.stringify({'A':'module A; interface export B { * }; implementation','B':'module B; interface export A { * }; implementation'}));
   assert.equal(cycle.ok,false);assert.match(cycle.message,/Import cycle/);
+});
+
+
+test('0.72 independent signatures check multiple concrete providers without changing their source',()=>{
+  const contract='initial (Number); read: :: (Number) -> Number; combine: with: :: (Number, Number) -> Number; identity (T): :: (T) -> T;';
+  const source=(name,expression)=>'module '+name+'; interface initial; read: ; combine: with: ; identity: ; implementation initial = 2; read: x = '+expression+'; combine: x, with: y = x + y; identity: x = x; private value = 42;';
+  for(const [name,expression] of [['Memory','x + initial'],['Native','x * initial']]){
+    const src=source(name,expression);
+    const before=bridge.compile(src,'js',null,false,null,true);
+    assert.equal(before.ok,true,before.message);
+    const r=bridge.verifyContract(src,name,contract);
+    assert.equal(r.ok,true,r.message);
+    const data=JSON.parse(r.output);
+    assert.equal(data.provider,name);
+    assert.deepEqual(data.verified.map(s=>s.name),['initial','read:','combine:with:','identity:']);
+    assert.equal(data.verified[1].signature.type,'(Number) -> Number');
+    assert.equal(data.verified[3].signature.type,"('a) -> 'a");
+    const after=bridge.compile(src,'js',null,false,null,true);
+    assert.equal(after.ok,true,after.message);assert.equal(after.output,before.output);
+  }
+  const src=source('Memory','x + initial');
+  for(const [provider,signature,pattern] of [
+    ['Memory','private value (Number);',/not publicly defined/],
+    ['Memory','missing: :: (Number) -> Number;',/not publicly defined/],
+    ['Memory','read: :: (Text) -> Text;',/Type check/],
+    ['Memory','read: ;',/explicit value and selector signatures only/],
+    ['Memory','read: :: (Number) -> Number; read: :: (Number) -> Number;',/Duplicate contract symbol/],
+    ['Memory','Hidden :: Number;',/explicit value and selector signatures only/],
+    ['Memory','implementation',/cannot contain implementation/],
+    ['Missing',contract,/not publicly defined/],
+    ['Memory','',/Empty independent contract/]
+  ]){
+    const result=bridge.verifyContract(src,provider,signature);
+    assert.equal(result.ok,false,signature);assert.match(result.message,pattern);
+  }
+  const invalid=bridge.verifyContract('module Bad; interface identity: ; implementation identity: x = 42;','Bad','identity (T): :: (T) -> T;');
+  assert.equal(invalid.ok,false);assert.match(invalid.message,/Type check/);
+  assert.match(read('module-explorer.html'),/id="verify-contract"/);
 });

@@ -18,13 +18,14 @@ class ModuleSections {
     public final imports:Array<Token> = [];
     public final bodyOffset:Int;
 
-    public function new(tokens:Array<Token>, start:Int) {
+    public function new(tokens:Array<Token>, start:Int, standalone:Bool = false) {
         var cursor = start + 1; // interface
         var importing = false;
         final seen = new Map<String,Bool>();
         while (tokens[cursor].kind != End) {
             final anchor = tokens[cursor];
             if (anchor.kind == Word && anchor.value == "implementation") {
+                if (standalone) throw new MiraError("Independent contract cannot contain implementation",anchor);
                 bodyOffset = cursor + 1;
                 typeTokens.push(tokens[tokens.length-1]);
                 return;
@@ -69,6 +70,11 @@ class ModuleSections {
                 seen.set(name,true);
                 references.push({name:name,origin:anchor});
             }
+        }
+        if (standalone) {
+            bodyOffset = cursor;
+            typeTokens.push(tokens[cursor]);
+            return;
         }
         throw new MiraError("Expected implementation section",tokens[cursor]);
     }

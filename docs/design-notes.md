@@ -615,3 +615,13 @@ solo passaggio (anziché scansione completa per ogni modulo). Fixture
 con dipendenza a diamante, benchmark per JS/PHP e test di identità opaca
 attraverso due riesportazioni, proiezione negata e ciclo di dipendenze.
 Non si introducono cache persistenti o compilazione incrementale.
+
+## 0.72 — primo verificatore indipendente
+
+ContractVerifier riusa ModuleSections (modalità frammento autonomo),
+PublicSignature e TypeChecker. Un contratto è una lista di firme
+esplicite; viene verificata una nuova istanza del programma, applicando
+le firme ai soli simboli pubblici locali del provider. Non si confrontano
+stringhe di tipi inferiti. Prima fase deliberatamente conservativa:
+nessun matching per subtyping delle firme annotate, nessuna equazione
+tra tipi nominali di provider differenti, nessuna selezione di provider.
