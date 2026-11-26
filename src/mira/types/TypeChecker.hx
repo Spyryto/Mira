@@ -16,6 +16,9 @@ private typedef LocalScheme = {
 // Experimental, target-independent inference. No code generation or evaluation.
 class TypeChecker {
     final bindings = new Map<Int, Type>();
+    // Rigid variables stand for arbitrary caller-chosen types while checking
+    // an explicitly generic body. Instantiating its finished signature is flexible.
+    final rigid = new Map<Int,Bool>();
     final definitions = new Map<String, Definition>();
     final inferred = new Map<String, Type>();
     final active = new Map<String, Type>();
@@ -113,6 +116,7 @@ class TypeChecker {
             case Variable(other) if (id == other): return;
             default:
         }
+        if (rigid.exists(id)) fail("Cannot specialize explicit type parameter " + show(Variable(id)) + " to " + show(type));
         if (occurs(id,type)) fail("infinite type");
         if (lacks.exists(id)) constrainRow(type,lacks.get(id));
         if (scalarEq.exists(id)) requireScalarEq(type);
@@ -123,6 +127,7 @@ class TypeChecker {
         final left = prune(a);
         final right = prune(b);
         switch [left,right] {
+            case [Variable(id), Variable(other)] if (rigid.exists(id) && !rigid.exists(other)): bind(other,left);
             case [Variable(id), _]: bind(id,right);
             case [_, Variable(id)]: bind(id,left);
             case [NamedType(x,_),NamedType(y,_)] if (x == y):
@@ -296,6 +301,7 @@ class TypeChecker {
     function constrainRow(type:Type, forbidden:Map<String,Bool>):Void {
         switch (prune(type)) {
             case Variable(id):
+                if (rigid.exists(id)) fail("Explicit type parameter cannot be constrained to a record row");
                 if (scalarEq.exists(id)) fail("scalar equality cannot constrain a record row");
                 if (!lacks.exists(id)) lacks.set(id,new Map<String,Bool>());
                 final current = lacks.get(id);
@@ -468,6 +474,18 @@ class TypeChecker {
                 active.set(name,constructor);
                 continue;
             }
+            if (d.typeParameters.length > 0) {
+                if (recursive) fail("Recursive explicitly generic functions are not yet supported");
+                final slots = new Map<Int,Type>();
+                for (i in 0...d.typeParameters.length) {
+                    final id = nextId++;
+                    rigid.set(id,true);
+                    slots.set(-i-1,Variable(id));
+                }
+                final signature = FunctionType([for (a in d.parameterAnnotations) a],d.resultAnnotation);
+                active.set(name,instantiate(signature,slots));
+                continue;
+            }
             final result:Type = d.resultAnnotation == null ? fresh() : d.resultAnnotation;
             final placeholder:Type = d.isFunction()
                 ? FunctionType([for (i in 0...d.parameters.length)
@@ -544,6 +562,7 @@ class TypeChecker {
             case NamedType(_,base) | RefinedType(base,_): requireScalarEq(base);
             case IntegerType | NumberType | TextType | BooleanType:
             case Variable(id):
+                if (rigid.exists(id)) fail("Explicit type parameter does not guarantee scalar equality");
                 if (lacks.exists(id)) fail("scalar equality cannot constrain a record row");
                 scalarEq.set(id,true);
             default: fail("ScalarEq requires Number, Text or Boolean, got " + show(type));
