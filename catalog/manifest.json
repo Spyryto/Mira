@@ -1,5 +1,5 @@
 {
-  "version": "0.66.0",
+  "version": "0.67.0",
   "features": [
     {
       "id": "values",
@@ -1962,6 +1962,12 @@
       "title": "Sezioni piatte interface e implementation",
       "since": "0.66",
       "doc": "docs/grammar.md#mira-066-interfaccia-e-implementazione-piatte"
+    },
+    {
+      "id": "selective-module-imports",
+      "title": "Import logici selettivi, completi e alias statici",
+      "since": "0.67",
+      "doc": "docs/grammar.md#mira-067-import-selettivi-e-alias"
     }
   ]
 }
