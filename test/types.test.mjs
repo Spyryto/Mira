@@ -325,3 +325,45 @@ test('types: obsolete and malformed annotations are rejected, not interpreted as
     ['(Number) = 1;',/Expected name before type annotation/]
   ])assert.throws(()=>check(source),pattern,source);
 });
+
+test('types: postfix annotations on block parameters and immutable locals',()=>{
+  const result=check('f = {first number (Number), second number | first number * second number}; names = () >> {| students ([Text]) = []; students}; nested = {x (Number) | {y (Number) | x + y}}; r = collect: [{hours: 2}], with: {lesson ({hours: Number}) | fee (Number) = lesson ~ hours * 30; fee};');
+  assert.equal(result.f,'(Number, Number) -> Number');
+  assert.equal(result.names,'[Text]');
+  assert.equal(result.nested,'(Number) -> (Number) -> Number');
+  assert.equal(result.r,'[Number]');
+  const mixed=check('f = {x (Number), y | {n: x, value: y}};');
+  assert.equal(mixed.f,"(Number, 'a) -> {n: Number, value: 'a}");
+});
+test('types: local annotations check initializers, preserve scope and reject invalid syntax',()=>{
+  for(const [source,pattern] of [
+    ['f = {x (Text) | x + 1};',/expected Number, got Text/],
+    ['f = {x (Number) | x}; r = "a" >> f;',/expected Number, got Text/],
+    ['r = () >> {| values ([Text]) = [1]; values};',/expected Text, got Number/],
+    ['r = () >> {| first = later; later (Number) = 1; first};',/used before its declaration/],
+    ['f = {x (Number) | x (Text) = "a"; x};',/Duplicate or shadowed local name/],
+    ['f = {x (Number), x (Text) | x};',/Duplicate or conflicting block parameter/],
+    ['f = {x (Dynamic) | x};',/Unknown annotation type Dynamic/],
+    ['r = () >> {| x () = 1; x};',/Expected a type annotation/],
+    ['r = () >> {| x (Number) = 1;};',/end with a value expression/]
+  ])assert.throws(()=>check(source),pattern,source);
+  assert.equal(check('f = {x | x}; r = () >> {| f (1 + 2)};').r,'Number');
+  assert.equal(check('r = () >> {| id = {x | x}; {a: (1 >> id), b: ("a" >> id)}};').r,'{a: Number, b: Text}');
+});
+test('types: typed blocks and locals erase identically in JS and PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-local-annotations-'));
+  try{
+    const input=join(dir,'program.mira');
+    const typed='result = 2 >> {hours (Number) | rate (Number) = 30; hours * rate};';
+    const bare='result = 2 >> {hours | rate = 30; hours * rate};';
+    assert.equal(check(typed).result,'Number');
+    for(const target of ['js','php']){
+      const compile=source=>{writeFileSync(input,source);const r=spawnSync('node',['dist/mira.cjs',input,target],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);return r.stdout;};
+      const output=compile(typed);assert.equal(output,compile(bare));
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,output+(target==='js'?'\nconsole.log(result);':'\necho $result;'));
+      const r=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);assert.equal(r.stdout.trim(),'60');
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

@@ -6,6 +6,7 @@ import mira.lex.Token.TokenKind;
 import mira.resolve.SelectorResolver;
 import mira.resolve.Symbols;
 import mira.resolve.Mangle;
+import mira.types.Type;
 
 class ExpressionParser {
     final tokens:Array<Token>;
@@ -343,7 +344,8 @@ class ExpressionParser {
         if (tokens[cursor].isSymbol("|")) return true;
         if (tokens[cursor].kind != Word) return false;
         while (true) {
-            while (tokens[cursor].kind == Word) cursor++;
+            cursor = bindingEnd(cursor);
+            if (cursor < 0) return false;
             if (tokens[cursor].isSymbol("|")) return true;
             if (!tokens[cursor].isSymbol(",")) return false;
             cursor++;
@@ -357,15 +359,16 @@ class ExpressionParser {
     function block():Expr {
         consume(); // {
         final parameters:Array<String> = [];
+        final annotations:Array<Null<Type>> = [];
         final emitted:Array<String> = [];
         if (!current().isSymbol("|")) while (true) {
             final parameterToken = current();
-            final words:Array<String> = [];
-            while (current().kind == Word) words.push(consume().value);
-            if (words.length == 0) {
-                throw new MiraError("Expected block parameter", parameterToken);
-            }
-            final parameter = words.join(" ");
+            final end = bindingEnd(position);
+            if (end < 0) throw new MiraError("Expected block parameter",parameterToken);
+            final binding = DefinitionParser.annotatedName(tokens.slice(position,end));
+            position = end;
+            final parameter = binding.name;
+            annotations.push(binding.type);
             final symbol = Mangle.name(parameter);
             if (symbol == "__miraHost") {
                 throw new MiraError("Reserved block parameter __miraHost", parameterToken);
@@ -402,9 +405,9 @@ class ExpressionParser {
             final nameEnd = localAssignmentEnd();
             if (nameEnd >= 0) {
                 final nameToken = current();
-                final nameParts:Array<String> = [];
-                while (position < nameEnd) nameParts.push(consume().value);
-                final name = nameParts.join(" ");
+                final binding = DefinitionParser.annotatedName(tokens.slice(position,nameEnd));
+                position = nameEnd;
+                final name = binding.name;
                 final symbol = Mangle.name(name);
                 if (symbol == "__miraHost") {
                     throw new MiraError("Reserved local name __miraHost", nameToken);
@@ -422,7 +425,9 @@ class ExpressionParser {
                 }
                 // The initializer is resolved before this name comes into scope.
                 final value = expression();
-                expressions.push(at(Expr.Local(name, value),nameToken));
+                final local = at(Expr.Local(name,value),binding.typeOrigin == null ? nameToken : binding.typeOrigin);
+                if (origins != null && binding.type != null) origins.annotate(local,[binding.type]);
+                expressions.push(local);
                 taken.push(symbol);
                 localNames.unshift(name);
                 bindings.push(name);
@@ -449,7 +454,9 @@ class ExpressionParser {
         for (_ in pending) pendingLocals.pop();
         requireSymbol("}");
         final body:Expr = expressions.length == 1 ? expressions[0] : Expr.Steps(expressions);
-        return Block(parameters, body);
+        final block:Expr = Expr.Block(parameters,body);
+        if (origins != null) origins.annotate(block,annotations);
+        return block;
     }
 
     // Scan only statement starts at the current brace depth; assignments
@@ -469,7 +476,8 @@ class ExpressionParser {
                     words.push(tokens[end].value);
                     end++;
                 }
-                if (tokens[end].isSymbol("=")) names.push(words.join(" "));
+                final binding = bindingEnd(cursor);
+                if (binding >= 0 && tokens[binding].isSymbol("=")) names.push(words.join(" "));
             }
             if (token.isSymbol("(") || token.isSymbol("[") || token.isSymbol("{")) {
                 depth++;
@@ -483,13 +491,29 @@ class ExpressionParser {
         return names;
     }
 
-    // Recognize only an initial sequence of words immediately followed
-    // by '='. Comparisons '==' and calls remain ordinary expressions.
-    function localAssignmentEnd():Int {
-        var cursor = position;
+    // Look ahead without interpreting a parenthesized expression as a type.
+    // The following '=', ',' or '|' is what establishes binding context.
+    function bindingEnd(start:Int):Int {
+        var cursor = start;
         if (tokens[cursor].kind != Word) return -1;
         while (tokens[cursor].kind == Word) cursor++;
-        return tokens[cursor].isSymbol("=") ? cursor : -1;
+        if (tokens[cursor].isSymbol("(")) {
+            var depth = 0;
+            do {
+                final token = tokens[cursor++];
+                if (token.kind == End) return -1;
+                if (token.isSymbol("(")) depth++;
+                else if (token.isSymbol(")")) depth--;
+            } while (depth > 0 && cursor < tokens.length);
+            if (depth != 0 || cursor >= tokens.length) return -1;
+        }
+        return cursor;
+    }
+
+    // Calls and comparisons remain ordinary expressions.
+    function localAssignmentEnd():Int {
+        final end = bindingEnd(position);
+        return end >= 0 && tokens[end].isSymbol("=") ? end : -1;
     }
 
     function record():Expr {

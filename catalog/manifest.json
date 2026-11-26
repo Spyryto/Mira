@@ -1,5 +1,5 @@
 {
-  "version": "0.47.0",
+  "version": "0.48.0",
   "features": [
     {
       "id": "values",
@@ -1830,6 +1830,12 @@
       "title": "Annotazioni esplicite per parametri, valori e risultati",
       "since": "0.47",
       "doc": "docs/type-checker.md#047-annotazioni-esplicite"
+    },
+    {
+      "id": "local-annotations",
+      "title": "Annotazioni uniformi nei blocchi e valori locali",
+      "since": "0.48",
+      "doc": "docs/type-checker.md#048-annotazioni-locali"
     }
   ]
 }

@@ -463,7 +463,9 @@ class TypeChecker {
                 RecordType([for (i in 0...keys.length) keys[i] => infer(values[i],scope)],null);
             case Block(parameters,body):
                 final inner = scope.copy();
-                final args = [for (p in parameters) fresh()];
+                final annotations = origins.annotations(expr);
+                final args:Array<Type> = [for (i in 0...parameters.length)
+                    annotations != null && annotations[i] != null ? annotations[i] : fresh()];
                 for (i in 0...args.length) inner.set(parameters[i],mono(args[i]));
                 FunctionType(args,infer(body,inner));
             case Steps(items):
@@ -472,7 +474,11 @@ class TypeChecker {
                 for (e in items) switch (e) {
                     case Local(name,value):
                         final type = infer(value,inner);
-                        inner.set(name,localScheme(value,type,inner));
+                        final annotations = origins.annotations(e);
+                        if (annotations != null) {
+                            unifyAt(annotations[0],type,e);
+                            inner.set(name,mono(annotations[0]));
+                        } else inner.set(name,localScheme(value,type,inner));
                     default: result = infer(e,inner);
                 }
                 result;
