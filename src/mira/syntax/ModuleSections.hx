@@ -48,8 +48,6 @@ class ModuleSections {
             final item = tokens.slice(begin,cursor);
             cursor++;
             if (anchor.kind == Word && anchor.value == "import") {
-                if (item.length != 2 || item[1].kind != Text)
-                    throw new MiraError("Logical and selective imports are not implemented yet",anchor);
                 importing = true;
                 for (token in tokens.slice(begin,cursor)) imports.push(token);
                 continue;
@@ -70,7 +68,7 @@ class ModuleSections {
         throw new MiraError("Expected implementation section",tokens[cursor]);
     }
 
-    static function reference(tokens:Array<Token>):String {
+    public static function reference(tokens:Array<Token>):String {
         final labels:Array<String> = [];
         var words:Array<String> = [];
         for (token in tokens) {
