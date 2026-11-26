@@ -1291,7 +1291,7 @@ class DefinitionParser
 public static function annotatedName(tokens:Array<Token>,?names:Map<String,Type>):{name:String,type:Null<Type>,typeOrigin:Null<Token>} { final opening = topLevel(tokens,"("); if (opening < 0) return {name:readWords(tokens),type:null,typeOrigin:null}; if (opening == 0) throw new MiraError("Expected name before type annotation",tokens[0]); final name = readWords(tokens.slice(0,opening)); if (!tokens[tokens.length-1].isSymbol(")")) throw new MiraError("Expected closing ) after type annotation",tokens[opening]); final origin = opening + 1 < tokens.length - 1 ? tokens[opening+1] : tokens[opening]; final type = new TypeParser(tokens.slice(opening+1,tokens.length-1),origin,names).parse(); return {name:name,type:type,typeOrigin:origin}; } public static function splitHeader(tokens:Array<Token>):Array<Array<Token>>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L235)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L258)
 
 <a id="api-mira-syntax-definitionparser-parse"></a>
 ### `mira.syntax.DefinitionParser.parse`
@@ -1315,7 +1315,7 @@ Feature: [Definizioni di valori](language.md#feature-values), [Funzioni con para
 public static function topLevel(tokens:Array<Token>,symbol:String):Int
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L270)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L293)
 
 <a id="api-mira-syntax-definitionparser-typeheader"></a>
 ### `mira.syntax.DefinitionParser.typeHeader`
@@ -1326,7 +1326,18 @@ public static function topLevel(tokens:Array<Token>,symbol:String):Int
 public static function typeHeader(tokens:Array<Token>,names:Map<String,Type>):{name:String,parameters:Array<String>} { final opening = topLevel(tokens,"("); if (opening < 0) return {name:readWords(tokens),parameters:[]}; final name = readWords(tokens.slice(0,opening)); if (!tokens[tokens.length-1].isSymbol(")")) throw new MiraError("Expected closing ) in type declaration",tokens[opening]); final parameters:Array<String> = []; final arguments = tokens.slice(opening + 1,tokens.length-1); if (arguments.length == 0) throw new MiraError("Expected type parameter",tokens[opening]); for (part in splitHeader(arguments))
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L76)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L99)
+
+<a id="api-mira-syntax-definitionparser-typeheaders"></a>
+### `mira.syntax.DefinitionParser.typeHeaders`
+
+**method** · Analizza le dichiarazioni e i loro terminatori.
+
+```haxe
+public static function typeHeaders(tokens:Array<Token>):Map<String,Int>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L77)
 
 <a id="api-mira-syntax-expr"></a>
 ### `mira.syntax.Expr`
@@ -1909,7 +1920,7 @@ class PublicSignature
 public function apply(d:Definition):Void
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/PublicSignature.hx#L90)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/PublicSignature.hx#L92)
 
 <a id="api-mira-syntax-publicsignature-name"></a>
 ### `mira.syntax.PublicSignature.name`
@@ -2500,7 +2511,7 @@ NumberType
 **variant** · Membro pubblico di mira.types.Type.
 
 ```haxe
-OpaqueType(name:String)
+OpaqueType(name:String,arguments:Array<Type>)
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L6)
@@ -2681,6 +2692,17 @@ class TypeVisibility
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L8)
 
+<a id="api-mira-types-typevisibility-defineopaque"></a>
+### `mira.types.TypeVisibility.defineOpaque`
+
+**method** · Membro pubblico di mira.types.TypeVisibility.
+
+```haxe
+public function defineOpaque(name:String,type:Type):Void
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L22)
+
 <a id="api-mira-types-typevisibility-markopaque"></a>
 ### `mira.types.TypeVisibility.markOpaque`
 
@@ -2690,7 +2712,7 @@ class TypeVisibility
 public function markOpaque(name:String):Void
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L16)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L17)
 
 <a id="api-mira-types-typevisibility-new"></a>
 ### `mira.types.TypeVisibility.new`
@@ -2701,7 +2723,7 @@ public function markOpaque(name:String):Void
 public function new()
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L14)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L15)
 
 <a id="api-mira-types-typevisibility-requirepublic"></a>
 ### `mira.types.TypeVisibility.requirePublic`
@@ -2712,7 +2734,18 @@ public function new()
 public function requirePublic(type:Type,origin:Token,resolve:Type->Type):Void
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L47)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L66)
+
+<a id="api-mira-types-typevisibility-reveal"></a>
+### `mira.types.TypeVisibility.reveal`
+
+**method** · Membro pubblico di mira.types.TypeVisibility.
+
+```haxe
+public function reveal(type:Type,owner:Null<String>):Type
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L29)
 
 <a id="api-mira-types-typevisibility-view"></a>
 ### `mira.types.TypeVisibility.view`
@@ -2723,5 +2756,5 @@ public function requirePublic(type:Type,origin:Token,resolve:Type->Type):Void
 public function view(type:Type,owner:Null<String>,?resolve:Type->Type):Type
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L21)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L38)
 

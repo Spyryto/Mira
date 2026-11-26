@@ -116,6 +116,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Import logici selettivi, completi e alias statici | `0.67` | [Dettagli](docs/grammar.md#mira-067-import-selettivi-e-alias) |
 | ✅ | Firme pubbliche esplicite e inferite dei moduli | `0.68` | [Dettagli](docs/grammar.md#mira-068-firme-pubbliche-esplicite-e-inferite) |
 | ✅ | Tipi opachi monomorfi e controllo delle firme pubbliche | `0.69` | [Dettagli](docs/grammar.md#mira-069-tipi-opachi-monomorfi-e-controllo-delle-firme-pubbliche) |
+| ✅ | Tipi opachi parametrici e riferimenti pubblici annidati | `0.69.1` | [Dettagli](docs/grammar.md#mira-0691-tipi-opachi-parametrici) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
