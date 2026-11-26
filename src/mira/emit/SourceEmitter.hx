@@ -63,6 +63,10 @@ class SourceEmitter {
                 };
                 accessor;
 
+            case Variant(_,tag,payload):
+                final fields = payload == null ? ["tag"] : ["tag","value"];
+                final values = payload == null ? [Text(tag)] : [Text(tag),payload];
+                expression(Record(fields,values),target,scope,reservedHostNames,guards);
             case Validate(input,required,success,failure):
                 final constraint = new NumericGuard();
                 constraint.integer = mira.types.NumericRange.integerType(required);
@@ -248,6 +252,7 @@ class SourceEmitter {
                     names.push(name);
             case FieldGet(receiver, _):
                 referencedNames(receiver, bound, names);
+            case Variant(_,_,payload): if (payload != null) referencedNames(payload,bound,names);
             case Validate(input,_,success,failure):
                 referencedNames(input,bound,names);
                 referencedNames(success,bound,names);
