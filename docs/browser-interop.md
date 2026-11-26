@@ -428,3 +428,15 @@ preventivo stateless richiamato dal browser. Lo stesso contratto
 produce le registrazioni di entrambi. Non sono introdotte dipendenze
 o modifiche al formato HTTP 0.37. Autenticazione e contratti tipizzati
 generali restano futuri.
+
+## Mira 0.88: GET testuale
+
+lib/http/Services/Http.mira produce get text: id come effetto
+{service: "http text", id: id, reply: "http loaded", payload: true}.
+Registrare MiraHttpHost.textService(url) sotto "http text" in createApp.
+La risposta è {status,body}; anche 4xx/5xx sono normali valori di risposta,
+mentre redirect, timeout, testo invalido, limite e trasporto fallito
+generano un errore di effetto. successful: classifica lo status in Mira.
+Il PHP adapter sincrono usa stream nativo e timeout di inattività.
+Non è un sostituto del protocollo RPC; niente URL, header o credenziali
+scelti dal programma. La demo same-origin è disponibile offline.

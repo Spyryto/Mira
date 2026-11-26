@@ -1,0 +1,7 @@
+module Services / Http;
+interface
+get text: :: (Number) -> {service: Text, id: Number, reply: Text, payload: Boolean};
+successful: :: ({status: Number, body: Text}) -> Boolean;
+implementation
+get text: id = {service: "http text", id: id, reply: "http loaded", payload: true};
+successful: response = response ~ status >= 200 AND response ~ status < 300;

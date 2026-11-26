@@ -268,3 +268,57 @@ echo 'ok';
     assert.equal(execFileSync('php',[join(dir,'test.php')],{encoding:'utf8'}),'ok');
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('0.88 HTTP text adapters use real loopback transport, bound endpoint and bounded UTF-8', {timeout:15000},async()=>{
+  const {createServer}=await import('node:http');
+  const {execFile}=await import('node:child_process');
+  const {promisify}=await import('node:util');
+  const exec=promisify(execFile);
+  let hits=0;
+  const server=createServer((req,res)=>{
+    if(req.url==='/ok'){hits++;res.writeHead(200,{'Content-Type':'text/plain'});const bytes=Buffer.from('Caffè 🎸');res.write(bytes.subarray(0,8));res.end(bytes.subarray(8));}
+    else if(req.url==='/missing'){res.writeHead(404);res.end('missing');}
+    else if(req.url==='/redirect'){res.writeHead(302,{Location:'/ok'});res.end();}
+    else if(req.url==='/large'){res.writeHead(200);res.end('x'.repeat(33));}
+    else if(req.url==='/bad'){res.writeHead(200);res.end(Buffer.from([0xc3,0x28]));}
+    else if(req.url==='/slow'){res.writeHead(200);res.flushHeaders();const timer=setTimeout(()=>res.end('late'),500);res.on('close',()=>clearTimeout(timer));}
+    else {res.writeHead(500);res.end('unknown');}
+  });
+  await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
+  const url='http://127.0.0.1:'+server.address().port;
+  const env={URL,AbortController,TextDecoder,setTimeout,clearTimeout,fetch};
+  runInNewContext(read('lib/http/http-host.js'),env);const service=env.MiraHttpHost.textService;
+  const adapter=fileURLToPath(new URL('../lib/http/http-host.php',import.meta.url));
+  const php=async(path,max=32)=>JSON.parse((await exec('php',['-r','require $argv[1];try{$h=\\Mira\\Http\\textService($argv[2],(int)$argv[3],1000);echo json_encode(["value"=>$h(true)],JSON_THROW_ON_ERROR);}catch(Throwable $e){echo json_encode(["error"=>$e->getMessage()]);}',adapter,url+path,String(max)],{timeout:5000})).stdout);
+  try{
+    for(const [path,expected] of [['/ok',{value:{status:200,body:'Caffè 🎸'}}],['/missing',{value:{status:404,body:'missing'}}],['/redirect',{error:'http_redirect'}],['/large',{error:'http_too_large'}],['/bad',{error:'http_invalid_text'}]]){
+      let js;try{js={value:await service(url+path,{maxBytes:32})(true,new AbortController().signal)}}catch(e){js={error:e.message}}
+      assert.deepEqual(plain(js),expected,path);assert.deepEqual(await php(path),expected,path);
+    }
+    assert.equal(hits,2,'redirect must not follow');
+    await assert.rejects(service(url+'/ok')({url:url+'/missing'}),/invalid_http_payload/);
+    await assert.rejects(service(url+'/slow',{timeoutMs:30})(true),/http_timeout/);
+    const c=new AbortController();const pending=service(url+'/slow')(true,c.signal);c.abort();
+    await assert.rejects(pending,/http_cancelled/);
+    assert.throws(()=>service('file:///etc/passwd'),/invalid_endpoint/);
+    const app=createApp(fakeRenderer(),{initial,view:()=>{},update:(model,msg)=>msg.type==='load'?{model,effects:[{service:'http text',id:1,reply:'loaded',payload:true}]}:{model:{...model,status:msg.value.body},effects:[]}}, {'http text':service(url+'/ok')});
+    app.dispatch({type:'load'});
+    for(let n=0;n<100&&app.getState().status!=='Caffè 🎸';n++)await new Promise(r=>setTimeout(r,10));
+    assert.equal(app.getState().status,'Caffè 🎸');app.stop();
+  }finally{server.closeAllConnections();await new Promise(r=>server.close(r));}
+});
+test('0.88 checked Mira HTTP effect and response classification run on CLI JS/PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-http-module-'));
+  try{
+    const input=fileURLToPath(new URL('../lib/http/App.mira',import.meta.url));
+    const cli=fileURLToPath(new URL('../dist/mira.cjs',import.meta.url));
+    const name='__miraModule_v_417070202F20726573756C74';
+    const expected=[{service:'http text',id:7,reply:'http loaded',payload:true},true,false];
+    for(const target of ['js','php']){
+      const compiled=execFileSync('node',[cli,input,target,'--checked','--tree-shake'],{encoding:'utf8'});
+      const file=join(dir,target==='js'?'out.mjs':'out.php');
+      const suffix=target==='js'?'\nconst p='+name+';console.log(JSON.stringify([p.request(7),p.successful({status:204,body:""}),p.successful({status:404,body:"missing"})]));':'\n$p=$'+name+';echo json_encode([$p["request"](7),$p["successful"](["status"=>204,"body"=>""]),$p["successful"](["status"=>404,"body"=>"missing"])]);';
+      writeFileSync(file,compiled+suffix);assert.deepEqual(JSON.parse(execFileSync(target==='js'?'node':'php',[file],{encoding:'utf8'})),expected);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
