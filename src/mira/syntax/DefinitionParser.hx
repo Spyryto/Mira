@@ -6,7 +6,7 @@ import mira.lex.Token.TokenKind;
 import mira.types.Type;
 
 class DefinitionParser {
-    public static function parse(tokens:Array<Token>, ?names:Map<String,Type>):Array<Definition> {
+    public static function parse(tokens:Array<Token>, ?names:Map<String,Type>, ?modulePath:String):Array<Definition> {
         if (names == null) names = new Map<String,Type>();
         final definitions:Array<Definition> = [];
         var start = 0;
@@ -35,15 +35,16 @@ class DefinitionParser {
                             throw new MiraError("Expected name :: Type",segment[marker]);
                         final header = typeHeader(segment.slice(0,marker),names);
                         final name = header.name;
+                        final identity = mira.resolve.ModuleIdentity.qualify(modulePath,name);
                         if (["Number","Integer","Text","Boolean"].indexOf(name) >= 0 || names.exists(name))
                             throw new MiraError("Duplicate or reserved type " + name,segment[0]);
                         final rhs = segment.slice(marker+1);
                         if (topLevel(rhs,"|") >= 0) {
-                            declareSum(name,rhs,names,definitions,header.parameters);
+                            declareSum(name,identity,rhs,names,definitions,header.parameters);
                         } else {
                             if (header.parameters.length == 0) {
                                 final base = new TypeParser(rhs,segment[marker+1],names,false).parse();
-                                names.set(name,NamedType(name,base));
+                                names.set(name,NamedType(identity,base));
                             } else {
                                 final local = names.copy();
                                 final arguments:Array<Type> = [for (i in 0...header.parameters.length) Variable(-i-1)];
@@ -51,7 +52,7 @@ class DefinitionParser {
                                 final base = new TypeParser(rhs,segment[marker+1],local,false).parse();
                                 switch (base) {
                                     case RecordType(_,null) | ListType(_):
-                                        names.set(name,ParametricNamedType(name,base,arguments));
+                                        names.set(name,ParametricNamedType(identity,base,arguments));
                                     default:
                                         throw new MiraError("Parametric nominal types currently require a record or list base",segment[0]);
                                 }
@@ -96,14 +97,14 @@ class DefinitionParser {
 
     // Sum declarations synthesize ordinary constructor definitions, with a
     // trusted canonical Variant body rather than user-forgeable records.
-    static function declareSum(name:String,tokens:Array<Token>,names:Map<String,Type>,definitions:Array<Definition>,parameters:Array<String>):Void {
+    static function declareSum(name:String,identity:String,tokens:Array<Token>,names:Map<String,Type>,definitions:Array<Definition>,parameters:Array<String>):Void {
         final local = names.copy();
         // Negative ids are declaration-local template slots, never checker ids.
         final arguments:Array<Type> = [for (i in 0...parameters.length) Variable(-i-1)];
         for (i in 0...parameters.length) local.set(parameters[i],arguments[i]);
         final alternatives = new Map<String,Null<Type>>();
         // Only this declaration can see its own back-reference before completion.
-        local.set(name,SumReference(name,alternatives,arguments));
+        local.set(name,SumReference(identity,alternatives,arguments));
         final tags:Array<String> = [];
         final origins:Array<Token> = [];
         var rest = tokens[0].isSymbol("|") ? tokens.slice(1) : tokens;
@@ -122,7 +123,7 @@ class DefinitionParser {
             if (separator < 0) break;
             rest = rest.slice(separator+1);
         }
-        final sum = SumType(name,alternatives,arguments);
+        final sum = SumType(identity,alternatives,arguments);
         names.set(name,sum);
         for (i in 0...tags.length) {
             final tag = tags[i];
