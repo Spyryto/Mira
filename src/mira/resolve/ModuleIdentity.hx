@@ -9,6 +9,11 @@ class ModuleIdentity {
 
     public static function isQualified(name:String):Bool return name.indexOf(" / ") >= 0;
 
+    public static function owner(name:String):Null<String> {
+        final i = name.lastIndexOf(" / ");
+        return i < 0 ? null : name.substr(0,i);
+    }
+
     public static function mangle(name:String,kind:String):String {
         final bytes = haxe.io.Bytes.ofString(name);
         final encoded = new StringBuf();
