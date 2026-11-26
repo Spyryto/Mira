@@ -5,22 +5,26 @@ import mira.lex.Token;
 import mira.lex.Token.TokenKind;
 import mira.syntax.Definition;
 import mira.syntax.DefinitionParser;
+import mira.syntax.ModuleSections;
+import mira.resolve.ModuleIdentity;
 
 // File resolution belongs to the host. The compiler never accesses the
 // filesystem or network, and each source retains its own token coordinates.
 class Modules {
     public static function collect(source:String, ?read:String->Null<String>,
         ?entry:String, ?types:Map<String,mira.types.Type>,
-        ?moduleTypes:Map<String,Map<String,mira.types.Type>>):Array<Definition> {
+        ?moduleTypes:Map<String,Map<String,mira.types.Type>>,
+        ?publicTypes:Map<String,Array<String>>):Array<Definition> {
         if (types == null) types = new Map<String,mira.types.Type>();
         if (moduleTypes == null) moduleTypes = new Map<String,Map<String,mira.types.Type>>();
+        if (publicTypes == null) publicTypes = new Map<String,Array<String>>();
         final loaded = new Map<String, Bool>();
         final stack:Array<String> = entry == null ? [] : [entry];
         final definitions:Array<Definition> = [];
         var count = 0;
         var size = source.length;
         function visit(text:String, file:Null<String>):Void {
-            final tokens = new Lexer(text, file).tokenize();
+            var tokens = new Lexer(text, file).tokenize();
             var offset = 0;
             var modulePath:Null<String> = null;
             // The header is a logical identity, unrelated to the resolver's file key.
@@ -56,6 +60,14 @@ class Modules {
                 moduleTypes.set(modulePath,new Map<String,mira.types.Type>());
                 offset++;
             }
+            var sections:Null<ModuleSections> = null;
+            if (modulePath != null) {
+                publicTypes.set(modulePath,[]);
+                if (tokens[offset].kind == Word && tokens[offset].value == "interface") {
+                    sections = new ModuleSections(tokens,offset);
+                    tokens = tokens.slice(0,offset).concat(sections.imports).concat(tokens.slice(sections.bodyOffset));
+                }
+            }
             while (tokens[offset].kind == Word && tokens[offset].value == "import"
                 && tokens[offset + 1].kind == Text) {
                 final origin = tokens[offset];
@@ -86,8 +98,35 @@ class Modules {
                 loaded.set(path, true);
             }
             final localTypes = modulePath == null ? types : moduleTypes.get(modulePath);
-            final local = DefinitionParser.parse(offset == 0 ? tokens : tokens.slice(offset),localTypes,modulePath);
+            final local:Array<Definition> = [];
+            if (sections != null) {
+                final constructors = DefinitionParser.parse(sections.typeTokens,localTypes,modulePath);
+                for (name in localTypes.keys()) publicTypes.get(modulePath).push(name);
+                publicTypes.get(modulePath).sort(Reflect.compare);
+                for (d in constructors) {
+                    d.isExported = true;
+                    local.push(d);
+                }
+            }
+            for (d in DefinitionParser.parse(offset == 0 ? tokens : tokens.slice(offset),localTypes,modulePath))
+                local.push(d);
+            if (sections != null) {
+                final byName = new Map<String,Definition>();
+                for (d in local) if (!d.isStatement) byName.set(d.isFunction() ? d.selector() : d.name,d);
+                for (reference in sections.references) {
+                    final d = byName.get(reference.name);
+                    if (localTypes.exists(reference.name)) {
+                        if (d != null) throw new MiraError("Ambiguous value or type export " + reference.name,reference.origin);
+                        throw new MiraError("Opaque type exports are not implemented yet: " + reference.name,reference.origin);
+                    }
+                    if (d == null) throw new MiraError("Unknown interface export " + reference.name,reference.origin);
+                    if (d.isExported) throw new MiraError("Duplicate interface export " + reference.name,reference.origin);
+                    d.isExported = true;
+                }
+            }
             for (definition in local) {
+                if (sections != null && (definition.origin.value == "interface" || definition.origin.value == "implementation"))
+                    throw new MiraError("Unexpected module section marker",definition.origin);
                 // Detect a misplaced directive independently of host signatures.
                 if (definition.isStatement && definition.bodyTokens[0].kind == Word
                     && definition.bodyTokens[0].value == "import"
