@@ -120,6 +120,18 @@
     const r=MiraStudioCompiler.compile(by('source').value,target,by('host').value.trim()||null,false,by('modules').value.trim()||null,true,true,by('bindings').value.trim()||null);
     by('provider-output').textContent=r.ok?r.output:r.message;
   }
+  function contractModuleExample(){
+    by('host').value='';
+    by('modules').value=JSON.stringify({
+      'Services / Storage':'module Services / Storage;\ninterface\nStorage;\nopen: :: (Text) -> Storage;\nread: key: :: (Storage, Text) -> Text;\nclose: :: (Storage) -> Boolean;',
+      'Providers / Memory':'module Providers / Memory;\nimplements Services / Storage;\nimplementation\nStorage :: {name: Text};\nopen: name = {name: name};\nread: store, key: k = store ~ name;\nclose: store = true;',
+      'Providers / Native':'module Providers / Native;\nimplements Services / Storage;\nimplementation\nStorage :: Text;\nopen: name = name;\nread: store, key: k = k;\nclose: store = true;'
+    },null,2);
+    by('source').value='module App;\n\nimport Services / Storage {\n  Storage;\n  open: ;\n  read: key: ;\n  close: ;\n};\n\nstore (Storage) = open: "memory";\nresult = read: store, key: "native";\ndone = close: store;';
+    by('bindings').value=JSON.stringify({'Services / Storage':{provider:'Providers / Memory'}},null,2);
+    by('provider-settings').open=true;by('provider-output').textContent='';selected='App';analyze();
+  }
+  by('contract-module-example').addEventListener('click',contractModuleExample);
   by('provider-example').addEventListener('click',providerExample);
   by('provider-swap').addEventListener('click',()=>{
     try {
