@@ -4,8 +4,9 @@ import mira.lex.Token;
 import mira.lex.Token.TokenKind;
 import mira.MiraError;
 import mira.types.Type;
+import mira.types.NumericRange;
 
-// Closed data annotations, deliberately no inference variables or refinements.
+// Closed data annotations and the initial numeric refinement subset.
 class TypeParser {
     final tokens:Array<Token>;
     final fallback:Token;
@@ -38,7 +39,16 @@ class TypeParser {
     public function parse():Type {
         final projected = take("~");
         if (projected && !allowProjection) return fail("Structural projection is an annotation, not a nominal base");
-        final type = readType(0);
+        var type = readType(0);
+        if (current() != null && current().kind == Word && current().value == "where") {
+            if (projected) return fail("Numeric refinement cannot refine a structural projection");
+            position++;
+            final inherited = NumericRange.ofType(type);
+            if (inherited == null) return fail("Numeric refinement requires a Number representation");
+            final range = readRange();
+            if (inherited.intersect(range).empty()) return fail("Empty numeric refinement");
+            type = RefinedType(type,range);
+        }
         if (current() != null) fail("Unexpected token in type annotation");
         if (!projected) return type;
         return switch (type) {
@@ -54,6 +64,32 @@ class TypeParser {
                 fail("Structural projection requires a named record type");
             default: fail("Structural projection requires a named record type");
         };
+    }
+
+    // Initial predicate subset: conjunctions of comparisons against numeric
+    // constants. All occurrences of _ refer to the same refined value.
+    function readRange():NumericRange {
+        var result = NumericRange.any();
+        while (true) {
+            if (current() == null || current().kind != Word || current().value != "_")
+                return fail("Expected _ in numeric refinement");
+            position++;
+            final op = current();
+            if (op == null || [">",">=","<","<=","=="].indexOf(op.value) < 0 || op.kind != Symbol)
+                return fail("Expected numeric refinement comparison");
+            position++;
+            final negative = take("-");
+            final value = current();
+            if (value == null || value.kind != Number || !~/^(0|[1-9][0-9]*)(\.[0-9]+)?$/.match(value.value))
+                return fail("Expected decimal constant in numeric refinement");
+            position++;
+            final n = Std.parseFloat(value.value) * (negative ? -1 : 1);
+            if (!Math.isFinite(n) || Math.abs(n) > 9007199254740991.0)
+                return fail("Numeric refinement constant exceeds portable range");
+            result = result.intersect(NumericRange.comparison(op.value,n));
+            if (!take("AND")) break;
+        }
+        return result;
     }
 
     function readType(depth:Int):Type {
@@ -93,7 +129,7 @@ class TypeParser {
         final token = current();
         if (token == null || token.kind != Word) return fail("Expected a type annotation");
         final words:Array<String> = [];
-        while (current() != null && current().kind == Word) words.push(tokens[position++].value);
+        while (current() != null && current().kind == Word && current().value != "where") words.push(tokens[position++].value);
         final name = words.join(" ");
         return switch (name) {
             case "Number": NumberType;
