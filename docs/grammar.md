@@ -858,3 +858,9 @@ confronta l'ultima analisi riuscita in memoria e mostra il report.
 ## Mira 0.78: confronto delle interfacce e impatto potenziale
 
 Il report `--interfaces` formato 1 aggiunge `dependencies`, le direttive del resolver, separate dal JSON canonico e dalla sua impronta. Studio → Module Explorer → Impronte delle interfacce confronta due analisi riuscite: moduli nuovi, rimossi, modificati, invariati e cambi di provider. Mostra i consumatori potenzialmente interessati dalle modifiche di superficie tramite gli archi inversi di entrambi i grafi, normalizzando i provider selezionati alla superficie logica. Gli archi implements non sono dipendenze di consumo; import di file legacy non sono coperti. Il rapporto non certifica sicurezza di riuso, non rileva tutte le modifiche di build e non è una cache incrementale. Il controllo completo resta invariato.
+
+## Mira 0.79: impronte dei sorgenti e collegamenti
+
+Il report `--interfaces` aggiunge `sourceInputs.entry` (SHA-256 del testo di ingresso) e `sourceInputs.reads` (sequenza effettiva delle letture riuscite del resolver, ciascuna con path e fingerprint). Include contratti ereditati e file legacy; non include i sorgenti mai letti. Nessun accesso aggiuntivo a filesystem o rete. Le impronte pubbliche restano identiche.
+
+Studio confronta separatamente testo di ingresso, letture modificate/aggiunte/rimosse, superfici pubbliche, consumatori potenzialmente interessati e selezioni di provider osservate nelle direttive. Confronta inoltre il testo dei manifest host e binding tra analisi riuscite nella sessione; una modifica anche solo testuale è segnalata prudentemente. Il report CLI non contiene impronte dei manifest, versione del compilatore o opzioni di emissione; non è una chiave completa di cache. Commenti e spazi cambiano l'impronta del sorgente, non necessariamente il codice generato. Nessuna compilazione viene saltata; nessun nuovo costo nel programma emesso.

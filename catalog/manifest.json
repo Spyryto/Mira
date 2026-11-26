@@ -1,5 +1,5 @@
 {
-  "version": "0.78.0",
+  "version": "0.79.0",
   "features": [
     {
       "id": "values",
@@ -2046,6 +2046,12 @@
       "title": "Confronto delle interfacce e impatto sulle dipendenze",
       "since": "0.78",
       "doc": "docs/grammar.md#mira-078-confronto-delle-interfacce-e-impatto-potenziale"
+    },
+    {
+      "id": "interface-source-inputs",
+      "title": "Impronte dei sorgenti letti e confronto del collegamento",
+      "since": "0.79",
+      "doc": "docs/grammar.md#mira-079-impronte-dei-sorgenti-e-collegamenti"
     }
   ]
 }

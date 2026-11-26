@@ -281,6 +281,7 @@ make pair: first, with: second = {first: first, second: second};
 | 0.72–0.76 | Contratti indipendenti, binding statico, opacità e identità stabili |
 | 0.77 | Impronte delle superfici pubbliche |
 | 0.78 | Confronto delle superfici e impatto potenziale sulle dipendenze |
+| 0.79 | Impronte dei sorgenti letti e confronto del collegamento |
 
 Le versioni possono cambiare se un incremento necessita di un prerequisito.
 Non dichiarare completo l'isolamento prima che tutte le vie d'accesso
@@ -353,3 +354,7 @@ la chiave completa di analisi e il riuso sicuro delle interfacce.
 ### 0.78 — confronto e dipendenti potenziali
 
 Il report include le direttive del resolver come metadati separati. Per il confronto in Studio si normalizzano i percorsi dei provider selezionati alla superficie logica; si percorre l'unione dei grafi precedenti e successivi in direzione dipendenza → consumatore. Si escludono gli archi implements (realizzazione già rappresentata nella superficie) e i file legacy, segnalati come non coperti. Un cambio di provider a parità di impronta non è una modifica del tipo pubblico, ma richiede considerazioni di linking/codegen. Non saltare controlli sulla base di questo rapporto.
+
+### 0.79 — tre livelli di cambiamento
+
+Superficie pubblica, testo sorgente effettivamente letto e collegamento dei provider sono informazioni distinte. Una modifica privata non implica un cambiamento dell'impronta pubblica; non certifica però la riutilizzabilità del codice emesso o degli esiti del checker. Il cambio di provider può conservare il contratto e alterare rappresentazioni, funzioni o dipendenze concrete. I manifest vengono confrontati testualmente in Studio; il report non è completo per cache o compilazione separata. Mantenere il controllo completo finché non esiste una strategia di invalidazione dimostrata e misurata.
