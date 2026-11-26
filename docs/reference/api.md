@@ -73,7 +73,7 @@ public static function inspectTokens(source:String):String
 **method** · Genera definizioni con corpi risolti dopo la raccolta delle firme dei selettori.
 
 ```haxe
-public static function parse(source:String, ?host:HostEnvironment, ?readModule:String->Null<String>, ?entry:String, ?origins:ExpressionOrigins, ?visibility:mira.types.TypeVisibility, ?providers:mira.resolve.ProviderBindings):Array<Definition>
+public static function parse(source:String, ?host:HostEnvironment, ?readModule:String->Null<String>, ?entry:String, ?origins:ExpressionOrigins, ?visibility:mira.types.TypeVisibility, ?providers:mira.resolve.ProviderBindings, allowContracts:Bool = false):Array<Definition>
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L14)
@@ -570,7 +570,7 @@ public function new(message:String, ?token:Token, code:String = "source_error")
 class Modules
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Modules.hx#L18)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Modules.hx#L20)
 
 <a id="api-mira-modules-collect"></a>
 ### `mira.Modules.collect`
@@ -578,10 +578,10 @@ class Modules
 **method** · Raccoglie dichiarazioni da import transitivi, una sola volta per percorso, prima del parsing delle espressioni.
 
 ```haxe
-public static function collect(source:String, ?read:String->Null<String>, ?entry:String, ?types:Map<String,mira.types.Type>, ?moduleTypes:Map<String,Map<String,mira.types.Type>>, ?publicTypes:Map<String,Array<String>>, ?bindings:Map<String,Array<ImportBinding>>, ?visibility:TypeVisibility, ?reexports:Map<String,Array<Dynamic>>, ?moduleEdges:Array<Dynamic>, ?providers:ProviderBindings):Array<Definition>
+public static function collect(source:String, ?read:String->Null<String>, ?entry:String, ?types:Map<String,mira.types.Type>, ?moduleTypes:Map<String,Map<String,mira.types.Type>>, ?publicTypes:Map<String,Array<String>>, ?bindings:Map<String,Array<ImportBinding>>, ?visibility:TypeVisibility, ?reexports:Map<String,Array<Dynamic>>, ?moduleEdges:Array<Dynamic>, ?providers:ProviderBindings, allowContracts:Bool = true):Array<Definition>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Modules.hx#L20)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Modules.hx#L22)
 
 <a id="api-mira-optimize-treeshaker"></a>
 ### `mira.optimize.TreeShaker`
@@ -1116,6 +1116,28 @@ public static function verifyContract(source:String,provider:String,contract:Str
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L132)
+
+<a id="api-mira-syntax-contractmodule"></a>
+### `mira.syntax.ContractModule`
+
+**class** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+class ContractModule
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ContractModule.hx#L8)
+
+<a id="api-mira-syntax-contractmodule-read"></a>
+### `mira.syntax.ContractModule.read`
+
+**method** · Membro pubblico di mira.syntax.ContractModule.
+
+```haxe
+public static function read(source:String,path:String):ModuleSections
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ContractModule.hx#L10)
 
 <a id="api-mira-syntax-definition"></a>
 ### `mira.syntax.Definition`
@@ -1888,6 +1910,28 @@ public final wildcard:Bool
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ModuleImport.hx#L16)
+
+<a id="api-mira-syntax-modulepath"></a>
+### `mira.syntax.ModulePath`
+
+**class** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+class ModulePath
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ModulePath.hx#L7)
+
+<a id="api-mira-syntax-modulepath-read"></a>
+### `mira.syntax.ModulePath.read`
+
+**method** · Membro pubblico di mira.syntax.ModulePath.
+
+```haxe
+public static function read(tokens:Array<Token>,start:Int):{path:String,next:Int} { final segments:Array<String> = []; var words:Array<String> = []; var cursor = start; while (tokens[cursor].kind != End && !tokens[cursor].isSymbol(";"))
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ModulePath.hx#L9)
 
 <a id="api-mira-syntax-modulesections"></a>
 ### `mira.syntax.ModuleSections`

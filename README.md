@@ -122,6 +122,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Module Explorer: dipendenze, contratti e identità | `0.71` | [Dettagli](docs/grammar.md#mira-071-module-explorer) |
 | ✅ | Verifica sperimentale di contratti indipendenti | `0.72` | [Dettagli](docs/grammar.md#mira-072-verifica-sperimentale-dei-contratti-indipendenti) |
 | ✅ | Selezione statica di provider tramite contratto | `0.73` | [Dettagli](docs/grammar.md#mira-073-selezione-statica-del-provider) |
+| ✅ | Contratti come moduli e implementazione ereditata | `0.74` | [Dettagli](docs/grammar.md#mira-074-contratti-come-moduli-senza-implementazione) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
