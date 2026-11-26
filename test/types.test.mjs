@@ -982,3 +982,49 @@ test('types: host name hygiene keeps Error constructors and native guards indepe
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('types: explicitly generic functions are universally checked and independently instantiated',()=>{
+  const src='Option (Element Type) :: Some (Element Type) | None; identity (Value Type): x (Value Type) -> Value Type = x; singleton (element type): value (element type) -> [element type] = [value]; choose (Item Type): option (Option (Item Type)), fallback: value (Item Type) -> Item Type = match: option {some: {x | x}, none: {| value}}; pair (Left Type, Right Type): x (Left Type), with: y (Right Type) -> {left: Left Type, right: Right Type} = {left: x, right: y}; a = identity: 42; b = identity: "Ada"; c = singleton: "Mira"; d = choose: (Some: 7), fallback: 0; e = choose: None, fallback: "empty"; f = pair: 1, with: "x";';
+  const t=check(src);
+  assert.equal(t['identity:'],"('a) -> 'a");
+  assert.equal(t.a,'Number');
+  assert.equal(t.b,'Text');
+  assert.equal(t.c,'[Text]');
+  assert.equal(t.d,'Number');
+  assert.equal(t.e,'Text');
+  for(const [extra,pattern] of [
+    ['bad (T): x (T) -> T = 1;',/Cannot specialize explicit type parameter/],
+    ['bad (T): x (T) -> Number = x + 1;',/Cannot specialize explicit type parameter/],
+    ['bad (T): x (T) -> Boolean = x == x;',/does not guarantee scalar equality/],
+    ['bad (T, U): x (T) -> U = x;',/Cannot specialize explicit type parameter/],
+    ['bad (T): x (T) -> Number = x ~ field;',/Cannot specialize explicit type parameter/],
+    ['bad (T): x -> T = x;',/require all parameter and result annotations/],
+    ['bad (T): x (T) = x;',/require all parameter and result annotations/],
+    ['bad (T, T): x (T) -> T = x;',/Invalid or duplicate type parameter/],
+    ['bad (Value Type) = 1;',/Unknown annotation type Value Type/],
+    ['bad (T): x (T) -> T = bad: x;',/Recursive explicitly generic/],
+    ['bad = choose: (Some: 1), fallback: "wrong";',/expected Number, got Text|expected Text, got Number/]
+  ]) assert.throws(()=>check(src+extra),pattern,extra);
+});
+test('types: explicit generic function signatures are erased on JS and PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-generic-functions-'));
+  try{
+    const input=join(dir,'program.mira');
+    const source='identity (Value Type): x (Value Type) -> Value Type = x; a = identity: 42; b = identity: "Ada"; result = {a: a, b: b};';
+    const plain='identity: x = x; a = identity: 42; b = identity: "Ada"; result = {a: a, b: b};';
+    for(const target of ['js','php']){
+      writeFileSync(input,source);
+      const r=spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      writeFileSync(input,plain);
+      const baseline=spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
+      assert.equal(baseline.status,0,baseline.stderr);
+      assert.equal(r.stdout,baseline.stdout);
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,r.stdout+(target==='js'?'\nconsole.log(JSON.stringify(result));':'\necho json_encode($result);'));
+      const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);
+      assert.deepEqual(JSON.parse(run.stdout),{a:42,b:'Ada'});
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
