@@ -3,7 +3,8 @@
 **Stato: progettazione delle interfacce.** La 0.65 introduce il nucleo di
 identità e scope isolati; la 0.66 aggiunge sezioni piatte, export di
 valori/selettori senza annotazioni e tipi nominali pubblici completi; la 0.67 introduce import selettivi,
-import completi e alias di simboli. Vedi grammar.md per le funzionalità implementate.
+import completi e alias di simboli; la 0.68 introduce firme pubbliche
+esplicite, comprese quelle parametriche. Vedi grammar.md per le funzionalità implementate.
 Il campionario completo resta una proposta. Sostituisce la direzione sperimentale
 della PR #95 (nomi puntati come fondamento del namespace), che non va integrata
 nella sua forma attuale. Gli import statici della 0.30 continuano a funzionare

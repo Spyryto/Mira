@@ -13,6 +13,7 @@ class Definition {
     public final isStatement:Bool;
     public var modulePath:Null<String> = null;
     public var isExported:Bool = false;
+    public var hasPublicSignature:Bool = false;
     public var importedGlobals:Array<String> = [];
     public var typeParameters:Array<String> = [];
     public var parameterAnnotations:Array<Null<Type>> = [];
@@ -47,6 +48,7 @@ class Definition {
             labels,parameters,bodyTokens,origin,isStatement,parameterOrigins);
         d.modulePath = modulePath;
         d.isExported = isExported;
+        d.hasPublicSignature = hasPublicSignature;
         d.importedGlobals = importedGlobals;
         d.typeParameters = typeParameters;
         d.parameterAnnotations = parameterAnnotations;

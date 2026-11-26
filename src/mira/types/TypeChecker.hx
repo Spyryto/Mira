@@ -60,6 +60,7 @@ class TypeChecker {
             if (d.modulePath != null) {
                 Reflect.setField(item,"module",d.modulePath);
                 Reflect.setField(item,"exported",d.isExported);
+                if (d.isExported) Reflect.setField(item,"explicitSignature",d.hasPublicSignature);
             }
             result.push(item);
         }
