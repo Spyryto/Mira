@@ -526,7 +526,7 @@ grammatica ufficiale. Il fondamento sarà lo scope isolato del modulo,
 non un separatore di qualificazione. Il progetto completo, il syntax
 tour revisionato dall'autore e la roadmap sono in
 [module-design.md](module-design.md); Mira Studio include quel documento
-nel quaderno offline. Tutto il nuovo sistema è ancora pianificato.
+nel quaderno offline. Il nucleo di isolamento è descritto nella sezione 0.65; le interfacce restano pianificate.
 
 ## 0.65 — primo nucleo dei moduli isolati
 
