@@ -724,6 +724,35 @@ class TypeChecker {
         };
     }
 
+    function matchResult(input:Type,tags:Array<String>,handlers:Array<Expr>,scope:Map<String,LocalScheme>):Type {
+        return switch (representation(input)) {
+            case SumType(name,alternatives):
+                for (tag in tags) if (!alternatives.exists(tag))
+                    fail("Unknown match alternative " + tag + " for " + name);
+                final missing = [for (tag in alternatives.keys()) if (tags.indexOf(tag) < 0) tag];
+                missing.sort(Reflect.compare);
+                if (missing.length > 0) fail("Non-exhaustive match for " + name + ": missing " + missing.join(", "));
+                final result = fresh();
+                for (i in 0...tags.length) {
+                    final handler = handlers[i];
+                    final expected = alternatives.get(tags[i]);
+                    switch (handler) {
+                        case Block(parameters,body):
+                            if (parameters.length != (expected == null ? 0 : 1))
+                                fail("Wrong match handler arity for " + tags[i]);
+                            if (origins.annotations(handler) != null)
+                                fail("Match handler parameters are typed by the alternative");
+                            final inner = scope.copy();
+                            if (expected != null) inner.set(parameters[0],mono(expected));
+                            unifyAt(result,infer(body,inner),handler);
+                        default: fail("Expected match handler");
+                    }
+                }
+                result;
+            default: fail("Match requires a known sum type; annotate the scrutinee if necessary");
+        };
+    }
+
     function inferNode(expr:Expr,scope:Map<String,LocalScheme>):Type {
         return switch (expr) {
             case Numeric(_): NumberType;
@@ -744,6 +773,7 @@ class TypeChecker {
             case FieldAccessor(key) | FieldSection(key):
                 final record = fresh();
                 FunctionType([record],projection(record,key));
+            case Match(input,tags,handlers): matchResult(infer(input,scope),tags,handlers,scope);
             case Variant(sum,tag,payload):
                 switch (sum) {
                     case SumType(_,alternatives):
