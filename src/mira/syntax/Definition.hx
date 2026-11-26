@@ -11,6 +11,7 @@ class Definition {
     public final origin:Token;
     public final parameterOrigins:Array<Token>;
     public final isStatement:Bool;
+    public var modulePath:Null<String> = null;
     public var typeParameters:Array<String> = [];
     public var parameterAnnotations:Array<Null<Type>> = [];
     public var resultAnnotation:Null<Type> = null;
@@ -33,6 +34,22 @@ class Definition {
         this.origin = origin;
         this.isStatement = isStatement;
         this.parameterOrigins = parameterOrigins == null ? [] : parameterOrigins;
+    }
+
+    // Resolved declarations share the same identity as their AST references.
+    public function canonical():Definition {
+        if (modulePath == null || isStatement) return this;
+        final labels = this.labels.copy();
+        if (isFunction()) labels[0] = mira.resolve.ModuleIdentity.qualify(modulePath,labels[0]);
+        final d = new Definition(isFunction() ? name : mira.resolve.ModuleIdentity.qualify(modulePath,name),
+            labels,parameters,bodyTokens,origin,isStatement,parameterOrigins);
+        d.modulePath = modulePath;
+        d.typeParameters = typeParameters;
+        d.parameterAnnotations = parameterAnnotations;
+        d.resultAnnotation = resultAnnotation;
+        d.resultAnnotationOrigin = resultAnnotationOrigin;
+        d.body = body;
+        return d;
     }
 
     public function isFunction():Bool {
