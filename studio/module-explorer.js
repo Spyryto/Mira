@@ -71,6 +71,32 @@
     by('source').value='module App;\ninterface\nresult;\nimport Data / API {\n  Container;\n  box: ;\n  value of: ;\n};\nimplementation\nn (Container (Number)) = box: 7;\nresult = value of: n;';
     selected='App';by('filter').value='';analyze();
   }
+  async function benchmark(){
+    const button=by('benchmark'),out=by('benchmark-report');
+    const bench=globalThis.MiraModuleBenchmark;
+    button.disabled=true;out.textContent='';
+    try{
+      for(const count of [4,16,64]){
+        const fixture=bench.project(count);
+        for(const target of ['js','php']){
+          const samples=[[],[]];
+          for(let i=0;i<3;i++)for(const mode of (i%2?[1,0]:[0,1])){
+            await new Promise(resolve=>setTimeout(resolve,0));
+            samples[mode].push(bench.measure(MiraStudioCompiler,fixture,target,mode===1));
+          }
+          const a=samples[0][2],b=samples[1][2];
+          const line=[(count+2)+' moduli · '+target.toUpperCase(),
+            'Checked: '+bench.median(samples[0]).toFixed(2)+' ms',
+            'Ottimizzata: '+bench.median(samples[1]).toFixed(2)+' ms',
+            'Byte UTF-8: '+a.bytes+' → '+b.bytes,
+            'Dichiarazioni: '+b.optimization.before+' → '+b.optimization.after].join('\n');
+          out.textContent+=(out.textContent?'\n\n':'')+line;
+        }
+      }
+    }catch(error){out.textContent+='\n'+String(error);}
+    finally{button.disabled=false;}
+  }
+  by('benchmark').addEventListener('click',benchmark);
   by('analyze').addEventListener('click',analyze);
   by('example').addEventListener('click',example);
   by('filter').addEventListener('input',()=>{if(model)renderSymbols();});
