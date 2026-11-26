@@ -684,3 +684,73 @@ test('types: numeric obligations distinguish certain overflow, fractional values
   assert.throws(()=>check('Low :: Number where _ >= 0 AND _ <= 1; High :: Low where _ > 1;'),/Empty numeric refinement/);
   assert.throws(()=>check('Low :: Number where _ >= 0 AND _ <= 1; f: x (Number where _ >= 2 AND _ <= 3) = x; low (Low) = 0; bad = f: low;'),/refinement violated/);
 });
+
+test('types: checked compilation emits only unresolved numerical guards and rejects certain violations',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-checked-'));
+  try{
+    const input=join(dir,'program.mira');
+    const compile=(src,target,checked=true)=>{
+      writeFileSync(input,src);
+      return spawnSync('node',['dist/mira.cjs',input,target,...(checked?['--checked']:[])],{encoding:'utf8'});
+    };
+    const proven='Percentage :: Number where _ >= 0 AND _ <= 100; half of: p (Percentage) -> Percentage = p / 2; p (Percentage) = 42; result = half of: p;';
+    const guarded='Percentage :: Number where _ >= 0 AND _ <= 100; Retry Count :: Integer where _ >= 0 AND _ <= 3; bounded value: x (Number) -> Percentage = x; retry value: x (Number) -> Retry Count = x; increment checked: x (Integer) -> Integer = x + 1; local checked: x (Number) -> Percentage = () >> {| p (Percentage) = x; p};';
+    for(const target of ['js','php']){
+      const p=compile(proven,target);
+      assert.equal(p.status,0,p.stderr);
+      assert.equal(p.stdout,compile(proven,target,false).stdout);
+      assert.ok(!p.stdout.includes('__miraNumericValue'));
+      const g=compile(guarded,target);
+      assert.equal(g.status,0,g.stderr);
+      assert.match(g.stdout,/__miraNumericValue/);
+      assert.ok(!compile(guarded,target,false).stdout.includes('__miraNumericValue'));
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      const execute=(js,php)=>{
+        writeFileSync(file,g.stdout+'\n'+(target==='js'?js:php));
+        return spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      };
+      const ok=execute('console.log(JSON.stringify([bounded_value(42),retry_value(3),increment_checked(9007199254740990),local_checked(5)]));','echo json_encode([bounded_value(42),retry_value(3),increment_checked(9007199254740990),local_checked(5)]);');
+      assert.equal(ok.status,0,ok.stderr);
+      assert.deepEqual(JSON.parse(ok.stdout),[42,3,9007199254740991,5]);
+      for(const [js,php] of [
+        ['bounded_value(101);','bounded_value(101);'],
+        ['bounded_value(NaN);','bounded_value(NAN);'],
+        ['bounded_value(Infinity);','bounded_value(INF);'],
+        ['bounded_value("42");','bounded_value("42");'],
+        ['retry_value(2.5);','retry_value(2.5);'],
+        ['retry_value(4);','retry_value(4);'],
+        ['increment_checked(9007199254740991);','increment_checked(9007199254740991);'],
+        ['local_checked(-1);','local_checked(-1);']
+      ]){
+        const bad=execute(js,php);
+        assert.notEqual(bad.status,0,js);assert.match(bad.stderr,/Mira (Integer constraint|numeric refinement) violated/);
+      }
+      for(const src of [
+        'x (Integer) = 9007199254740991 + 1;',
+        'x (Integer) = 3 / 2;',
+        'x (Integer) = (9007199254740991 + 2) - 2;',
+        'x (Integer) = 1 / 0;',
+        'bad: x (Integer) -> Integer = x / 2;',
+        'f: x (Integer) = x; bad = f: 3;'
+      ])assert.notEqual(compile(src,target).status,0,src);
+    }
+    assert.throws(()=>check(guarded),/refinement not statically proven/);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+test('types: checked refinement evaluates a host expression once',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-checked-host-'));
+  try{
+    const input=join(dir,'program.mira'),host=join(dir,'host.json');
+    writeFileSync(input,'Percentage :: Number where _ >= 0 AND _ <= 100; probe once: x (Number) -> Percentage = probe x;');
+    writeFileSync(host,JSON.stringify({callables:['probe'],types:{probe:{parameters:['Number'],result:'Number'}}}));
+    for(const target of ['js','php']){
+      const r=spawnSync('node',['dist/mira.cjs',input,target,'--checked','--host',host],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,r.stdout+(target==='js'?'\nlet calls=0; const __miraHost={probe:x=>{calls++;return x;}}; console.log(JSON.stringify([probe_once(42),calls]));':'\n$calls=0; $GLOBALS["__miraHost"]=["probe"=>function($x) use (&$calls){$calls++;return $x;}]; echo json_encode([probe_once(42),$calls]);'));
+      const executed=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(executed.status,0,executed.stderr);
+      assert.deepEqual(JSON.parse(executed.stdout),[42,1]);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
