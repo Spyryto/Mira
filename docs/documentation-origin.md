@@ -7,11 +7,11 @@
 
 | Categoria | Parole | Quota | Documenti coinvolti |
 | --- | ---: | ---: | ---: |
-| Generata automaticamente dal tooling | 20.886 | 38,1% | 4 |
-| Redatta con assistenza IA (dichiarata) | 28.905 | 52,7% | 12 |
+| Generata automaticamente dal tooling | 20.981 | 37,8% | 4 |
+| Redatta con assistenza IA (dichiarata) | 29.526 | 53,2% | 12 |
 | Redazione umana dichiarata | 0 | 0,0% | 0 |
-| Provenienza non verificata | 5006 | 9,1% | 3 |
-| **Totale** | **54.797** | **100%** | **18** |
+| Provenienza non verificata | 5006 | 9,0% | 3 |
+| **Totale** | **55.513** | **100%** | **18** |
 
 I documenti coinvolti **non sono sommabili**: per esempio il README contiene
 una sezione generata dal tooling e altre sezioni editoriali. Le percentuali
@@ -25,22 +25,22 @@ arrotondamenti).
 | [`docs/atlas.md`](../docs/atlas.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 921 | — |
 | [`docs/browser-interop.md`](../docs/browser-interop.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 5295 | — |
 | [`docs/decisions.md`](../docs/decisions.md) | Intero documento | Provenienza non verificata | 916 | — |
-| [`docs/design-notes.md`](../docs/design-notes.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 2841 | — |
+| [`docs/design-notes.md`](../docs/design-notes.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 3123 | — |
 | [`docs/dogfooding.md`](../docs/dogfooding.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 652 | — |
 | [`docs/grammar.md`](../docs/grammar.md) | Intero documento | Provenienza non verificata | 2252 | — |
 | [`docs/gui-rendering.md`](../docs/gui-rendering.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 2154 | — |
 | [`docs/mira04.md`](../docs/mira04.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 699 | — |
 | [`docs/performance.md`](../docs/performance.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 698 | — |
-| [`docs/reference/api.md`](../docs/reference/api.md) | Intero documento | Generata automaticamente dal tooling | 7930 | `scripts/generate-reference.mjs` |
+| [`docs/reference/api.md`](../docs/reference/api.md) | Intero documento | Generata automaticamente dal tooling | 8012 | `scripts/generate-reference.mjs` |
 | [`docs/reference/examples.md`](../docs/reference/examples.md) | Intero documento | Generata automaticamente dal tooling | 8163 | `scripts/generate-reference.mjs` |
 | [`docs/reference/language.md`](../docs/reference/language.md) | Intero documento | Generata automaticamente dal tooling | 3842 | `scripts/generate-reference.mjs` |
 | [`docs/reference/README.md`](../docs/reference/README.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 161 | — |
 | [`docs/structured-data.md`](../docs/structured-data.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 1617 | — |
 | [`docs/studio.md`](../docs/studio.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 3819 | — |
 | [`docs/syntax.md`](../docs/syntax.md) | Intero documento | Provenienza non verificata | 1838 | — |
-| [`docs/type-checker.md`](../docs/type-checker.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 5812 | — |
-| [`README.md`](../README.md) | Resto del documento | Redatta con assistenza IA (dichiarata) | 4236 | — |
-| [`README.md`](../README.md) | Sezione generata | Generata automaticamente dal tooling | 951 | `scripts/generate-reference.mjs` |
+| [`docs/type-checker.md`](../docs/type-checker.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 6120 | — |
+| [`README.md`](../README.md) | Resto del documento | Redatta con assistenza IA (dichiarata) | 4267 | — |
+| [`README.md`](../README.md) | Sezione generata | Generata automaticamente dal tooling | 964 | `scripts/generate-reference.mjs` |
 
 ## Come interpretare le cifre
 
@@ -81,5 +81,5 @@ npm run docs
 node scripts/generate-documentation-origin.mjs --check
 ```
 
-Dimensione totale classificata: **409.446 byte UTF-8**,
+Dimensione totale classificata: **414.691 byte UTF-8**,
 in **18 documenti** e **19 sezioni attribuite**.

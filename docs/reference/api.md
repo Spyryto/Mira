@@ -54,7 +54,7 @@ class Compiler
 public static function check(source:String, ?host:HostEnvironment, ?readModule:String->Null<String>, ?entry:String):Array<Dynamic>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L52)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L53)
 
 <a id="api-mira-compiler-inspecttokens"></a>
 ### `mira.Compiler.inspectTokens`
@@ -65,7 +65,7 @@ public static function check(source:String, ?host:HostEnvironment, ?readModule:S
 public static function inspectTokens(source:String):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L65)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L66)
 
 <a id="api-mira-compiler-parse"></a>
 ### `mira.Compiler.parse`
@@ -89,7 +89,7 @@ Feature: [Dichiarazioni successive](language.md#feature-forward)
 public static function specialize(source:String,name:String,args:Array<mira.types.Type>,?host:HostEnvironment, ?readModule:String->Null<String>,?entry:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L58)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L59)
 
 <a id="api-mira-compiler-transpile"></a>
 ### `mira.Compiler.transpile`
@@ -100,7 +100,7 @@ public static function specialize(source:String,name:String,args:Array<mira.type
 public static function transpile(source:String, target:Target, ?host:HostEnvironment, ?locations:Array<GeneratedLocation>, ?readModule:String->Null<String>, ?entry:String):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L26)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L27)
 
 <a id="api-mira-compiler-transpilechecked"></a>
 ### `mira.Compiler.transpileChecked`
@@ -111,7 +111,7 @@ public static function transpile(source:String, target:Target, ?host:HostEnviron
 public static function transpileChecked(source:String,target:Target,?host:HostEnvironment, ?locations:Array<GeneratedLocation>,?readModule:String->Null<String>,?entry:String):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L38)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L39)
 
 <a id="api-mira-emit-jsemitter"></a>
 ### `mira.emit.JsEmitter`
@@ -190,7 +190,7 @@ Feature: [Sezioni con più `_`](language.md#feature-multi-sections), [Cattura le
 public static function hostAccess(name:String, target:Target):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L289)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L294)
 
 <a id="api-mira-emit-sourcelocations"></a>
 ### `mira.emit.SourceLocations`
@@ -1126,7 +1126,7 @@ class DefinitionParser
 public static function annotatedName(tokens:Array<Token>,?names:Map<String,Type>):{name:String,type:Null<Type>,typeOrigin:Null<Token>} { final opening = topLevel(tokens,"("); if (opening < 0) return {name:readWords(tokens),type:null,typeOrigin:null}; if (opening == 0) throw new MiraError("Expected name before type annotation",tokens[0]); final name = readWords(tokens.slice(0,opening)); if (!tokens[tokens.length-1].isSymbol(")")) throw new MiraError("Expected closing ) after type annotation",tokens[opening]); final origin = opening + 1 < tokens.length - 1 ? tokens[opening+1] : tokens[opening]; final type = new TypeParser(tokens.slice(opening+1,tokens.length-1),origin,names).parse(); return {name:name,type:type,typeOrigin:origin}; } static function splitHeader(tokens:Array<Token>):Array<Array<Token>>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L125)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L169)
 
 <a id="api-mira-syntax-definitionparser-parse"></a>
 ### `mira.syntax.DefinitionParser.parse`
@@ -1163,7 +1163,7 @@ Feature: [Sezioni unarie](language.md#feature-sections), [Pipeline `>>`](languag
 Apply(callee:Expr, argument:Null<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L28)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L29)
 
 <a id="api-mira-syntax-expr-binary"></a>
 ### `mira.syntax.Expr.Binary`
@@ -1174,7 +1174,7 @@ Apply(callee:Expr, argument:Null<Expr>)
 Binary(symbol:String, left:Expr, right:Expr)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L20)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L21)
 
 <a id="api-mira-syntax-expr-block"></a>
 ### `mira.syntax.Expr.Block`
@@ -1185,7 +1185,7 @@ Binary(symbol:String, left:Expr, right:Expr)
 Block(parameters:Array<String>, body:Expr)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L17)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L18)
 
 Feature: [Blocchi funzione con parametro](language.md#feature-blocks), [Blocchi con più parametri](language.md#feature-block-parameters), [Blocchi senza parametri](language.md#feature-nullary-blocks)
 
@@ -1211,7 +1211,7 @@ Feature: [Booleani e confronti](language.md#feature-comparisons)
 Call(selector:String, arguments:Array<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L22)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L23)
 
 <a id="api-mira-syntax-expr-conditional"></a>
 ### `mira.syntax.Expr.Conditional`
@@ -1272,7 +1272,7 @@ FieldSection(key:String)
 HostCall(selector:String, arguments:Array<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L23)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L24)
 
 <a id="api-mira-syntax-expr-hostref"></a>
 ### `mira.syntax.Expr.HostRef`
@@ -1294,7 +1294,7 @@ HostRef(name:String)
 HostSection(selector:String, arguments:Array<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L26)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L27)
 
 <a id="api-mira-syntax-expr-local"></a>
 ### `mira.syntax.Expr.Local`
@@ -1305,7 +1305,7 @@ HostSection(selector:String, arguments:Array<Expr>)
 Local(name:String, value:Expr)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L19)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L20)
 
 Feature: [Valori locali immutabili nei blocchi](language.md#feature-local-values)
 
@@ -1340,7 +1340,7 @@ Numeric(value:String)
 OperatorSection(symbol:String, left:Expr, right:Expr)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L21)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L22)
 
 <a id="api-mira-syntax-expr-placeholder"></a>
 ### `mira.syntax.Expr.Placeholder`
@@ -1351,7 +1351,7 @@ OperatorSection(symbol:String, left:Expr, right:Expr)
 Placeholder
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L24)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L25)
 
 <a id="api-mira-syntax-expr-record"></a>
 ### `mira.syntax.Expr.Record`
@@ -1362,7 +1362,7 @@ Placeholder
 Record(keys:Array<String>, values:Array<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L16)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L17)
 
 Feature: [Record e dati strutturati](language.md#feature-records)
 
@@ -1375,7 +1375,7 @@ Feature: [Record e dati strutturati](language.md#feature-records)
 Section(selector:String, arguments:Array<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L25)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L26)
 
 <a id="api-mira-syntax-expr-sequence"></a>
 ### `mira.syntax.Expr.Sequence`
@@ -1386,7 +1386,7 @@ Section(selector:String, arguments:Array<Expr>)
 Sequence(items:Array<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L15)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L16)
 
 Feature: [Sequenze e trasformazioni](language.md#feature-sequences)
 
@@ -1399,7 +1399,7 @@ Feature: [Sequenze e trasformazioni](language.md#feature-sequences)
 Steps(expressions:Array<Expr>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L18)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L19)
 
 Feature: [Blocchi con espressioni in sequenza](language.md#feature-block-steps)
 
@@ -1424,6 +1424,17 @@ Validate(value:Expr, required:mira.types.Type, success:Expr, failure:Expr)
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L14)
+
+<a id="api-mira-syntax-expr-variant"></a>
+### `mira.syntax.Expr.Variant`
+
+**variant** · AST canonico, indipendente dalla grafia superficiale dei selettori.
+
+```haxe
+Variant(sum:mira.types.Type, tag:String, payload:Null<Expr>)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Expr.hx#L15)
 
 <a id="api-mira-syntax-expressionorigins"></a>
 ### `mira.syntax.ExpressionOrigins`
@@ -1964,7 +1975,7 @@ enum Type
 BooleanType
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L12)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L13)
 
 <a id="api-mira-types-type-functiontype"></a>
 ### `mira.types.Type.FunctionType`
@@ -1975,7 +1986,7 @@ BooleanType
 FunctionType(parameters:Array<Type>, result:Type)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L15)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L16)
 
 <a id="api-mira-types-type-integertype"></a>
 ### `mira.types.Type.IntegerType`
@@ -1986,7 +1997,7 @@ FunctionType(parameters:Array<Type>, result:Type)
 IntegerType
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L10)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L11)
 
 <a id="api-mira-types-type-listtype"></a>
 ### `mira.types.Type.ListType`
@@ -1997,7 +2008,7 @@ IntegerType
 ListType(item:Type)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L14)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L15)
 
 <a id="api-mira-types-type-namedtype"></a>
 ### `mira.types.Type.NamedType`
@@ -2019,7 +2030,7 @@ NamedType(name:String,base:Type)
 NumberType
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L9)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L10)
 
 <a id="api-mira-types-type-recordtype"></a>
 ### `mira.types.Type.RecordType`
@@ -2030,7 +2041,7 @@ NumberType
 RecordType(fields:Map<String, Type>, tail:Null<Type>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L16)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L17)
 
 <a id="api-mira-types-type-refinedtype"></a>
 ### `mira.types.Type.RefinedType`
@@ -2041,7 +2052,7 @@ RecordType(fields:Map<String, Type>, tail:Null<Type>)
 RefinedType(base:Type,range:NumericRange)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L6)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L7)
 
 <a id="api-mira-types-type-structuraltype"></a>
 ### `mira.types.Type.StructuralType`
@@ -2052,7 +2063,18 @@ RefinedType(base:Type,range:NumericRange)
 StructuralType(name:String,fields:Map<String,Type>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L8)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L9)
+
+<a id="api-mira-types-type-sumtype"></a>
+### `mira.types.Type.SumType`
+
+**variant** · Membro pubblico di mira.types.Type.
+
+```haxe
+SumType(name:String,alternatives:Map<String,Null<Type>>)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L6)
 
 <a id="api-mira-types-type-texttype"></a>
 ### `mira.types.Type.TextType`
@@ -2063,7 +2085,7 @@ StructuralType(name:String,fields:Map<String,Type>)
 TextType
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L11)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L12)
 
 <a id="api-mira-types-type-variable"></a>
 ### `mira.types.Type.Variable`
@@ -2074,7 +2096,7 @@ TextType
 Variable(id:Int)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L13)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L14)
 
 <a id="api-mira-types-typechecker"></a>
 ### `mira.types.TypeChecker`

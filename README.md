@@ -102,6 +102,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Diagnostica di prove numeriche e overflow certo | `0.55` | [Dettagli](docs/type-checker.md#055-esiti-delle-prove-numeriche) |
 | ✅ | Compilazione checked con guardie numeriche selettive | `0.56` | [Dettagli](docs/type-checker.md#056-guardie-numeriche) |
 | ✅ | Validazione numerica fallibile con handler tipizzati | `0.57` | [Dettagli](docs/type-checker.md#057-validazione-fallibile) |
+| ✅ | Tipi somma nominali chiusi e costruttori | `0.58` | [Dettagli](docs/type-checker.md#058-tipi-somma-nominali) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
