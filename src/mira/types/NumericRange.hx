@@ -43,6 +43,43 @@ class NumericRange {
         (low > other.low || (low == other.low && (!lowClosed || other.lowClosed)))
         && (high < other.high || (high == other.high && (!highClosed || other.highClosed)));
 
+    // Conservative closed bounds for arithmetic on finite portable numbers.
+    // PHP integer arithmetic and JS double arithmetic agree on the numerical
+    // bounds when operands/results remain within the safe integer magnitude.
+    public function portable():Bool return Math.isFinite(low) && Math.isFinite(high)
+        && Math.abs(low) <= 9007199254740991.0 && Math.abs(high) <= 9007199254740991.0;
+
+    public static function literal(text:String):Null<NumericRange> {
+        if (!~/^(0|[1-9][0-9]*)(\.[0-9]+)?$/.match(text)) return null;
+        final n = Std.parseFloat(text);
+        final result = new NumericRange(n,n,true,true);
+        return result.portable() ? result : null;
+    }
+
+    public static function arithmetic(op:String,a:NumericRange,b:NumericRange):Null<NumericRange> {
+        if (!a.portable() || !b.portable()) return null;
+        // A divisor approaching zero is deliberately not analysed, even if
+        // its zero endpoint is open. No assumptions about overflow or NaN.
+        if (op == "/" && b.low <= 0 && b.high >= 0) return null;
+        var low = Math.POSITIVE_INFINITY;
+        var high = Math.NEGATIVE_INFINITY;
+        for (x in [a.low,a.high]) for (y in [b.low,b.high]) {
+            final value = switch (op) {
+                case "+": x + y;
+                case "-": x - y;
+                case "*": x * y;
+                case "/": x / y;
+                default: return null;
+            };
+            if (!Math.isFinite(value)) return null;
+            low = Math.min(low,value);
+            high = Math.max(high,value);
+        }
+        // Close endpoints even if inputs were open: rounding can reach them.
+        final result = new NumericRange(low,high,true,true);
+        return result.portable() ? result : null;
+    }
+
     public function equal(other:NumericRange):Bool return implies(other) && other.implies(this);
 
     public static function ofType(type:Type):Null<NumericRange> {
