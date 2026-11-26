@@ -21,8 +21,9 @@ class Bridge {
             ast: ast,
             trace: trace,
             exploreModules: exploreModules,
+            interfaces: interfaces,
             verifyContract: verifyContract,
-            version: "0.76.0"
+            version: "0.77.0"
         });
     }
 
@@ -126,6 +127,14 @@ class Bridge {
                 tree.push(node);
             }
             return haxe.Json.stringify({kind: "Program", definitions: tree}, null, "  ");
+        });
+    }
+
+    public static function interfaces(source:String,?hostJson:String,?modulesJson:String,?bindingsJson:String):Dynamic {
+        return safely(function() {
+            final host = hostJson == null ? HostEnvironment.empty() : HostEnvironment.fromJson(hostJson);
+            final providers = bindingsJson == null ? null : mira.resolve.ProviderBindings.fromJson(bindingsJson);
+            return haxe.Json.stringify(Compiler.interfaces(source,host,resolver(modulesJson),null,providers),null,"  ");
         });
     }
 

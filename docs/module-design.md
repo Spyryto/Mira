@@ -338,3 +338,11 @@ gli altri provider mantengono identità separate. La rappresentazione
 rimane accessibile esclusivamente al proprietario concreto. Le firme
 del consumatore possono quindi essere confrontate prima e dopo il binding
 senza rinominare i tipi. Non è ancora compilazione incrementale.
+
+### 0.77 — interfacce elaborate e impronte
+
+Report `--interfaces`, formato 1, JSON canonico e SHA-256. Prima fase
+per progettare invalidazione e cache: distingue cambiamenti pubblici da
+modifiche private senza saltare il controllo. Il provider è metadato di
+collegamento separato dalla superficie del contratto. Resta da definire
+la chiave completa di analisi e il riuso sicuro delle interfacce.

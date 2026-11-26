@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
 import {mkdtempSync,writeFileSync,rmSync, mkdirSync} from 'node:fs';
@@ -1727,5 +1728,41 @@ test('0.76 contract type identities remain stable before linking and across diff
     assert.notEqual(invalid.status,0);assert.match(invalid.stderr,/Type check/);
     const unbound=run(mixed+' wrong = read: b, key: "bad";',['--check']);
     assert.notEqual(unbound.status,0);assert.match(unbound.stderr,/Type check/);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+
+test('0.77 canonical public interface fingerprints ignore private changes and detect public type changes',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-interfaces-'));
+  try{
+    const input=join(dir,'program.mira');
+    const src='module Lib; interface Secret; Window :: Number where _ >= 0 AND _ <= 10; Unused :: {x: Text, y: Number}; value (Number); id (T): :: (T) -> T; make: :: (Text) -> Secret; implementation Secret :: {name: Text}; value = 1; id: x = x; make: x = {name: x}; private value = 3;';
+    const snapshot=source=>{
+      writeFileSync(input,source);
+      const r=spawnSync('node',['dist/mira.cjs',input,'--interfaces'],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      const report=JSON.parse(r.stdout);assert.equal(report.format,1);
+      const data=report.interfaces.find(x=>x.module==='Lib');
+      assert.equal(data.fingerprint,createHash('sha256').update(data.canonical).digest('hex'));
+      assert.deepEqual(JSON.parse(data.canonical),data.surface);
+      return data;
+    };
+    const first=snapshot(src);
+    assert.equal(first.surface.types.find(x=>x.name==='Secret').schema.kind,'Opaque');
+    assert.ok(!first.canonical.includes('private value'));
+    assert.ok(!first.canonical.includes('"name":"name"'));
+    assert.equal(snapshot(src.replace('private value = 3','private value = 300').replace('value = 1','value = 99').replace('Secret :: {name: Text}','Secret :: Text').replace('make: x = {name: x}','make: x = x')).fingerprint,first.fingerprint);
+    assert.equal(snapshot(src.replace('value (Number); id (T): :: (T) -> T;','id (U): :: (U) -> U; value (Number);').replace('{x: Text, y: Number}','{y: Number, x: Text}')).fingerprint,first.fingerprint);
+    assert.notEqual(snapshot(src.replace('_ <= 10','_ <= 20')).fingerprint,first.fingerprint);
+    assert.notEqual(snapshot(src.replace('y: Number','y: Text')).fingerprint,first.fingerprint);
+    assert.notEqual(snapshot(src.replace('value (Number)','value (Integer)')).fingerprint,first.fingerprint);
+    writeFileSync(join(dir,'Core.mira'),'module Core; interface Item :: {text: Text}; read: :: (Text) -> Text; implementation read: x = x;');
+    writeFileSync(input,'module Facade; interface export Core {Item => Public Item; read: => load: ;}; implementation');
+    const f=spawnSync('node',['dist/mira.cjs',input,'--interfaces'],{encoding:'utf8'});
+    assert.equal(f.status,0,f.stderr);
+    const facade=JSON.parse(f.stdout).interfaces.find(x=>x.module==='Facade');
+    assert.equal(facade.surface.types[0].schema.name,'Core / Item');
+    assert.equal(facade.surface.symbols[0].name,'load:');
+    assert.equal(facade.surface.symbols[0].schema.result.kind,'Text');
   }finally{rmSync(dir,{recursive:true,force:true});}
 });

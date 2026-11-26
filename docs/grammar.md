@@ -831,3 +831,26 @@ invece l'identità del contratto. Il manifest inline 0.73 non cambia.
 Non si condividono ancora risultati di compilazione tra build, né si
 promette compatibilità di dati serializzati tra provider. La cache delle
 interfacce elaborate è un incremento successivo.
+
+## Mira 0.77: impronte semantiche delle interfacce
+
+`node dist/mira.cjs app.mira --interfaces [--bindings bindings.json]`
+produce un report JSON versionato (format 1) di ogni modulo logico
+raggiungibile dopo il controllo statico completo. Include tipi pubblici
+anche inutilizzati, nomi pubblici e schemi dei valori e selettori,
+parametri, vincoli, opacità e riesportazioni. Le chiavi JSON, i nomi e
+i campi sono ordinati deterministicamente; gli argomenti conservano
+il loro ordine semantico. Le variabili dei tipi sono rinumerate dal
+checker. Ogni superficie ha una serializzazione canonica e SHA-256
+calcolato su di essa. Il provider selezionato è un metadato separato:
+il contratto mantiene la propria identità e impronta prima e dopo il
+binding quando la superficie coincide. Il confronto ignora coordinate,
+ordine delle dichiarazioni indipendenti, corpi, dettagli privati e
+presenza di annotazioni esplicite a parità di schema. Non è una prova
+di equivalenza comportamentale: gli effetti o i valori possono cambiare.
+Non è una chiave completa di build, né una garanzia di compatibilità
+serializzata: serviranno versione del compilatore, configurazione host,
+identità delle dipendenze, sorgente e opzioni, oltre a diagnostica e
+obblighi di codegen. Non vengono ancora riutilizzate analisi o scritte
+cache persistenti. Studio → Module Explorer → Impronte delle interfacce
+confronta l'ultima analisi riuscita in memoria e mostra il report.
