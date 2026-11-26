@@ -22,7 +22,7 @@ class Bridge {
             trace: trace,
             exploreModules: exploreModules,
             verifyContract: verifyContract,
-            version: "0.72.0"
+            version: "0.73.0"
         });
     }
 
@@ -49,7 +49,7 @@ class Bridge {
     }
 
     public static function compile(source:String, targetName:String, ?hostJson:String,
-        ?withLocations:Bool = false, ?modulesJson:String, ?checked:Bool = false, ?treeShake:Bool = false):Dynamic {
+        ?withLocations:Bool = false, ?modulesJson:String, ?checked:Bool = false, ?treeShake:Bool = false, ?bindingsJson:String):Dynamic {
         final locations:Array<GeneratedLocation> = withLocations ? [] : null;
         final optimization:Dynamic = {};
         final result = safely(function() {
@@ -61,7 +61,9 @@ class Bridge {
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
             if (treeShake && !checked) throw new MiraError("Tree shaking requires checked compilation");
-            return checked ? Compiler.transpileChecked(source,target,host,locations,resolver(modulesJson),null,treeShake,optimization)
+            if (bindingsJson != null && !checked) throw new MiraError("Provider bindings require checked compilation");
+            final providers = bindingsJson == null ? null : mira.resolve.ProviderBindings.fromJson(bindingsJson);
+            return checked ? Compiler.transpileChecked(source,target,host,locations,resolver(modulesJson),null,treeShake,optimization,providers)
                 : Compiler.transpile(source, target, host, locations, resolver(modulesJson));
         });
         if (withLocations && result.ok) Reflect.setField(result, "locations", locations);
@@ -69,10 +71,11 @@ class Bridge {
         return result;
     }
 
-    public static function check(source:String, ?hostJson:String, ?modulesJson:String):Dynamic {
+    public static function check(source:String, ?hostJson:String, ?modulesJson:String, ?bindingsJson:String):Dynamic {
         return safely(function() {
             final host = hostJson == null ? HostEnvironment.empty() : HostEnvironment.fromJson(hostJson);
-            return haxe.Json.stringify(Compiler.check(source,host,resolver(modulesJson)), null, "  ");
+            final providers = bindingsJson == null ? null : mira.resolve.ProviderBindings.fromJson(bindingsJson);
+            return haxe.Json.stringify(Compiler.check(source,host,resolver(modulesJson),null,providers), null, "  ");
         });
     }
 
