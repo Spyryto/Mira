@@ -639,3 +639,41 @@ Il vincolo è richiesto soltanto dal risultato annotato.
 L'analisi conserva i fatti intermedi senza trasformarli in tipi
 nominali. La costruzione finale è dimostrata staticamente.
 Si veda anche il [quaderno di progettazione](design-notes.md).
+
+## 0.53: Integer portabile
+
+```mira
+Request Id :: Integer where _ > 0;
+Retry Count :: Integer where _ >= 0 AND _ <= 3;
+retry (Retry Count) = 2;
+next retry: r (Retry Count) -> Integer = r + 1;
+result = next retry: retry;
+```
+
+Integer rappresenta un valore matematicamente intero nel dominio
+comune JS/PHP da -9007199254740991 a 9007199254740991.
+È accettato direzionalmente dove è richiesto Number, non viceversa.
+Non è il tipo nativo int di PHP; un valore numerico come 3.0 può
+soddisfare Integer. L'uguaglianza stretta conserva per ora le regole
+precedenti, incluso il limite noto della distinzione int/float in PHP.
+Il checker resta opt-in e non vengono ancora generate guardie.
+
+Le espressioni numeriche ordinarie mantengono Number, anche per
+letterali interi: una costruzione esplicitamente annotata Integer
+usa fatti separati di integrità e intervallo. Non si cambia il tipo
+inferito di tutti i programmi esistenti. Le chiamate con parametro
+Integer richiedono un valore già tipizzato Integer o un suo
+sottotipo; non si esegue ancora la costruzione implicita da letterali.
+
++ - * conservano l'integrità di operandi interi quando la prova
+aritmetica resta nella magnitudine sicura. / è provata solo nei
+casi puntuali con risultato intero o divisore unitario in valore
+assoluto. Non si deduce divisibilità generale, e non si promuove
+automaticamente un risultato Number a Integer. Il checker restringe
+i limiti dei tipi interi alla griglia discreta, ad esempio 0 < x < 4
+diventa [1,3], e rifiuta tipi vuoti come 0 < x < 1.
+
+Il tipo nominale Request Id resta distinto da Retry Count. Non
+si cambia il runtime, e si confronta l'emissione JS/PHP con
+l'equivalente non annotato. Codec host/RPC, guardie runtime, narrowing
+e propagazione dei fatti attraverso nomi non annotati restano futuri.
