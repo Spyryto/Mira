@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.64.0');
+  assert.equal(bridge.version, '0.65.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.64.0');
+  assert.equal(bridge.version,'0.65.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1191,4 +1191,15 @@ test('Studio exposes finite recursive sum schemas and checks nested alternatives
   assert.equal(compiled.ok,true,compiled.message);
   assert.equal(runInNewContext(compiled.output+'\nresult',{}),42);
   assert.match(read('type-lab.html'),/recursive-sum-example/);
+});
+
+
+test('Studio checks qualified library declarations from imported modules',()=>{
+  const modules=JSON.stringify({'math.mira':'Math.rate = 2; Math.scale: x (Number) -> Number = x * Math.rate;','billing.mira':'Billing.rate = 3; Billing.scale: x (Number) -> Number = x * Billing.rate;'});
+  const src='import "math.mira"; import "billing.mira"; result = (Math.scale: 5) + (Billing.scale: 5);';
+  const report=bridge.check(src,null,modules);assert.equal(report.ok,true,report.message);
+  const compiled=bridge.compile(src,'js',null,false,modules,true);
+  assert.equal(compiled.ok,true,compiled.message);
+  assert.equal(runInNewContext(compiled.output+'\nresult',{}),25);
+  assert.match(read('type-lab.html'),/qualified-symbol-example/);
 });
