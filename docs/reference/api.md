@@ -1106,6 +1106,17 @@ class DefinitionParser
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L6)
 
+<a id="api-mira-syntax-definitionparser-annotatedname"></a>
+### `mira.syntax.DefinitionParser.annotatedName`
+
+**method** · Analizza le dichiarazioni e i loro terminatori.
+
+```haxe
+public static function annotatedName(tokens:Array<Token>):{name:String,type:Null<Type>,typeOrigin:Null<Token>} { final opening = topLevel(tokens,"("); if (opening < 0) return {name:readWords(tokens),type:null,typeOrigin:null}; if (opening == 0) throw new MiraError("Expected name before type annotation",tokens[0]); final name = readWords(tokens.slice(0,opening)); if (!tokens[tokens.length-1].isSymbol(")")) throw new MiraError("Expected closing ) after type annotation",tokens[opening]); final origin = opening + 1 < tokens.length - 1 ? tokens[opening+1] : tokens[opening]; final type = new TypeParser(tokens.slice(opening+1,tokens.length-1),origin).parse(); return {name:name,type:type,typeOrigin:origin}; } static function splitHeader(tokens:Array<Token>):Array<Array<Token>>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L114)
+
 <a id="api-mira-syntax-definitionparser-parse"></a>
 ### `mira.syntax.DefinitionParser.parse`
 
@@ -1401,7 +1412,18 @@ Text(value:String)
 class ExpressionOrigins
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionOrigins.hx#L7)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionOrigins.hx#L8)
+
+<a id="api-mira-syntax-expressionorigins-annotations"></a>
+### `mira.syntax.ExpressionOrigins.annotations`
+
+**method** · Membro pubblico di mira.syntax.ExpressionOrigins.
+
+```haxe
+public function annotations(expr:Expr):Null<Array<Null<Type>>> return bindingTypes.get(expr); public function inherit(rewritten:Expr, original:Expr):Expr
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionOrigins.hx#L30)
 
 <a id="api-mira-syntax-expressionorigins-get"></a>
 ### `mira.syntax.ExpressionOrigins.get`
@@ -1409,10 +1431,10 @@ class ExpressionOrigins
 **method** · Membro pubblico di mira.syntax.ExpressionOrigins.
 
 ```haxe
-public function get(expr:Expr):Null<Token> return anchors.get(expr); public function inherit(rewritten:Expr, original:Expr):Expr
+public function get(expr:Expr):Null<Token> return anchors.get(expr); public function annotate(expr:Expr, types:Array<Null<Type>>):Expr
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionOrigins.hx#L21)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionOrigins.hx#L23)
 
 <a id="api-mira-syntax-expressionorigins-new"></a>
 ### `mira.syntax.ExpressionOrigins.new`
@@ -1423,7 +1445,7 @@ public function get(expr:Expr):Null<Token> return anchors.get(expr); public func
 public function new()
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionOrigins.hx#L11)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionOrigins.hx#L13)
 
 <a id="api-mira-syntax-expressionorigins-remember"></a>
 ### `mira.syntax.ExpressionOrigins.remember`
@@ -1434,7 +1456,7 @@ public function new()
 public function remember(expr:Expr, token:Token):Expr
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionOrigins.hx#L13)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionOrigins.hx#L15)
 
 <a id="api-mira-syntax-expressionparser"></a>
 ### `mira.syntax.ExpressionParser`
@@ -1445,7 +1467,7 @@ public function remember(expr:Expr, token:Token):Expr
 class ExpressionParser
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L8)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L9)
 
 <a id="api-mira-syntax-expressionparser-new"></a>
 ### `mira.syntax.ExpressionParser.new`
@@ -1456,7 +1478,7 @@ class ExpressionParser
 public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<String>, ?allowOperatorArgument:Bool = false, ?pendingLocals:Array<String>, ?origins:ExpressionOrigins)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L23)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L24)
 
 <a id="api-mira-syntax-expressionparser-parse"></a>
 ### `mira.syntax.ExpressionParser.parse`
@@ -1467,7 +1489,7 @@ public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<Strin
 public function parse():Expr
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L40)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ExpressionParser.hx#L41)
 
 Feature: [Operatori aritmetici](language.md#feature-arithmetic), [Parentesi](language.md#feature-grouping), [Sezioni di operatori](language.md#feature-operator-sections), [Accesso `~` prima dell'aritmetica](language.md#feature-field-precedence)
 

@@ -87,6 +87,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Schemi strutturati dei tipi e specializzazione | `0.45` | [Dettagli](docs/type-checker.md#045-esportazione-dei-tipi) |
 | ✅ | Validazione runtime dei contratti inferiti JS/PHP | `0.46` | [Dettagli](docs/type-checker.md#046-validazione-runtime-rpc) |
 | ✅ | Annotazioni esplicite per parametri, valori e risultati | `0.47` | [Dettagli](docs/type-checker.md#047-annotazioni-esplicite) |
+| ✅ | Annotazioni uniformi nei blocchi e valori locali | `0.48` | [Dettagli](docs/type-checker.md#048-annotazioni-locali) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
