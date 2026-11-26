@@ -354,3 +354,34 @@ Le annotazioni (Type), le dichiarazioni nominali ::, la proiezione
 Precedenze configurabili, Unicode, localizzazione e dichiarazioni
 di operatori custom sono proposte, non la grammatica attuale:
 vedi [quaderno di progettazione](design-notes.md).
+
+
+## Mira 0.65: simboli qualificati esplicitamente
+
+```mira
+Math.rate = 2;
+Billing.rate = 3;
+Math.scale: x (Number) -> Number = x * Math.rate;
+Billing.scale: x (Number) -> Number = x * Billing.rate;
+Math.Option (Element Type) :: Some (Element Type) | None;
+a = Math.Some: 5;
+result = match: a {some: {x | Math.scale: x}, none: {| 0}};
+```
+
+Il punto contiguo separa segmenti di un identificatore qualificato
+e non è un operatore di accesso ai campi: per i record si usa ~.
+La qualificazione può precedere un nome globale, una dichiarazione
+di tipo o la prima etichetta di un selettore, anche discorsivo.
+Sono ammesse più componenti (Math.Geometry.area:). Non è ammessa
+nei parametri, binding locali, ulteriori etichette o nomi dei
+parametri di tipo. I campi che contengono un punto vanno quotati.
+Una somma qualificata introduce costruttori con lo stesso prefisso
+della somma; i tag runtime e le alternative di match non cambiano.
+I nomi completi sono distinti e case-sensitive anche su PHP:
+il mangler codifica i simboli qualificati in un prefisso riservato
+seguito da una rappresentazione esadecimale iniettiva, distinta
+per valori e selettori. Nessun oggetto namespace a runtime.
+Import continua a raccogliere dichiarazioni staticamente e
+la qualificazione è scritta esplicitamente, anche all'interno
+della libreria. Non esistono ancora direttive namespace, alias,
+export/private, scope per file o capability qualificate.
