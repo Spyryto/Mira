@@ -12,6 +12,7 @@ enum Expr {
     FieldSection(key:String);
     Conditional(condition:Expr, whenTrue:Expr, whenFalse:Expr);
     Validate(value:Expr, required:mira.types.Type, success:Expr, failure:Expr);
+    ValidateResult(value:Expr, required:mira.types.Type, result:mira.types.Type);
     Variant(sum:mira.types.Type, tag:String, payload:Null<Expr>);
     Match(value:Expr, tags:Array<String>, handlers:Array<Expr>);
     Sequence(items:Array<Expr>);
