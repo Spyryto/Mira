@@ -138,6 +138,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Decoder JSON fallibile con Result e pattern matching | `0.85` | [Dettagli](docs/studio.md#mira-085-json-fallibile) |
 | ✅ | Date civili opache con provider nativi | `0.86` | [Dettagli](docs/studio.md#mira-086-date-civili) |
 | ✅ | Persistenza testuale con provider Browser e Files | `0.87` | [Dettagli](docs/studio.md#mira-087-persistenza-chiave-valore) |
+| ✅ | Effetti HTTP GET testuali con adapter nativi | `0.88` | [Dettagli](docs/studio.md#mira-088-http-testuale) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
