@@ -149,6 +149,23 @@ class DefinitionParser {
         }
 
         var header = tokens.slice(0, equals);
+        // Explicit generics belong to the first selector label, not to its identity.
+        final colon = topLevel(header,":");
+        final typeParameters:Array<String> = [];
+        if (colon >= 0) {
+            final first = header.slice(0,colon);
+            final opening = topLevel(first,"(");
+            if (opening >= 0) {
+                final generic = typeHeader(first,names);
+                names = names.copy();
+                for (i in 0...generic.parameters.length) {
+                    final parameter = generic.parameters[i];
+                    typeParameters.push(parameter);
+                    names.set(parameter,Variable(-i-1));
+                }
+                header = first.slice(0,opening).concat(header.slice(colon));
+            }
+        }
         var resultType:Null<Type> = null;
         var resultOrigin:Null<Token> = null;
         final arrow = topLevel(header,"->");
@@ -187,6 +204,11 @@ class DefinitionParser {
         }
 
         final d = new Definition("", labels, parameters, body, tokens[0], false, parameterOrigins);
+        if (typeParameters.length > 0) {
+            if (resultType == null || Lambda.exists(annotations, a -> a == null))
+                throw new MiraError("Explicit generic functions require all parameter and result annotations",tokens[0]);
+            d.typeParameters = typeParameters;
+        }
         d.parameterAnnotations = annotations;
         d.resultAnnotation = resultType;
         d.resultAnnotationOrigin = resultOrigin;
