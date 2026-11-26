@@ -25,6 +25,7 @@ class TypeChecker {
     final ranges = new haxe.ds.ObjectMap<Dynamic,NumericRange>();
     final integers = new haxe.ds.ObjectMap<Dynamic,Bool>();
     final wideObservations = new haxe.ds.ObjectMap<Dynamic,NumericRange>();
+    final guards:Null<haxe.ds.ObjectMap<Dynamic,NumericGuard>>;
     var nextId = 0;
     var origin:Token;
 
@@ -32,7 +33,8 @@ class TypeChecker {
 
     final host:HostEnvironment;
 
-    public function new(origins:ExpressionOrigins,host:HostEnvironment) {
+    public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.ds.ObjectMap<Dynamic,NumericGuard>) {
+        this.guards = guards;
         this.origins = origins;
         this.host = host;
     }
@@ -213,6 +215,29 @@ class TypeChecker {
         }
     }
 
+    // Only explicit construction sites have an expression. Do not silently
+    // validate arguments at call sites or accept unchecked intermediate math.
+    function guardFor(expr:Null<Expr>,integer:Bool):Null<NumericGuard> {
+        if (guards == null || expr == null) return null;
+        final eligible = switch (expr) {
+            case Name(_) | HostRef(_) | FieldGet(_,_) | Call(_,_) | HostCall(_,_) | Apply(_,_): true;
+            case Binary(op,left,right):
+                // A single operation whose inputs are statically portable.
+                // For Integer only exact integer +,-,* (until range overflow)
+                // are supported; reject uncertain divisibility or precision loss.
+                final a = ranges.get(left);
+                final b = ranges.get(right);
+                a != null && b != null
+                    && (integer
+                        ? integers.exists(left) && integers.exists(right) && ["+","-","*"].indexOf(op) >= 0
+                        : NumericRange.arithmeticBounds(op,a,b) != null);
+            default: false;
+        };
+        if (!eligible) return null;
+        if (!guards.exists(expr)) guards.set(expr,new NumericGuard());
+        return guards.get(expr);
+    }
+
     function proveInteger(actual:Type,expr:Null<Expr>):Void {
         final known = NumericRange.ofType(prune(actual));
         if (known == null) {
@@ -229,6 +254,8 @@ class TypeChecker {
             if (candidate.portable() && candidate.integerHull().empty())
                 numericFailure("Integer violated: no integral value in inferred interval",Violated,"integer_fractional");
         }
+        final guard = guardFor(expr,true);
+        if (guard != null) { guard.integer = true; return; }
         numericFailure("Integer not statically proven",Unknown,"integer_unproven");
     }
 
@@ -243,6 +270,8 @@ class TypeChecker {
             if (candidate != null && candidate.proof(range) == Violated)
                 numericFailure("refinement violated: " + range.predicate() + ", inferred " + candidate.predicate(),Violated,"refinement_disjoint");
         }
+        final guard = guardFor(expr,false);
+        if (guard != null) { guard.requireRange(range); return; }
         numericFailure("refinement not statically proven: " + range.predicate(),Unknown,"refinement_unproven");
     }
 
