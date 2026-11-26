@@ -1220,8 +1220,6 @@ test('0.66 flat interfaces accept inferred selectors, values and public nominal 
     ['interface x; implementation x = 1; implementation y = 2;',/Unexpected module section marker/],
     ['interface Hidden; implementation Hidden :: Number;',/Opaque type exports are not implemented yet/],
     ['interface T; implementation T :: Number; T = 1;',/Ambiguous value or type export/],
-    ['interface x (Number); implementation x = 1;',/explicit signatures are not implemented yet/],
-    ['interface f: :: (Number) -> Number; implementation f: x = x;',/explicit signatures are not implemented yet/],
     ['interface T :: Number; implementation T :: Text;',/Duplicate or reserved type T/],
     ['interface import "unused.mira"; x; implementation x = 1;',/Interface exports must precede imports/],
     ['interface import Data / Math {f:;}; implementation x = 1;',/Module not found: Data \/ Math/]
@@ -1289,6 +1287,54 @@ test('0.67 logical imports resolve aliases and types to their original canonical
     ]){
       writeFileSync(input,source);const a=spawnSync('node',['dist/mira.cjs',input,'--check'],{encoding:'utf8'});
       assert.notEqual(a.status,0,source);assert.match(a.stderr,pattern,source);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+
+test('0.68 public contracts supply parameter and result annotations without repetition',()=>{
+  const src='module Math / Example; interface Amount :: Number; rate (Number); square: :: (Number) -> Number; add: by: :: (Number, Number) -> Number; identity (Value Type): :: (Value Type) -> Value Type; pair (A, B): with: :: (A, B) -> {first: A, second: B}; make amount: :: (Number) -> Amount; double: ; implementation rate = 2; square: x = x * x; add: x, by: y = x + y; identity: x = x; pair: x, with: y = {first: x, second: y}; make amount: x = x; double: x = x + x; a = identity: 42; b = identity: "Mira"; c = pair: 1, with: "Mira"; result = make amount: 7;';
+  const t=check(src), p='Math / Example / ';
+  assert.equal(t[p+'rate'],'Number');
+  assert.equal(t[p+'square:'],'(Number) -> Number');
+  assert.equal(t[p+'add:by:'],'(Number, Number) -> Number');
+  assert.equal(t[p+'identity:'],"('a) -> 'a");
+  assert.equal(t[p+'a'],'Number');assert.equal(t[p+'b'],'Text');
+  assert.equal(t[p+'c'],'{first: Number, second: Text}');
+  assert.equal(t[p+'result'],p+'Amount');
+  assert.equal(t[p+'double:'],'(Number) -> Number');
+  assert.equal(check('module M; interface f: :: (Number) -> Number; implementation f: x (Number) -> Number = x;')['M / f:'],'(Number) -> Number');
+  assert.equal(check('module M; interface id (T): :: (T) -> T; implementation id (U): x (U) -> U = x;')['M / id:'],"('a) -> 'a");
+  for(const [src,pattern] of [
+    ['interface f: :: (Number) -> Number; implementation f: x = "bad";',/Type check/],
+    ['interface f: :: (Text) -> Text; implementation f: x = x * 2;',/Type check/],
+    ['interface id (T): :: (T) -> T; implementation id: x = 42;',/Type check/],
+    ['interface f: :: (Number) -> Number; implementation f: x (Text) = x;',/Implementation parameter annotation conflicts/],
+    ['interface f: :: (Number) -> Number; implementation f: x -> Text = "x";',/Implementation result annotation conflicts/],
+    ['interface rate (Number); implementation rate (Text) = "x";',/Implementation result annotation conflicts/],
+    ['interface rate (Number); implementation rate = "x";',/Type check/],
+    ['interface f: by: :: (Number) -> Number; implementation f: x, by: y = x;',/Public signature arity mismatch/],
+    ['interface f: :: (Number) -> Number; implementation x = 1;',/Unknown interface export/],
+    ['interface f: ; f: :: (Number) -> Number; implementation f: x = x;',/Duplicate interface export/],
+    ['interface f: :: (Hidden) -> Number; implementation Hidden :: Number; f: x = x;',/Unknown annotation type Hidden/]
+  ]) assert.throws(()=>check('module M; '+src),pattern,src);
+});
+
+test('0.68 a public contract is equivalent to implementation annotations in checked JS/PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-public-contract-'));
+  try{
+    const input=join(dir,'program.mira');
+    const a='module Library; interface rate (Number); square: :: (Number) -> Number; identity (T): :: (T) -> T; implementation rate = 2; square: x = x * x; identity: x = x; result = square: (identity: rate);';
+    const b='module Library; interface rate; square: ; identity: ; implementation rate (Number) = 2; square: x (Number) -> Number = x * x; identity (T): x (T) -> T = x; result = square: (identity: rate);';
+    for(const target of ['js','php']){
+      const compile=src=>{writeFileSync(input,src);return spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});};
+      const x=compile(a),y=compile(b);
+      assert.equal(x.status,0,x.stderr);assert.equal(y.status,0,y.stderr);assert.equal(x.stdout,y.stdout);
+      const name='__miraModule_v_'+Buffer.from('Library / result').toString('hex').toUpperCase();
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,x.stdout+(target==='js'?'\nconsole.log('+name+');':'\necho $'+name+';'));
+      const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);assert.equal(run.stdout.trim(),'4');
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
