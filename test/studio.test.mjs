@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.59.0');
+  assert.equal(bridge.version, '0.60.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.59.0');
+  assert.equal(bridge.version,'0.60.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1119,4 +1119,17 @@ test('Studio exposes Match and verifies exhaustive typed alternatives',()=>{
   assert.equal(runInNewContext(bridge.compile(src,'js',null,false,null,true).output+'\nresult',{}),'Ada');
   assert.equal(bridge.check(src+'bad = match: connection {disconnected: {| 0}};').ok,false);
   assert.match(read('type-lab.html'),/match-example/);
+});
+
+test('Studio exposes parametric sum schemas with concrete payload types',()=>{
+  const src='Result (T, E) :: Ok (T) | Err (E); a (Result (Number, Text)) = Ok: 42; result = match: a {ok: {n | n}, err: {e | 0}};';
+  const report=bridge.check(src);assert.equal(report.ok,true,report.message);
+  const entries=JSON.parse(report.output);
+  const a=entries.find(x=>x.name==='a');
+  assert.equal(a.type,'Result (Number, Text)');
+  assert.deepEqual(a.schema.arguments,[{kind:'Number'},{kind:'Text'}]);
+  assert.deepEqual(a.schema.alternatives,[{tag:'Err',payload:{kind:'Text'}},{tag:'Ok',payload:{kind:'Number'}}]);
+  assert.equal(runInNewContext(bridge.compile(src,'js',null,false,null,true).output+'\nresult',{}),42);
+  assert.equal(bridge.check(src+'bad (Result (Text, Number)) = a;').ok,false);
+  assert.match(read('type-lab.html'),/generic-sum-example/);
 });
