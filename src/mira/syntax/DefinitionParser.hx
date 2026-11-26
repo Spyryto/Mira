@@ -33,13 +33,15 @@ class DefinitionParser {
                     if (marker >= 0) {
                         if (marker == 0 || marker == segment.length-1)
                             throw new MiraError("Expected name :: Type",segment[marker]);
-                        final name = readWords(segment.slice(0,marker));
+                        final header = typeHeader(segment.slice(0,marker),names);
+                        final name = header.name;
                         if (["Number","Integer","Text","Boolean"].indexOf(name) >= 0 || names.exists(name))
                             throw new MiraError("Duplicate or reserved type " + name,segment[0]);
                         final rhs = segment.slice(marker+1);
                         if (topLevel(rhs,"|") >= 0) {
-                            declareSum(name,rhs,names,definitions);
+                            declareSum(name,rhs,names,definitions,header.parameters);
                         } else {
+                            if (header.parameters.length > 0) throw new MiraError("Type parameters currently require a sum declaration",segment[0]);
                             final base = new TypeParser(rhs,segment[marker+1],names,false).parse();
                             names.set(name,NamedType(name,base));
                         }
@@ -57,9 +59,37 @@ class DefinitionParser {
         return definitions;
     }
 
+    // Parameter names are lexical to a sum declaration, not global type names.
+    static function typeHeader(tokens:Array<Token>,names:Map<String,Type>):{name:String,parameters:Array<String>} {
+        final opening = topLevel(tokens,"(");
+        if (opening < 0) return {name:readWords(tokens),parameters:[]};
+        final name = readWords(tokens.slice(0,opening));
+        if (!tokens[tokens.length-1].isSymbol(")"))
+            throw new MiraError("Expected closing ) in type declaration",tokens[opening]);
+        final parameters:Array<String> = [];
+        var i = opening + 1;
+        while (i < tokens.length-1) {
+            final parameter = tokens[i++];
+            if (parameter.kind != Word || parameter.value == "_" || names.exists(parameter.value)
+                || ["Number","Integer","Text","Boolean","where"].indexOf(parameter.value) >= 0
+                || parameter.value == name || parameters.indexOf(parameter.value) >= 0)
+                throw new MiraError("Invalid or duplicate type parameter " + parameter.value,parameter);
+            parameters.push(parameter.value);
+            if (i == tokens.length-1) break;
+            if (!tokens[i++].isSymbol(",") || i == tokens.length-1)
+                throw new MiraError("Expected comma and type parameter",tokens[i-1]);
+        }
+        if (parameters.length == 0) throw new MiraError("Expected type parameter",tokens[opening]);
+        return {name:name,parameters:parameters};
+    }
+
     // Sum declarations synthesize ordinary constructor definitions, with a
     // trusted canonical Variant body rather than user-forgeable records.
-    static function declareSum(name:String,tokens:Array<Token>,names:Map<String,Type>,definitions:Array<Definition>):Void {
+    static function declareSum(name:String,tokens:Array<Token>,names:Map<String,Type>,definitions:Array<Definition>,parameters:Array<String>):Void {
+        final local = names.copy();
+        // Negative ids are declaration-local template slots, never checker ids.
+        final arguments:Array<Type> = [for (i in 0...parameters.length) Variable(-i-1)];
+        for (i in 0...parameters.length) local.set(parameters[i],arguments[i]);
         final alternatives = new Map<String,Null<Type>>();
         final tags:Array<String> = [];
         final origins:Array<Token> = [];
@@ -68,7 +98,7 @@ class DefinitionParser {
             final separator = topLevel(rest,"|");
             final part = separator < 0 ? rest : rest.slice(0,separator);
             if (part.length == 0) throw new MiraError("Empty sum alternative",tokens[0]);
-            final variant = annotatedName(part,names);
+            final variant = annotatedName(part,local);
             if (!~/^[A-Z][A-Za-z0-9_]*( [A-Za-z_][A-Za-z0-9_]*)*$/.match(variant.name))
                 throw new MiraError("Sum constructor must start with an uppercase letter",part[0]);
             if (alternatives.exists(variant.name))
@@ -79,7 +109,7 @@ class DefinitionParser {
             if (separator < 0) break;
             rest = rest.slice(separator+1);
         }
-        final sum = SumType(name,alternatives);
+        final sum = SumType(name,alternatives,arguments);
         names.set(name,sum);
         for (i in 0...tags.length) {
             final tag = tags[i];
