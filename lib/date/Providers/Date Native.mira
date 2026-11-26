@@ -1,0 +1,10 @@
+module Providers / Date Native;
+implements Services / Date;
+implementation
+Date :: {iso: Text};
+valid date: source = native valid date source;
+date from: source = {iso: (native checked date source)};
+iso of: date = date ~ iso;
+add days: count, to: date = {iso: (native add days: count, to: (date ~ iso))};
+days between: first, and: last = native days between: (first ~ iso), and: (last ~ iso);
+weekday of: date = native weekday (date ~ iso);

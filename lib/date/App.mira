@@ -1,0 +1,23 @@
+module App;
+interface
+result;
+import Services / Date {
+  Date;
+  valid date: ;
+  date from: ;
+  iso of: ;
+  add days: to: ;
+  days between: and: ;
+  weekday of: ;
+};
+implementation
+start (Date) = date from: "2028-02-28";
+next (Date) = add days: 2, to: start;
+result = {
+  start: (iso of: start),
+  finish: (iso of: next),
+  elapsed: (days between: start, and: next),
+  weekday: (weekday of: next),
+  leap: (valid date: "2028-02-29"),
+  invalid: (valid date: "2027-02-29")
+};

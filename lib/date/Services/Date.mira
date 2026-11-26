@@ -1,0 +1,9 @@
+module Services / Date;
+interface
+Date;
+valid date: :: (Text) -> Boolean;
+date from: :: (Text) -> Date;
+iso of: :: (Date) -> Text;
+add days: to: :: (Number, Date) -> Date;
+days between: and: :: (Date, Date) -> Number;
+weekday of: :: (Date) -> Number;

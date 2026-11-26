@@ -1,0 +1,62 @@
+{
+  "callables": [
+    "native valid date",
+    "native checked date",
+    "native weekday"
+  ],
+  "selectors": [
+    "native add days:to:",
+    "native days between:and:"
+  ],
+  "types": {
+    "native valid date": {
+      "parameters": [
+        "Text"
+      ],
+      "result": "Boolean"
+    },
+    "native checked date": {
+      "parameters": [
+        "Text"
+      ],
+      "result": "Text"
+    },
+    "native weekday": {
+      "parameters": [
+        "Text"
+      ],
+      "result": "Number"
+    },
+    "native add days:to:": {
+      "parameters": [
+        "Number",
+        "Text"
+      ],
+      "result": "Text"
+    },
+    "native days between:and:": {
+      "parameters": [
+        "Text",
+        "Text"
+      ],
+      "result": "Number"
+    }
+  },
+  "scopes": {
+    "native valid date": [
+      "Providers / Date Native"
+    ],
+    "native checked date": [
+      "Providers / Date Native"
+    ],
+    "native weekday": [
+      "Providers / Date Native"
+    ],
+    "native add days:to:": [
+      "Providers / Date Native"
+    ],
+    "native days between:and:": [
+      "Providers / Date Native"
+    ]
+  }
+}

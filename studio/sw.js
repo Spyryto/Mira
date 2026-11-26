@@ -51,6 +51,8 @@ const ASSETS = [
   './text-host.js',
   './json-module-data.js',
   './json-host.js',
+  './date-host.js',
+  './date-module-data.js',
   './module-explorer.html',
   './module-explorer.js',
   './interface-impact.js',
