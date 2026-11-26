@@ -697,3 +697,9 @@ Il report avvolge il resolver già esistente solo nel percorso di introspezione,
 ## 0.80 — misurare prima di introdurre cache
 
 Profilazione opt-in del percorso checked reale, con intervalli consecutivi in Compiler e riuso della fixture modulare di Studio. Separare raccolta/lexer/import, scope, espressioni, checker, pruning ed emissione. Non duplicare parser o checker, non misurare per sottrazione di due compilazioni indipendenti. Il timer non appartiene al runtime Mira. I dati sono esplorativi, la cache incrementale resta una possibilità da valutare su app concrete. Vedi performance.md.
+
+## 0.81 — interoperabilità nativa a confini espliciti
+
+Si riusa il manifest tipizzato e il resolver esistente, aggiungendo soltanto scope per capability. Un provider ordinario Mira implementa un contratto e chiama una funzione nativa registrata dall'host (Math.abs in JS, abs in PHP nel test); un provider Mira alternativo si può selezionare senza rendere visibile la capability al consumatore. Non si introduce sintassi extern, generazione di wrapper, package manager o un ABI universale. Il test confronta la funzione valore assoluto nativa con una normale funzione Mira su un input negativo; non costituisce una prova di equivalenza su tutti i valori numerici. I tipi dichiarati sono affidati all'host; eventuali boundary validator sono un incremento separato.
+
+I primi campioni CI della 0.80 (66 moduli sintetici) mostrano circa 69.67 ms JS e 62.52 ms PHP checked senza pruning; con pruning 15.53 e 19.69 ms. L'emissione domina i campioni senza pruning (55 e 49 ms); type checker circa 4 ms. Timer interno grossolano (~1 ms), campioni singoli, non mediana. Priorità: interoperabilità applicativa, profilazione più fine degli emitter solo con misure ripetute. Nessuna cache incrementale introdotta.

@@ -115,3 +115,14 @@ Fasi consecutive, misurate nello stesso passaggio:
 - emission: tabella globale dei simboli ed emitter.
 
 La mediana di cinque campioni alternati per modalità, dopo un warmup per modalità, è mostrata per ogni fase e totale. Le mediane separate non sono necessariamente additive. Il tempo esterno della chiamata include anche preparazione manifest/resolver e bridge. La CI verifica output identico alla compilazione ordinaria, ordine delle fasi, tempi finiti non negativi, somma dei singoli intervalli e risultato eseguito JS/PHP. I log CI contengono campioni singoli di profiling; non sono un benchmark di regressione con soglie. Le fasi aggregano operazioni realmente intercalate: non attribuiamo tempi distinti a lexer e resolver senza strumentazione più fine. Nessuna cache, nessuna promessa di velocità e nessun codice di profiling nei programmi generati.
+
+### Primo campione CI (0.80)
+
+Log [Studio PWA, run 45903729632](https://github.com/Spyryto/Mira/actions/runs/45903729632): progetto sintetico a diamante, 66 moduli, campioni singoli (non mediane).
+
+| Target | Checked ms | Checked + pruning ms | Emissione checked ms | Type checker checked ms | Byte prima → dopo |
+| --- | ---: | ---: | ---: | ---: | --- |
+| JS | 69.67 | 15.53 | 55 | 4 | 48610 → 13786 |
+| PHP | 62.52 | 19.69 | 49 | 4 | 81372 → 17100 |
+
+La risoluzione del timer Haxe in quel contesto è circa 1 ms: zeri non significano costo nullo. Risultato esplorativo, con potenziali effetti di JIT e ordine delle prove. Non inferire complessità asintotica o speedup generalizzabile. L'emissione merita un'indagine prima di progettare cache del checker.

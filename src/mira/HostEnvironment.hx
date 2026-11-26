@@ -11,12 +11,14 @@ class HostEnvironment {
     public final callables:Array<String>;
     public final selectors:Array<String>;
     public final types:Map<String,Type>;
+    final scopes = new Map<String,Array<String>>();
 
     public function new(
         ?values:Array<String>,
         ?callables:Array<String>,
         ?selectors:Array<String>,
-        ?typeManifest:Dynamic
+        ?typeManifest:Dynamic,
+        ?scopeManifest:Dynamic
     ) {
         this.values = values == null ? [] : values.copy();
         this.callables = callables == null ? [] : callables.copy();
@@ -38,6 +40,7 @@ class HostEnvironment {
             seen.set(selector, true);
         }
         types = HostTypeCodec.read(typeManifest,this.values,this.callables,this.selectors);
+        if (scopeManifest != null) readScopes(scopeManifest,seen);
     }
 
     public static function empty():HostEnvironment {
@@ -57,8 +60,46 @@ class HostEnvironment {
             names(input, "values"),
             names(input, "callables"),
             names(input, "selectors"),
-            Reflect.field(input, "types")
+            Reflect.field(input, "types"),
+            Reflect.field(input, "scopes")
         );
+    }
+
+    function readScopes(input:Dynamic,registered:Map<String,Bool>):Void {
+        if (!Reflect.isObject(input) || Std.isOfType(input,Array) || Std.isOfType(input,String))
+            throw new MiraError("Host scopes must be a name-to-module-list object");
+        for (name in Reflect.fields(input)) {
+            if (!registered.exists(name) || !types.exists(name))
+                throw new MiraError("Host scope requires a registered typed capability: " + name);
+            // Legacy native overrides have global checker semantics.
+            if (mira.resolve.Symbols.nativeSelectors().indexOf(name) >= 0)
+                throw new MiraError("Cannot scope a native selector override: " + name);
+            final raw:Dynamic = Reflect.field(input,name);
+            if (!Std.isOfType(raw,Array) || (cast raw:Array<Dynamic>).length == 0)
+                throw new MiraError("Host scope requires a nonempty module list: " + name);
+            final modules:Array<String> = [];
+            for (item in (cast raw:Array<Dynamic>)) {
+                if (!Std.isOfType(item,String))
+                    throw new MiraError("Invalid host scope module for " + name);
+                final path:String = cast item;
+                if (!~/^[A-Za-z_][A-Za-z_0-9]*( [A-Za-z_][A-Za-z_0-9]*)*( \/ [A-Za-z_][A-Za-z_0-9]*( [A-Za-z_][A-Za-z_0-9]*)*)*$/.match(path) || modules.indexOf(path) >= 0)
+                    throw new MiraError("Invalid or duplicate host scope module: " + path);
+                modules.push(path);
+            }
+            scopes.set(name,modules);
+        }
+    }
+
+    // Only source resolution receives the narrowed environment. The checker
+    // and emitter retain the full host types for resolved HostRef/HostCall.
+    public function forModule(path:Null<String>):HostEnvironment {
+        if (!scopes.iterator().hasNext()) return this;
+        function allowed(name:String):Bool {
+            return !scopes.exists(name) || (path != null && scopes.get(name).indexOf(path) >= 0);
+        }
+        final view = new HostEnvironment(values.filter(allowed),callables.filter(allowed),selectors.filter(allowed));
+        for (name => type in types) if (allowed(name)) view.types.set(name,type);
+        return view;
     }
 
     static function names(input:Dynamic, field:String):Array<String> {

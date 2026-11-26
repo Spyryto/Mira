@@ -27,7 +27,7 @@ class Compiler {
         }
         final scopes = new Map<String,Symbols>();
         for (key => group in groups)
-            scopes.set(key,new Symbols(group,host,key == "" ? null : key,bindings.get(key)));
+            scopes.set(key,new Symbols(group,host == null ? null : host.forModule(key == "" ? null : key),key == "" ? null : key,bindings.get(key)));
         if (profile != null) profile.mark("scopes");
         for (definition in definitions) {
             if (definition.body != null || definition.isAbstractContract) continue; // synthesized sum constructor
