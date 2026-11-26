@@ -330,3 +330,11 @@ astratta stabile per percorso durante l'analisi, ancora distinta dalle
 identità concrete della compilazione. Cache e compilazione incrementale
 restano da progettare. La disambiguazione di header parametrici non
 utilizzati richiede una decisione sintattica ulteriore.
+
+### 0.76 — identità stabili durante la selezione
+
+Il provider selezionato realizza le identità nominali del contratto;
+gli altri provider mantengono identità separate. La rappresentazione
+rimane accessibile esclusivamente al proprietario concreto. Le firme
+del consumatore possono quindi essere confrontate prima e dopo il binding
+senza rinominare i tipi. Non è ancora compilazione incrementale.
