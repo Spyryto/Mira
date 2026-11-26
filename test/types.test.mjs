@@ -609,8 +609,8 @@ test('types: proven Integer operations erase without overhead on JS/PHP',()=>{
   const dir=mkdtempSync(join(tmpdir(),'mira-integer-'));
   try{
     const input=join(dir,'program.mira');
-    const typed='Retry Count :: Integer where _ >= 0 AND _ <= 3; next: r (Retry Count) -> Integer = r + 1; retry (Retry Count) = 3; result = next: retry;';
-    const bare='next: r = r + 1; retry = 3; result = next: retry;';
+    const typed='Retry Count :: Integer where _ >= 0 AND _ <= 3; increment retry: r (Retry Count) -> Integer = r + 1; retry (Retry Count) = 3; result = increment retry: retry;';
+    const bare='increment retry: r = r + 1; retry = 3; result = increment retry: retry;';
     assert.equal(check(typed).result,'Integer');
     for(const target of ['js','php']){
       const compile=src=>{writeFileSync(input,src);const r=spawnSync('node',['dist/mira.cjs',input,target],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);return r.stdout;};
