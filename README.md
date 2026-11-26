@@ -139,6 +139,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Date civili opache con provider nativi | `0.86` | [Dettagli](docs/studio.md#mira-086-date-civili) |
 | ✅ | Persistenza testuale con provider Browser e Files | `0.87` | [Dettagli](docs/studio.md#mira-087-persistenza-chiave-valore) |
 | ✅ | Effetti HTTP GET testuali con adapter nativi | `0.88` | [Dettagli](docs/studio.md#mira-088-http-testuale) |
+| ✅ | App checked di importazione e persistenza di una lezione | `0.89` | [Dettagli](docs/studio.md#mira-089-importa-una-lezione) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
