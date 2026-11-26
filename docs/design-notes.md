@@ -634,3 +634,13 @@ e costruisce una vista ristretta ai requisiti. PublicSignature.apply
 inserisce i vincoli prima del checker nello stesso AST che raggiunge gli
 emitter. Nessun wrapper, nessun nuovo costruttore Expr, nessuna seconda
 compilazione di verifica. I binding richiedono modalità checked.
+
+## 0.74 — interfaccia indipendente, implementazione ereditata
+
+ModulePath condivide la grammatica del percorso tra module e implements.
+ContractModule legge il sorgente del contratto con ModuleSections in
+modalità standalone. Modules riusa direttamente i token dell'interfaccia
+nella compilazione del provider, senza concatenare sorgenti sintetici.
+Il manifest con solo provider verifica il percorso implements. L'opacità
+e i tipi parametrici riusano TypeVisibility e il checker. Identità nominale
+concreta per build; niente nuovi costruttori Expr o emitter.

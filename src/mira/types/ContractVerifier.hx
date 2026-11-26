@@ -38,7 +38,7 @@ class ContractVerifier {
         final visibility = new TypeVisibility();
         // Parse a fresh program. The verifier never changes the original source
         // or a previously compiled program.
-        final program = Compiler.parse(source,host,readModule,null,origins,visibility);
+        final program = Compiler.parse(source,host,readModule,null,origins,visibility,null,true);
         final exported = new Map<String,Definition>();
         for (d in program) if (d.modulePath == provider && d.isExported && !d.isStatement)
             exported.set(d.isFunction() ? d.selector() : d.name,d);

@@ -1,5 +1,5 @@
 {
-  "version": "0.73.0",
+  "version": "0.74.0",
   "features": [
     {
       "id": "values",
@@ -2016,6 +2016,12 @@
       "title": "Selezione statica di provider tramite contratto",
       "since": "0.73",
       "doc": "docs/grammar.md#mira-073-selezione-statica-del-provider"
+    },
+    {
+      "id": "interface-only-contract-modules",
+      "title": "Contratti come moduli e implementazione ereditata",
+      "since": "0.74",
+      "doc": "docs/grammar.md#mira-074-contratti-come-moduli-senza-implementazione"
     }
   ]
 }

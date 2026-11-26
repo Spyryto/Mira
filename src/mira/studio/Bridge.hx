@@ -22,7 +22,7 @@ class Bridge {
             trace: trace,
             exploreModules: exploreModules,
             verifyContract: verifyContract,
-            version: "0.73.0"
+            version: "0.74.0"
         });
     }
 
@@ -98,7 +98,7 @@ class Bridge {
         return safely(function() {
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
-            final definitions = Compiler.parse(source, host, resolver(modulesJson));
+            final definitions = Compiler.parse(source, host, resolver(modulesJson),null,null,null,null,true);
             final tree:Array<Dynamic> = [];
             for (definition in definitions) {
                 final node:Dynamic = {

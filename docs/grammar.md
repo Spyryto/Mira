@@ -739,3 +739,56 @@ contratti. Il manifest è una scelta sperimentale di build, non la sintassi
 definitiva. Studio supporta il manifest in compile/check/exploreModules/trace
 (e mostra il servizio sull'arco verso il provider). Il verificatore autonomo
 0.72 e le altre viste non ricevono ancora questa configurazione.
+
+## Mira 0.74: contratti come moduli senza implementazione
+
+```mira
+module Services / Storage;
+
+interface
+
+Storage;
+open: :: (Text) -> Storage;
+read: key: :: (Storage, Text) -> Text;
+close: :: (Storage) -> Boolean;
+```
+
+```mira
+module Providers / Memory;
+
+implements Services / Storage;
+
+implementation
+
+Storage :: {name: Text};
+open: name = {name: name};
+read: store, key: k = store ~ name;
+close: store = true;
+```
+
+Manifest di build (JSON):
+
+```json
+{"Services / Storage":{"provider":"Providers / Memory"}}
+```
+
+Il consumatore mantiene gli import dal percorso del contratto. Il provider
+legge l'interfaccia originale, applica firme, tipi e costruttori pubblici con
+le stesse regole di un modulo ordinario. Le dichiarazioni bare sono tipi
+astratti da implementare; le funzioni/valori richiedono firme esplicite.
+Tipi opachi parametrici e record pubblici con riferimenti opachi riusano
+la risoluzione esistente; per distinguere un header parametrico da una
+firma di valore si usa ancora la dichiarazione concreta. L'identità
+nominale risolta appartiene al provider selezionato nel singolo build,
+non costituisce ancora un'identità di contratto indipendente dal provider.
+Il provider non ripete interface e non aggiunge export; le dichiarazioni
+ulteriori sono private. Un solo implements per modulo. Per ora interfacce
+indipendenti senza import/re-export; non è ancora possibile controllare
+il consumatore senza un provider, né compilare il contratto da solo.
+L'import diretto del provider è consentito in modalità checked; il manifest
+con solo provider richiede implements esattamente quel percorso.
+I manifest con firme inline della 0.73 restano validi. Il contratto non
+produce codice e conserva coordinate originali nei diagnostici.
+Studio: Module Explorer → Dependency injection statica → Contratto come
+modulo, cambia provider, compila JS/PHP. L'arco implements indica il
+contratto letto, non una dipendenza runtime.

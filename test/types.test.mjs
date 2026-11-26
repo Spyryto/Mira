@@ -1588,3 +1588,61 @@ test('0.73 build-time provider selection is checked and emits the original direc
     assert.notEqual(loop.status,0);assert.match(loop.stderr,/Provider must be a concrete module/);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.74 interface-only modules supply public signatures and abstract representations to providers',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-interface-contract-'));
+  try {
+    mkdirSync(join(dir,'Services'),{recursive:true});
+    mkdirSync(join(dir,'Providers'),{recursive:true});
+    const input=join(dir,'program.mira'),manifest=join(dir,'bindings.json'),contractFile=join(dir,'Services','Storage.mira');
+    const contract='module Services / Storage; interface Storage; open: :: (Text) -> Storage; read: key: :: (Storage, Text) -> Text; close: :: (Storage) -> Boolean;';
+    writeFileSync(contractFile,contract);
+    const prefix=name=>'module Providers / '+name+'; implements Services / Storage; implementation ';
+    const memory=prefix('Memory')+'Storage :: {name: Text}; open: name = {name: name}; read: store, key: k = store ~ name; close: store = true; extra = 99;';
+    const native=prefix('Native')+'Storage :: Text; open: name = name; read: store, key: k = k; close: store = true;';
+    writeFileSync(join(dir,'Providers','Memory.mira'),memory);
+    writeFileSync(join(dir,'Providers','Native.mira'),native);
+    const source='module App; import Services / Storage {Storage; open: ; read: key: ; close: ;}; store (Storage) = open: "memory"; result = read: store, key: "native"; done = close: store;';
+    const config=provider=>writeFileSync(manifest,JSON.stringify({'Services / Storage':{provider}}));
+    const compile=(target,flags)=>spawnSync('node',['dist/mira.cjs',input,target,...flags],{encoding:'utf8'});
+    for(const [provider,expected] of [['Providers / Memory','memory'],['Providers / Native','native']]){
+      config(provider);
+      for(const target of ['js','php']){
+        writeFileSync(input,source);
+        const bound=compile(target,['--checked','--bindings',manifest,'--tree-shake']);
+        assert.equal(bound.status,0,bound.stderr);
+        writeFileSync(input,source.replace('import Services / Storage','import '+provider));
+        const direct=compile(target,['--checked','--tree-shake']);
+        assert.equal(direct.status,0,direct.stderr);assert.equal(bound.stdout,direct.stdout);
+        const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+        const file=join(dir,target==='js'?'out.mjs':'out.php');
+        writeFileSync(file,bound.stdout+(target==='js'?'\nconsole.log('+name+');':'\necho $'+name+';'));
+        const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+        assert.equal(run.status,0,run.stderr);assert.equal(run.stdout.trim(),expected);
+      }
+    }
+    config('Providers / Memory');
+    for(const [bad,pattern] of [
+      [source+' leaked = store ~ name;',/Type check/],
+      ['module App; import Services / Storage {Storage;}; store (Storage) = {name: "forged"};',/Type check/],
+      ['module App; import Services / Storage {extra;}; result = extra;',/Symbol not exported/]
+    ]){
+      writeFileSync(input,bad);const x=compile('--check',['--bindings',manifest]);assert.notEqual(x.status,0);assert.match(x.stderr,pattern);
+    }
+    writeFileSync(input,source.replace('import Services / Storage','import Providers / Memory'));
+    const unchecked=compile('js',[]);assert.notEqual(unchecked.status,0);assert.match(unchecked.stderr,/require checked compilation/);
+    writeFileSync(input,source);
+    writeFileSync(join(dir,'Providers','Memory.mira'),memory.replace('Storage :: {name: Text};',''));
+    let bad=compile('--check',['--bindings',manifest]);assert.notEqual(bad.status,0);assert.match(bad.stderr,/Missing abstract type implementation/);
+    writeFileSync(join(dir,'Providers','Memory.mira'),memory.replace('close: store = true;',''));
+    bad=compile('--check',['--bindings',manifest]);assert.notEqual(bad.status,0);assert.match(bad.stderr,/Unknown interface export/);
+    writeFileSync(join(dir,'Providers','Memory.mira'),memory.replace('close: store = true;','close: store = "bad";'));
+    bad=compile('--check',['--bindings',manifest]);assert.notEqual(bad.status,0);assert.match(bad.stderr,/Type check/);
+    writeFileSync(join(dir,'Providers','Memory.mira'),'module Providers / Memory; interface implementation');
+    bad=compile('--check',['--bindings',manifest]);assert.notEqual(bad.status,0);assert.match(bad.stderr,/must implement contract/);
+    writeFileSync(join(dir,'Providers','Memory.mira'),memory);
+    writeFileSync(contractFile,contract+' implementation');
+    bad=compile('--check',['--bindings',manifest]);assert.notEqual(bad.status,0);assert.match(bad.stderr,/cannot contain implementation/);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
