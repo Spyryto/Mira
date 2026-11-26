@@ -707,3 +707,7 @@ I primi campioni CI della 0.80 (66 moduli sintetici) mostrano circa 69.67 ms JS 
 ## 0.82 — laboratorio dei moduli host
 
 Prima di aggiungere servizi o sintassi extern, rendere osservabile la sostituzione statica dei provider. Host Module Lab riusa il compilatore browser, espone sorgenti, manifest, binding, impronte e output reali; l'esecuzione JS è isolata dal thread UI con un worker terminabile. PHP è ispezionabile in Studio ed eseguito nei test. Esempi numerici minimi, nessuna pretesa di equivalenza su ogni valore. Non introdurre un secondo sistema di moduli, binding o type checker.
+
+## 0.83 — primo servizio nativo riutilizzabile: Text
+
+Contratto Mira e provider concreto in lib/text, manifest con scope, adapter JS/PHP espliciti. Studio importa gli stessi file nel proprio bundle. Semantica Unicode scalare dichiarata, test differenziali dei due host su ASCII, accenti, emoji, combinanti, ZWJ, newline, NUL, ago vuoto e input non valido. Il conteggio non è una misura di grafemi. Riutilizzare native API quando la semantica coincide, adattare solo dove necessario; niente prelude, grammatica o nuovo runtime.

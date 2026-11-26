@@ -43,6 +43,7 @@ const assets = [
   'host-module-fixtures.js',
   'host-module-lab.js',
   'host-module-worker.js',
+  'text-module-lab.js',
   'module-explorer.html',
   'module-explorer.js',
   'interface-impact.js',
@@ -65,6 +66,14 @@ copyFileSync(resolve(root, 'studio/dogfood/host.json'),
 for (const filename of assets) {
   copyFileSync(resolve(root, 'studio', filename), resolve(destination, filename));
 }
+
+// Bundle the actual reusable Text library, not a duplicate Studio fixture.
+const textFile = path => readFileSync(resolve(root,'lib/text',path),'utf8');
+const textData = {source:textFile('App.mira'),
+  modules:JSON.stringify({'Services / Text':textFile('Services/Text.mira'),'Providers / Text Native':textFile('Providers/Text Native.mira')}),
+  host:textFile('host.json'),bindings:textFile('bindings.json')};
+writeFileSync(resolve(destination,'text-module-data.js'),'globalThis.MiraTextModuleData = '+JSON.stringify(textData)+';\n');
+copyFileSync(resolve(root,'lib/text/text-host.js'),resolve(destination,'text-host.js'));
 
 // Publish the design notebook from its single Markdown source. It uses a
 // deliberately small, escaped subset: headings, paragraphs and fenced code.

@@ -1,0 +1,17 @@
+module App;
+interface
+result;
+import Services / Text {
+  code points: ;
+  contains: in: ;
+  starts with: in: ;
+  ends with: in: ;
+};
+implementation
+sample = "Caffè 🎸";
+result = {
+  points: (code points: sample),
+  contains: (contains: "🎸", in: sample),
+  starts: (starts with: "Caffè", in: sample),
+  ends: (ends with: "🎸", in: sample)
+};

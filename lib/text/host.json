@@ -1,0 +1,53 @@
+{
+  "callables": [
+    "native code points"
+  ],
+  "selectors": [
+    "native contains:in:",
+    "native starts with:in:",
+    "native ends with:in:"
+  ],
+  "types": {
+    "native code points": {
+      "parameters": [
+        "Text"
+      ],
+      "result": "Number"
+    },
+    "native contains:in:": {
+      "parameters": [
+        "Text",
+        "Text"
+      ],
+      "result": "Boolean"
+    },
+    "native starts with:in:": {
+      "parameters": [
+        "Text",
+        "Text"
+      ],
+      "result": "Boolean"
+    },
+    "native ends with:in:": {
+      "parameters": [
+        "Text",
+        "Text"
+      ],
+      "result": "Boolean"
+    }
+  },
+  "scopes": {
+    "native code points": [
+      "Providers / Text Native"
+    ],
+    "native contains:in:": [
+      "Providers / Text Native"
+    ],
+    "native starts with:in:": [
+      "Providers / Text Native"
+    ],
+    "native ends with:in:": [
+      "Providers / Text Native"
+    ]
+  }
+}

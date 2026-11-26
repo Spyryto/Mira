@@ -1,0 +1,6 @@
+module Services / Text;
+interface
+code points: :: (Text) -> Number;
+contains: in: :: (Text, Text) -> Boolean;
+starts with: in: :: (Text, Text) -> Boolean;
+ends with: in: :: (Text, Text) -> Boolean;

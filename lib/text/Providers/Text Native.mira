@@ -1,0 +1,7 @@
+module Providers / Text Native;
+implements Services / Text;
+implementation
+code points: text = native code points text;
+contains: needle, in: text = native contains: needle, in: text;
+starts with: prefix, in: text = native starts with: prefix, in: text;
+ends with: suffix, in: text = native ends with: suffix, in: text;
