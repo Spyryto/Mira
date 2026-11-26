@@ -10,6 +10,10 @@
     const response=MiraStudioCompiler.check(source.value,host.value.trim()||null);
     result.textContent=response.ok?(document.getElementById('structured').checked?response.output:JSON.parse(response.output).map(x=>x.name+'  :  '+x.type).join('\n')):response.message;
     const d=response.diagnostic;
+    if(!response.ok && d?.proof){
+      const label=d.proof==='violated'?'Vincolo certamente violato':'Vincolo non dimostrato';
+      result.textContent=label+'\n'+response.message+(document.getElementById('structured').checked?'\n'+JSON.stringify(d,null,2):'');
+    }
     if(highlight && !response.ok && d && !d.file && d.line!=null && d.column!=null){
       source.focus();
       const start=offset(d.line,d.column);
@@ -19,6 +23,8 @@
   document.getElementById('check').addEventListener('click',()=>check(true));
   document.getElementById('example').addEventListener('click',()=>{host.value='';source.value=valid;check();});
   document.getElementById('invalid').addEventListener('click',()=>{host.value='';source.value='same: a, as: b = a == b;\na = same: [1], as: [2];';check(true);});
+  document.getElementById('overflow').addEventListener('click',()=>{host.value='';source.value='x (Integer) = 9007199254740991 + 1;';check(true);});
+  document.getElementById('unknown').addEventListener('click',()=>{host.value='';source.value='increment: x (Integer) -> Integer = x + 1;';check(true);});
   document.getElementById('host-example').addEventListener('click',()=>{
     host.value=JSON.stringify({values:['rate'],callables:['format'],types:{rate:'Number',format:{parameters:['Number'],result:'Text'}}},null,2);
     host.closest('details').open=true;
