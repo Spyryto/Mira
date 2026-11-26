@@ -31,6 +31,11 @@
   }
   document.getElementById('checked-js').addEventListener('click',()=>compileChecked('js'));
   document.getElementById('checked-php').addEventListener('click',()=>compileChecked('php'));
+  document.getElementById('parametric-data-example').addEventListener('click',()=>{
+    host.value='';
+    source.value='Pair (First Type, Second Type) :: {first: First Type, second: Second Type};\nBag (Element Type) :: [Element Type];\nmake pair (A, B): x (A), with: y (B) -> Pair (A, B) = {first: x, second: y};\na = make pair: 42, with: "Ada";\nb (Bag (Number)) = [1, 2];\nresult = a ~ first;';
+    check();
+  });
   document.getElementById('generic-sum-example').addEventListener('click',()=>{
     host.value='';
     source.value='Result (Success Type, Failure Type) :: Ok (Success Type) | Err (Failure Type);\nidentity (Value Type): x (Value Type) -> Value Type = x;\nOption (element type) :: Some (element type) | None;\na (Result (Number, Text)) = Ok: (identity: 42);\nb (Result (Text, Number)) = Ok: "Ada";\nnone number (Option (Number)) = None;\nresult = match: a {ok: {n | n}, err: {e | 0}};';
