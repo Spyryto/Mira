@@ -859,3 +859,55 @@ errori strutturati, accumulo di errori, parsing di testo, validazione
 ricorsiva di record e confini RPC/persistenza sono futuri.
 Il Type Lab include un esempio; la suite verifica JS/PHP, input
 singolo, lazy handlers, identità nominale e diagnostica.
+
+
+## 0.58: tipi somma nominali
+
+```mira
+Session :: {user: Text};
+Connection :: Disconnected | Connecting | Connected (Session) | Failed (Text);
+session (Session) = {user: "Ada"};
+initial = Disconnected;
+active connection = Connected: session;
+failure = Failed: "Timeout";
+states = [initial, active connection, failure];
+```
+
+Il checker distingue nominalmente Connection dagli altri
+tipi somma. Tutti i costruttori restituiscono Connection;
+Connected: richiede Session, Failed: richiede Text.
+Una variante senza payload è un valore globale; una con
+payload è un selettore unario. Il separatore | a livello
+zero distingue la somma dalla dichiarazione nominale
+ordinaria. Per una somma con una sola alternativa usare
+una barra iniziale (Only :: | Single;). Le alternative
+iniziano con una lettera maiuscola, sono uniche e possono
+avere nomi discorsivi. Le annotazioni dei payload si
+riferiscono a tipi già dichiarati.
+
+DefinitionParser sintetizza Definition con body Variant;
+Compiler.parse non riparsa questi body. Si riutilizzano
+il resolver, le annotazioni dei parametri e il checker
+ordinario. I costruttori sono soggetti alle collisioni
+ordinarie di valori e selettori, senza qualificazione.
+Lo schema strutturato usa kind Sum, name e alternatives
+ordinate per tag, con payload null per le alternative
+senza dati.
+
+JavaScript usa oggetti e PHP array associativi con tag
+e, per le varianti con dati, value. Non si espongono i
+campi della rappresentazione al type checker; un record
+con la stessa forma non è un valore del tipo somma.
+Le garanzie valgono nei programmi controllati, non per
+dati host arbitrari. Nessuna libreria runtime aggiuntiva.
+I costruttori sono emessi anche se inutilizzati, senza
+ottimizzazioni in questa versione. Il formato non è un
+contratto RPC o persistente stabile.
+
+Non sono ancora supportati match, generici, tipi somma
+ricorsivi, pattern annidati o payload multipli (usare
+un record come singolo payload). Il Type Lab mostra i
+tipi e lo schema; i test verificano l'identità nominale,
+i costruttori, il rifiuto di record falsificati e la
+rappresentazione JS/PHP. Il quaderno registra la regola
+grammaticale concordata per il futuro match.
