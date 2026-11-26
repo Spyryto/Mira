@@ -1647,16 +1647,38 @@ public static function any():NumericRange return new NumericRange(Math.NEGATIVE_
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L18)
 
+<a id="api-mira-types-numericrange-arithmetic"></a>
+### `mira.types.NumericRange.arithmetic`
+
+**method** · Membro pubblico di mira.types.NumericRange.
+
+```haxe
+public static function arithmetic(op:String,a:NumericRange,b:NumericRange):Null<NumericRange>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L59)
+
 <a id="api-mira-types-numericrange-empty"></a>
 ### `mira.types.NumericRange.empty`
 
 **method** · Membro pubblico di mira.types.NumericRange.
 
 ```haxe
-public function empty():Bool return low > high || (low == high && !(lowClosed && highClosed)); public function contains(n:Float):Bool return Math.isFinite(n) && (n > low || (lowClosed && n == low)) && (n < high || (highClosed && n == high)); public function implies(other:NumericRange):Bool return (low > other.low || (low == other.low && (!lowClosed || other.lowClosed))) && (high < other.high || (high == other.high && (!highClosed || other.highClosed))); public function equal(other:NumericRange):Bool return implies(other) && other.implies(this); public static function ofType(type:Type):Null<NumericRange>
+public function empty():Bool return low > high || (low == high && !(lowClosed && highClosed)); public function contains(n:Float):Bool return Math.isFinite(n) && (n > low || (lowClosed && n == low)) && (n < high || (highClosed && n == high)); public function implies(other:NumericRange):Bool return (low > other.low || (low == other.low && (!lowClosed || other.lowClosed))) && (high < other.high || (high == other.high && (!highClosed || other.highClosed))); // Conservative closed bounds for arithmetic on finite portable numbers. // PHP integer arithmetic and JS double arithmetic agree on the numerical // bounds when operands/results remain within the safe integer magnitude. public function portable():Bool return Math.isFinite(low) && Math.isFinite(high) && Math.abs(low) <= 9007199254740991.0 && Math.abs(high) <= 9007199254740991.0; public static function literal(text:String):Null<NumericRange>
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L37)
+
+<a id="api-mira-types-numericrange-equal"></a>
+### `mira.types.NumericRange.equal`
+
+**method** · Membro pubblico di mira.types.NumericRange.
+
+```haxe
+public function equal(other:NumericRange):Bool return implies(other) && other.implies(this); public static function ofType(type:Type):Null<NumericRange>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L83)
 
 <a id="api-mira-types-numericrange-high"></a>
 ### `mira.types.NumericRange.high`
@@ -1733,7 +1755,7 @@ public function new(low:Float,high:Float,lowClosed:Bool,highClosed:Bool)
 public function predicate():String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L59)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L96)
 
 <a id="api-mira-types-numericrange-schema"></a>
 ### `mira.types.NumericRange.schema`
@@ -1744,7 +1766,7 @@ public function predicate():String
 public function schema():Dynamic return
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L66)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L103)
 
 <a id="api-mira-types-type"></a>
 ### `mira.types.Type`
@@ -1887,7 +1909,7 @@ class TypeChecker
 public function check(program:Array<Definition>):Array<Dynamic>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L42)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L44)
 
 <a id="api-mira-types-typechecker-new"></a>
 ### `mira.types.TypeChecker.new`
@@ -1898,7 +1920,7 @@ public function check(program:Array<Definition>):Array<Dynamic>
 public function new(origins:ExpressionOrigins,host:HostEnvironment)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L30)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L32)
 
 <a id="api-mira-types-typechecker-specialize"></a>
 ### `mira.types.TypeChecker.specialize`
@@ -1909,5 +1931,5 @@ public function new(origins:ExpressionOrigins,host:HostEnvironment)
 public function specialize(program:Array<Definition>,name:String,args:Array<Type>):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L56)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L58)
 
