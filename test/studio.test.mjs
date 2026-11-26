@@ -1180,7 +1180,7 @@ test('Studio exposes nominal parametric record schemas and executes the compiled
 });
 
 test('Studio exposes finite recursive sum schemas and checks nested alternatives',()=>{
-  const src='Tree (Element Type) :: Leaf (Element Type) | Branch ([Tree (Element Type)]); a = Branch: [(Leaf: 42)]; result = match: a {leaf: {n | n}, branch: {children | fold: children, with: {acc, child | acc + (match: child {leaf: {n | n}, branch: {rest | 0}})}, from: 0}};';
+  const src='Tree (Element Type) :: Leaf (Element Type) | Branch ([Tree (Element Type)]); a = Branch: [(Leaf: 42)]; result = match: a {leaf: {n | n}, branch: {children | fold: children, with: {acc, child (Tree (Number)) | acc + (match: child {leaf: {n | n}, branch: {rest | 0}})}, from: 0}};';
   const report=bridge.check(src);assert.equal(report.ok,true,report.message);
   const a=JSON.parse(report.output).find(x=>x.name==='a');
   assert.equal(a.type,'Tree (Number)');
