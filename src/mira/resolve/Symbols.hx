@@ -27,7 +27,7 @@ class Symbols {
     final resolvedValues = new Map<String,String>();
     final resolvedSelectors = new Map<String,String>();
 
-    public function new(definitions:Array<Definition>, ?environment:HostEnvironment, ?modulePath:String) {
+    public function new(definitions:Array<Definition>, ?environment:HostEnvironment, ?modulePath:String, ?imports:Array<ImportBinding>) {
         this.environment = environment == null ? HostEnvironment.empty() : environment;
         final seenSelectors = new Map<String, Bool>();
         final seenGlobals = new Map<String, Bool>();
@@ -112,6 +112,25 @@ class Symbols {
             mangled.set(hostName, identifier);
             hostNames.push(hostName);
         }
+        if (imports != null) for (binding in imports) {
+            final alias = binding.alias;
+            final canonical = binding.canonicalName();
+            if (binding.target.isFunction()) {
+                if (seenSelectors.exists(alias) || StringTools.startsWith(alias,"validate:"))
+                    throw new MiraError("Duplicate or conflicting imported selector " + alias,binding.origin);
+                seenSelectors.set(alias,true);
+                final labels = alias.substr(0,alias.length-1).split(":");
+                functions.push(new Definition("",labels,binding.target.parameters,[],binding.origin));
+                resolvedSelectors.set(alias,canonical);
+            } else {
+                if (seenGlobals.exists(alias)) throw new MiraError("Duplicate or conflicting imported value " + alias,binding.origin);
+                seenGlobals.set(alias,true);
+                globals.push(alias);
+                resolvedValues.set(alias,canonical);
+            }
+            final generated = binding.target.isFunction() ? Mangle.selector(canonical.substr(0,canonical.length-1).split(":")) : Mangle.name(canonical);
+            hostNames.push(generated);
+        }
         // Validate named-function scopes after all globals are collected,
         // regardless of declaration order. The same literal name may shadow
         // a global; distinct names must not become the same JS/PHP symbol.
@@ -133,7 +152,7 @@ class Symbols {
                 }
                 generated.set(symbol, parameter);
                 for (outer in globals) {
-                    if (outer != parameter && Mangle.name(outer) == symbol) {
+                    if (outer != parameter && Mangle.name(resolvedName(outer)) == symbol) {
                         throw new MiraError("Generated-name collision for function parameter "
                             + parameter + " with visible name " + outer, token);
                     }
