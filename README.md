@@ -98,6 +98,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | AND, OR, NOT e operatori come funzioni | `0.51` | [Dettagli](docs/type-checker.md#051-refinement-numerici) |
 | ✅ | Dimostrazione statica di intervalli aritmetici | `0.52` | [Dettagli](docs/type-checker.md#052-prove-aritmetiche) |
 | ✅ | Integer portabile e prove di integrità | `0.53` | [Dettagli](docs/type-checker.md#053-integer-portabile) |
+| ✅ | Narrowing numerico lessicale nei condizionali | `0.54` | [Dettagli](docs/type-checker.md#054-narrowing-numerico) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
