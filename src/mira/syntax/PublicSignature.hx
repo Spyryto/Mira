@@ -60,7 +60,7 @@ class PublicSignature {
         return switch [a,b] {
             case [NumberType,NumberType] | [IntegerType,IntegerType] | [TextType,TextType] | [BooleanType,BooleanType]: true;
             case [Variable(x),Variable(y)]: x == y;
-            case [NamedType(x,_),NamedType(y,_)]: x == y;
+            case [OpaqueType(x),OpaqueType(y)] | [NamedType(x,_),NamedType(y,_)]: x == y;
             case [ParametricNamedType(x,_,xs),ParametricNamedType(y,_,ys)]
                 | [SumType(x,_,xs),SumType(y,_,ys)] | [SumReference(x,_,xs),SumReference(y,_,ys)]
                 | [SumType(x,_,xs),SumReference(y,_,ys)] | [SumReference(x,_,xs),SumType(y,_,ys)]:
