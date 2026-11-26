@@ -491,3 +491,42 @@ a incrementi distinti. Per ~ si intende conservare i campi nominali
 interni e i futuri vincoli, ammettendo campi extra; non cancellare
 ricorsivamente tutte le identità. Nessun controllo runtime dei
 refinements è ancora implementato.
+
+## 0.50: proiezione strutturale
+
+```mira
+Size :: {width: Number, height: Number};
+Window :: {width: Number, height: Number, title: Text};
+window (Window) = {width: 12, height: 10, title: "Mira"};
+area of: size (~ Size) = size ~ width * size ~ height;
+result = area of: window;
+```
+
+~ Tipo richiede una dichiarazione nominale la cui rappresentazione
+finale è un record chiuso. La proiezione ignora il nome esterno,
+ammette campi extra e verifica la compatibilità direzionale di
+ciascun campo richiesto. Un campo Student Id non è soddisfatto
+da Request Id né da Number. L'eventuale sottotipo nominale del
+campo è invece ammesso. Un campo record chiuso conserva i suoi
+requisiti esatti: non si applica ~ ricorsivamente.
+
+StructuralType(name,fields) rappresenta un requisito aperto con
+campi noti, non un record chiuso né una variabile di riga
+generalizzabile. Il nome serve al rendering e allo schema.
+L'unificazione tra due proiezioni richiede la stessa struttura;
+acceptShape implementa la compatibilità direzionale più ampia.
+Il corpo può leggere soltanto i campi dichiarati, anche se il
+valore effettivo ne possiede altri. Nessuna copia o rimozione
+dei campi a runtime; le annotazioni sono cancellate come prima.
+Il report JSON usa kind Structural, name, fields e open true.
+
+La proiezione è ammessa come annotazione intera di parametri,
+valori e risultati, anche nei blocchi e locali. Non ancora
+come tipo di base di una nuova dichiarazione :: o dentro altri
+tipi. Non si assume la presenza di campi ignoti in una riga
+aperta. L'unificazione con record inferiti, aggiornamenti,
+callback e altre operazioni rimane conservativa: una vista
+non può essere spacciata per un record chiuso. Gli schemi
+aperti non sono contratti RPC validi. Nessun cambiamento al
+runtime JS/PHP. I predicati where e la loro conservazione
+saranno il prossimo incremento, non sono ancora implementati.

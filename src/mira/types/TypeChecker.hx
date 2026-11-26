@@ -111,6 +111,7 @@ class TypeChecker {
             case [Variable(id), _]: bind(id,right);
             case [_, Variable(id)]: bind(id,left);
             case [NamedType(x,_),NamedType(y,_)] if (x == y):
+            case [StructuralType(_,x),StructuralType(_,y)]: unifyRecords(RecordType(x,null),RecordType(y,null));
             case [NumberType, NumberType] | [TextType,TextType] | [BooleanType,BooleanType]:
             case [ListType(x),ListType(y)]: unify(x,y);
             case [FunctionType(xs,x),FunctionType(ys,y)]:
@@ -137,10 +138,28 @@ class TypeChecker {
         switch [wanted,given] {
             case [Variable(_),_] | [_,Variable(_)]: unify(wanted,given);
             case [NamedType(x,_),NamedType(y,_)] if (x == y):
+            case [StructuralType(_,fields),_]: acceptShape(fields,given);
             case [_,NamedType(_,base)]: accept(wanted,base);
             case [ListType(x),ListType(y)]: accept(x,y);
             // Records with named fields are invariant in this first increment.
             default: unify(wanted,given);
+        }
+    }
+
+    // The outer record identity is irrelevant, but the field types are not.
+    // Only known fields establish compatibility; an unknown row is not proof
+    // of the presence of a missing field. Extra fields are never removed.
+    function acceptShape(required:Map<String,Type>,actual:Type):Void {
+        final available = switch (representation(actual)) {
+            case StructuralType(_,fields): fields;
+            case RecordType(_,_): row(representation(actual)).fields;
+            default: fail("structural projection requires a record, got " + show(actual));
+        };
+        final keys = [for (key in required.keys()) key];
+        keys.sort(Reflect.compare);
+        for (key in keys) {
+            if (!available.exists(key)) fail("missing record field " + key);
+            accept(required.get(key),available.get(key));
         }
     }
 
@@ -366,9 +385,15 @@ class TypeChecker {
     }
 
     function projection(record:Type,key:String):Type {
-        final value = fresh();
-        unify(representation(record),recordType([key => value],fresh()));
-        return value;
+        switch (representation(record)) {
+            case StructuralType(_,fields):
+                if (!fields.exists(key)) return fail("missing record field " + key);
+                return fields.get(key);
+            default:
+                final value = fresh();
+                unify(representation(record),recordType([key => value],fresh()));
+                return value;
+        }
     }
 
     function call(type:Type,args:Array<Type>):Type {
@@ -564,6 +589,10 @@ class TypeChecker {
         final seen = ids == null ? new Map<Int,Int>() : ids;
         return switch (prune(type)) {
             case NamedType(name,base): {kind:"Named",name:name,base:describe(base,seen)};
+            case StructuralType(name,fields):
+                final keys = [for (key in fields.keys()) key];
+                keys.sort(Reflect.compare);
+                {kind:"Structural",name:name,fields:[for (key in keys) {name:key,type:describe(fields.get(key),seen)}],open:true};
             case NumberType: {kind:"Number"};
             case TextType: {kind:"Text"};
             case BooleanType: {kind:"Boolean"};
@@ -600,6 +629,7 @@ class TypeChecker {
     function render(type:Type,names:Map<Int,String>,order:Array<Int>):String {
         return switch (prune(type)) {
             case NamedType(name,_): name;
+            case StructuralType(name,_): "~ " + name;
             case NumberType: "Number";
             case TextType: "Text";
             case BooleanType: "Boolean";

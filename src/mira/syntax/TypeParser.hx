@@ -11,11 +11,13 @@ class TypeParser {
     final fallback:Token;
     var position = 0;
     final names:Map<String,Type>;
+    final allowProjection:Bool;
 
-    public function new(tokens:Array<Token>, fallback:Token, ?names:Map<String,Type>) {
+    public function new(tokens:Array<Token>, fallback:Token, ?names:Map<String,Type>, ?allowProjection:Bool = true) {
         this.tokens = tokens;
         this.fallback = fallback;
         this.names = names == null ? new Map<String,Type>() : names;
+        this.allowProjection = allowProjection;
     }
 
     function current():Null<Token> return position < tokens.length ? tokens[position] : null;
@@ -34,9 +36,24 @@ class TypeParser {
     }
 
     public function parse():Type {
+        final projected = take("~");
+        if (projected && !allowProjection) return fail("Structural projection is an annotation, not a nominal base");
         final type = readType(0);
         if (current() != null) fail("Unexpected token in type annotation");
-        return type;
+        if (!projected) return type;
+        return switch (type) {
+            case NamedType(name,base):
+                var shape = base;
+                while (true) {
+                    switch (shape) {
+                        case NamedType(_,parent): shape = parent;
+                        case RecordType(fields,null): return StructuralType(name,fields);
+                        default: return fail("Structural projection requires a named record type");
+                    }
+                }
+                fail("Structural projection requires a named record type");
+            default: fail("Structural projection requires a named record type");
+        };
     }
 
     function readType(depth:Int):Type {
