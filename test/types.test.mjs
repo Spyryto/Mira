@@ -964,8 +964,8 @@ test('types: host name hygiene keeps Error constructors and native guards indepe
       assert.equal(compiled.status,0,compiled.stderr);
       const file=join(dir,target==='js'?'program.mjs':'program.php');
       const suffix=target==='js'
-        ? '\\nconsole.log(JSON.stringify([result,mapped]));'
-        : '\\necho json_encode([$result,$mapped]);';
+        ? '\nconsole.log(JSON.stringify([result,mapped]));'
+        : '\necho json_encode([$result,$mapped]);';
       writeFileSync(file,compiled.stdout+suffix);
       const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
       assert.equal(run.status,0,run.stderr);
