@@ -90,6 +90,8 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Annotazioni uniformi nei blocchi e valori locali | `0.48` | [Dettagli](docs/type-checker.md#048-annotazioni-locali) |
 | ✅ | Dichiarazioni nominali :: e compatibilità direzionale | `0.49` | [Dettagli](docs/type-checker.md#049-tipi-nominali) |
 | ✅ | Proiezione strutturale aperta ~ Tipo | `0.50` | [Dettagli](docs/type-checker.md#050-proiezione-strutturale) |
+| ✅ | Refinement numerici where | `0.51` | [Dettagli](docs/type-checker.md#051-refinement-numerici) |
+| ✅ | AND, OR, NOT e operatori come funzioni | `0.51` | [Dettagli](docs/type-checker.md#051-refinement-numerici) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

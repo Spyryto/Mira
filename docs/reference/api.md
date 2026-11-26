@@ -1502,7 +1502,7 @@ Feature: [Operatori aritmetici](language.md#feature-arithmetic), [Parentesi](lan
 class TypeParser
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/TypeParser.hx#L8)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/TypeParser.hx#L9)
 
 <a id="api-mira-syntax-typeparser-new"></a>
 ### `mira.syntax.TypeParser.new`
@@ -1513,7 +1513,7 @@ class TypeParser
 public function new(tokens:Array<Token>, fallback:Token, ?names:Map<String,Type>, ?allowProjection:Bool = true)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/TypeParser.hx#L16)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/TypeParser.hx#L17)
 
 <a id="api-mira-syntax-typeparser-parse"></a>
 ### `mira.syntax.TypeParser.parse`
@@ -1524,7 +1524,7 @@ public function new(tokens:Array<Token>, fallback:Token, ?names:Map<String,Type>
 public function parse():Type
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/TypeParser.hx#L38)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/TypeParser.hx#L39)
 
 <a id="api-mira-target"></a>
 ### `mira.Target`
@@ -1625,6 +1625,127 @@ public static function read(input:Dynamic,values:Array<String>,callables:Array<S
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/HostTypeCodec.hx#L46)
 
+<a id="api-mira-types-numericrange"></a>
+### `mira.types.NumericRange`
+
+**class** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+class NumericRange
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L4)
+
+<a id="api-mira-types-numericrange-any"></a>
+### `mira.types.NumericRange.any`
+
+**method** · Membro pubblico di mira.types.NumericRange.
+
+```haxe
+public static function any():NumericRange return new NumericRange(Math.NEGATIVE_INFINITY,Math.POSITIVE_INFINITY,false,false); public static function comparison(op:String,value:Float):NumericRange
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L18)
+
+<a id="api-mira-types-numericrange-empty"></a>
+### `mira.types.NumericRange.empty`
+
+**method** · Membro pubblico di mira.types.NumericRange.
+
+```haxe
+public function empty():Bool return low > high || (low == high && !(lowClosed && highClosed)); public function contains(n:Float):Bool return Math.isFinite(n) && (n > low || (lowClosed && n == low)) && (n < high || (highClosed && n == high)); public function implies(other:NumericRange):Bool return (low > other.low || (low == other.low && (!lowClosed || other.lowClosed))) && (high < other.high || (high == other.high && (!highClosed || other.highClosed))); public function equal(other:NumericRange):Bool return implies(other) && other.implies(this); public static function ofType(type:Type):Null<NumericRange>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L37)
+
+<a id="api-mira-types-numericrange-high"></a>
+### `mira.types.NumericRange.high`
+
+**field** · Membro pubblico di mira.types.NumericRange.
+
+```haxe
+public final high:Float
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L7)
+
+<a id="api-mira-types-numericrange-highclosed"></a>
+### `mira.types.NumericRange.highClosed`
+
+**field** · Membro pubblico di mira.types.NumericRange.
+
+```haxe
+public final highClosed:Bool
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L9)
+
+<a id="api-mira-types-numericrange-intersect"></a>
+### `mira.types.NumericRange.intersect`
+
+**method** · Membro pubblico di mira.types.NumericRange.
+
+```haxe
+public function intersect(other:NumericRange):NumericRange
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L31)
+
+<a id="api-mira-types-numericrange-low"></a>
+### `mira.types.NumericRange.low`
+
+**field** · Membro pubblico di mira.types.NumericRange.
+
+```haxe
+public final low:Float
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L6)
+
+<a id="api-mira-types-numericrange-lowclosed"></a>
+### `mira.types.NumericRange.lowClosed`
+
+**field** · Membro pubblico di mira.types.NumericRange.
+
+```haxe
+public final lowClosed:Bool
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L8)
+
+<a id="api-mira-types-numericrange-new"></a>
+### `mira.types.NumericRange.new`
+
+**constructor** · Membro pubblico di mira.types.NumericRange.
+
+```haxe
+public function new(low:Float,high:Float,lowClosed:Bool,highClosed:Bool)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L11)
+
+<a id="api-mira-types-numericrange-predicate"></a>
+### `mira.types.NumericRange.predicate`
+
+**method** · Membro pubblico di mira.types.NumericRange.
+
+```haxe
+public function predicate():String
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L59)
+
+<a id="api-mira-types-numericrange-schema"></a>
+### `mira.types.NumericRange.schema`
+
+**method** · Membro pubblico di mira.types.NumericRange.
+
+```haxe
+public function schema():Dynamic return
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L66)
+
 <a id="api-mira-types-type"></a>
 ### `mira.types.Type`
 
@@ -1645,7 +1766,7 @@ enum Type
 BooleanType
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L10)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L11)
 
 <a id="api-mira-types-type-functiontype"></a>
 ### `mira.types.Type.FunctionType`
@@ -1656,7 +1777,7 @@ BooleanType
 FunctionType(parameters:Array<Type>, result:Type)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L13)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L14)
 
 <a id="api-mira-types-type-listtype"></a>
 ### `mira.types.Type.ListType`
@@ -1667,7 +1788,7 @@ FunctionType(parameters:Array<Type>, result:Type)
 ListType(item:Type)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L12)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L13)
 
 <a id="api-mira-types-type-namedtype"></a>
 ### `mira.types.Type.NamedType`
@@ -1689,7 +1810,7 @@ NamedType(name:String,base:Type)
 NumberType
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L8)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L9)
 
 <a id="api-mira-types-type-recordtype"></a>
 ### `mira.types.Type.RecordType`
@@ -1700,7 +1821,18 @@ NumberType
 RecordType(fields:Map<String, Type>, tail:Null<Type>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L14)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L15)
+
+<a id="api-mira-types-type-refinedtype"></a>
+### `mira.types.Type.RefinedType`
+
+**variant** · Membro pubblico di mira.types.Type.
+
+```haxe
+RefinedType(base:Type,range:NumericRange)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L6)
 
 <a id="api-mira-types-type-structuraltype"></a>
 ### `mira.types.Type.StructuralType`
@@ -1711,7 +1843,7 @@ RecordType(fields:Map<String, Type>, tail:Null<Type>)
 StructuralType(name:String,fields:Map<String,Type>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L7)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L8)
 
 <a id="api-mira-types-type-texttype"></a>
 ### `mira.types.Type.TextType`
@@ -1722,7 +1854,7 @@ StructuralType(name:String,fields:Map<String,Type>)
 TextType
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L9)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L10)
 
 <a id="api-mira-types-type-variable"></a>
 ### `mira.types.Type.Variable`
@@ -1733,7 +1865,7 @@ TextType
 Variable(id:Int)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L11)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L12)
 
 <a id="api-mira-types-typechecker"></a>
 ### `mira.types.TypeChecker`
