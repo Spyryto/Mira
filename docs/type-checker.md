@@ -436,3 +436,58 @@ errori di scope, chiamate con parentesi ed equivalenza byte
 per byte del codice emesso. Restano fuori le annotazioni
 esplicite dei risultati dei blocchi, tipi funzione e refinements.
 Il controllo resta opt-in come nella 0.47.
+
+## 0.49: tipi nominali
+
+```mira
+Identifier :: Number;
+Student Id :: Identifier;
+Request Id :: Identifier;
+student (Student Id) = 42;
+request (Request Id) = 7;
+read student: id (Student Id) = id;
+result = read student: student;
+```
+
+Ogni dichiarazione :: introduce un'identità nominale distinta
+anche con identica rappresentazione. I nomi sono multiword.
+Il namespace dei tipi è separato da quello dei valori ed è
+condiviso dai moduli importati (come le dichiarazioni globali).
+Le dichiarazioni di tipo devono precedere il loro uso nelle
+intestazioni globali e nelle altre dichiarazioni di tipo.
+I tipi ricorsivi, riferimenti in avanti nelle intestazioni,
+duplicati e ridefinizioni di Number/Text/Boolean non sono ammessi.
+I blocchi vengono risolti dopo la raccolta delle dichiarazioni.
+
+Type.NamedType(name,base) contiene solo tipi chiusi. L'unificazione
+rimane simmetrica e i tipi nominali unificano solo con se stessi.
+La relazione direzionale accept consente il passaggio al tipo
+di base e ai suoi antenati, non a un fratello né al figlio.
+Le annotazioni esplicite di valori, locali e risultati sono
+punti di costruzione nominale: un valore della rappresentazione
+può acquisire il nome dichiarato; un antenato può essere ristretto
+esplicitamente; un fratello non viene automaticamente rietichettato.
+Una chiamata non introduce implicitamente una nuova identità.
+Le annotazioni dei parametri esprimono requisiti, non costruzioni.
+
+I tipi di campi nominali di un record devono già essere conformi:
+non si costruiscono ricorsivamente nuove identità nei campi.
+La proiezione di campo usa la rappresentazione esterna, conservando
+i tipi dei campi. Gli operatori numerici accettano sottotipi di
+Number e restituiscono Number (o Boolean per confronti); l'uguaglianza
+rimane rigorosa rispetto all'identità nominale.
+La compatibilità direzionale riguarda i confini espliciti e le
+chiamate dirette; le callback e l'unificazione di record/liste
+in altre operazioni restano conservative. L'aggiornamento di un
+record nominale non è ancora supportato dal checker.
+Gli schemi esportati usano {kind:"Named",name,base}.
+I contratti RPC e manifest host non importano ancora nomi nominali;
+il generatore RPC continua a rifiutare questo nuovo tipo.
+Le dichiarazioni :: non sono valori e non entrano nell'AST eseguibile.
+Non ci sono wrapper JS/PHP e il controllo statico rimane opt-in.
+
+La proiezione strutturale ~ Tipo e i predicati where sono rinviati
+a incrementi distinti. Per ~ si intende conservare i campi nominali
+interni e i futuri vincoli, ammettendo campi extra; non cancellare
+ricorsivamente tutte le identità. Nessun controllo runtime dei
+refinements è ancora implementato.
