@@ -1,7 +1,7 @@
 {
   "name": "mira-discursive",
   "private": true,
-  "version": "0.83.0",
+  "version": "0.84.0",
   "type": "module",
   "description": "Mira discursive syntax frontend: Haxe source, JS/PHP emitters",
   "scripts": {
@@ -9,6 +9,7 @@
     "test": "npm run build && npm run build:studio && node --test",
     "benchmark": "npm run build && node scripts/benchmark.mjs",
     "build:studio": "node scripts/build-studio.mjs",
+    "build:json": "npm run build && node scripts/build-json-service.mjs",
     "test:studio": "npm run build:studio && node --test test/studio.test.mjs",
     "docs": "node scripts/generate-reference.mjs && node scripts/generate-documentation-origin.mjs",
     "docs:check": "node scripts/generate-documentation-origin.mjs --check",

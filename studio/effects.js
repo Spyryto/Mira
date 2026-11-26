@@ -188,5 +188,5 @@
     })));
   }
 
-  global.MiraEffects = Object.freeze({createApp, jsonService, rpcService, rpcServices});
+  global.MiraEffects = Object.freeze({createApp, jsonService, rpcService, rpcServices, matchesType});
 })(globalThis);

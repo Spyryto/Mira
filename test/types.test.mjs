@@ -1876,3 +1876,30 @@ test('0.83 Text service runs on both CLI targets using the reusable native adapt
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('0.84 CLI generates the JSON decoder manifest from the independent contract',async()=>{
+  const {generateJsonDecoder}=await import('../scripts/json-contract.mjs');
+  const {readFileSync}=await import('node:fs');
+  const run=spawnSync('node',['dist/mira.cjs','lib/json/App.mira','--interfaces'],{encoding:'utf8'});assert.equal(run.status,0,run.stderr);
+  const config=JSON.parse(readFileSync('lib/json/decoder.json','utf8'));
+  const report=JSON.parse(run.stdout),generated=generateJsonDecoder(report,config);
+  assert.equal(generated.host.types[config.capability].result.record.hours,'Number');
+  const dir=mkdtempSync(join(tmpdir(),'mira-json-'));
+  try{
+    const host=join(dir,'host.json'),bindings=join(dir,'bindings.json');
+    writeFileSync(host,JSON.stringify(generated.host));writeFileSync(bindings,JSON.stringify(generated.bindings));
+    for(const target of ['js','php']){
+      const out=spawnSync('node',['dist/mira.cjs','lib/json/App.mira',target,'--checked','--tree-shake','--host',host,'--bindings',bindings],{encoding:'utf8'});
+      assert.equal(out.status,0,out.stderr);
+      const name='__miraModule_v_417070202F20726573756C74';
+      const file=join(dir,target==='js'?'out.mjs':'out.php');
+      const js='await import('+JSON.stringify(pathToFileURL(resolve('studio/effects.js')).href)+');\nawait import('+JSON.stringify(pathToFileURL(resolve('lib/json/json-host.js')).href)+');\nconst __miraHost=globalThis.MiraJsonDecoder.host('+JSON.stringify(generated.decoder)+');\n'+out.stdout+'\nconsole.log(JSON.stringify('+name+'));';
+      const php=out.stdout.replace('declare(strict_types=1);','declare(strict_types=1);\nrequire $argv[1];$GLOBALS["__miraHost"]=\\Mira\\Json\\host(json_decode($argv[2],true));')+'\necho json_encode($'+name+');';
+      writeFileSync(file,target==='js'?js:php);
+      const actual=spawnSync(target==='js'?'node':'php',target==='js'?[file]:[file,'lib/json/json-host.php',JSON.stringify(generated.decoder)],{encoding:'utf8'});
+      assert.equal(actual.status,0,actual.stderr);assert.deepEqual(JSON.parse(actual.stdout),{name:'Ada',total:60,paid:false,tags:['chitarra']});
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+  const changed=structuredClone(report);changed.interfaces.find(m=>m.module===config.service).surface.symbols[0].schema.result={kind:'Variable',id:0};
+  assert.throws(()=>generateJsonDecoder(changed,config),/concrete data types/);
+});

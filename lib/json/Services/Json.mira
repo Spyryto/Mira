@@ -1,0 +1,3 @@
+module Services / Json;
+interface
+decode lesson: :: (Text) -> {name: Text, hours: Number, paid: Boolean, tags: [Text]};

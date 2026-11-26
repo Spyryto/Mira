@@ -1,5 +1,5 @@
 {
-  "version": "0.83.0",
+  "version": "0.84.0",
   "features": [
     {
       "id": "values",
@@ -2076,6 +2076,12 @@
       "title": "Servizio Text portabile con adapter nativi",
       "since": "0.83",
       "doc": "docs/studio.md#mira-083-servizio-text"
+    },
+    {
+      "id": "typed-json-decoder",
+      "title": "Decoder JSON da contratti Mira tipizzati",
+      "since": "0.84",
+      "doc": "docs/studio.md#mira-084-json-tipizzato"
     }
   ]
 }

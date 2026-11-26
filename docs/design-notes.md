@@ -711,3 +711,7 @@ Prima di aggiungere servizi o sintassi extern, rendere osservabile la sostituzio
 ## 0.83 — primo servizio nativo riutilizzabile: Text
 
 Contratto Mira e provider concreto in lib/text, manifest con scope, adapter JS/PHP espliciti. Studio importa gli stessi file nel proprio bundle. Semantica Unicode scalare dichiarata, test differenziali dei due host su ASCII, accenti, emoji, combinanti, ZWJ, newline, NUL, ago vuoto e input non valido. Il conteggio non è una misura di grafemi. Riutilizzare native API quando la semantica coincide, adattare solo dove necessario; niente prelude, grammatica o nuovo runtime.
+
+## 0.84 — decoder JSON specializzato da un contratto
+
+Il contratto è l'unica fonte delle firme. Il generatore converte lo schema chiuso già verificato in un manifest host strutturale e riusa il medesimo schema per i validatori esistenti JS/PHP della 0.46. La capability nativa rimane confinata al provider. Non aggiungere Dynamic o un parser JSON proprio. Primo incremento concreto: eccezione al confine per dati non validi, non ancora Result; valutare un'estensione fallibile tipizzata quando si possa conservare un'unica firma senza duplicare l'algebra dei tipi nel manifest.

@@ -1,0 +1,4 @@
+module Providers / Json Native;
+implements Services / Json;
+implementation
+decode lesson: source = native decode lesson source;
