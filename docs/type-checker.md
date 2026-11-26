@@ -677,3 +677,41 @@ Il tipo nominale Request Id resta distinto da Retry Count. Non
 si cambia il runtime, e si confronta l'emissione JS/PHP con
 l'equivalente non annotato. Codec host/RPC, guardie runtime, narrowing
 e propagazione dei fatti attraverso nomi non annotati restano futuri.
+
+## 0.54: narrowing numerico
+
+```mira
+Percentage :: Number where _ >= 0 AND _ <= 100;
+normalize percentage: x (Number) -> Percentage =
+  if (x >= 0 AND x <= 100) then x else 0;
+```
+
+Una condizione fornisce fatti numerici lessicali ai rami.
+Si riconoscono confronti ordinati fra un nome locale/parametro
+e un letterale decimale portabile, anche in ordine inverso.
+Nel ramo vero di AND e nel ramo falso di OR si accumulano
+le informazioni di entrambi gli operandi; NOT, che si abbassa
+a una condizionale booleana, scambia i rami. Il complemento
+di un confronto è usato soltanto quando il valore ha già
+limiti finiti portabili: con NaN, ad esempio, NOT (x < 0)
+non implica x >= 0. Un Number senza limiti può essere
+ristretto nel ramo vero di due confronti, ma un solo estremo
+non prova la finitezza (potrebbe includere infinito).
+
+Le informazioni sono conservate in copie degli schemi
+lessicali dei rami, non modificano il tipo nominale né
+fuoriescono dal ramo; un nome ombreggiato non eredita
+i fatti del nome esterno. Alla ricongiunzione dei rami si
+usa l'inviluppo chiuso dei due intervalli, quando entrambi
+sono noti, e si conserva l'integrità se entrambi la provano.
+La condizionale continua a richiedere tipi di ramo unificabili.
+Non si introduce il tipo bottom per rami impossibili.
+
+Il narrowing riguarda per ora soltanto i fatti numerici, non
+i tipi nominali in generale. Non comprende ancora l'analisi
+del secondo operando short-circuit, unioni disgiuntive di
+intervalli, confronti fra due variabili, campi dei record,
+uguaglianza (differenze JS/PHP), o guardie runtime. Nessuna
+modifica agli emitter: la condizione originale è sufficiente,
+quando dimostra la costruzione del risultato. I test verificano
+l'identità byte per byte di JS/PHP con e senza annotazioni.

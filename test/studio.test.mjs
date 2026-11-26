@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.53.0');
+  assert.equal(bridge.version, '0.54.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.53.0');
+  assert.equal(bridge.version,'0.54.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1031,5 +1031,13 @@ test('Studio supports portable Integer and its bounded arithmetic proofs',()=>{
   assert.equal(entries.find(x=>x.name==='result').type,'Integer');
   assert.equal(entries.find(x=>x.name==='result').schema.kind,'Integer');
   assert.equal(bridge.check(src+'bad (Integer) = 1 / 2;').ok,false);
+  for(const target of ['js','php'])assert.equal(bridge.compile(src,target).ok,true);
+});
+
+test('Studio proves conditional refinement results using branch-local facts',()=>{
+  const src='Percentage :: Number where _ >= 0 AND _ <= 100; normalize percentage: x (Number) -> Percentage = if (x >= 0 AND x <= 100) then x else 0; result = normalize percentage: 120;';
+  const report=bridge.check(src);assert.equal(report.ok,true,report.message);
+  assert.equal(JSON.parse(report.output).find(x=>x.name==='result').type,'Percentage');
+  assert.equal(bridge.check(src+'bad: x (Number) -> Percentage = if (x >= 0 OR x <= 100) then x else 0;').ok,false);
   for(const target of ['js','php'])assert.equal(bridge.compile(src,target).ok,true);
 });

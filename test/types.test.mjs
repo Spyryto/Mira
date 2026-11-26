@@ -622,3 +622,39 @@ test('types: proven Integer operations erase without overhead on JS/PHP',()=>{
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('types: numeric narrowing proves conditional results without changing their ordinary type',()=>{
+  const src='Percentage :: Number where _ >= 0 AND _ <= 100; Wide :: Number where _ >= 0 AND _ <= 200; normalize percentage: x (Number) -> Percentage = if (x >= 0 AND x <= 100) then x else 0; reversed bounds: x (Number) -> Percentage = if (0 <= x AND 100 >= x) then x else 0; cap percentage: x (Wide) -> Percentage = if (x > 100) then 100 else (x + 0); outside range: x (Wide) -> Percentage = if (x < 0 OR x > 100) then 0 else (x + 0); inverted condition: x (Wide) -> Percentage = if (NOT x > 100) then (x + 0) else 100; nested bounds: x (Number) -> Percentage = if (x >= 0) then (if (x <= 100) then x else 0) else 0; Count :: Integer where _ >= 0 AND _ <= 10; Small :: Integer where _ >= 0 AND _ <= 3; cap count: x (Count) -> Small = if (x > 3) then 3 else (x + 0);';
+  const t=check(src);
+  for(const name of ['normalize percentage:','reversed bounds:','nested bounds:'])assert.equal(t[name],'(Number) -> Percentage');
+  for(const name of ['cap percentage:','outside range:','inverted condition:'])assert.equal(t[name],'(Wide) -> Percentage');
+  assert.equal(t['cap count:'],'(Count) -> Small');
+});
+test('types: narrowing remains lexical and conservative for incomplete or disjunctive facts',()=>{
+  const prefix='Percentage :: Number where _ >= 0 AND _ <= 100; ';
+  for(const program of [
+    'bad: x (Number) -> Percentage = if (x >= 0 AND x <= 100) then x else x;',
+    'bad: x (Number) -> Percentage = if (x >= 0 OR x <= 100) then x else 0;',
+    'bad: x (Number) -> Percentage = if (x >= 0 AND x <= 100) then (x + 1) else 0;',
+    'bad: x (Number) -> Number where _ >= 0 = if (x < 0) then 0 else x;',
+    'bad: x (Number) -> Number where _ >= 0 = if (x >= 0) then x else 0;',
+    'bad: x (Number) -> Percentage = if (x >= 0 AND x <= 100) then (150 >> {x (Number) | v (Percentage) = x; 0}) else 0;'
+  ])assert.throws(()=>check(prefix+program),/refinement not statically proven/,program);
+});
+test('types: branch proofs erase, and native conditional behavior is identical on JS/PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-narrowing-'));
+  try{
+    const input=join(dir,'program.mira');
+    const typed='Percentage :: Number where _ >= 0 AND _ <= 100; normalize percentage: x (Number) -> Percentage = if (x >= 0 AND x <= 100) then x else 0; a = normalize percentage: 42; b = normalize percentage: 101; c = normalize percentage: 100; result = [a, b, c];';
+    const bare='normalize percentage: x = if (x >= 0 AND x <= 100) then x else 0; a = normalize percentage: 42; b = normalize percentage: 101; c = normalize percentage: 100; result = [a, b, c];';
+    assert.equal(check(typed).result,'[Percentage]');
+    for(const target of ['js','php']){
+      const compile=src=>{writeFileSync(input,src);const r=spawnSync('node',['dist/mira.cjs',input,target],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);return r.stdout;};
+      const output=compile(typed);assert.equal(output,compile(bare));
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,output+(target==='js'?'\nconsole.log(JSON.stringify(result));':'\necho json_encode($result);'));
+      const r=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);assert.deepEqual(JSON.parse(r.stdout),[42,0,100]);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
