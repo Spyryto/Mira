@@ -570,7 +570,7 @@ public function new(message:String, ?token:Token, code:String = "source_error")
 class Modules
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Modules.hx#L13)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Modules.hx#L14)
 
 <a id="api-mira-modules-collect"></a>
 ### `mira.Modules.collect`
@@ -581,7 +581,7 @@ class Modules
 public static function collect(source:String, ?read:String->Null<String>, ?entry:String, ?types:Map<String,mira.types.Type>, ?moduleTypes:Map<String,Map<String,mira.types.Type>>, ?publicTypes:Map<String,Array<String>>, ?bindings:Map<String,Array<ImportBinding>>):Array<Definition>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Modules.hx#L15)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Modules.hx#L16)
 
 <a id="api-mira-resolve-importbinding"></a>
 ### `mira.resolve.ImportBinding`
@@ -1038,7 +1038,7 @@ public static function tokens(source:String):Dynamic
 public static function trace(source:String, ?hostJson:String, ?modulesJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L124)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L125)
 
 <a id="api-mira-syntax-definition"></a>
 ### `mira.syntax.Definition`
@@ -1060,7 +1060,7 @@ class Definition
 public var body:Null<Expr>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L21)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L22)
 
 <a id="api-mira-syntax-definition-bodytokens"></a>
 ### `mira.syntax.Definition.bodyTokens`
@@ -1082,7 +1082,18 @@ public final bodyTokens:Array<Token>
 public function canonical():Definition
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L42)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L43)
+
+<a id="api-mira-syntax-definition-haspublicsignature"></a>
+### `mira.syntax.Definition.hasPublicSignature`
+
+**field** · Definizione Mira, valore o funzione keyword, con testo del corpo e origine.
+
+```haxe
+public var hasPublicSignature:Bool
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L16)
 
 <a id="api-mira-syntax-definition-importedglobals"></a>
 ### `mira.syntax.Definition.importedGlobals`
@@ -1093,7 +1104,7 @@ public function canonical():Definition
 public var importedGlobals:Array<String>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L16)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L17)
 
 <a id="api-mira-syntax-definition-isexported"></a>
 ### `mira.syntax.Definition.isExported`
@@ -1115,7 +1126,7 @@ public var isExported:Bool
 public function isFunction():Bool
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L59)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L61)
 
 <a id="api-mira-syntax-definition-isstatement"></a>
 ### `mira.syntax.Definition.isStatement`
@@ -1170,7 +1181,7 @@ public final name:String
 public function new(name:String, labels:Array<String>, parameters:Array<String>, bodyTokens:Array<Token>, origin:Token, isStatement:Bool = false, ?parameterOrigins:Array<Token>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L23)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L24)
 
 <a id="api-mira-syntax-definition-origin"></a>
 ### `mira.syntax.Definition.origin`
@@ -1192,7 +1203,7 @@ public final origin:Token
 public var parameterAnnotations:Array<Null<Type>>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L18)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L19)
 
 <a id="api-mira-syntax-definition-parameterorigins"></a>
 ### `mira.syntax.Definition.parameterOrigins`
@@ -1225,7 +1236,7 @@ public final parameters:Array<String>
 public var resultAnnotation:Null<Type>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L19)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L20)
 
 <a id="api-mira-syntax-definition-resultannotationorigin"></a>
 ### `mira.syntax.Definition.resultAnnotationOrigin`
@@ -1236,7 +1247,7 @@ public var resultAnnotation:Null<Type>
 public var resultAnnotationOrigin:Null<Token>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L20)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L21)
 
 <a id="api-mira-syntax-definition-selector"></a>
 ### `mira.syntax.Definition.selector`
@@ -1247,7 +1258,7 @@ public var resultAnnotationOrigin:Null<Token>
 public function selector():String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L63)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L65)
 
 <a id="api-mira-syntax-definition-typeparameters"></a>
 ### `mira.syntax.Definition.typeParameters`
@@ -1258,7 +1269,7 @@ public function selector():String
 public var typeParameters:Array<String>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L17)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L18)
 
 <a id="api-mira-syntax-definitionparser"></a>
 ### `mira.syntax.DefinitionParser`
@@ -1277,7 +1288,7 @@ class DefinitionParser
 **method** · Analizza le dichiarazioni e i loro terminatori.
 
 ```haxe
-public static function annotatedName(tokens:Array<Token>,?names:Map<String,Type>):{name:String,type:Null<Type>,typeOrigin:Null<Token>} { final opening = topLevel(tokens,"("); if (opening < 0) return {name:readWords(tokens),type:null,typeOrigin:null}; if (opening == 0) throw new MiraError("Expected name before type annotation",tokens[0]); final name = readWords(tokens.slice(0,opening)); if (!tokens[tokens.length-1].isSymbol(")")) throw new MiraError("Expected closing ) after type annotation",tokens[opening]); final origin = opening + 1 < tokens.length - 1 ? tokens[opening+1] : tokens[opening]; final type = new TypeParser(tokens.slice(opening+1,tokens.length-1),origin,names).parse(); return {name:name,type:type,typeOrigin:origin}; } static function splitHeader(tokens:Array<Token>):Array<Array<Token>>
+public static function annotatedName(tokens:Array<Token>,?names:Map<String,Type>):{name:String,type:Null<Type>,typeOrigin:Null<Token>} { final opening = topLevel(tokens,"("); if (opening < 0) return {name:readWords(tokens),type:null,typeOrigin:null}; if (opening == 0) throw new MiraError("Expected name before type annotation",tokens[0]); final name = readWords(tokens.slice(0,opening)); if (!tokens[tokens.length-1].isSymbol(")")) throw new MiraError("Expected closing ) after type annotation",tokens[opening]); final origin = opening + 1 < tokens.length - 1 ? tokens[opening+1] : tokens[opening]; final type = new TypeParser(tokens.slice(opening+1,tokens.length-1),origin,names).parse(); return {name:name,type:type,typeOrigin:origin}; } public static function splitHeader(tokens:Array<Token>):Array<Array<Token>>
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L235)
@@ -1294,6 +1305,28 @@ public static function parse(tokens:Array<Token>, ?names:Map<String,Type>, ?modu
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L9)
 
 Feature: [Definizioni di valori](language.md#feature-values), [Funzioni con parametri](language.md#feature-functions)
+
+<a id="api-mira-syntax-definitionparser-toplevel"></a>
+### `mira.syntax.DefinitionParser.topLevel`
+
+**method** · Analizza le dichiarazioni e i loro terminatori.
+
+```haxe
+public static function topLevel(tokens:Array<Token>,symbol:String):Int
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L270)
+
+<a id="api-mira-syntax-definitionparser-typeheader"></a>
+### `mira.syntax.DefinitionParser.typeHeader`
+
+**method** · Analizza le dichiarazioni e i loro terminatori.
+
+```haxe
+public static function typeHeader(tokens:Array<Token>,names:Map<String,Type>):{name:String,parameters:Array<String>} { final opening = topLevel(tokens,"("); if (opening < 0) return {name:readWords(tokens),parameters:[]}; final name = readWords(tokens.slice(0,opening)); if (!tokens[tokens.length-1].isSymbol(")")) throw new MiraError("Expected closing ) in type declaration",tokens[opening]); final parameters:Array<String> = []; final arguments = tokens.slice(opening + 1,tokens.length-1); if (arguments.length == 0) throw new MiraError("Expected type parameter",tokens[opening]); for (part in splitHeader(arguments))
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L76)
 
 <a id="api-mira-syntax-expr"></a>
 ### `mira.syntax.Expr`
@@ -1788,7 +1821,7 @@ class ModuleSections
 public final bodyOffset:Int
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ModuleSections.hx#L18)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ModuleSections.hx#L19)
 
 <a id="api-mira-syntax-modulesections-imports"></a>
 ### `mira.syntax.ModuleSections.imports`
@@ -1799,7 +1832,7 @@ public final bodyOffset:Int
 public final imports:Array<Token>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ModuleSections.hx#L17)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ModuleSections.hx#L18)
 
 <a id="api-mira-syntax-modulesections-new"></a>
 ### `mira.syntax.ModuleSections.new`
@@ -1810,7 +1843,7 @@ public final imports:Array<Token>
 public function new(tokens:Array<Token>, start:Int)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ModuleSections.hx#L20)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ModuleSections.hx#L21)
 
 <a id="api-mira-syntax-modulesections-reference"></a>
 ### `mira.syntax.ModuleSections.reference`
@@ -1821,7 +1854,7 @@ public function new(tokens:Array<Token>, start:Int)
 public static function reference(tokens:Array<Token>):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ModuleSections.hx#L71)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ModuleSections.hx#L74)
 
 <a id="api-mira-syntax-modulesections-references"></a>
 ### `mira.syntax.ModuleSections.references`
@@ -1834,6 +1867,17 @@ public final references:Array<ExportReference>
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ModuleSections.hx#L15)
 
+<a id="api-mira-syntax-modulesections-signatures"></a>
+### `mira.syntax.ModuleSections.signatures`
+
+**field** · Membro pubblico di mira.syntax.ModuleSections.
+
+```haxe
+public final signatures:Array<Array<Token>>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ModuleSections.hx#L16)
+
 <a id="api-mira-syntax-modulesections-typetokens"></a>
 ### `mira.syntax.ModuleSections.typeTokens`
 
@@ -1843,7 +1887,106 @@ public final references:Array<ExportReference>
 public final typeTokens:Array<Token>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ModuleSections.hx#L16)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ModuleSections.hx#L17)
+
+<a id="api-mira-syntax-publicsignature"></a>
+### `mira.syntax.PublicSignature`
+
+**class** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+class PublicSignature
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/PublicSignature.hx#L8)
+
+<a id="api-mira-syntax-publicsignature-apply"></a>
+### `mira.syntax.PublicSignature.apply`
+
+**method** · Membro pubblico di mira.syntax.PublicSignature.
+
+```haxe
+public function apply(d:Definition):Void
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/PublicSignature.hx#L90)
+
+<a id="api-mira-syntax-publicsignature-name"></a>
+### `mira.syntax.PublicSignature.name`
+
+**field** · Membro pubblico di mira.syntax.PublicSignature.
+
+```haxe
+public final name:String
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/PublicSignature.hx#L10)
+
+<a id="api-mira-syntax-publicsignature-new"></a>
+### `mira.syntax.PublicSignature.new`
+
+**constructor** · Membro pubblico di mira.syntax.PublicSignature.
+
+```haxe
+public function new(name:String,origin:Token,typeParameters:Array<String>,parameters:Array<Type>,result:Type)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/PublicSignature.hx#L16)
+
+<a id="api-mira-syntax-publicsignature-origin"></a>
+### `mira.syntax.PublicSignature.origin`
+
+**field** · Membro pubblico di mira.syntax.PublicSignature.
+
+```haxe
+public final origin:Token
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/PublicSignature.hx#L11)
+
+<a id="api-mira-syntax-publicsignature-parameters"></a>
+### `mira.syntax.PublicSignature.parameters`
+
+**field** · Membro pubblico di mira.syntax.PublicSignature.
+
+```haxe
+public final parameters:Array<Type>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/PublicSignature.hx#L13)
+
+<a id="api-mira-syntax-publicsignature-read"></a>
+### `mira.syntax.PublicSignature.read`
+
+**method** · Membro pubblico di mira.syntax.PublicSignature.
+
+```haxe
+public static function read(tokens:Array<Token>,names:Map<String,Type>):PublicSignature
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/PublicSignature.hx#L24)
+
+<a id="api-mira-syntax-publicsignature-result"></a>
+### `mira.syntax.PublicSignature.result`
+
+**field** · Membro pubblico di mira.syntax.PublicSignature.
+
+```haxe
+public final result:Type
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/PublicSignature.hx#L14)
+
+<a id="api-mira-syntax-publicsignature-typeparameters"></a>
+### `mira.syntax.PublicSignature.typeParameters`
+
+**field** · Membro pubblico di mira.syntax.PublicSignature.
+
+```haxe
+public final typeParameters:Array<String>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/PublicSignature.hx#L12)
 
 <a id="api-mira-syntax-typeparser"></a>
 ### `mira.syntax.TypeParser`
@@ -2481,7 +2624,7 @@ public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.
 public function specialize(program:Array<Definition>,name:String,args:Array<Type>):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L71)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L72)
 
 <a id="api-mira-types-typetemplates"></a>
 ### `mira.types.TypeTemplates`
