@@ -141,6 +141,9 @@ class Symbols {
         }
     }
 
+    public function globalsOf(modulePath:Null<String>):Array<String>
+        return [for (name in globals) if (ModuleIdentity.owner(name) == modulePath) name];
+
     public function resolvedName(name:String):String
         return resolvedValues.exists(name) ? resolvedValues.get(name) : name;
 
