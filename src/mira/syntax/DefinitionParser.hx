@@ -73,7 +73,7 @@ class DefinitionParser {
     }
 
     // Parameter names are lexical to a sum declaration, not global type names.
-    static function typeHeader(tokens:Array<Token>,names:Map<String,Type>):{name:String,parameters:Array<String>} {
+    public static function typeHeader(tokens:Array<Token>,names:Map<String,Type>):{name:String,parameters:Array<String>} {
         final opening = topLevel(tokens,"(");
         if (opening < 0) return {name:readWords(tokens),parameters:[]};
         final name = readWords(tokens.slice(0,opening));
@@ -244,7 +244,7 @@ class DefinitionParser {
         return {name:name,type:type,typeOrigin:origin};
     }
 
-    static function splitHeader(tokens:Array<Token>):Array<Array<Token>> {
+    public static function splitHeader(tokens:Array<Token>):Array<Array<Token>> {
         final result:Array<Array<Token>> = [];
         var start = 0;
         var depth = 0;
@@ -267,7 +267,7 @@ class DefinitionParser {
         return topLevel(tokens,":") >= 0;
     }
 
-    static function topLevel(tokens:Array<Token>,symbol:String):Int {
+    public static function topLevel(tokens:Array<Token>,symbol:String):Int {
         var depth = 0;
         for (i in 0...tokens.length) {
             final token = tokens[i];
