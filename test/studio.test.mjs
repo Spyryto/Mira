@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.48.0');
+  assert.equal(bridge.version, '0.49.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.48.0');
+  assert.equal(bridge.version,'0.49.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -957,4 +957,17 @@ test('Studio checks annotated block parameters and anchors errors at local type 
   const bad=bridge.check('r = () >> {|\n  a (Text) = 1;\n  a\n};');
   assert.equal(bad.ok,false);assert.equal(bad.diagnostic.line,2);assert.equal(bad.diagnostic.column,6);
   for(const target of ['js','php'])assert.equal(bridge.compile(source,target).ok,true);
+});
+
+test('Studio checks nominal declarations and preserves their identity in schemas',()=>{
+  const source='Student Id :: Number; Request Id :: Number; student (Student Id) = 42; request (Request Id) = 7; read student: id (Student Id) = id; result = read student: student;';
+  const checked=bridge.check(source);
+  assert.equal(checked.ok,true,checked.message);
+  const entries=JSON.parse(checked.output);
+  assert.deepEqual(JSON.parse(JSON.stringify(entries.find(x=>x.name==='student').schema)),{kind:'Named',name:'Student Id',base:{kind:'Number'}});
+  assert.equal(entries.find(x=>x.name==='result').type,'Student Id');
+  assert.equal(bridge.check(source+'bad = read student: request;').ok,false);
+  const imported=bridge.check('import "types.mira"; id (Student Id) = 42;',null,JSON.stringify({'types.mira':'Student Id :: Number;'}));
+  assert.equal(imported.ok,true,imported.message);
+  assert.equal(JSON.parse(imported.output)[0].type,'Student Id');
 });
