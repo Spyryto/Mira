@@ -25,7 +25,6 @@ class Modules {
         if (publicTypes == null) publicTypes = new Map<String,Array<String>>();
         if (bindings == null) bindings = new Map<String,Array<ImportBinding>>();
         if (visibility == null) visibility = new TypeVisibility();
-        final complete = new Map<String,Array<Definition>>();
         final exportedSymbols = new Map<String,Map<String,Definition>>();
         if (reexports == null) reexports = new Map<String,Array<Dynamic>>();
         final loaded = new Map<String, Bool>();
@@ -97,7 +96,7 @@ class Modules {
                     final directive = new ModuleImport(tokens,offset);
                     offset = directive.next;
                     final path = directive.path;
-                    if (!complete.exists(path)) {
+                    if (!exportedSymbols.exists(path)) {
                         if (moduleTypes.exists(path))
                             throw new MiraError("Import cycle involving " + path,origin);
                         if (read == null) throw new MiraError("No module resolver for " + path,origin);
@@ -112,7 +111,7 @@ class Modules {
                         stack.push(path);
                         visit(dependency,path);
                         stack.pop();
-                        if (!complete.exists(path))
+                        if (!exportedSymbols.exists(path))
                             throw new MiraError("Module declaration does not match requested path " + path,origin);
                     }
                     final exported = exportedSymbols.get(path);
@@ -141,7 +140,7 @@ class Modules {
                                     case NamedType(name,_) | OpaqueType(name,_) | ParametricNamedType(name,_,_) | SumType(name,_,_) | SumReference(name,_,_): name;
                                     default: throw new MiraError("Expected nominal re-export type",item.origin);
                                 };
-                                forwardedInfo.push({name:item.alias,kind:"type",target:identity});
+                                forwardedInfo.push({name:item.alias,kind:"type",target:identity,opaque:visibility.opaqueNames.exists(identity)});
                             }
                         } else {
                             final binding = new ImportBinding(item.alias,d,item.origin);
@@ -304,6 +303,9 @@ class Modules {
                     && definition.bodyTokens[0].value == "import"
                     && definition.bodyTokens.length > 1 && definition.bodyTokens[1].kind == Text)
                     throw new MiraError("Imports must precede definitions", definition.origin);
+                if (modulePath != null && definition.isStatement && definition.bodyTokens[0].kind == Word
+                    && definition.bodyTokens[0].value == "export")
+                    throw new MiraError("Re-exports belong in the interface",definition.origin);
                 if (file != null && definition.isStatement)
                     throw new MiraError("Imported modules may contain declarations only", definition.origin);
                 definition.modulePath = modulePath;
@@ -315,7 +317,6 @@ class Modules {
                 for (d in local) if (d.isExported) table.set(d.isFunction() ? d.selector() : d.name,d);
                 exportedSymbols.set(modulePath,table);
                 reexports.set(modulePath,forwardedInfo);
-                complete.set(modulePath,local);
             }
         }
         visit(source, null);
