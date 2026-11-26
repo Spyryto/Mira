@@ -8,7 +8,7 @@ import mira.resolve.Symbols;
 import mira.emit.SourceLocations.GeneratedLocation;
 
 class PhpEmitter {
-    public static function emit(definitions:Array<Definition>, symbols:Symbols, ?locations:Array<GeneratedLocation>):String {
+    public static function emit(definitions:Array<Definition>, symbols:Symbols, ?locations:Array<GeneratedLocation>, ?guards:haxe.ds.ObjectMap<Dynamic,mira.types.NumericGuard>):String {
         final lines = ["<?php", "declare(strict_types=1);", ""];
         var generatedLine = lines.length + 1;
         for (definition in definitions) {
@@ -19,7 +19,7 @@ class PhpEmitter {
             final scope = definition.isFunction()
                 ? definition.parameters.concat(symbols.globals) : symbols.globals;
             final expr = SourceEmitter.expression(
-                cast definition.body, Php, scope, symbols.hostNames
+                cast definition.body, Php, scope, symbols.hostNames, guards
             );
 
             if (definition.isStatement) {
