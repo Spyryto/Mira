@@ -715,3 +715,40 @@ uguaglianza (differenze JS/PHP), o guardie runtime. Nessuna
 modifica agli emitter: la condizione originale è sufficiente,
 quando dimostra la costruzione del risultato. I test verificano
 l'identità byte per byte di JS/PHP con e senza annotazioni.
+
+## 0.55: esiti delle prove numeriche
+
+NumericProof distingue Proven, Violated e Unknown. Un intervallo
+contenuto nel vincolo è una prova, un intervallo disgiunto è una
+violazione, altrimenti manca una dimostrazione. Per Integer si
+distingue anche un intervallo senza interi dal dominio superato.
+
+```mira
+good (Integer) = 9007199254740990 + 1;
+bad (Integer) = 9007199254740991 + 1;
+increment: x (Integer) -> Integer = x + 1;
+```
+
+good è dimostrato; bad supera certamente il dominio portabile;
+increment potrebbe superarlo. In questa versione entrambi i casi
+negativi sono rifiutati dal checker, ma con diagnostica distinta.
+I campi JSON proof (violated/unknown) e reason (integer_overflow,
+integer_fractional, integer_unproven, refinement_disjoint,
+refinement_unproven) si aggiungono al codice type_error esistente.
+
+Le osservazioni oltre la magnitudine sicura ottenute da letterali
+finiti o da una singola operazione su operandi portabili sono
+usate solo per diagnosticare violazioni certe. Non partecipano
+alle successive prove: non si assume che un risultato nuovamente
+nel dominio dopo un intermedio non portabile sia esatto. I fatti
+sui valori Number non sono nuovi vincoli intermedi. La divisione
+per zero, i risultati non finiti e l'analisi incompleta rimangono
+casi non dimostrati. L'aritmetica non annotata resta nativa.
+
+Nessuna guardia a runtime e nessuna modifica agli emitter.
+La futura compilazione con guardie deve distinguere l'obbligo
+dinamico da un errore statico, valutare una sola volta il valore
+e non assumere equivalenza dopo perdita di precisione. Un controllo
+del solo risultato non garantisce esattezza dopo un intermedio
+non portabile. Validazione fallibile e gestione degli errori
+di esecuzione rimangono da progettare.

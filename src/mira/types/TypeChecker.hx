@@ -24,6 +24,7 @@ class TypeChecker {
     // Proof facts belong to expressions, not the public inference algebra.
     final ranges = new haxe.ds.ObjectMap<Dynamic,NumericRange>();
     final integers = new haxe.ds.ObjectMap<Dynamic,Bool>();
+    final wideObservations = new haxe.ds.ObjectMap<Dynamic,NumericRange>();
     var nextId = 0;
     var origin:Token;
 
@@ -72,6 +73,13 @@ class TypeChecker {
 
     function fail(message:String):Dynamic {
         throw new MiraError("Type check: " + message, origin, "type_error");
+    }
+
+    function numericFailure(message:String,proof:NumericProof,?reason:String):Dynamic {
+        final error = new MiraError("Type check: " + message, origin, "type_error");
+        error.diagnostic.proof = proof == Violated ? "violated" : "unknown";
+        error.diagnostic.reason = reason;
+        throw error;
     }
 
     function prune(type:Type):Type {
@@ -198,23 +206,44 @@ class TypeChecker {
                 if (!NumericRange.integerType(given) && (expr == null || !integers.exists(expr))) {
                     switch (given) {
                         case Variable(_): unify(wanted,given);
-                        default: fail("Integer not statically proven");
+                        default: proveInteger(given,expr);
                     }
                 }
             default: accept(wanted,given);
         }
     }
 
+    function proveInteger(actual:Type,expr:Null<Expr>):Void {
+        final known = NumericRange.ofType(prune(actual));
+        if (known == null) {
+            fail("expected Integer, got " + show(actual));
+            return;
+        }
+        final fact = expr == null ? null : ranges.get(expr);
+        final wide = expr == null ? null : wideObservations.get(expr);
+        final domain = NumericRange.integers();
+        for (candidate in [known,fact,wide]) {
+            if (candidate == null) continue;
+            if (candidate.proof(domain) == Violated)
+                numericFailure("Integer overflow: result outside portable domain",Violated,"integer_overflow");
+            if (candidate.portable() && candidate.integerHull().empty())
+                numericFailure("Integer violated: no integral value in inferred interval",Violated,"integer_fractional");
+        }
+        numericFailure("Integer not statically proven",Unknown,"integer_unproven");
+    }
+
     function prove(range:NumericRange,actual:Type,expr:Null<Expr>):Void {
         final known = NumericRange.ofType(prune(actual));
-        if (known != null && known.implies(range)) return;
         final fact = expr == null ? null : ranges.get(expr);
-        if (fact != null) {
-            if (fact.implies(range)) return;
-            if (fact.intersect(range).empty())
-                fail("refinement violated: " + range.predicate() + ", inferred " + fact.predicate());
+        // Only portable facts may establish success. Wide observations
+        // may establish a definite violation at this construction boundary.
+        for (candidate in [known,fact]) if (candidate != null && candidate.proof(range) == Proven) return;
+        final wide = expr == null ? null : wideObservations.get(expr);
+        for (candidate in [known,fact,wide]) {
+            if (candidate != null && candidate.proof(range) == Violated)
+                numericFailure("refinement violated: " + range.predicate() + ", inferred " + candidate.predicate(),Violated,"refinement_disjoint");
         }
-        fail("refinement not statically proven: " + range.predicate());
+        numericFailure("refinement not statically proven: " + range.predicate(),Unknown,"refinement_unproven");
     }
 
     function nominalName(type:Type):Null<String> return switch (prune(type)) {
@@ -621,6 +650,17 @@ class TypeChecker {
                 final known = NumericRange.ofType(prune(type));
                 known != null && known.portable() ? known : null;
         };
+        if (fact == null) {
+            final observation:Null<NumericRange> = switch (expr) {
+                case Numeric(value): NumericRange.literalBounds(value);
+                case Binary(symbol,left,right):
+                    final a = ranges.get(left);
+                    final b = ranges.get(right);
+                    a == null || b == null ? null : NumericRange.arithmeticBounds(symbol,a,b);
+                default: null;
+            };
+            if (observation != null && !observation.portable()) wideObservations.set(expr,observation);
+        }
         if (fact != null) {
             ranges.set(expr,fact);
             final integral = NumericRange.integerType(prune(type)) || switch (expr) {

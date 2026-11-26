@@ -554,7 +554,7 @@ test('types: static interval proofs for bounded arithmetic and typed function re
     ['bad: p (Percentage) -> Percentage = p * 2;',/refinement not statically proven/],
     ['bad: p (Percentage) -> Percentage = 1 / p;',/refinement not statically proven/],
     ['bad: p (Number) -> Percentage = p / 2;',/refinement not statically proven/],
-    ['bad (Percentage) = 9007199254740991 + 1;',/refinement not statically proven/],
+    ['bad (Percentage) = 9007199254740991 + 1;',/refinement violated/],
     ['bad (Percentage) = 10 % 3;',/refinement not statically proven/],
     ['bad: p (Number where _ > 0 AND _ <= 100) -> Number where _ > 0 = p / 2;',/refinement not statically proven/]
   ])assert.throws(()=>check(source+extra),pattern,extra);
@@ -584,14 +584,14 @@ test('types: Integer construction, nominal refinements and portable arithmetic',
   assert.equal(check(src+'copy (Integer) = id;').copy,'Integer');
   assert.equal(check(src+'r (Integer) = 3.0;').r,'Integer');
   for(const [extra,pattern] of [
-    ['bad (Integer) = 3.5;',/Integer not statically proven/],
-    ['bad (Integer) = 9 / 2;',/Integer not statically proven/],
-    ['bad (Integer) = 9007199254740992;',/Integer not statically proven/],
+    ['bad (Integer) = 3.5;',/Integer violated/],
+    ['bad (Integer) = 9 / 2;',/Integer violated/],
+    ['bad (Integer) = 9007199254740992;',/Integer overflow/],
     ['bad: x (Integer) -> Integer = x + 1;',/Integer not statically proven/],
     ['bad: x (Number) -> Integer = x;',/Integer not statically proven/],
     ['bad (Request Id) = 0;',/refinement violated/],
     ['bad (Retry Count) = 4;',/refinement violated/],
-    ['bad (Timeout) = 1000.5;',/Integer not statically proven/],
+    ['bad (Timeout) = 1000.5;',/Integer violated/],
     ['Other Id :: Integer; other (Other Id) = 7; bad (Request Id) = other;',/expected Request Id/],
     ['Empty :: Integer where _ > 0 AND _ < 1;',/Empty numeric refinement/],
     ['Empty :: Integer where _ == 2.5;',/Empty numeric refinement/],
@@ -657,4 +657,30 @@ test('types: branch proofs erase, and native conditional behavior is identical o
       assert.equal(r.status,0,r.stderr);assert.deepEqual(JSON.parse(r.stdout),[42,0,100]);
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('types: numeric obligations distinguish certain overflow, fractional values and unknown proofs',()=>{
+  for(const src of [
+    'bad (Integer) = 9007199254740991 + 1;',
+    'bad (Integer) = (0 - 9007199254740991) - 1;',
+    'bad (Integer) = 9007199254740991 * 2;',
+    'Top :: Integer where _ >= 9007199254740990; bad: x (Top) -> Integer = x + 2;'
+  ])assert.throws(()=>check(src),/Integer overflow/,src);
+  for(const src of [
+    'bad (Integer) = 0.5;',
+    'bad (Integer) = 3 / 2;',
+    'Fraction :: Number where _ > 0 AND _ < 1; bad: x (Fraction) -> Integer = x;'
+  ])assert.throws(()=>check(src),/Integer violated/,src);
+  for(const src of [
+    'increment: x (Integer) -> Integer = x + 1;',
+    'bad: x (Number) -> Integer = x;',
+    'bad (Integer) = (9007199254740991 + 1) - 1;',
+    'bad (Integer) = 1 / 0;'
+  ])assert.throws(()=>check(src),/Integer not statically proven/,src);
+  assert.equal(check('good (Integer) = 9007199254740990 + 1;').good,'Integer');
+  assert.equal(check('n = 9007199254740991 + 1;').n,'Number');
+  const bounded='Safe :: Integer where _ >= 0 AND _ <= 10; cap increment: x (Safe) -> Integer = if (x < 10) then (x + 1) else 10;';
+  assert.equal(check(bounded)['cap increment:'],'(Safe) -> Integer');
+  assert.throws(()=>check('Low :: Number where _ >= 0 AND _ <= 1; High :: Low where _ > 1;'),/Empty numeric refinement/);
+  assert.throws(()=>check('Low :: Number where _ >= 0 AND _ <= 1; f: x (Number where _ >= 2 AND _ <= 3) = x; low (Low) = 0; bad = f: low;'),/refinement violated/);
 });

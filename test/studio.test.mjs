@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.54.0');
+  assert.equal(bridge.version, '0.55.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.54.0');
+  assert.equal(bridge.version,'0.55.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1040,4 +1040,26 @@ test('Studio proves conditional refinement results using branch-local facts',()=
   assert.equal(JSON.parse(report.output).find(x=>x.name==='result').type,'Percentage');
   assert.equal(bridge.check(src+'bad: x (Number) -> Percentage = if (x >= 0 OR x <= 100) then x else 0;').ok,false);
   for(const target of ['js','php'])assert.equal(bridge.compile(src,target).ok,true);
+});
+
+test('Studio exports structured numeric proof failure reasons',()=>{
+  for(const [src,proof,reason] of [
+    ['x (Integer) = 9007199254740991 + 1;','violated','integer_overflow'],
+    ['x (Integer) = 3 / 2;','violated','integer_fractional'],
+    ['increment: x (Integer) -> Integer = x + 1;','unknown','integer_unproven'],
+    ['Percentage :: Number where _ >= 0 AND _ <= 100; x (Percentage) = 101;','violated','refinement_disjoint'],
+    ['Percentage :: Number where _ >= 0 AND _ <= 100; f: x (Number) -> Percentage = x;','unknown','refinement_unproven']
+  ]){
+    const report=bridge.check(src);
+    assert.equal(report.ok,false,src);
+    assert.equal(report.diagnostic.code,'type_error');
+    assert.equal(report.diagnostic.proof,proof,src);
+    assert.equal(report.diagnostic.reason,reason,src);
+  }
+  const typed='x (Integer) = 9007199254740990 + 1;';
+  for(const target of ['js','php']){
+    const compiled=bridge.compile(typed,target);
+    assert.equal(compiled.ok,true);
+    assert.equal(compiled.output,bridge.compile('x = 9007199254740990 + 1;',target).output);
+  }
 });
