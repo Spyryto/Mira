@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.73.0');
+  assert.equal(bridge.version, '0.74.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.73.0');
+  assert.equal(bridge.version,'0.74.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1504,4 +1504,29 @@ test('0.73 Studio selects providers at build time and displays actual dependency
   }
   assert.match(read('module-explorer.html'),/id="provider-example"/);
   assert.match(read('module-explorer.html'),/id="bindings"/);
+});
+
+
+test('0.74 Studio inherits generic abstract types and traces implements without duplicating signatures',()=>{
+  const files=JSON.stringify({
+    'Services / Box':'module Services / Box; interface Box (Element Type); Envelope (T) :: {box: Box (T)}; box (T): :: (T) -> Box (T); item (T): :: (Box (T)) -> T;',
+    'Providers / Record Box':'module Providers / Record Box; implements Services / Box; implementation Box (U) :: {item: U}; box: x = {item: x}; item: b = b ~ item;'
+  });
+  // Record provider exercises generic inheritance and the forward opaque type
+  // inside a transparent public record without requiring a new list primitive.
+  const src='module App; import Services / Box {Box; Envelope; box: ; item: ;}; n (Box (Number)) = box: 7; e (Envelope (Number)) = {box: n}; result = item: (e ~ box);';
+  const bindings=JSON.stringify({'Services / Box':{provider:'Providers / Record Box'}});
+  const report=bridge.exploreModules(src,null,files,bindings);
+  assert.equal(report.ok,true,report.message);
+  const data=JSON.parse(report.output);
+  assert.ok(data.dependencies.some(x=>x.kind==='implements'&&x.to==='Services / Box'));
+  assert.ok(data.dependencies.some(x=>x.contract==='Services / Box'&&x.to==='Providers / Record Box'));
+  const types=data.interfaces.find(x=>x.module==='Providers / Record Box').typeIdentities;
+  assert.ok(types.some(x=>x.name==='Box'&&x.opaque&&x.arity===1));
+  const js=bridge.compile(src,'js',null,false,files,true,true,bindings);assert.equal(js.ok,true,js.message);
+  const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+  assert.equal(runInNewContext(js.output+'\n'+name,{}),7);
+  const bad=bridge.check(src+' leaked = n ~ item;',null,files,bindings);
+  assert.equal(bad.ok,false);assert.match(bad.message,/Type check/);
+  assert.match(read('module-explorer.html'),/id="contract-module-example"/);
 });
