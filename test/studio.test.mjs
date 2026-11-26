@@ -1806,3 +1806,54 @@ test('0.82 Host Module Lab assets, offline navigation and controls are connected
   node('example').value='maximum';node('example').listeners.change();
   assert.match(node('status').textContent,/Type check riuscito/);
 });
+
+test('0.83 Text library compiles in Studio and runs with the actual JS/PHP adapters',()=>{
+  const env={};runInNewContext(read('text-module-data.js'),env);const data=env.MiraTextModuleData;
+  assert.equal(data.source,readFileSync(resolve(root,'lib/text/App.mira'),'utf8'));
+  const expected={points:7,contains:true,starts:true,ends:true};
+  const name='__miraModule_v_417070202F20726573756C74';
+  const adapter=resolve(root,'lib/text/text-host.php');
+  for(const target of ['js','php']){
+    const out=bridge.compile(data.source,target,data.host,false,data.modules,true,true,data.bindings);
+    assert.equal(out.ok,true,out.message);
+    if(target==='js'){
+      let response;
+      const ctx={self:{postMessage(v){response=v;}}};
+      ctx.importScripts=()=>runInNewContext(read('text-host.js'),ctx);
+      runInNewContext(read('host-module-worker.js'),ctx);
+      ctx.self.onmessage({data:{code:out.output,service:'text'}});
+      assert.equal(response.ok,true,response.message);assert.deepEqual(JSON.parse(response.output),expected);
+    }else{
+      const code=out.output.replace(/^<\?php/,'').replace('declare(strict_types=1);','declare(strict_types=1);$GLOBALS["__miraHost"]=require $argv[1];')+'\necho json_encode($'+name+');';
+      const run=spawnSync('php',['-r',code,adapter],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);assert.deepEqual(JSON.parse(run.stdout),expected);
+    }
+  }
+  for(const bad of [data.source+'\nleak = native code points "abc";',data.source.replace('code points: sample','code points: 42')]){
+    assert.equal(bridge.check(bad,data.host,data.modules,data.bindings).ok,false);
+  }
+  for(const asset of ['text-module-data.js','text-module-lab.js','text-host.js']){
+    assert.ok(read('sw.js').includes('./'+asset));new Function(read(asset));
+  }
+  const nodes=new Map();const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',className:'',listeners:{},addEventListener(event,fn){this.listeners[event]=fn;}});return nodes.get(id);};
+  const ctx={document:{getElementById:node},MiraStudioCompiler:bridge,TextEncoder};
+  runInNewContext(read('text-module-data.js'),ctx);runInNewContext(read('text-module-lab.js'),ctx);
+  assert.match(node('text-status').textContent,/Type check riuscito/);
+  node('text-php').listeners.click();assert.match(node('text-status').textContent,/riuscita/);
+});
+test('0.83 Text adapters agree on Unicode scalar values, empty needles and exact matching',()=>{
+  const ctx={};runInNewContext(read('text-host.js'),ctx);const h=ctx.MiraTextHost;
+  const cases=['','abc','è','🎸','é','👨‍👩‍👧‍👦','a\n\u0000','你好'];
+  const queries=['','a','è','🎸','é','é','👩','\u0000','好'];
+  const matrix=cases.map(s=>[h['native code points'](s),...queries.map(q=>[h['native contains:in:'](q,s),h['native starts with:in:'](q,s),h['native ends with:in:'](q,s)])]);
+  assert.deepEqual(matrix.map(x=>x[0]),[0,3,1,1,2,7,3,2]);
+  assert.equal(h['native contains:in:']('é','é'),false);
+  for(const bad of ['\uD800','\uDC00',42,null])assert.throws(()=>h['native code points'](bad),/valid Unicode Text/);
+  assert.throws(()=>h['native contains:in:']('\uD800','a'),/valid Unicode Text/);
+  const code='$h=require $argv[1];[$cases,$queries]=json_decode($argv[2],true,512,JSON_THROW_ON_ERROR);$out=[];foreach($cases as $s){$row=[$h["native code points"]($s)];foreach($queries as $q)$row[]=[$h["native contains:in:"]($q,$s),$h["native starts with:in:"]($q,$s),$h["native ends with:in:"]($q,$s)];$out[]=$row;}echo json_encode($out,JSON_THROW_ON_ERROR);';
+  const adapter=resolve(root,'lib/text/text-host.php');
+  const run=spawnSync('php',['-r',code,adapter,JSON.stringify([cases,queries])],{encoding:'utf8'});
+  assert.equal(run.status,0,run.stderr);assert.deepEqual(JSON.parse(run.stdout),matrix);
+  const invalid=spawnSync('php',['-r','$h=require $argv[1];try{$h["native code points"](hex2bin("eda080"));exit(1);}catch(InvalidArgumentException $e){echo $e->getMessage();}',adapter],{encoding:'utf8'});
+  assert.equal(invalid.status,0,invalid.stderr);assert.match(invalid.stdout,/valid Unicode Text/);
+});

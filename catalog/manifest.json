@@ -1,5 +1,5 @@
 {
-  "version": "0.82.0",
+  "version": "0.83.0",
   "features": [
     {
       "id": "values",
@@ -2070,6 +2070,12 @@
       "title": "Host Module Lab: contratti e provider nativi",
       "since": "0.82",
       "doc": "docs/studio.md#mira-082-host-module-lab"
+    },
+    {
+      "id": "native-text-module",
+      "title": "Servizio Text portabile con adapter nativi",
+      "since": "0.83",
+      "doc": "docs/studio.md#mira-083-servizio-text"
     }
   ]
 }
