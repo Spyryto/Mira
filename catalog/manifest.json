@@ -1,5 +1,5 @@
 {
-  "version": "0.51.0",
+  "version": "0.52.0",
   "features": [
     {
       "id": "values",
@@ -1860,6 +1860,12 @@
       "title": "AND, OR, NOT e operatori come funzioni",
       "since": "0.51",
       "doc": "docs/type-checker.md#051-refinement-numerici"
+    },
+    {
+      "id": "range-proofs",
+      "title": "Dimostrazione statica di intervalli aritmetici",
+      "since": "0.52",
+      "doc": "docs/type-checker.md#052-prove-aritmetiche"
     }
   ]
 }
