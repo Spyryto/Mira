@@ -58,20 +58,33 @@ class NumericRange {
         (low > other.low || (low == other.low && (!lowClosed || other.lowClosed)))
         && (high < other.high || (high == other.high && (!highClosed || other.highClosed)));
 
+    public function proof(required:NumericRange):NumericProof {
+        if (implies(required)) return Proven;
+        if (intersect(required).empty()) return Violated;
+        return Unknown;
+    }
+
     // Conservative closed bounds for arithmetic on finite portable numbers.
     // PHP integer arithmetic and JS double arithmetic agree on the numerical
     // bounds when operands/results remain within the safe integer magnitude.
     public function portable():Bool return Math.isFinite(low) && Math.isFinite(high)
         && Math.abs(low) <= 9007199254740991.0 && Math.abs(high) <= 9007199254740991.0;
 
-    public static function literal(text:String):Null<NumericRange> {
+    // Wide observations are for diagnostics only. They must not feed
+    // further arithmetic proofs after leaving the portable domain.
+    public static function literalBounds(text:String):Null<NumericRange> {
         if (!~/^(0|[1-9][0-9]*)(\.[0-9]+)?$/.match(text)) return null;
         final n = Std.parseFloat(text);
         final result = new NumericRange(n,n,true,true);
-        return result.portable() ? result : null;
+        return Math.isFinite(n) ? result : null;
     }
 
-    public static function arithmetic(op:String,a:NumericRange,b:NumericRange):Null<NumericRange> {
+    public static function literal(text:String):Null<NumericRange> {
+        final result = literalBounds(text);
+        return result != null && result.portable() ? result : null;
+    }
+
+    public static function arithmeticBounds(op:String,a:NumericRange,b:NumericRange):Null<NumericRange> {
         if (!a.portable() || !b.portable()) return null;
         // A divisor approaching zero is deliberately not analysed, even if
         // its zero endpoint is open. No assumptions about overflow or NaN.
@@ -92,7 +105,12 @@ class NumericRange {
         }
         // Close endpoints even if inputs were open: rounding can reach them.
         final result = new NumericRange(low,high,true,true);
-        return result.portable() ? result : null;
+        return result;
+    }
+
+    public static function arithmetic(op:String,a:NumericRange,b:NumericRange):Null<NumericRange> {
+        final result = arithmeticBounds(op,a,b);
+        return result != null && result.portable() ? result : null;
     }
 
     public function equal(other:NumericRange):Bool return implies(other) && other.implies(this);
