@@ -14,8 +14,7 @@ import mira.resolve.ModuleIdentity;
 // explicit value and selector signatures, in the existing interface syntax.
 // They do not introduce runtime objects, nominal type equations or binding.
 class ContractVerifier {
-    public static function verify(source:String,provider:String,contract:String,?host:HostEnvironment,
-        ?readModule:String->Null<String>):Dynamic {
+    public static function signatures(contract:String):Array<PublicSignature> {
         final tokens = new Lexer(contract,"<contract>").tokenize();
         final sections = new ModuleSections(tokens,-1,true);
         if (sections.references.length > 0 || sections.imports.length > 0 || sections.typeTokens.length != 1)
@@ -29,6 +28,12 @@ class ContractVerifier {
             if (seen.exists(signature.name)) throw new MiraError("Duplicate contract symbol " + signature.name,signature.origin);
             seen.set(signature.name,true);
         }
+        return required;
+    }
+
+    public static function verify(source:String,provider:String,contract:String,?host:HostEnvironment,
+        ?readModule:String->Null<String>):Dynamic {
+        final required = signatures(contract);
         final origins = new ExpressionOrigins();
         final visibility = new TypeVisibility();
         // Parse a fresh program. The verifier never changes the original source
