@@ -77,7 +77,12 @@ class TypeVisibility {
                     if (opaqueNames.exists(name))
                         throw new MiraError("Public signature exposes opaque representation " + name,origin,"type_error");
                     for (field in fields) walk(field);
-                case RefinedType(base,_): walk(base);
+                case RefinedType(base,_):
+                    switch (view(base,null,resolve)) {
+                        case OpaqueType(name): throw new MiraError("Public signature exposes opaque refinement " + name,origin,"type_error");
+                        default:
+                    }
+                    walk(base);
                 case ListType(item): walk(item);
                 case FunctionType(args,result): for (a in args) walk(a); walk(result);
                 case RecordType(fields,tail):
