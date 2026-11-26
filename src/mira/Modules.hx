@@ -24,7 +24,17 @@ class Modules {
             var offset = 0;
             var modulePath:Null<String> = null;
             // The header is a logical identity, unrelated to the resolver's file key.
-            if (tokens[0].kind == Word && tokens[0].value == "module" && tokens[1].kind == Word) {
+            // Preserve legacy multiword definitions such as "module name = ...".
+            var header = tokens[0].kind == Word && tokens[0].value == "module" && tokens[1].kind == Word;
+            if (header) {
+                var cursor = 1;
+                while (tokens[cursor].kind != End && !tokens[cursor].isSymbol(";")) {
+                    if (tokens[cursor].isSymbol("=") || tokens[cursor].isSymbol(":") || tokens[cursor].isSymbol("::")
+                        || tokens[cursor].isSymbol("(")) { header = false; break; }
+                    cursor++;
+                }
+            }
+            if (header) {
                 final anchor = tokens[0];
                 final segments:Array<String> = [];
                 var words:Array<String> = [];
