@@ -20,10 +20,12 @@ class ExpressionParser {
     var operatorDepth:Int = 0;
     final allowOperatorArgument:Bool;
     final origins:Null<ExpressionOrigins>;
+    final types:Map<String,Type>;
 
     public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<String>,
-        ?allowOperatorArgument:Bool = false, ?pendingLocals:Array<String>, ?origins:ExpressionOrigins) {
+        ?allowOperatorArgument:Bool = false, ?pendingLocals:Array<String>, ?origins:ExpressionOrigins, ?types:Map<String,Type>) {
         this.origins = origins;
+        this.types = types == null ? new Map<String,Type>() : types;
         this.tokens = tokens.copy();
         final last = tokens.length > 0 ? tokens[tokens.length - 1] : new Token(End, "", 1, 1);
         this.tokens.push(new Token(End, "", last.line, last.column, last.file));
@@ -216,7 +218,7 @@ class ExpressionParser {
                     holes++;
                 } else {
                     args.push(new ExpressionParser(argumentTokens, symbols, localNames,
-                        true, pendingLocals, origins).parse());
+                        true, pendingLocals, origins,types).parse());
                 }
             }
             if (symbols.isHostSelector(matched.selector)) {
@@ -279,7 +281,7 @@ class ExpressionParser {
         }
         if (start == position) throw new MiraError("Expected then expression", current());
         final whenTrue = new ExpressionParser(tokens.slice(start, position), symbols,
-            localNames, allowOperatorArgument, pendingLocals, origins).parse();
+            localNames, allowOperatorArgument, pendingLocals, origins,types).parse();
 
         optionalSymbol(",");
         requireWord("else");
@@ -365,7 +367,7 @@ class ExpressionParser {
             final parameterToken = current();
             final end = bindingEnd(position);
             if (end < 0) throw new MiraError("Expected block parameter",parameterToken);
-            final binding = DefinitionParser.annotatedName(tokens.slice(position,end));
+            final binding = DefinitionParser.annotatedName(tokens.slice(position,end),types);
             position = end;
             final parameter = binding.name;
             annotations.push(binding.type);
@@ -405,7 +407,7 @@ class ExpressionParser {
             final nameEnd = localAssignmentEnd();
             if (nameEnd >= 0) {
                 final nameToken = current();
-                final binding = DefinitionParser.annotatedName(tokens.slice(position,nameEnd));
+                final binding = DefinitionParser.annotatedName(tokens.slice(position,nameEnd),types);
                 position = nameEnd;
                 final name = binding.name;
                 final symbol = Mangle.name(name);

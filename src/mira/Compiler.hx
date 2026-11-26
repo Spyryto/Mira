@@ -13,11 +13,12 @@ import mira.emit.SourceLocations.GeneratedLocation;
 class Compiler {
     public static function parse(source:String, ?host:HostEnvironment,
         ?readModule:String->Null<String>, ?entry:String, ?origins:ExpressionOrigins):Array<Definition> {
-        final definitions = Modules.collect(source, readModule, entry);
+        final types = new Map<String,mira.types.Type>();
+        final definitions = Modules.collect(source, readModule, entry,types);
         final symbols = new Symbols(definitions, host);
         for (definition in definitions) {
             final locals = definition.isFunction() ? definition.parameters : [];
-            definition.body = new ExpressionParser(definition.bodyTokens, symbols, locals, false, null, origins).parse();
+            definition.body = new ExpressionParser(definition.bodyTokens, symbols, locals, false, null, origins,types).parse();
         }
         return definitions;
     }

@@ -6,7 +6,8 @@ import mira.lex.Token.TokenKind;
 import mira.types.Type;
 
 class DefinitionParser {
-    public static function parse(tokens:Array<Token>):Array<Definition> {
+    public static function parse(tokens:Array<Token>, ?names:Map<String,Type>):Array<Definition> {
+        if (names == null) names = new Map<String,Type>();
         final definitions:Array<Definition> = [];
         var start = 0;
         var index = 0;
@@ -27,7 +28,17 @@ class DefinitionParser {
 
             if (token.isSymbol(";") && brackets.length == 0) {
                 if (start < index) {
-                    definitions.push(parseOne(tokens.slice(start, index)));
+                    final segment = tokens.slice(start,index);
+                    final marker = topLevel(segment,"::");
+                    if (marker >= 0) {
+                        if (marker == 0 || marker == segment.length-1)
+                            throw new MiraError("Expected name :: Type",segment[marker]);
+                        final name = readWords(segment.slice(0,marker));
+                        if (["Number","Text","Boolean"].indexOf(name) >= 0 || names.exists(name))
+                            throw new MiraError("Duplicate or reserved type " + name,segment[0]);
+                        final base = new TypeParser(segment.slice(marker+1),segment[marker+1],names).parse();
+                        names.set(name,NamedType(name,base));
+                    } else definitions.push(parseOne(segment,names));
                 }
                 start = index + 1;
             }
@@ -41,7 +52,7 @@ class DefinitionParser {
         return definitions;
     }
 
-    static function parseOne(tokens:Array<Token>):Definition {
+    static function parseOne(tokens:Array<Token>,names:Map<String,Type>):Definition {
         var equals = -1;
         var depth = 0;
         for (i in 0...tokens.length) {
@@ -70,7 +81,7 @@ class DefinitionParser {
         final arrow = topLevel(header,"->");
         if (arrow >= 0) {
             resultOrigin = arrow + 1 < header.length ? header[arrow+1] : header[arrow];
-            resultType = new TypeParser(header.slice(arrow+1),resultOrigin).parse();
+            resultType = new TypeParser(header.slice(arrow+1),resultOrigin,names).parse();
             header = header.slice(0,arrow);
             if (header.length == 0) throw new MiraError("Expected definition name before ->",tokens[0]);
         }
@@ -79,7 +90,7 @@ class DefinitionParser {
 
         if (parts.length == 1 && !containsColon(parts[0])) {
             if (arrow >= 0) throw new MiraError("Use name (Type) for a value annotation",resultOrigin);
-            final value = annotatedName(header);
+            final value = annotatedName(header,names);
             final d = new Definition(value.name, [], [], body, tokens[0]);
             d.resultAnnotation = value.type;
             d.resultAnnotationOrigin = value.typeOrigin;
@@ -96,7 +107,7 @@ class DefinitionParser {
                 throw new MiraError("Expected label: parameter", part[0]);
             }
             labels.push(readWords(part.slice(0, colon)));
-            final parameter = annotatedName(part.slice(colon+1));
+            final parameter = annotatedName(part.slice(colon+1),names);
             parameters.push(parameter.name);
             parameterOrigins.push(part[colon+1]);
             annotations.push(parameter.type);
@@ -111,7 +122,7 @@ class DefinitionParser {
 
     // A binding has the same grammar in both value and parameter headers:
     // multiword name, optionally followed by a single parenthesized type.
-    public static function annotatedName(tokens:Array<Token>):{name:String,type:Null<Type>,typeOrigin:Null<Token>} {
+    public static function annotatedName(tokens:Array<Token>,?names:Map<String,Type>):{name:String,type:Null<Type>,typeOrigin:Null<Token>} {
         final opening = topLevel(tokens,"(");
         if (opening < 0) return {name:readWords(tokens),type:null,typeOrigin:null};
         if (opening == 0) throw new MiraError("Expected name before type annotation",tokens[0]);
@@ -119,7 +130,7 @@ class DefinitionParser {
         if (!tokens[tokens.length-1].isSymbol(")"))
             throw new MiraError("Expected closing ) after type annotation",tokens[opening]);
         final origin = opening + 1 < tokens.length - 1 ? tokens[opening+1] : tokens[opening];
-        final type = new TypeParser(tokens.slice(opening+1,tokens.length-1),origin).parse();
+        final type = new TypeParser(tokens.slice(opening+1,tokens.length-1),origin,names).parse();
         return {name:name,type:type,typeOrigin:origin};
     }
 

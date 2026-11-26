@@ -10,7 +10,8 @@ import mira.syntax.DefinitionParser;
 // filesystem or network, and each source retains its own token coordinates.
 class Modules {
     public static function collect(source:String, ?read:String->Null<String>,
-        ?entry:String):Array<Definition> {
+        ?entry:String, ?types:Map<String,mira.types.Type>):Array<Definition> {
+        if (types == null) types = new Map<String,mira.types.Type>();
         final loaded = new Map<String, Bool>();
         final stack:Array<String> = entry == null ? [] : [entry];
         final definitions:Array<Definition> = [];
@@ -48,7 +49,7 @@ class Modules {
                 stack.pop();
                 loaded.set(path, true);
             }
-            final local = DefinitionParser.parse(offset == 0 ? tokens : tokens.slice(offset));
+            final local = DefinitionParser.parse(offset == 0 ? tokens : tokens.slice(offset),types);
             for (definition in local) {
                 // Detect a misplaced directive independently of host signatures.
                 if (definition.isStatement && definition.bodyTokens[0].kind == Word

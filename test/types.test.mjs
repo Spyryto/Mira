@@ -367,3 +367,46 @@ test('types: typed blocks and locals erase identically in JS and PHP',()=>{
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('types: distinct nominal identities and transitive parent compatibility',()=>{
+  const source='Identifier :: Number; Student Id :: Identifier; Request Id :: Identifier; student (Student Id) = 42; request (Request Id) = 7; id of: x (Identifier) -> Identifier = x; number of: x (Number) = x + 1; s = id of: student; n = number of: student; read student: x (Student Id) = x; r = read student: student;';
+  const result=check(source);
+  assert.equal(result.student,'Student Id');assert.equal(result.request,'Request Id');
+  assert.equal(result.s,'Identifier');assert.equal(result.n,'Number');assert.equal(result.r,'Student Id');
+  for(const extra of ['bad = read student: request;','bad = read student: 42;','bad (Student Id) = request;','bad = student == request;'])
+    assert.throws(()=>check(source+extra),/expected/,extra);
+});
+test('types: named record families support projection and closed structural consumers',()=>{
+  const result=check('Pixels :: Number; Size :: {width: Pixels, height: Pixels}; Window Size :: Size; Image Size :: Size; w (Pixels) = 12; h (Pixels) = 10; window size (Window Size) = {width: w, height: h}; image size (Image Size) = {width: w, height: h}; area of: size (Size) = size ~ width * size ~ height; a = area of: window size; b = area of: image size; width of: size = size ~ width; c = width of: window size;');
+  assert.equal(result['window size'],'Window Size');assert.equal(result['image size'],'Image Size');
+  assert.equal(result['area of:'],'(Size) -> Number');
+  assert.equal(result.a,'Number');assert.equal(result.b,'Number');assert.equal(result.c,'Pixels');
+});
+test('types: nominal declarations are available in locals and blocks, including multiword names',()=>{
+  const result=check('Student Id :: Number; f = {id (Student Id) | id}; result = () >> {| id (Student Id) = 42; id >> f};');
+  assert.equal(result.f,'(Student Id) -> Student Id');assert.equal(result.result,'Student Id');
+  for(const [source,pattern] of [
+    ['A :: A;',/Unknown annotation type A/],
+    ['A :: Number; A :: Text;',/Duplicate or reserved type A/],
+    ['Number :: Text;',/Duplicate or reserved type Number/],
+    ['A :: Number; x (A) = "a";',/expected Number, got Text/],
+    ['A :: Number; B :: A; a (A) = 1; f: x (B) = x; r = f: a;',/expected B/]
+  ])assert.throws(()=>check(source),pattern,source);
+});
+test('types: nominal declarations erase identically in JS and PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-nominal-'));
+  try{
+    const input=join(dir,'program.mira');
+    const typed='Student Id :: Number; id (Student Id) = 42; f: x (Student Id) -> Number = x + 1; result = f: id;';
+    const bare='id = 42; f: x = x + 1; result = f: id;';
+    assert.equal(check(typed).result,'Number');
+    for(const target of ['js','php']){
+      const compile=source=>{writeFileSync(input,source);const r=spawnSync('node',['dist/mira.cjs',input,target],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);return r.stdout;};
+      const output=compile(typed);assert.equal(output,compile(bare));
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,output+(target==='js'?'\nconsole.log(result);':'\necho $result;'));
+      const r=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);assert.equal(r.stdout.trim(),'43');
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

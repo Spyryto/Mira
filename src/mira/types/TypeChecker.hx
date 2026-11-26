@@ -110,6 +110,7 @@ class TypeChecker {
         switch [left,right] {
             case [Variable(id), _]: bind(id,right);
             case [_, Variable(id)]: bind(id,left);
+            case [NamedType(x,_),NamedType(y,_)] if (x == y):
             case [NumberType, NumberType] | [TextType,TextType] | [BooleanType,BooleanType]:
             case [ListType(x),ListType(y)]: unify(x,y);
             case [FunctionType(xs,x),FunctionType(ys,y)]:
@@ -120,6 +121,52 @@ class TypeChecker {
             default: fail("expected " + show(left) + ", got " + show(right));
         }
     }
+
+    // Equality is symmetric; passing a subtype to a consumer is directional.
+    // Named data have closed representations, not inheritance of behavior.
+    function representation(type:Type):Type {
+        return switch (prune(type)) {
+            case NamedType(_,base): representation(base);
+            default: prune(type);
+        };
+    }
+
+    function accept(expected:Type,actual:Type):Void {
+        final wanted = prune(expected);
+        final given = prune(actual);
+        switch [wanted,given] {
+            case [Variable(_),_] | [_,Variable(_)]: unify(wanted,given);
+            case [NamedType(x,_),NamedType(y,_)] if (x == y):
+            case [_,NamedType(_,base)]: accept(wanted,base);
+            case [ListType(x),ListType(y)]: accept(x,y);
+            // Records with named fields are invariant in this first increment.
+            default: unify(wanted,given);
+        }
+    }
+
+    // An explicit typed declaration introduces a nominal identity. A sibling
+    // is never silently rebranded; the immediate base must be compatible.
+    function construct(expected:Type,actual:Type):Void {
+        switch [prune(expected),prune(actual)] {
+            case [NamedType(_,base),Variable(_)]: unify(base,actual);
+            case [NamedType(name,base),NamedType(other,_)] if (name != other):
+                // Only an ancestor can be explicitly narrowed to a child.
+                if (ancestor(expected,other)) accept(actual,base);
+                else accept(expected,actual);
+            case [NamedType(_,base),given] if (!isNamed(given)): construct(base,given);
+            default: accept(expected,actual);
+        }
+    }
+
+    function isNamed(type:Type):Bool return switch (prune(type)) {
+        case NamedType(_,_): true;
+        default: false;
+    };
+
+    function ancestor(type:Type,name:String):Bool return switch (prune(type)) {
+        case NamedType(n,base): n == name || ancestor(base,name);
+        default: false;
+    };
 
     // Row variables carry a set of labels that must be absent. Propagate
     // restrictions through variable aliases and concrete extensions.
@@ -297,7 +344,9 @@ class TypeChecker {
             final body = infer(d.body,scope);
             final type:Type = d.isFunction() ? FunctionType(params,body) : body;
             if (d.resultAnnotationOrigin != null) origin = d.resultAnnotationOrigin;
-            unify(active.get(name),type);
+            if (d.resultAnnotation != null) {
+                construct(d.resultAnnotation,body);
+            } else unify(active.get(name),type);
         }
         for (name in group) {
             inferred.set(name,active.get(name));
@@ -318,20 +367,28 @@ class TypeChecker {
 
     function projection(record:Type,key:String):Type {
         final value = fresh();
-        unify(record,recordType([key => value],fresh()));
+        unify(representation(record),recordType([key => value],fresh()));
         return value;
     }
 
     function call(type:Type,args:Array<Type>):Type {
-        final result = fresh();
-        unify(type,FunctionType(args,result));
-        return result;
+        switch (prune(type)) {
+            case FunctionType(parameters,result):
+                if (parameters.length != args.length) fail("function arity mismatch");
+                for (i in 0...args.length) accept(parameters[i],args[i]);
+                return result;
+            default:
+                final result = fresh();
+                unify(type,FunctionType(args,result));
+                return result;
+        }
     }
 
     // A closed built-in predicate, not a runtime typeclass dictionary.
     // Unification may solve it now or propagate it to another variable.
     function requireScalarEq(type:Type):Void {
         switch (prune(type)) {
+            case NamedType(_,base): requireScalarEq(base);
             case NumberType | TextType | BooleanType:
             case Variable(id):
                 if (lacks.exists(id)) fail("scalar equality cannot constrain a record row");
@@ -346,8 +403,8 @@ class TypeChecker {
             requireScalarEq(left);
             return BooleanType;
         }
-        unify(NumberType,left);
-        unify(NumberType,right);
+        accept(NumberType,left);
+        accept(NumberType,right);
         return ["<",">","<=",">="].indexOf(symbol) >= 0 ? BooleanType : NumberType;
     }
 
@@ -476,7 +533,11 @@ class TypeChecker {
                         final type = infer(value,inner);
                         final annotations = origins.annotations(e);
                         if (annotations != null) {
-                            unifyAt(annotations[0],type,e);
+                            final previous = origin;
+                            final anchor = origins.get(e);
+                            if (anchor != null) origin = anchor;
+                            construct(annotations[0],type);
+                            origin = previous;
                             inner.set(name,mono(annotations[0]));
                         } else inner.set(name,localScheme(value,type,inner));
                     default: result = infer(e,inner);
@@ -502,6 +563,7 @@ class TypeChecker {
     function describe(type:Type, ?ids:Map<Int,Int>):Dynamic {
         final seen = ids == null ? new Map<Int,Int>() : ids;
         return switch (prune(type)) {
+            case NamedType(name,base): {kind:"Named",name:name,base:describe(base,seen)};
             case NumberType: {kind:"Number"};
             case TextType: {kind:"Text"};
             case BooleanType: {kind:"Boolean"};
@@ -537,6 +599,7 @@ class TypeChecker {
 
     function render(type:Type,names:Map<Int,String>,order:Array<Int>):String {
         return switch (prune(type)) {
+            case NamedType(name,_): name;
             case NumberType: "Number";
             case TextType: "Text";
             case BooleanType: "Boolean";

@@ -1,5 +1,5 @@
 {
-  "version": "0.48.0",
+  "version": "0.49.0",
   "features": [
     {
       "id": "values",
@@ -1836,6 +1836,12 @@
       "title": "Annotazioni uniformi nei blocchi e valori locali",
       "since": "0.48",
       "doc": "docs/type-checker.md#048-annotazioni-locali"
+    },
+    {
+      "id": "nominal-types",
+      "title": "Dichiarazioni nominali :: e compatibilità direzionale",
+      "since": "0.49",
+      "doc": "docs/type-checker.md#049-tipi-nominali"
     }
   ]
 }
