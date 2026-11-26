@@ -1,5 +1,5 @@
 {
-  "version": "0.69.1",
+  "version": "0.70.0",
   "features": [
     {
       "id": "values",
@@ -1986,6 +1986,12 @@
       "title": "Tipi opachi parametrici e riferimenti pubblici annidati",
       "since": "0.69.1",
       "doc": "docs/grammar.md#mira-0691-tipi-opachi-parametrici"
+    },
+    {
+      "id": "module-reexports",
+      "title": "Riesportazione statica con alias e identità originale",
+      "since": "0.70",
+      "doc": "docs/grammar.md#mira-070-riesportazione-statica"
     }
   ]
 }
