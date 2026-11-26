@@ -1,5 +1,5 @@
 {
-  "version": "0.65.0",
+  "version": "0.66.0",
   "features": [
     {
       "id": "values",
@@ -1956,6 +1956,12 @@
       "title": "Percorsi logici discorsivi e scope isolati",
       "since": "0.65",
       "doc": "docs/grammar.md#mira-065-percorsi-logici-e-scope-isolati"
+    },
+    {
+      "id": "flat-module-interfaces",
+      "title": "Sezioni piatte interface e implementation",
+      "since": "0.66",
+      "doc": "docs/grammar.md#mira-066-interfaccia-e-implementazione-piatte"
     }
   ]
 }
