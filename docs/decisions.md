@@ -57,3 +57,12 @@ Il modello immutabile non obbliga a copiare fisicamente tutta la struttura a ogn
 Priorità immediata: interoperabilità asincrona ed effetti, errori espliciti, HTTP/servizi esterni e transizioni del modello. Poi remoting JS/PHP e deploy reale, evoluzione del registro con form e validazione, navigazione, layout responsive e componenti riutilizzabili. Ancora da progettare: namespace, export/private, editor multifile, tipi/inferenza/generici/tipi somma/pattern matching, Result/optional, sincronizzazione e backup, database, test/debugger/formatter/language server. Dialoghi e notifiche, SVG/grafici e temi sono desiderabili; animazioni, virtualizzazione e nuove ottimizzazioni solo quando motivate da app e misure. Il pilota non è un gestionale di produzione: tariffa fissa, limite 100 lezioni, nessuna cifratura o backup. Non usare dati personali reali.
 
 Nessun ulteriore sviluppo in questa revisione documentale.
+
+## Decisioni successive (0.39–0.52)
+
+Il [quaderno di progettazione](design-notes.md) raccoglie le decisioni
+concordate sui tipi, sugli operatori, sul Grammar Lab e sul principio
+compile-time-first, distinguendo implementazioni verificate, proposte
+e questioni aperte. È consultabile anche da Mira Studio.
+Le sezioni storiche precedenti conservano la prospettiva delle versioni
+a cui si riferiscono, non rappresentano tutte lo stato attuale.
