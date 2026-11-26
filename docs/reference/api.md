@@ -603,7 +603,7 @@ class Mangle
 public static function name(source:String):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Mangle.hx#L4)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Mangle.hx#L29)
 
 <a id="api-mira-resolve-mangle-selector"></a>
 ### `mira.resolve.Mangle.selector`
@@ -614,7 +614,7 @@ public static function name(source:String):String
 public static function selector(labels:Array<String>):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Mangle.hx#L15)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/resolve/Mangle.hx#L40)
 
 <a id="api-mira-resolve-selectorresolver"></a>
 ### `mira.resolve.SelectorResolver`
