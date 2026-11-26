@@ -969,3 +969,11 @@ ed espone l'AST. I test verificano esaustività, shadowing
 dei selettori ordinari, payload, tipi dei risultati,
 singola valutazione dello scrutinee e selezione del ramo
 su JS/PHP.
+
+Il nome match è riservato da PHP 8, non da Mira: il mangler
+traduce il selettore unario match: (anche nelle varianti
+maiuscole/minuscole) in un identificatore prefissato, uguale
+nei due target. La risoluzione delle collisioni generate resta
+quella ordinaria. Il test esegue insieme selettori utente
+e costrutto algebrico su entrambi i target. Il problema più
+generale delle collisioni con nomi nativi rimane distinto.
