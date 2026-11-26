@@ -17,6 +17,21 @@ class NumericRange {
 
     public static function any():NumericRange return new NumericRange(Math.NEGATIVE_INFINITY,Math.POSITIVE_INFINITY,false,false);
 
+    public static function integers():NumericRange return new NumericRange(-9007199254740991.0,9007199254740991.0,true,true);
+
+    public function integerHull():NumericRange {
+        final bounded = intersect(integers());
+        final lo = bounded.lowClosed ? Math.fceil(bounded.low) : Math.ffloor(bounded.low) + 1;
+        final hi = bounded.highClosed ? Math.ffloor(bounded.high) : Math.fceil(bounded.high) - 1;
+        return new NumericRange(lo,hi,true,true);
+    }
+
+    public static function integerType(type:Type):Bool return switch (type) {
+        case IntegerType: true;
+        case NamedType(_,base) | RefinedType(base,_): integerType(base);
+        default: false;
+    };
+
     public static function comparison(op:String,value:Float):NumericRange {
         return switch (op) {
             case ">": new NumericRange(value,Math.POSITIVE_INFINITY,false,false);
@@ -85,10 +100,11 @@ class NumericRange {
     public static function ofType(type:Type):Null<NumericRange> {
         return switch (type) {
             case NumberType: any();
+            case IntegerType: integers();
             case NamedType(_,base): ofType(base);
             case RefinedType(base,range):
                 final previous = ofType(base);
-                previous == null ? null : previous.intersect(range);
+                previous == null ? null : integerType(base) ? previous.intersect(range).integerHull() : previous.intersect(range);
             default: null;
         };
     }
