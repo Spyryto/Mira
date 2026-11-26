@@ -355,11 +355,11 @@ Precedenze configurabili, Unicode, localizzazione e dichiarazioni
 di operatori custom sono proposte, non la grammatica attuale:
 vedi [quaderno di progettazione](design-notes.md).
 
-## Direzione futura: interfacce dei moduli (non implementata)
+## Direzione futura: contratti e import logici dei moduli
 
-Vedi [progetto dei moduli](module-design.md). Le sezioni piatte interface e implementation, gli alias => e le firme
-pubbliche inferite o esplicite sono la direzione concordata, non la
-grammatica accettata dal compilatore 0.65. Gli import statici a percorso
+Vedi [progetto dei moduli](module-design.md). Le sezioni piatte interface e implementation sono introdotte nella 0.66;
+gli alias => e le firme pubbliche esplicite nell'interfaccia restano
+una direzione futura. Gli import statici a percorso
 file della 0.30 restano l'unica forma di caricamento implementata. Il punto sperimentato
 nella PR #95 non è stato adottato.
 
@@ -387,10 +387,10 @@ Il mangler usa un prefisso riservato e codifica iniettiva; JS e PHP
 non ricevono oggetti namespace o resolver. PHP non importa nei
 corpi delle funzioni le variabili globali degli altri moduli.
 L'host rimane una capability esplicita comune al programma.
-Un import a percorso file può caricare un modulo dichiarato, ma non
-rende visibili i suoi simboli (ancora tutti privati). Gli effetti
+Nella 0.65 un import a percorso file può caricare un modulo dichiarato, ma non
+rende visibili i suoi simboli (in quella versione tutti privati). Gli effetti
 degli inizializzatori continuano a essere eseguiti come prima.
-Non esistono ancora import logici, export, interface/implementation,
+Nella 0.65 non esistono ancora import logici, export, interface/implementation,
 alias, qualificazione nelle espressioni o package. In questa fase
 gli identificatori generati dei moduli non costituiscono un'API host.
 
