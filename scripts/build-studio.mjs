@@ -58,6 +58,33 @@ for (const filename of assets) {
   copyFileSync(resolve(root, 'studio', filename), resolve(destination, filename));
 }
 
+// Publish the design notebook from its single Markdown source. It uses a
+// deliberately small, escaped subset: headings, paragraphs and fenced code.
+const notebook = readFileSync(resolve(root, 'docs/design-notes.md'), 'utf8');
+const escape = text => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+const sections = [];
+let paragraph = [];
+let code = null;
+function flushParagraph() {
+  if (paragraph.length) sections.push('<p>' + escape(paragraph.join(' ')) + '</p>');
+  paragraph = [];
+}
+for (const line of notebook.split('\n')) {
+  if (line.startsWith('```')) {
+    if (code === null) { flushParagraph(); code = []; }
+    else { sections.push('<pre><code>' + escape(code.join('\n')) + '</code></pre>'); code = null; }
+  } else if (code !== null) code.push(line);
+  else if (line.startsWith('# ') || line.startsWith('## ')) {
+    flushParagraph();
+    const tag = line.startsWith('## ') ? 'h2' : 'h1';
+    sections.push('<' + tag + '>' + escape(line.replace(/^#+ /, '')) + '</' + tag + '>');
+  } else if (!line.trim()) flushParagraph();
+  else paragraph.push(line);
+}
+if (code !== null) throw Error('Unclosed code fence in design notebook');
+flushParagraph();
+writeFileSync(resolve(destination, 'design-notes.html'), '<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mira · Quaderno di progettazione</title><link rel="stylesheet" href="styles.css"><style>.notebook{max-width:800px;margin:auto;padding:1rem;line-height:1.65}.notebook h2{margin-top:2rem;border-top:1px solid #718096;padding-top:1rem}.notebook pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:1rem;border:1px solid #718096;border-radius:.6rem}</style></head><body><main class="notebook"><a href="./index.html">← Mira Studio</a>' + sections.join('\n') + '</main></body></html>');
+
 // Bundle the canonical GUI library in the benchmark source generator.
 // No separate fetch: the lab works offline and from a local file URL.
 const guiBenchmark = resolve(destination, 'gui-benchmark.js');
