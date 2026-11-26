@@ -1141,3 +1141,38 @@ Non genera chiamate ai costruttori o closure per i due rami.
 Non intercetta eccezioni durante il calcolo dell'input. Err contiene
 il messaggio Text già usato dalla forma lunga. Record, liste,
 errori strutturati e validazione ricorsiva restano futuri.
+
+
+## 0.63: record e liste nominali parametrici
+
+```mira
+Pair (First Type, Second Type) :: {
+  first: First Type,
+  second: Second Type
+};
+Bag (Element Type) :: [Element Type];
+
+make pair (A, B): x (A), with: y (B) -> Pair (A, B) =
+  {first: x, second: y};
+a = make pair: 42, with: "Ada";
+b (Bag (Number)) = [1, 2];
+result = a ~ first;
+```
+
+Una dichiarazione parametrica non somma richiede in questa
+iterazione una rappresentazione record chiusa o lista.
+I parametri possono essere discorsivi e sono locali alla
+dichiarazione. Sono ammesse applicazioni annidate di tipi
+già dichiarati. Le istanze nominali sono invarianti negli
+argomenti. Una costruzione annotata verifica la rappresentazione
+e attribuisce l'identità nominale; una chiamata richiede
+l'identità dichiarata, non soltanto la forma del record.
+Il checker sostituisce gli slot anche nella rappresentazione
+e mantiene la coerenza degli argomenti nelle nuove istanze.
+Lo schema Named aggiunge arguments per le istanze parametriche.
+I record e le liste generati sono identici a quelli ordinari:
+nessun wrapper, tag nominale o parametro di tipo a runtime.
+Si rinviano alias di tipo arbitrari (es. Box (T) :: T),
+refinement parametrici, ricorsione e proiezione strutturale
+esplicita ~ di un tipo parametrico. L'accesso ai campi di
+un record nominale parametrico è già supportato.
