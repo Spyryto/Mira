@@ -1,5 +1,5 @@
 {
-  "version": "0.72.0",
+  "version": "0.73.0",
   "features": [
     {
       "id": "values",
@@ -2010,6 +2010,12 @@
       "title": "Verifica sperimentale di contratti indipendenti",
       "since": "0.72",
       "doc": "docs/grammar.md#mira-072-verifica-sperimentale-dei-contratti-indipendenti"
+    },
+    {
+      "id": "static-provider-binding",
+      "title": "Selezione statica di provider tramite contratto",
+      "since": "0.73",
+      "doc": "docs/grammar.md#mira-073-selezione-statica-del-provider"
     }
   ]
 }

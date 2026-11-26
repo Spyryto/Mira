@@ -36,6 +36,13 @@ class Main {
                 args.splice(flag, 2);
             }
 
+            var providers:mira.resolve.ProviderBindings = null;
+            final bindingFlag = args.indexOf("--bindings");
+            if (bindingFlag >= 0) {
+                if (bindingFlag + 1 >= args.length) throw new MiraError("--bindings requires a JSON manifest path");
+                providers = mira.resolve.ProviderBindings.fromJson(fs.readFileSync(args[bindingFlag+1],"utf8"));
+                args.splice(bindingFlag,2);
+            }
             final checkedFlag = args.indexOf("--checked");
             if (checkedFlag >= 0) args.splice(checkedFlag,1);
 
@@ -68,24 +75,26 @@ class Main {
             };
             if (checkedFlag >= 0 && args[1] != "js" && args[1] != "php")
                 throw new MiraError("--checked requires a js or php target");
+            if (providers != null && checkedFlag < 0 && args[1] != "--check" && args[1] != "--check-json")
+                throw new MiraError("--bindings requires --checked or --check/--check-json");
             var output:String;
             if (args[1] == "--check-json") {
                 if (locationFlag >= 0) throw new MiraError("--locations is not applicable to --check-json");
                 try {
-                    output = haxe.Json.stringify({ok:true, types:Compiler.check(source,host,readModule,entry), diagnostics:[]}, null, "  ") + "\n";
+                    output = haxe.Json.stringify({ok:true, types:Compiler.check(source,host,readModule,entry,providers), diagnostics:[]}, null, "  ") + "\n";
                 } catch (error:MiraError) {
                     output = haxe.Json.stringify({ok:false, types:[], diagnostics:[error.diagnostic]}, null, "  ") + "\n";
                     nodeProcess.exitCode = 1;
                 }
             } else if (locationFlag >= 0) {
                 final locations:Array<GeneratedLocation> = [];
-                final code = checkedFlag >= 0 ? Compiler.transpileChecked(source,parseTarget(args[1]),host,locations,readModule,entry,shakeFlag >= 0)
+                final code = checkedFlag >= 0 ? Compiler.transpileChecked(source,parseTarget(args[1]),host,locations,readModule,entry,shakeFlag >= 0,null,providers)
                     : Compiler.transpile(source, parseTarget(args[1]), host, locations, readModule, entry);
                 output = haxe.Json.stringify({output: code, locations: locations}, null, "  ") + "\n";
             } else {
-                output = args[1] == "--check" ? haxe.Json.stringify(Compiler.check(source,host,readModule,entry), null, "  ") + "\n"
+                output = args[1] == "--check" ? haxe.Json.stringify(Compiler.check(source,host,readModule,entry,providers), null, "  ") + "\n"
                     : args[1] == "--tokens" ? Compiler.inspectTokens(source) + "\n"
-                    : checkedFlag >= 0 ? Compiler.transpileChecked(source,parseTarget(args[1]),host,null,readModule,entry,shakeFlag >= 0)
+                    : checkedFlag >= 0 ? Compiler.transpileChecked(source,parseTarget(args[1]),host,null,readModule,entry,shakeFlag >= 0,null,providers)
                     : Compiler.transpile(source, parseTarget(args[1]), host, null, readModule, entry);
             }
 
@@ -110,7 +119,7 @@ class Main {
 
     static function usage(nodeProcess:Dynamic):Void {
         nodeProcess.stderr.write(
-            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens|--check|--check-json> [output] [--host manifest.json] [--locations] [--checked] [--tree-shake]\n"
+            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens|--check|--check-json> [output] [--host manifest.json] [--locations] [--checked] [--tree-shake] [--bindings bindings.json]\n"
         );
         nodeProcess.exitCode = 2;
     }

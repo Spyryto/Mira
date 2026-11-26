@@ -22,7 +22,7 @@
       const edge=append(edges,'div',null,'edge');
       edge.append(moduleButton(d.from,d.from||'Legacy'));
       const middle=append(edge,'span','→');
-      append(middle,'small',d.kind+' · '+d.phase);
+      append(middle,'small',d.kind+' · '+d.phase+(d.contract?' · '+d.contract:''));
       edge.append(moduleButton(d.kind==='file'?null:d.to,d.to));
     }
     if(!model.dependencies.length)append(edges,'p','Nessuna dipendenza.','muted');
@@ -55,7 +55,7 @@
   }
   function analyze(){
     const status=by('status');status.className='';by('contract-report').textContent='';
-    const result=MiraStudioCompiler.exploreModules(by('source').value,by('host').value.trim()||null,by('modules').value.trim()||null);
+    const result=MiraStudioCompiler.exploreModules(by('source').value,by('host').value.trim()||null,by('modules').value.trim()||null,by('bindings').value.trim()||null);
     if(!result.ok){model=null;by('report').hidden=true;status.className='error';status.textContent=result.message;return;}
     model=JSON.parse(result.output);
     if(!model.interfaces.some(m=>m.module===selected))selected=model.interfaces[0]?.module||null;
@@ -64,6 +64,7 @@
   }
   function example(){
     by('host').value='';
+    by('bindings').value='';by('provider-output').textContent='';
     by('modules').value=JSON.stringify({
       'Data / Box':'module Data / Box;\ninterface\nBox (T);\nbox (T): :: (T) -> Box (T);\nitem (T): :: (Box (T)) -> T;\nimplementation\nBox (T) :: {item: T};\nbox: x = {item: x};\nitem: b = b ~ item;\nprivate constant = 42;',
       'Data / API':'module Data / API;\ninterface\nexport Data / Box {\n  Box => Container;\n  box: ;\n  item: => value of: ;\n};\nimplementation'
@@ -98,12 +99,40 @@
   }
   by('verify-contract').addEventListener('click',()=>{
     const out=by('contract-report');
+    if(by('bindings').value.trim()){out.textContent='Il verificatore autonomo della 0.72 richiede un progetto senza binding; usa Compila JS/PHP per verificare i binding.';return;}
     if(!selected){out.textContent='Seleziona un modulo dopo aver analizzato il progetto.';return;}
     const response=MiraStudioCompiler.verifyContract(by('source').value,selected,by('contract').value,by('host').value.trim()||null,by('modules').value.trim()||null);
     if(!response.ok){out.textContent=response.message;return;}
     const data=JSON.parse(response.output);
     out.textContent='Contratto verificato: '+data.provider+'\n'+data.verified.map(s=>s.name+'  :  '+s.signature.type).join('\n');
   });
+  function providerExample(){
+    by('host').value='';
+    by('modules').value=JSON.stringify({
+      'Providers / Memory':'module Providers / Memory;\ninterface\nread: ;\nimplementation\nread: x = x + 2;',
+      'Providers / Native':'module Providers / Native;\ninterface\nread: ;\nimplementation\nread: x = x * 2;'
+    },null,2);
+    by('source').value='module App;\n\nimport Services / Storage {\n  read: ;\n};\n\nresult = read: 5;';
+    by('bindings').value=JSON.stringify({'Services / Storage':{provider:'Providers / Memory',contract:'read: :: (Number) -> Number;'}},null,2);
+    by('provider-settings').open=true;by('provider-output').textContent='';selected='App';analyze();
+  }
+  function compileProvider(target){
+    const r=MiraStudioCompiler.compile(by('source').value,target,by('host').value.trim()||null,false,by('modules').value.trim()||null,true,true,by('bindings').value.trim()||null);
+    by('provider-output').textContent=r.ok?r.output:r.message;
+  }
+  by('provider-example').addEventListener('click',providerExample);
+  by('provider-swap').addEventListener('click',()=>{
+    try {
+      const bindings=JSON.parse(by('bindings').value);
+      const example=bindings['Services / Storage'];
+      if(!example)throw Error('Carica prima l’esempio con due provider.');
+      example.provider=example.provider==='Providers / Memory'?'Providers / Native':'Providers / Memory';
+      by('bindings').value=JSON.stringify(bindings,null,2);
+      by('provider-output').textContent='';analyze();
+    }catch(error){by('provider-output').textContent=String(error);}
+  });
+  by('provider-js').addEventListener('click',()=>compileProvider('js'));
+  by('provider-php').addEventListener('click',()=>compileProvider('php'));
   by('benchmark').addEventListener('click',benchmark);
   by('analyze').addEventListener('click',analyze);
   by('example').addEventListener('click',example);

@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.72.0');
+  assert.equal(bridge.version, '0.73.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.72.0');
+  assert.equal(bridge.version,'0.73.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1480,4 +1480,28 @@ test('0.72 independent signatures check multiple concrete providers without chan
   const invalid=bridge.verifyContract('module Bad; interface identity: ; implementation identity: x = 42;','Bad','identity (T): :: (T) -> T;');
   assert.equal(invalid.ok,false);assert.match(invalid.message,/Type check/);
   assert.match(read('module-explorer.html'),/id="verify-contract"/);
+});
+
+
+test('0.73 Studio selects providers at build time and displays actual dependency identity',()=>{
+  const files=JSON.stringify({
+    'Providers / Memory':'module Providers / Memory; interface read: ; extra; implementation read: x = x + 2; extra = 99;',
+    'Providers / Native':'module Providers / Native; interface read: ; implementation read: x = x * 2;'
+  });
+  const src='module App; import Services / Storage {read: ;}; result = read: 5;';
+  for(const [provider,value] of [['Providers / Memory',7],['Providers / Native',10]]){
+    const bindings=JSON.stringify({'Services / Storage':{provider,contract:'read: :: (Number) -> Number;'}});
+    const a=bridge.exploreModules(src,null,files,bindings);assert.equal(a.ok,true,a.message);
+    const data=JSON.parse(a.output);
+    assert.equal(data.dependencies[0].to,provider);
+    assert.equal(data.dependencies[0].contract,'Services / Storage');
+    assert.equal(data.interfaces.length,2);
+    const compiled=bridge.compile(src,'js',null,false,files,true,true,bindings);
+    assert.equal(compiled.ok,true,compiled.message);
+    const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+    assert.equal(runInNewContext(compiled.output+'\n'+name,{}),value);
+    assert.equal(bridge.compile(src,'js',null,false,files,false,false,bindings).ok,false);
+  }
+  assert.match(read('module-explorer.html'),/id="provider-example"/);
+  assert.match(read('module-explorer.html'),/id="bindings"/);
 });

@@ -22,7 +22,7 @@ class Bridge {
             trace: trace,
             exploreModules: exploreModules,
             verifyContract: verifyContract,
-            version: "0.72.0"
+            version: "0.73.0"
         });
     }
 
@@ -49,7 +49,7 @@ class Bridge {
     }
 
     public static function compile(source:String, targetName:String, ?hostJson:String,
-        ?withLocations:Bool = false, ?modulesJson:String, ?checked:Bool = false, ?treeShake:Bool = false):Dynamic {
+        ?withLocations:Bool = false, ?modulesJson:String, ?checked:Bool = false, ?treeShake:Bool = false, ?bindingsJson:String):Dynamic {
         final locations:Array<GeneratedLocation> = withLocations ? [] : null;
         final optimization:Dynamic = {};
         final result = safely(function() {
@@ -61,7 +61,9 @@ class Bridge {
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
             if (treeShake && !checked) throw new MiraError("Tree shaking requires checked compilation");
-            return checked ? Compiler.transpileChecked(source,target,host,locations,resolver(modulesJson),null,treeShake,optimization)
+            if (bindingsJson != null && !checked) throw new MiraError("Provider bindings require checked compilation");
+            final providers = bindingsJson == null ? null : mira.resolve.ProviderBindings.fromJson(bindingsJson);
+            return checked ? Compiler.transpileChecked(source,target,host,locations,resolver(modulesJson),null,treeShake,optimization,providers)
                 : Compiler.transpile(source, target, host, locations, resolver(modulesJson));
         });
         if (withLocations && result.ok) Reflect.setField(result, "locations", locations);
@@ -69,10 +71,11 @@ class Bridge {
         return result;
     }
 
-    public static function check(source:String, ?hostJson:String, ?modulesJson:String):Dynamic {
+    public static function check(source:String, ?hostJson:String, ?modulesJson:String, ?bindingsJson:String):Dynamic {
         return safely(function() {
             final host = hostJson == null ? HostEnvironment.empty() : HostEnvironment.fromJson(hostJson);
-            return haxe.Json.stringify(Compiler.check(source,host,resolver(modulesJson)), null, "  ");
+            final providers = bindingsJson == null ? null : mira.resolve.ProviderBindings.fromJson(bindingsJson);
+            return haxe.Json.stringify(Compiler.check(source,host,resolver(modulesJson),null,providers), null, "  ");
         });
     }
 
@@ -134,10 +137,10 @@ class Bridge {
     }
 
     // Compose existing real trace and checked report; no source re-parsing in UI.
-    public static function exploreModules(source:String,?hostJson:String,?modulesJson:String):Dynamic {
-        final traced = Bridge.trace(source,hostJson,modulesJson);
+    public static function exploreModules(source:String,?hostJson:String,?modulesJson:String,?bindingsJson:String):Dynamic {
+        final traced = Bridge.trace(source,hostJson,modulesJson,bindingsJson);
         if (!traced.ok) return traced;
-        final checked = check(source,hostJson,modulesJson);
+        final checked = check(source,hostJson,modulesJson,bindingsJson);
         if (!checked.ok) return checked;
         return safely(function() {
             final info:Dynamic = haxe.Json.parse(traced.output);
@@ -167,16 +170,17 @@ class Bridge {
 
     // Exposes actual compiler intermediate data, not a reconstructed diagram.
     // The raw declarations are collected before expression resolution.
-    public static function trace(source:String, ?hostJson:String, ?modulesJson:String):Dynamic {
+    public static function trace(source:String, ?hostJson:String, ?modulesJson:String, ?bindingsJson:String):Dynamic {
         return safely(function() {
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
             final publicTypes = new Map<String,Array<String>>();
             final moduleTypes = new Map<String,Map<String,mira.types.Type>>();
             final moduleEdges:Array<Dynamic> = [];
+            final providers = bindingsJson == null ? null : mira.resolve.ProviderBindings.fromJson(bindingsJson);
             final reexports = new Map<String,Array<Dynamic>>();
             final visibility = new mira.types.TypeVisibility();
-            final raw = [for (d in mira.Modules.collect(source, resolver(modulesJson),null,null,moduleTypes,publicTypes,null,visibility,reexports,moduleEdges)) d.canonical()];
+            final raw = [for (d in mira.Modules.collect(source, resolver(modulesJson),null,null,moduleTypes,publicTypes,null,visibility,reexports,moduleEdges,providers)) d.canonical()];
             final exportsByModule = new Map<String,Array<Dynamic>>();
             for (d in raw) if (d.modulePath != null && d.isExported) {
                 if (!exportsByModule.exists(d.modulePath)) exportsByModule.set(d.modulePath,[]);

@@ -696,3 +696,46 @@ costituiscono ancora una prova di sostituibilità universale del modulo.
 Per la selezione statica di un provider occorrerà riusare le firme verificate
 nella compilazione effettiva e definire identità e astrazione dei tipi.
 Nessuna nuova astrazione runtime.
+
+## Mira 0.73: selezione statica del provider
+
+```mira
+module App;
+
+import Services / Storage {
+  read: ;
+};
+
+result = read: 5;
+```
+
+Il build manifest (JSON) sceglie il modulo concreto e il contratto esplicito:
+
+```json
+{
+  "Services / Storage": {
+    "provider": "Providers / Memory",
+    "contract": "read: :: (Number) -> Number;"
+  }
+}
+```
+
+CLI: `node dist/mira.cjs app.mira js --checked --bindings bindings.json`;
+anche PHP, `--check`, `--check-json`, `--locations` e tree shaking in
+modalità checked. Il resolver carica il provider concreto, applica tutte
+le firme richieste alle sue dichiarazioni pubbliche locali e restringe
+l'import del servizio ai soli simboli del contratto, anche con `*`.
+Il type checker controlla l'intero programma prima di emettere codice:
+non è un preflight separato. Non vengono generati wrapper o oggetti modulo.
+Gli import ripetuti condividono le dichiarazioni del provider. Le firme
+vincolano il provider nell'intero build, anche quando importato direttamente;
+contratti incompatibili sullo stesso simbolo sono rifiutati. Un binding
+non utilizzato viene validato sintatticamente ma il provider non è caricato.
+Percorsi del contratto distinti dai provider concreti, nessuna catena di
+binding; cicli delle dipendenze vietati. Restano fuori i tipi nominali
+indipendenti, i provider che espongono il requisito solo per riesportazione,
+il subtyping generale delle firme e la sintassi Mira per dichiarare/scegliere
+contratti. Il manifest è una scelta sperimentale di build, non la sintassi
+definitiva. Studio supporta il manifest in compile/check/exploreModules/trace
+(e mostra il servizio sull'arco verso il provider). Il verificatore autonomo
+0.72 e le altre viste non ricevono ancora questa configurazione.
