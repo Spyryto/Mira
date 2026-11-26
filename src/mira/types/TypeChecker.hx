@@ -22,6 +22,7 @@ class TypeChecker {
     final scalarEq = new Map<Int,Bool>();
     // Proof facts belong to expressions, not the public inference algebra.
     final ranges = new haxe.ds.ObjectMap<Dynamic,NumericRange>();
+    final integers = new haxe.ds.ObjectMap<Dynamic,Bool>();
     var nextId = 0;
     var origin:Token;
 
@@ -115,7 +116,7 @@ class TypeChecker {
             case [NamedType(x,_),NamedType(y,_)] if (x == y):
             case [RefinedType(x,r),RefinedType(y,s)] if (r.equal(s)): unify(x,y);
             case [StructuralType(_,x),StructuralType(_,y)]: unifyRecords(RecordType(x,null),RecordType(y,null));
-            case [NumberType, NumberType] | [TextType,TextType] | [BooleanType,BooleanType]:
+            case [IntegerType,IntegerType] | [NumberType, NumberType] | [TextType,TextType] | [BooleanType,BooleanType]:
             case [ListType(x),ListType(y)]: unify(x,y);
             case [FunctionType(xs,x),FunctionType(ys,y)]:
                 if (xs.length != ys.length) fail("function arity mismatch");
@@ -141,6 +142,7 @@ class TypeChecker {
         switch [wanted,given] {
             case [Variable(_),_] | [_,Variable(_)]: unify(wanted,given);
             case [NamedType(x,_),NamedType(y,_)] if (x == y):
+            case [NumberType,IntegerType]:
             case [StructuralType(_,fields),_]: acceptShape(fields,given);
             case [RefinedType(base,range),_]:
                 prove(range,given,null);
@@ -190,6 +192,13 @@ class TypeChecker {
                     default:
                         construct(base,given,expr);
                         prove(range,given,expr);
+                }
+            case IntegerType:
+                if (!NumericRange.integerType(given) && (expr == null || !integers.exists(expr))) {
+                    switch (given) {
+                        case Variable(_): unify(wanted,given);
+                        default: fail("Integer not statically proven");
+                    }
                 }
             default: accept(wanted,given);
         }
@@ -446,7 +455,7 @@ class TypeChecker {
     function requireScalarEq(type:Type):Void {
         switch (prune(type)) {
             case NamedType(_,base) | RefinedType(base,_): requireScalarEq(base);
-            case NumberType | TextType | BooleanType:
+            case IntegerType | NumberType | TextType | BooleanType:
             case Variable(id):
                 if (lacks.exists(id)) fail("scalar equality cannot constrain a record row");
                 scalarEq.set(id,true);
@@ -553,7 +562,19 @@ class TypeChecker {
                 final known = NumericRange.ofType(prune(type));
                 known != null && known.portable() ? known : null;
         };
-        if (fact != null) ranges.set(expr,fact);
+        if (fact != null) {
+            ranges.set(expr,fact);
+            final integral = NumericRange.integerType(prune(type)) || switch (expr) {
+                case Numeric(_): fact.low == Math.ffloor(fact.low);
+                case Binary(symbol,left,right):
+                    integers.exists(left) && integers.exists(right)
+                    && (symbol == "+" || symbol == "-" || symbol == "*"
+                        || (symbol == "/" && (fact.low == fact.high && fact.low == Math.ffloor(fact.low)
+                            || (ranges.get(right).low == ranges.get(right).high && Math.abs(ranges.get(right).low) == 1))));
+                default: false;
+            };
+            if (integral) integers.set(expr,true);
+        }
         origin = previous;
         return type;
     }
@@ -643,6 +664,7 @@ class TypeChecker {
                 keys.sort(Reflect.compare);
                 {kind:"Structural",name:name,fields:[for (key in keys) {name:key,type:describe(fields.get(key),seen)}],open:true};
             case NumberType: {kind:"Number"};
+            case IntegerType: {kind:"Integer"};
             case TextType: {kind:"Text"};
             case BooleanType: {kind:"Boolean"};
             case Variable(id):
@@ -681,6 +703,7 @@ class TypeChecker {
             case RefinedType(base,range): render(base,names,order) + " where " + range.predicate();
             case StructuralType(name,_): "~ " + name;
             case NumberType: "Number";
+            case IntegerType: "Integer";
             case TextType: "Text";
             case BooleanType: "Boolean";
             case Variable(id):
