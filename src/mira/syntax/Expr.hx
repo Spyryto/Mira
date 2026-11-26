@@ -11,6 +11,7 @@ enum Expr {
     FieldGet(record:Expr, key:String);
     FieldSection(key:String);
     Conditional(condition:Expr, whenTrue:Expr, whenFalse:Expr);
+    Validate(value:Expr, required:mira.types.Type, success:Expr, failure:Expr);
     Sequence(items:Array<Expr>);
     Record(keys:Array<String>, values:Array<Expr>);
     Block(parameters:Array<String>, body:Expr);
