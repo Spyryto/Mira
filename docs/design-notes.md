@@ -517,3 +517,16 @@ esplicita di un solo livello serve a match; unificazione e
 schema operano sui riferimenti nominali. Riutilizzo del
 template sostitutivo, senza modifiche agli emitter. La prima
 forma è volutamente limitata a ricorsione diretta regolare.
+
+
+## 0.65 — qualificazione esplicita prima della visibilità
+
+Introduciamo nomi qualificati con punto contiguo, non un nuovo
+operatore di accesso ai dati. Identità nominale e selettori
+riutilizzano i nomi completi, con mangling iniettivo anche per
+la distinzione di maiuscole nei selettori PHP qualificati.
+I costruttori delle somme ereditano il prefisso della somma,
+non il tag runtime. Import e AST delle espressioni restano
+invariati. Qualificazione esplicita prima di eventuali direttive
+namespace e regole di visibilità; queste ultime non sono
+implementate da questa versione.
