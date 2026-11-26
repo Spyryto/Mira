@@ -136,6 +136,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Servizio Text portabile con adapter nativi | `0.83` | [Dettagli](docs/studio.md#mira-083-servizio-text) |
 | ✅ | Decoder JSON da contratti Mira tipizzati | `0.84` | [Dettagli](docs/studio.md#mira-084-json-tipizzato) |
 | ✅ | Decoder JSON fallibile con Result e pattern matching | `0.85` | [Dettagli](docs/studio.md#mira-085-json-fallibile) |
+| ✅ | Date civili opache con provider nativi | `0.86` | [Dettagli](docs/studio.md#mira-086-date-civili) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
