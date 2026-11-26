@@ -7,6 +7,7 @@ import mira.syntax.Definition;
 import mira.syntax.DefinitionParser;
 import mira.syntax.ModuleSections;
 import mira.syntax.ModuleImport;
+import mira.syntax.PublicSignature;
 import mira.resolve.ImportBinding;
 
 // File resolution belongs to the host. The compiler never accesses the
@@ -158,11 +159,13 @@ class Modules {
             }
             final localTypes = modulePath == null ? types : moduleTypes.get(modulePath);
             final local:Array<Definition> = [];
+            final signatures:Array<PublicSignature> = [];
             for (name => type in publicAliases) localTypes.set(name,type);
             if (sections != null) {
                 final constructors = DefinitionParser.parse(sections.typeTokens,localTypes,modulePath);
                 for (name in localTypes.keys()) if (!publicAliases.exists(name)) publicTypes.get(modulePath).push(name);
                 publicTypes.get(modulePath).sort(Reflect.compare);
+                for (tokens in sections.signatures) signatures.push(PublicSignature.read(tokens,localTypes));
                 for (d in constructors) {
                     d.isExported = true;
                     local.push(d);
@@ -185,6 +188,15 @@ class Modules {
                     }
                     if (d == null) throw new MiraError("Unknown interface export " + reference.name,reference.origin);
                     if (d.isExported) throw new MiraError("Duplicate interface export " + reference.name,reference.origin);
+                    d.isExported = true;
+                }
+                for (signature in signatures) {
+                    final d = byName.get(signature.name);
+                    if (localTypes.exists(signature.name))
+                        throw new MiraError("Ambiguous value or type export " + signature.name,signature.origin);
+                    if (d == null) throw new MiraError("Unknown interface export " + signature.name,signature.origin);
+                    if (d.isExported) throw new MiraError("Duplicate interface export " + signature.name,signature.origin);
+                    signature.apply(d);
                     d.isExported = true;
                 }
             }
