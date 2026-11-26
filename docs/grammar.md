@@ -515,3 +515,43 @@ annotazioni equivalenti copre entrambi i target.
 In questa fase non è ancora garantito che le firme inferite non espongano
 tipi privati; verifica delle fughe, opacità, compilazione separata e report
 indipendente delle interfacce restano incrementi successivi.
+
+## Mira 0.69: tipi opachi monomorfi e controllo delle firme pubbliche
+
+```mira
+module Music / Theory;
+
+interface
+
+Note;
+note: :: (Number) -> Note;
+pitch of: :: (Note) -> Number;
+
+implementation
+
+Note :: {pitch: Number};
+note: n = {pitch: n};
+pitch of: n = n ~ pitch;
+```
+
+Un riferimento a un tipo nominale non parametrico nell'interfaccia,
+con definizione nell'implementazione, espone la sola identità. Nel
+modulo proprietario la rappresentazione rimane disponibile. Gli import
+(e gli alias) e le firme viste da altri moduli usano OpaqueType(name),
+senza base, payload o intervallo numerico. Il checker rifiuta costruzioni
+da rappresentazioni raw, conversioni, proiezioni, uguaglianza scalare,
+validazione numerica e match non autorizzati. Le somme opache non
+esportano direttamente i costruttori sintetizzati. Il report pubblico
+usa lo schema {kind: Opaque, name: ...}; trace elenca i tipi opachi.
+Le firme inferite ed esplicite di simboli esportati vengono controllate
+ricorsivamente per evitare fughe di tipi privati, anche in liste,
+record, funzioni e argomenti parametrici. L'opacità è un confine:
+la rappresentazione privata di un tipo opaco non costituisce una fuga.
+Gli import pubblici restano disponibili per le firme. Il controllo
+resta opt-in (check/checked); il sorgente e il report diagnostico
+privato del modulo non sono cifrati né costituiscono sicurezza runtime.
+Nessuna modifica agli emitter: stesso codice per tipi equivalenti
+pubblici o opachi. Non ancora supportati: tipi opachi parametrici,
+riferimenti a un tipo opaco locale nelle dichiarazioni di altri tipi
+pubblici della stessa interfaccia (le firme delle funzioni possono
+riferirvisi), compilazione separata, riesportazioni.
