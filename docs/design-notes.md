@@ -418,3 +418,37 @@ Il selettore match:with: non richiede una modifica.
 Il test di convivenza deve eseguire il codice effettivo,
 non limitarsi all'inferenza. Questo è un intervento mirato,
 non una soluzione generale ai nomi riservati dei target.
+
+
+## 0.60 — tipi somma parametrici (implementazione proposta)
+
+La 0.59 è stata integrata con 241 test del compilatore e
+tutti i workflow verdi, inclusi i selettori match: e
+match:with: eseguiti su JS/PHP. La prossima estensione
+è un insieme ristretto di tipi somma parametrici:
+
+```mira
+Result (T, E) :: Ok (T) | Err (E);
+Option (T) :: Some (T) | None;
+```
+
+La forma delle dichiarazioni e delle applicazioni segue
+le parentesi delle annotazioni già utilizzate da Mira.
+I parametri restano a compile time. Non si genera
+una classe o un costruttore runtime per ogni combinazione:
+i tag e i payload conservano la rappresentazione nativa.
+Le istanze sono invarianti e i costruttori utilizzano
+l'inferenza polimorfica del checker, con variabili fresche.
+
+Scelta circoscritta: generici dei soli tipi somma, non
+una sintassi universale per tutte le dichiarazioni.
+I parametri si applicano ai payload e a somme annidate
+già note. La ricorsività richiede un incremento separato,
+con analisi delle dichiarazioni e rappresentazione finita
+dei tipi. Il nome Err è scelto negli esempi perché Error
+può collidere con il costruttore nativo JS; non implica
+la scelta definitiva dei nomi della libreria standard.
+Nessuna nuova keyword Result o Option. Il passo futuro
+verso la validazione materializzata dovrà riutilizzare
+questi tipi, senza duplicare le continuazioni o la
+logica dei predicati. Vedi type-checker.md.
