@@ -14,7 +14,7 @@ class Dependencies {
     final groups:Array<Array<String>> = [];
     var next = 0;
 
-    public function new(program:Array<Definition>) {
+    public function new(program:Array<Definition>,orderComponents:Bool = true) {
         for (d in program) if (!d.isStatement)
             edges.set(d.isFunction() ? d.selector() : d.name, []);
         for (d in program) if (!d.isStatement) {
@@ -25,11 +25,28 @@ class Dependencies {
             deps.sort(Reflect.compare);
             edges.set(name,deps);
         }
+        if (!orderComponents) return;
         // Preserve source order for independent components.
         for (d in program) if (!d.isStatement) {
             final name = d.isFunction() ? d.selector() : d.name;
             if (!indices.exists(name)) visit(name);
         }
+    }
+
+    // Reachability uses the same scope-aware AST walk as inference.
+    public function reachable(roots:Array<String>,statements:Array<Definition>):Map<String,Bool> {
+        final pending = roots.copy();
+        final found = new Map<String,Bool>();
+        for (d in statements) walk(d.body,[],found);
+        for (name in found.keys()) pending.push(name);
+        final live = new Map<String,Bool>();
+        while (pending.length > 0) {
+            final name = pending.pop();
+            if (!edges.exists(name) || live.exists(name)) continue;
+            live.set(name,true);
+            for (dep in edges.get(name)) pending.push(dep);
+        }
+        return live;
     }
 
     public function ordered():Array<Array<String>> return groups;
