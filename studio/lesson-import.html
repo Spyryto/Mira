@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mira · Importa lezione</title>
+<link rel="stylesheet" href="./styles.css"><link rel="stylesheet" href="./lesson-import.css"></head>
+<body><main class="app lesson-import"><a href="./index.html">← Mira Studio</a>
+<header><p class="eyebrow">MIRA 0.89 · APP PILOTA</p><h1>Importa una lezione</h1><p>HTTP, JSON tipizzato, Text, Date e Storage nello stesso programma checked. Tariffa dimostrativa: 30 €/ora.</p></header>
+<section><h2>1. Sorgente</h2><div class="lesson-actions"><button id="load">Importa esempio HTTP</button><button id="restore">Recupera salvato</button></div>
+<label for="raw">JSON (modificabile)</label><textarea id="raw" rows="9" spellcheck="false"></textarea><button id="inspect">Verifica lezione</button>
+<p id="status" role="status" aria-live="polite">Pronto. Usa soltanto dati dimostrativi.</p></section>
+<section id="summary" hidden><h2>2. Riepilogo</h2><h3 id="student"></h3><div class="lesson-stats"><div><small>Data</small><strong id="day"></strong></div><div><small>Ore</small><strong id="hours"></strong></div><div><small>Compenso</small><strong id="total"></strong></div><div><small>Pagamento</small><strong id="paid"></strong></div></div></section>
+<section><h2>3. Archivio locale</h2><p>Un solo slot dimostrativo, separato dal registro lezioni esistente. Il salvataggio sostituisce il valore precedente. Non è un backup.</p><div class="lesson-actions"><button id="save" disabled>Salva lezione</button><button id="remove">Rimuovi salvato</button></div></section>
+<section><h2>Dietro le quinte</h2><details><summary>Programma Mira</summary><pre id="source"></pre></details><details><summary>Schema del decoder</summary><pre id="schema"></pre></details><details><summary>JavaScript compilato</summary><pre id="js"></pre></details><details><summary>PHP compilato</summary><pre id="php"></pre></details></section>
+</main><script src="./effects.js"></script><script src="./text-host.js"></script><script src="./date-host.js"></script><script src="./storage-host.js"></script><script src="./json-host.js"></script><script src="./http-host.js"></script><script src="./lesson-import-data.js"></script><script src="./lesson-import-program.js"></script><script src="./lesson-import.js"></script></body></html>

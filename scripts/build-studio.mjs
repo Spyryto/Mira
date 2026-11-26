@@ -4,6 +4,7 @@ import { runInNewContext } from 'node:vm';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {generateJsonDecoder} from './json-contract.mjs';
+import {buildLessonImport} from './lesson-import.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const destination = resolve(root, 'dist/studio');
@@ -47,6 +48,9 @@ const assets = [
   'text-module-lab.js',
   'storage-module-lab.js',
   'http-module-lab.js',
+  'lesson-import.html',
+  'lesson-import.js',
+  'lesson-import.css',
   'http-example.txt',
   'module-explorer.html',
   'module-explorer.js',
@@ -176,6 +180,17 @@ httpData.js=httpJS.output;httpData.php=httpPHP.output;
 writeFileSync(resolve(destination,'http-module-data.js'),'globalThis.MiraHttpModuleData = '+JSON.stringify(httpData)+';\n');
 writeFileSync(resolve(destination,'http-module-program.js'),'globalThis.MiraHttpProgram = function(){\n'+httpJS.output+'\nreturn __miraModule_v_417070202F20726573756C74;\n};\n');
 copyFileSync(resolve(root,'lib/http/http-host.js'),resolve(destination,'http-host.js'));
+const lessonFile=path=>readFileSync(resolve(root,'examples/lesson-import',path),'utf8');
+const lessonData=buildLessonImport(context.MiraStudioCompiler,lessonFile('App.mira'),JSON.parse(lessonFile('decoder.json')),
+  {...JSON.parse(textData.modules),...JSON.parse(dateData.modules),...JSON.parse(storageData.modules),...JSON.parse(httpData.modules),
+    'Services / Lesson Import':lessonFile('Services/Lesson Import.mira'),
+    'Providers / Lesson Import Native':lessonFile('Providers/Lesson Import Native.mira')},
+  [JSON.parse(textData.host),JSON.parse(dateData.host),JSON.parse(storageData.host)],
+  {js:{...JSON.parse(textData.bindings),...JSON.parse(dateData.bindings),...JSON.parse(storageData.browser)},
+   php:{...JSON.parse(textData.bindings),...JSON.parse(dateData.bindings),...JSON.parse(storageData.files)}});
+writeFileSync(resolve(destination,'lesson-import-data.js'),'globalThis.MiraLessonImportData = '+JSON.stringify(lessonData)+';\n');
+writeFileSync(resolve(destination,'lesson-import-program.js'),'globalThis.MiraLessonImportProgram = function(__miraHost){\n'+lessonData.js+'\nreturn __miraModule_v_417070202F20726573756C74;\n};\n');
+copyFileSync(resolve(root,'examples/lesson-import/sample.json'),resolve(destination,'lesson-import-sample.json'));
 const ledger=context.MiraStudioCompiler.compile(
   readFileSync(resolve(root,'studio/persistent-ledger.mira'),'utf8'),'js',
   JSON.stringify({callables:['render']}));

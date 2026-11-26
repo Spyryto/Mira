@@ -62,6 +62,12 @@ const ASSETS = [
   './http-module-program.js',
   './http-module-lab.js',
   './http-example.txt',
+  './lesson-import.html',
+  './lesson-import.css',
+  './lesson-import.js',
+  './lesson-import-data.js',
+  './lesson-import-program.js',
+  './lesson-import-sample.json',
   './module-explorer.html',
   './module-explorer.js',
   './interface-impact.js',
@@ -121,6 +127,7 @@ self.addEventListener('fetch', event => {
       : url.pathname.endsWith('/module-explorer.html') ? './module-explorer.html'
       : url.pathname.endsWith('/type-lab.html') ? './type-lab.html'
       : url.pathname.endsWith('/effects-demo.html') ? './effects-demo.html'
+      : url.pathname.endsWith('/lesson-import.html') ? './lesson-import.html'
       : url.pathname.endsWith('/persistent-ledger.html') ? './persistent-ledger.html'
       : url.pathname.endsWith('/gui-benchmark.html') ? './gui-benchmark.html'
       : url.pathname.endsWith('/ui-preview.html') ? './ui-preview.html' : './index.html';

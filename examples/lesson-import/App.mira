@@ -1,0 +1,56 @@
+module App;
+interface
+result;
+import Services / Lesson Import { try decode imported lesson: ; };
+import Services / Text { code points: ; };
+import Services / Date { valid date: ; date from: ; iso of: ; weekday of: ; };
+import Services / Storage { read text: ; save text: for: ; remove text: ; };
+import Services / Http { get text: ; successful: ; };
+implementation
+failure: message = {
+  accepted: false, student: "", day: "", hours: 0, weekday: 0,
+  paid: false, total: 0, error: message
+};
+
+inspect lesson: raw =
+  match: (try decode imported lesson: raw) {
+    ok: {lesson |
+      if (NOT (valid date: (lesson ~ date))) then (failure: "invalid_date")
+      else (if ((lesson ~ hours <= 0) OR (lesson ~ hours > 24))
+        then (failure: "invalid_hours")
+        else (if (((code points: (lesson ~ name)) == 0) OR ((code points: (lesson ~ name)) > 120))
+          then (failure: "invalid_name")
+          else (
+            () >> {|
+              day = date from: (lesson ~ date);
+              {accepted: true, student: (lesson ~ name), day: (iso of: day),
+               hours: (lesson ~ hours), weekday: (weekday of: day),
+               paid: (lesson ~ paid), total: (lesson ~ hours * 30), error: ""}
+            }
+          )
+        )
+      )
+    },
+    err: {message | failure: message}
+  };
+
+accept response: response =
+  if (successful: response) then (inspect lesson: (response ~ body))
+  else (failure: "http_status");
+
+persist lesson: raw =
+  () >> {|
+    inspected = inspect lesson: raw;
+    if (inspected ~ accepted) then (
+      if (save text: raw, for: "lesson") then inspected else (failure: "storage_failure")
+    ) else inspected
+  };
+
+result = {
+  request: {id | get text: id},
+  accept: {response | accept response: response},
+  inspect: {raw | inspect lesson: raw},
+  save: {raw | persist lesson: raw},
+  restore: {| read text: "lesson"},
+  remove: {| remove text: "lesson"}
+};

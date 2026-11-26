@@ -1,0 +1,8 @@
+{
+  "service": "Services / Lesson Import",
+  "selector": "decode imported lesson:",
+  "provider": "Providers / Lesson Import Native",
+  "capability": "native decode imported lesson",
+  "fallibleSelector": "try decode imported lesson:",
+  "fallibleCapability": "native try decode imported lesson"
+}

@@ -1,0 +1,11 @@
+module Providers / Lesson Import Native;
+implements Services / Lesson Import;
+implementation
+decode imported lesson: source = native decode imported lesson source;
+try decode imported lesson: source =
+  () >> {|
+    decoded = native try decode imported lesson source;
+    fold: (decoded ~ values),
+      with: {acc, item | Ok: item},
+      from: (Err: (decoded ~ error))
+  };
