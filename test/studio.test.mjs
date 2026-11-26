@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.69.0');
+  assert.equal(bridge.version, '0.69.1');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.69.0');
+  assert.equal(bridge.version,'0.69.1');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1305,4 +1305,19 @@ test('0.69 Studio reports opaque public types without representation and rejects
   const bad=bridge.check(source+' leaked = n ~ pitch;',null,files);
   assert.equal(bad.ok,false);assert.match(bad.message,/Type check/);
   assert.match(read('type-lab.html'),/opaque-type-example/);
+});
+
+
+test('0.69.1 Studio preserves opaque generic arguments across aliases and public records',()=>{
+  const modules=JSON.stringify({'Data / Box':'module Data / Box; interface Box (T); Envelope (T) :: {box: Box (T)}; box (T): :: (T) -> Box (T); item (T): :: (Box (T)) -> T; implementation Box (U) :: {item: U}; box: x = {item: x}; item: b = b ~ item;'});
+  const source='module App; import Data / Box {Box => Container; Envelope; box: ; item: ;}; n (Container (Number)) = box: 7; e (Envelope (Number)) = {box: n}; result = item: (e ~ box);';
+  const checked=bridge.check(source,null,modules);assert.equal(checked.ok,true,checked.message);
+  const rows=JSON.parse(checked.output);
+  assert.deepEqual(rows.find(x=>x.name==='App / n').schema,{kind:'Opaque',name:'Data / Box / Box',arguments:[{kind:'Number'}]});
+  const js=bridge.compile(source,'js',null,false,modules,true);assert.equal(js.ok,true,js.message);
+  const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+  assert.equal(runInNewContext(js.output+'\n'+name,{}),7);
+  const denied=bridge.check(source+' bad = (e ~ box) ~ item;',null,modules);
+  assert.equal(denied.ok,false);assert.match(denied.message,/Type check/);
+  assert.match(read('type-lab.html'),/parametric-opaque-example/);
 });

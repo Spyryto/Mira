@@ -60,7 +60,9 @@ class PublicSignature {
         return switch [a,b] {
             case [NumberType,NumberType] | [IntegerType,IntegerType] | [TextType,TextType] | [BooleanType,BooleanType]: true;
             case [Variable(x),Variable(y)]: x == y;
-            case [OpaqueType(x),OpaqueType(y)] | [NamedType(x,_),NamedType(y,_)]: x == y;
+            case [NamedType(x,_),NamedType(y,_)]: x == y;
+            case [OpaqueType(x,xs),NamedType(y,_)] | [NamedType(x,_),OpaqueType(y,xs)]: x == y && xs.length == 0;
+            case [OpaqueType(x,xs),OpaqueType(y,ys)] | [OpaqueType(x,xs),ParametricNamedType(y,_,ys)] | [ParametricNamedType(x,_,xs),OpaqueType(y,ys)] | [OpaqueType(x,xs),SumType(y,_,ys)] | [SumType(x,_,xs),OpaqueType(y,ys)] | [OpaqueType(x,xs),SumReference(y,_,ys)] | [SumReference(x,_,xs),OpaqueType(y,ys)]: x == y && sameArray(xs,ys);
             case [ParametricNamedType(x,_,xs),ParametricNamedType(y,_,ys)]
                 | [SumType(x,_,xs),SumType(y,_,ys)] | [SumReference(x,_,xs),SumReference(y,_,ys)]
                 | [SumType(x,_,xs),SumReference(y,_,ys)] | [SumReference(x,_,xs),SumType(y,_,ys)]:

@@ -31,6 +31,13 @@
   }
   document.getElementById('checked-js').addEventListener('click',()=>compileChecked('js'));
   document.getElementById('checked-php').addEventListener('click',()=>compileChecked('php'));
+  document.getElementById('parametric-opaque-example').addEventListener('click',()=>{
+    host.value='';
+    modules.value=JSON.stringify({'Data / Box':'module Data / Box;\ninterface\nBox (Element Type);\nEnvelope (T) :: {box: Box (T)};\nbox (T): :: (T) -> Box (T);\nitem (T): :: (Box (T)) -> T;\nimplementation\nBox (U) :: {item: U};\nbox: x = {item: x};\nitem: b = b ~ item;'},null,2);
+    modules.closest('details').open=true;
+    source.value='module App;\n\nimport Data / Box {\n  Box => Container;\n  Envelope;\n  box: ;\n  item: ;\n};\n\nn (Container (Number)) = box: 7;\ne (Envelope (Number)) = {box: n};\nresult = item: (e ~ box);\n# Prova: bad = (e ~ box) ~ item;';
+    check();
+  });
   document.getElementById('opaque-type-example').addEventListener('click',()=>{
     host.value='';
     modules.value=JSON.stringify({'Music / Theory':'module Music / Theory;\ninterface\nNote;\nnote: :: (Number) -> Note;\npitch of: :: (Note) -> Number;\nimplementation\nNote :: {pitch: Number};\nnote: n = {pitch: n};\npitch of: n = n ~ pitch;'},null,2);

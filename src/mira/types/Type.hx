@@ -3,7 +3,7 @@ package mira.types;
 // A row tail is either another record, an inference variable, or null (closed).
 enum Type {
     NamedType(name:String,base:Type);
-    OpaqueType(name:String);
+    OpaqueType(name:String,arguments:Array<Type>);
     ParametricNamedType(name:String,base:Type,arguments:Array<Type>);
     SumType(name:String,alternatives:Map<String,Null<Type>>,arguments:Array<Type>);
     // A finite nominal back-reference; the shared declaration map is never traversed implicitly.

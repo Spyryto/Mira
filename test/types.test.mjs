@@ -1398,3 +1398,45 @@ test('0.69 opaque types retain nominal identity while hiding native representati
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.69.1 opaque type templates and public nested references preserve type arguments',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-parametric-opaque-'));
+  try{
+    const input=join(dir,'program.mira'),lib=join(dir,'Boxes.mira');
+    const header='module Boxes; interface Box (Element Type); Envelope (T) :: {box: Box (T)}; Choice (T); box (T): :: (T) -> Box (T); item (T): :: (Box (T)) -> T; envelope (T): :: (Box (T)) -> Envelope (T); item in (T): :: (Envelope (T)) -> T; choose (T): :: (T) -> Choice (T); get (T): fallback: :: (Choice (T), T) -> T; implementation ';
+    const body='Box (U) :: {item: U}; Choice (U) :: Empty | Full (U); box: x = {item: x}; item: b = b ~ item; envelope: b = {box: b}; item in: e = (e ~ box) ~ item; choose: x = Full: x; get: c, fallback: x = match: c {empty: {| x}, full: {v | v}};';
+    writeFileSync(lib,header+body);
+    const src='module App; import Boxes {Box => Container; Envelope; Choice; box: ; item: ; envelope: ; item in: ; choose: ; get: fallback: ;}; n (Container (Number)) = box: 7; s (Container (Text)) = box: "Mira"; e (Envelope (Number)) = envelope: n; nested = e ~ box; a = item: nested; b = item: s; result = (item in: e) + (get: (choose: 3), fallback: 0);';
+    writeFileSync(input,src);
+    const check=()=>spawnSync('node',['dist/mira.cjs',input,'--check'],{encoding:'utf8'});
+    const report=check();assert.equal(report.status,0,report.stderr);
+    const rows=JSON.parse(report.stdout);
+    assert.deepEqual(rows.find(x=>x.name==='App / n').schema,{kind:'Opaque',name:'Boxes / Box',arguments:[{kind:'Number'}]});
+    assert.equal(rows.find(x=>x.name==='App / nested').type,'Boxes / Box (Number)');
+    assert.equal(rows.find(x=>x.name==='App / b').type,'Text');
+    for(const target of ['js','php']){
+      const r=spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,r.stdout+(target==='js'?'\nconsole.log('+name+');':'\necho $'+name+';'));
+      const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);assert.equal(run.stdout.trim(),'10');
+    }
+    for(const [code,pattern] of [
+      ['import Boxes {Box; box: ;}; n (Box (Text)) = box: 7;',/Type check/],
+      ['import Boxes {Box;}; n (Box (Number)) = {item: 7};',/Type check/],
+      ['import Boxes {Box;}; n (Box) = 7;',/requires 1 type arguments/],
+      ['import Boxes {box: ;}; n = box: 7; bad = n ~ item;',/Type check/],
+      ['import Boxes {box: ; envelope: ;}; e = envelope: (box: 7); bad = (e ~ box) ~ item;',/Type check/],
+      ['import Boxes {choose: ;}; c = choose: 7; bad = match: c {empty: {| 0}, full: {x | x}};',/Match requires a known sum type/],
+      ['import Boxes {Full: ;}; bad = Full: 7;',/Symbol not exported/],
+      ['interface leaked; import Boxes {box: ;}; implementation Hidden :: Number; h (Hidden) = 7; leaked = box: h;',/Public signature exposes private type App \/ Hidden/]
+    ]){
+      writeFileSync(input,'module App; '+code);const x=check();assert.notEqual(x.status,0,code);assert.match(x.stderr,pattern,code);
+    }
+    writeFileSync(input,'module App; interface Box (A, B); implementation Box (T) :: [T];');
+    assert.match(check().stderr,/Opaque type parameter count mismatch/);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

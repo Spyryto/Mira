@@ -5,7 +5,7 @@ package mira.types;
 class TypeTemplates {
     public static function apply(template:Type,arguments:Array<Type>):Type {
         return switch (template) {
-            case SumType(_,_,parameters) | SumReference(_,_,parameters) | ParametricNamedType(_,_,parameters):
+            case OpaqueType(_,parameters) | SumType(_,_,parameters) | SumReference(_,_,parameters) | ParametricNamedType(_,_,parameters):
                 if (parameters.length != arguments.length) throw new mira.MiraError("Wrong number of type arguments");
                 final slots = new Map<Int,Type>();
                 for (i in 0...parameters.length) switch (parameters[i]) {
@@ -31,6 +31,7 @@ class TypeTemplates {
     static function substitute(type:Type,slots:Map<Int,Type>):Type {
         return switch (type) {
             case Variable(id) if (slots.exists(id)): slots.get(id);
+            case OpaqueType(name,args): OpaqueType(name,[for (a in args) substitute(a,slots)]);
             case ListType(item): ListType(substitute(item,slots));
             case RecordType(fields,tail):
                 RecordType([for (key => field in fields) key => substitute(field,slots)],
