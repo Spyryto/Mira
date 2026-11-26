@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.50.0');
+  assert.equal(bridge.version, '0.51.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.50.0');
+  assert.equal(bridge.version,'0.51.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -980,5 +980,15 @@ test('Studio checks projected nominal record shapes and exports open structural 
   assert.deepEqual(entries.find(x=>x.name==='width of:').schema.parameters[0],{kind:'Structural',name:'Size',fields:[{name:'width',type:{kind:'Number'}}],open:true});
   assert.equal(entries.find(x=>x.name==='result').type,'Number');
   assert.equal(bridge.check(source+'bad = width of: {title: "x"};').ok,false);
+  for(const target of ['js','php'])assert.equal(bridge.compile(source,target).ok,true);
+});
+
+test('Studio exports bounded refinement schemas and rejects unknown or invalid proofs',()=>{
+  const source='Percentage :: Number where _ >= 0 & _ <= 100; p (Percentage) = 42; valid = p > 0 & p <= 100;';
+  const checked=bridge.check(source);assert.equal(checked.ok,true,checked.message);
+  const schema=JSON.parse(checked.output).find(x=>x.name==='p').schema;
+  assert.deepEqual(schema,{kind:'Named',name:'Percentage',base:{kind:'Refined',base:{kind:'Number'},range:{lower:0,upper:100,lowerInclusive:true,upperInclusive:true}}});
+  assert.equal(bridge.check(source+'bad (Percentage) = 101;').ok,false);
+  assert.equal(bridge.check(source+'bad (Percentage) = 20 + 30;').ok,false);
   for(const target of ['js','php'])assert.equal(bridge.compile(source,target).ok,true);
 });
