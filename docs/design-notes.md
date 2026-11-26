@@ -506,3 +506,14 @@ staticamente; la rappresentazione rimane nativa. Si conserva
 NamedType per le dichiarazioni esistenti e si distingue
 ParametricNamedType con argomenti espliciti. Non introduciamo
 alias trasparenti, applicazioni ricorsive o nuovi costi runtime.
+
+
+## 0.64 — somme ricorsive regolari
+
+Un riferimento nominale finito (SumReference) conserva il
+nome, gli argomenti e la tabella condivisa delle alternative,
+senza espandere ricorsivamente la definizione. L'espansione
+esplicita di un solo livello serve a match; unificazione e
+schema operano sui riferimenti nominali. Riutilizzo del
+template sostitutivo, senza modifiche agli emitter. La prima
+forma è volutamente limitata a ricorsione diretta regolare.
