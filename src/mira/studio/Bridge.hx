@@ -19,7 +19,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.58.0"
+            version: "0.59.0"
         });
     }
 
@@ -177,6 +177,8 @@ class Bridge {
                 {kind: "FieldGet", record: expression(record), key: key};
             case FieldSection(key):
                 {kind: "FieldSection", key: key};
+            case Match(input,tags,handlers):
+                {kind:"Match",input:expression(input),alternatives:[for (i in 0...tags.length) {tag:tags[i],handler:expression(handlers[i])}]};
             case Variant(sum,tag,payload):
                 {kind:"Variant", sum:switch(sum){case SumType(name,_):name;default:null;},tag:tag,payload:expression(payload)};
             case Validate(input,required,success,failure):
