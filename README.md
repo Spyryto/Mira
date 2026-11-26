@@ -105,6 +105,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Tipi somma nominali chiusi e costruttori | `0.58` | [Dettagli](docs/type-checker.md#058-tipi-somma-nominali) |
 | ✅ | Match contestuale esaustivo e payload tipizzati | `0.59` | [Dettagli](docs/type-checker.md#059-match-esaustivo) |
 | ✅ | Tipi somma parametrici e costruttori polimorfici | `0.60` | [Dettagli](docs/type-checker.md#060-tipi-somma-parametrici) |
+| ✅ | Parametri di tipo con nomi discorsivi | `0.60.1` | [Dettagli](docs/type-checker.md#0601-parametri-di-tipo-discorsivi) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

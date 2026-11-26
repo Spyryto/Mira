@@ -1126,7 +1126,7 @@ class DefinitionParser
 public static function annotatedName(tokens:Array<Token>,?names:Map<String,Type>):{name:String,type:Null<Type>,typeOrigin:Null<Token>} { final opening = topLevel(tokens,"("); if (opening < 0) return {name:readWords(tokens),type:null,typeOrigin:null}; if (opening == 0) throw new MiraError("Expected name before type annotation",tokens[0]); final name = readWords(tokens.slice(0,opening)); if (!tokens[tokens.length-1].isSymbol(")")) throw new MiraError("Expected closing ) after type annotation",tokens[opening]); final origin = opening + 1 < tokens.length - 1 ? tokens[opening+1] : tokens[opening]; final type = new TypeParser(tokens.slice(opening+1,tokens.length-1),origin,names).parse(); return {name:name,type:type,typeOrigin:origin}; } static function splitHeader(tokens:Array<Token>):Array<Array<Token>>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L199)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/DefinitionParser.hx#L198)
 
 <a id="api-mira-syntax-definitionparser-parse"></a>
 ### `mira.syntax.DefinitionParser.parse`
