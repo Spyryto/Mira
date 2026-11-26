@@ -693,3 +693,7 @@ Il report delle interfacce espone anche le direttive di dipendenza già raccolte
 ## 0.79 — distinguere sorgenti, tipi e collegamento
 
 Il report avvolge il resolver già esistente solo nel percorso di introspezione, registrando l'hash del testo realmente consegnato al compilatore. L'ordine delle letture è conservato, anche per richieste ripetute. Non si confondono identità logica del contratto e chiave fisica/logica del resolver. Studio separa cambi di sorgente, impatto potenziale sui tipi e collegamenti effettivamente osservati. Il confronto testuale dei manifest nella sessione è conservativo, non parte di una chiave di cache. Prima di implementare riuso reale, misurare le fasi del compilatore e la dimensione dei progetti applicativi. Nessuna promessa di riuso per modifiche private: codegen, inizializzatori, tree shaking e specializzazione possono richiedere lavoro globale.
+
+## 0.80 — misurare prima di introdurre cache
+
+Profilazione opt-in del percorso checked reale, con intervalli consecutivi in Compiler e riuso della fixture modulare di Studio. Separare raccolta/lexer/import, scope, espressioni, checker, pruning ed emissione. Non duplicare parser o checker, non misurare per sottrazione di due compilazioni indipendenti. Il timer non appartiene al runtime Mira. I dati sono esplorativi, la cache incrementale resta una possibilità da valutare su app concrete. Vedi performance.md.

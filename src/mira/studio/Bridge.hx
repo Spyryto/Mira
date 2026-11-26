@@ -23,7 +23,7 @@ class Bridge {
             exploreModules: exploreModules,
             interfaces: interfaces,
             verifyContract: verifyContract,
-            version: "0.77.0"
+            version: "0.80.0"
         });
     }
 
@@ -50,7 +50,8 @@ class Bridge {
     }
 
     public static function compile(source:String, targetName:String, ?hostJson:String,
-        ?withLocations:Bool = false, ?modulesJson:String, ?checked:Bool = false, ?treeShake:Bool = false, ?bindingsJson:String):Dynamic {
+        ?withLocations:Bool = false, ?modulesJson:String, ?checked:Bool = false, ?treeShake:Bool = false, ?bindingsJson:String, ?withProfile:Bool = false):Dynamic {
+        final profile = withProfile ? new mira.CompileProfile() : null;
         final locations:Array<GeneratedLocation> = withLocations ? [] : null;
         final optimization:Dynamic = {};
         final result = safely(function() {
@@ -62,13 +63,15 @@ class Bridge {
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
             if (treeShake && !checked) throw new MiraError("Tree shaking requires checked compilation");
+            if (withProfile && !checked) throw new MiraError("Profiling requires checked compilation");
             if (bindingsJson != null && !checked) throw new MiraError("Provider bindings require checked compilation");
             final providers = bindingsJson == null ? null : mira.resolve.ProviderBindings.fromJson(bindingsJson);
-            return checked ? Compiler.transpileChecked(source,target,host,locations,resolver(modulesJson),null,treeShake,optimization,providers)
+            return checked ? Compiler.transpileChecked(source,target,host,locations,resolver(modulesJson),null,treeShake,optimization,providers,profile)
                 : Compiler.transpile(source, target, host, locations, resolver(modulesJson));
         });
         if (withLocations && result.ok) Reflect.setField(result, "locations", locations);
         if (treeShake && result.ok) Reflect.setField(result,"optimization",optimization);
+        if (withProfile && result.ok) Reflect.setField(result,"profile",profile.report());
         return result;
     }
 
