@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.69.1');
+  assert.equal(bridge.version, '0.70.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.69.1');
+  assert.equal(bridge.version,'0.70.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1320,4 +1320,29 @@ test('0.69.1 Studio preserves opaque generic arguments across aliases and public
   const denied=bridge.check(source+' bad = (e ~ box) ~ item;',null,modules);
   assert.equal(denied.ok,false);assert.match(denied.message,/Type check/);
   assert.match(read('type-lab.html'),/parametric-opaque-example/);
+});
+
+
+test('0.70 Studio traces re-exports without generating intermediate declarations',()=>{
+  const files=JSON.stringify({
+    'Core':'module Core; interface Box (T); box (T): :: (T) -> Box (T); item (T): :: (Box (T)) -> T; implementation Box (T) :: {item: T}; box: x = {item: x}; item: b = b ~ item;',
+    'Facade':'module Facade; interface export Core {Box => Container; box: ; item: => value of: ;}; implementation',
+    'API':'module API; interface export Facade { * }; implementation'
+  });
+  const src='module App; import API {Container; box: ; value of: ;}; n (Container (Number)) = box: 7; result = value of: n;';
+  const report=bridge.check(src,null,files);assert.equal(report.ok,true,report.message);
+  assert.equal(JSON.parse(report.output).find(x=>x.name==='App / result').type,'Number');
+  const trace=bridge.trace(src,null,files);assert.equal(trace.ok,true,trace.message);
+  const info=JSON.parse(trace.output);
+  const api=info.interfaces.find(x=>x.module==='API');
+  assert.deepEqual(api.opaqueTypes,['Container']);
+  assert.deepEqual(api.reexports.find(x=>x.name==='Container'),{name:'Container',kind:'type',target:'Core / Box',opaque:true});
+  assert.deepEqual(api.reexports.find(x=>x.name==='value of:'),{name:'value of:',kind:'selector',target:'Core / item:'});
+  assert.equal(info.declarations.some(x=>x.name==='API / value of:'),false);
+  const js=bridge.compile(src,'js',null,false,files,true);assert.equal(js.ok,true,js.message);
+  const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+  assert.equal(runInNewContext(js.output+'\n'+name,{}),7);
+  const bad=bridge.check('module App; import API {item: ;}; result = item: 7;',null,files);
+  assert.equal(bad.ok,false);assert.match(bad.message,/Symbol not exported/);
+  assert.match(read('type-lab.html'),/reexport-example/);
 });

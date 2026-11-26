@@ -1440,3 +1440,49 @@ test('0.69.1 opaque type templates and public nested references preserve type ar
     assert.match(check().stderr,/Opaque type parameter count mismatch/);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.70 re-exports preserve original canonical declarations, aliases and opaque types',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-reexports-'));
+  try{
+    const input=join(dir,'program.mira');
+    writeFileSync(join(dir,'Core.mira'),'module Core; interface Box (T); box (T): :: (T) -> Box (T); item (T): :: (Box (T)) -> T; add: by: ; rate; implementation Box (T) :: {item: T}; box: x = {item: x}; item: b = b ~ item; rate = 2; add: x, by: y = x + y; hidden = 42;');
+    writeFileSync(join(dir,'Facade.mira'),'module Facade; interface export Core {Box => Container; box: ; item: ; add: by: => plus: with: ; rate => unit rate;}; implementation');
+    writeFileSync(join(dir,'API.mira'),'module API; interface export Facade { * }; implementation');
+    const direct='module App; import Core {Box => Container; box: ; item: ; add: by: => plus: with: ; rate => unit rate;}; n (Container (Number)) = box: 7; result = plus: (item: n), with: unit rate;';
+    const forwarded=direct.replace('import Core {Box => Container; box: ; item: ; add: by: => plus: with: ; rate => unit rate;};','import API {Container; box: ; item: ; plus: with: ; unit rate;};');
+    writeFileSync(input,forwarded);
+    const check=()=>spawnSync('node',['dist/mira.cjs',input,'--check'],{encoding:'utf8'});
+    const report=check();assert.equal(report.status,0,report.stderr);
+    const rows=JSON.parse(report.stdout);
+    assert.deepEqual(rows.find(x=>x.name==='App / n').schema,{kind:'Opaque',name:'Core / Box',arguments:[{kind:'Number'}]});
+    assert.equal(rows.filter(x=>x.name==='Core / add:by:').length,1);
+    assert.equal(rows.some(x=>x.name==='API / plus:with:'),false);
+    for(const target of ['js','php']){
+      const compile=src=>{writeFileSync(input,src);return spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});};
+      const a=compile(direct),b=compile(forwarded);
+      assert.equal(a.status,0,a.stderr);assert.equal(b.status,0,b.stderr);assert.equal(a.stdout,b.stdout);
+      const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,b.stdout+(target==='js'?'\nconsole.log('+name+');':'\necho $'+name+';'));
+      const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);assert.equal(run.stdout.trim(),'9');
+    }
+    const local='module App; interface result; export Core {rate => unit rate;}; implementation result = unit rate + 1;';
+    writeFileSync(input,local);assert.equal(check().status,0,check().stderr);
+    for(const [src,pattern] of [
+      ['module App; interface export Core {hidden;}; implementation',/Symbol not exported/],
+      ['module App; interface export Core {add: by: => sum: ;}; implementation',/preserve selector arity/],
+      ['module App; interface export Core {rate;}; import Core {rate;}; implementation',/Duplicate imported name/],
+      ['module App; interface export Core {rate;}; implementation rate = 3;',/Imported name conflicts/],
+      ['module App; interface import Core {rate;}; export Core {box: ;}; implementation',/Interface exports must precede imports/],
+      ['module App; export Core {rate;};',/Re-exports belong in the interface/],
+      ['module App; import API {box: ;}; n = box: 1; bad = n ~ item;',/Type check/],
+      ['module App; import API {hidden;};',/Symbol not exported/],
+      ['module App; import API {Box;};',/Symbol not exported/],
+      ['module App; interface export App {rate;}; implementation',/Import cycle/]
+    ]) {
+      writeFileSync(input,src);const x=check();assert.notEqual(x.status,0,src);assert.match(x.stderr,pattern,src);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

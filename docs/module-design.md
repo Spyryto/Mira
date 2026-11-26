@@ -7,6 +7,7 @@ import completi e alias di simboli; la 0.68 introduce firme pubbliche
 esplicite, comprese quelle parametriche; la 0.69 aggiunge tipi opachi
 monomorfi e controllo delle fughe di tipi privati; la 0.69.1 estende
 l'opacità ai parametri e ai riferimenti annidati nei tipi pubblici.
+La 0.70 introduce riesportazioni esplicite con alias e identità originale.
 Vedi grammar.md per le funzionalità implementate.
 Il campionario completo resta una proposta. Sostituisce la direzione sperimentale
 della PR #95 (nomi puntati come fondamento del namespace), che non va integrata
@@ -272,7 +273,8 @@ make pair: first, with: second = {first: first, second: second};
 | 0.67 | Import selettivi e alias |
 | 0.68 | Firme pubbliche inferite ed esplicite |
 | 0.69 | Tipi opachi e incapsulamento |
-| 0.70 | Riesportazione e tree shaking conservativo |
+| 0.70 | Riesportazione statica |
+| 0.70.1 | Tree shaking conservativo |
 | 0.71 | Esplorazione delle interfacce elaborate in Mira Studio |
 
 Le versioni possono cambiare se un incremento necessita di un prerequisito.

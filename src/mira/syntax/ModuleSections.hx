@@ -54,8 +54,10 @@ class ModuleSections {
                 continue;
             }
             if (importing) throw new MiraError("Interface exports must precede imports",anchor);
-            if (anchor.kind == Word && anchor.value == "export")
-                throw new MiraError("Re-exports are not implemented yet",anchor);
+            if (anchor.kind == Word && anchor.value == "export") {
+                for (token in tokens.slice(begin,cursor)) imports.push(token);
+                continue;
+            }
             if (marker >= 0 && !selector && anchor.kind == Word) {
                 // Nominal definitions in the interface reuse DefinitionParser.
                 for (token in tokens.slice(begin,cursor)) typeTokens.push(token);
