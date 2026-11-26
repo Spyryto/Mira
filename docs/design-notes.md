@@ -135,3 +135,9 @@ discreti. Divisione, overflow e confronti con Number non devono
 nascondere differenze fra i target. L'uguaglianza stretta numerica
 JS/PHP, i confini host, la validazione dinamica e le conversioni
 implicite rimangono temi aperti. Vedi type-checker.md.
+
+La prima CI 0.53 ha superato 227/228 test: il test di esecuzione chiamava
+la funzione Mira next:, che collide con next() nativa PHP. Il fixture
+usa ora increment retry:. La collisione di nomi con funzioni native PHP
+resta un difetto di interoperabilità da risolvere separatamente, non un
+errore nelle prove Integer. Non si modifica l'emitter in questo incremento.
