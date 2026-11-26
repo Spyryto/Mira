@@ -195,7 +195,8 @@ class Modules {
                             throw new MiraError("Duplicate interface export " + reference.name,reference.origin);
                         final type = localTypes.get(reference.name);
                         switch (type) {
-                            case NamedType(_,_) | SumType(_,_,[]):
+                            case NamedType(_,_):
+                            case SumType(_,_,arguments) if (arguments.length == 0):
                             default: throw new MiraError("Opaque exports currently require a non-parametric nominal type",reference.origin);
                         }
                         visibility.markOpaque(ModuleIdentity.qualify(modulePath,reference.name));
@@ -208,6 +209,11 @@ class Modules {
                     d.isExported = true;
                 }
                 publicTypes.get(modulePath).sort(Reflect.compare);
+                for (d in local) if (d.isExported) switch (d.body) {
+                    case Variant(SumType(name,_,_),_,_) if (visibility.opaqueNames.exists(name)):
+                        throw new MiraError("Cannot export constructor of opaque type " + name,d.origin);
+                    default:
+                }
                 for (tokens in sections.signatures) signatures.push(PublicSignature.read(tokens,signatureTypes));
                 for (signature in signatures) {
                     final d = byName.get(signature.name);
