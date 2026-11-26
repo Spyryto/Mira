@@ -26,7 +26,17 @@ class Mangle {
         return generated;
     }
 
+    // Encode the entire qualified spelling, not just its separators. Hex
+    // preserves case even in PHP's case-insensitive function namespace.
+    static function qualified(source:String,kind:String):String {
+        final bytes = haxe.io.Bytes.ofString(source);
+        final encoded = new StringBuf();
+        for (i in 0...bytes.length) encoded.add(StringTools.hex(bytes.get(i),2));
+        return "__miraQualified_" + kind + "_" + encoded.toString();
+    }
+
     public static function name(source:String):String {
+        if (source.indexOf(".") >= 0) return qualified(source,"v");
         final words = source.split(" ");
         var result = words[0];
 
@@ -38,6 +48,7 @@ class Mangle {
     }
 
     public static function selector(labels:Array<String>):String {
+        if (labels[0].indexOf(".") >= 0) return qualified(labels.join(":"),"s");
         final names:Array<String> = [];
         for (label in labels) names.push(label.split(" ").join("_"));
         return protect(names.join("__"),true);
