@@ -72,6 +72,10 @@
     "docs/type-checker.md": {
       "kind": "ai_assisted",
       "note": "Descrizione del checker e dei limiti sperimentali redatta con assistenza IA."
+    },
+    "docs/design-notes.md": {
+      "kind": "ai_assisted",
+      "note": "Sintesi delle discussioni con l'autore e delle linee guida di progetto; distingue implementazioni, decisioni e proposte."
     }
   },
   "generatedSections": {
