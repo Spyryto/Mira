@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.68.0');
+  assert.equal(bridge.version, '0.69.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.68.0');
+  assert.equal(bridge.version,'0.69.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1233,7 +1233,7 @@ test('0.66 Studio exposes module export metadata without making private symbols 
   assert.equal(ast.definitions.find(d=>d.name===p+'rate').exported,true);
   assert.equal(ast.definitions.find(d=>d.name===p+'result').exported,false);
   const trace=JSON.parse(bridge.trace(src).output);
-  assert.deepEqual(trace.interfaces,[{module:'Math / Integer Math',types:['Option','Point'],exports:[
+  assert.deepEqual(trace.interfaces,[{module:'Math / Integer Math',types:['Option','Point'],opaqueTypes:[],exports:[
     {name:p+'Some:',kind:'selector'},{name:p+'None',kind:'value'},{name:p+'rate',kind:'value'},{name:p+'square:',kind:'selector'},{name:p+'add:by:',kind:'selector'}
   ]}]);
   const files=JSON.stringify({'library.mira':src,'helper.mira':'module Private / Helper; data = 1;'});
@@ -1288,4 +1288,21 @@ test('0.68 public signatures in virtual projects use public imports and constrai
   const bad=bridge.check('module App; import Math / Fees {fee: ;}; result = fee: "bad";',null,modules);
   assert.equal(bad.ok,false);assert.match(bad.message,/Type check/);
   assert.match(read('type-lab.html'),/public-signature-example/);
+});
+
+
+test('0.69 Studio reports opaque public types without representation and rejects external projection',()=>{
+  const files=JSON.stringify({'Music / Theory':'module Music / Theory; interface Note; note: :: (Number) -> Note; pitch of: :: (Note) -> Number; implementation Note :: {pitch: Number}; note: n = {pitch: n}; pitch of: n = n ~ pitch;'});
+  const source='module App; import Music / Theory {Note; note: ; pitch of: ;}; n (Note) = note: 7; result = pitch of: n;';
+  const checked=bridge.check(source,null,files);assert.equal(checked.ok,true,checked.message);
+  const rows=JSON.parse(checked.output);
+  assert.deepEqual(rows.find(x=>x.name==='App / n').schema,{kind:'Opaque',name:'Music / Theory / Note'});
+  const trace=JSON.parse(bridge.trace(source,null,files).output);
+  assert.deepEqual(trace.interfaces.find(x=>x.module==='Music / Theory').opaqueTypes,['Note']);
+  const js=bridge.compile(source,'js',null,false,files,true);assert.equal(js.ok,true,js.message);
+  const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+  assert.equal(runInNewContext(js.output+'\n'+name,{}),7);
+  const bad=bridge.check(source+' leaked = n ~ pitch;',null,files);
+  assert.equal(bad.ok,false);assert.match(bad.message,/Type check/);
+  assert.match(read('type-lab.html'),/opaque-type-example/);
 });
