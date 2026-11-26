@@ -412,6 +412,22 @@ class ExpressionParser {
         consume();
         if (mira.types.NumericRange.ofType(required) == null)
             throw new MiraError("Validation currently requires a numeric type",anchor);
+        // A comma belongs to the long form only if followed by its then label.
+        if (!(current().isSymbol(",") && tokens[position+1].kind == Word
+            && tokens[position+1].value == "then" && tokens[position+2].isSymbol(":"))) {
+            final template = types.get("Result");
+            switch (template) {
+                case SumType("Result",alternatives,[Variable(a),Variable(b)])
+                    if (a < 0 && b < 0 && a != b && Lambda.count(alternatives) == 2):
+                    switch [alternatives.get("Ok"),alternatives.get("Err")] {
+                        case [Variable(x),Variable(y)] if (x == a && y == b):
+                            return ValidateResult(value,required,mira.types.TypeTemplates.apply(template,[required,TextType]));
+                        default:
+                    }
+                default:
+            }
+            throw new MiraError("Short validation requires Result (T, E) :: Ok (T) | Err (E)",anchor);
+        }
         requireSymbol(",");
         requireWord("then");
         requireSymbol(":");
