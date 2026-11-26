@@ -38,8 +38,10 @@ class Lexer {
 
             if (isLetter(character) || character == "_") {
                 final start = offset;
-                while (isLetter(current()) || isDigit(current()) || current() == "_") {
-                    advance();
+                while (true) {
+                    if (isLetter(current()) || isDigit(current()) || current() == "_") advance();
+                    else if (current() == "." && (isLetter(peek(1)) || peek(1) == "_")) advance();
+                    else break;
                 }
                 final word = source.substring(start, offset);
                 final kind:TokenKind = word == "AND" || word == "OR" || word == "NOT" ? Symbol : Word;
