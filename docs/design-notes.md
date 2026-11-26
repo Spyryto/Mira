@@ -607,3 +607,11 @@ Il bridge exploreModules unisce i metadati delle interfacce al report
 checked, senza ricostruire i tipi dalla sintassi. La vista mobile mostra
 archi navigabili, contratti, simboli privati e identità di tipi opachi e
 alias. Due analisi del sorgente (trace e check), nessuna dipendenza web.
+
+### Consolidamento 0.71
+
+Indicizzazione delle dichiarazioni pubbliche e private per modulo in un
+solo passaggio (anziché scansione completa per ogni modulo). Fixture
+con dipendenza a diamante, benchmark per JS/PHP e test di identità opaca
+attraverso due riesportazioni, proiezione negata e ciclo di dipendenze.
+Non si introducono cache persistenti o compilazione incrementale.
