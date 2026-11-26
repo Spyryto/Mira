@@ -125,6 +125,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Contratti come moduli e implementazione ereditata | `0.74` | [Dettagli](docs/grammar.md#mira-074-contratti-come-moduli-senza-implementazione) |
 | ✅ | Verifica statica dei contratti senza provider | `0.75` | [Dettagli](docs/grammar.md#mira-075-verifica-di-contratti-senza-provider) |
 | ✅ | Identità nominali persistenti dei contratti | `0.76` | [Dettagli](docs/grammar.md#mira-076-identita-nominali-persistenti-dei-contratti) |
+| ✅ | Interfacce elaborate e impronte semantiche | `0.77` | [Dettagli](docs/grammar.md#mira-077-impronte-semantiche-delle-interfacce) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
