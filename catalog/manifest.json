@@ -1,5 +1,5 @@
 {
-  "version": "0.55.0",
+  "version": "0.56.0",
   "features": [
     {
       "id": "values",
@@ -1884,6 +1884,12 @@
       "title": "Diagnostica di prove numeriche e overflow certo",
       "since": "0.55",
       "doc": "docs/type-checker.md#055-esiti-delle-prove-numeriche"
+    },
+    {
+      "id": "checked-numeric-guards",
+      "title": "Compilazione checked con guardie numeriche selettive",
+      "since": "0.56",
+      "doc": "docs/type-checker.md#056-guardie-numeriche"
     }
   ]
 }
