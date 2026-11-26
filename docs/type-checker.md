@@ -808,3 +808,54 @@ da codice esterno. Nessuna convalida generale di record/list,
 guardia fallibile Result, o inserimento di verifiche implicite
 ai confini RPC/DB. Il normale --check conserva il comportamento
 strettamente statico. La modalità checked resta sperimentale.
+
+## 0.57: validazione fallibile
+
+```mira
+Percentage :: Number where _ >= 0 AND _ <= 100;
+display percent: p (Percentage) = p + 0;
+
+read percent: input =
+  validate: (input), as: (Percentage),
+    then: {p | display percent: p},
+    else: {error | 0};
+
+result = read percent: 120;
+```
+
+La forma esplicita validate:as:then:else: valuta l'input una volta,
+verifica tipo numerico, finitezza, integrità e limiti applicabili
+e invoca soltanto il blocco pertinente. Il valore non viene
+convertito: la stringa "42" non è un Number. Il fallimento del
+predicato non genera eccezioni. Il blocco then riceve un valore
+del tipo richiesto, inclusa l'identità nominale; else riceve un
+Text con un messaggio generico. I due risultati devono unificarsi.
+Il tipo del parametro dei blocchi è assegnato dal checker, non
+va annotato. I blocchi devono avere un solo parametro.
+
+Sono obbligatorie le parentesi intorno all'input e al tipo, i
+due punti e le virgole; il primo label validate è riservato.
+Il tipo è risolto staticamente, non un valore o un nome host.
+Sono supportati Number (finito), Integer e i relativi sottotipi
+e refinement numerici. Il checker accetta anche input non
+numerici, che possono fallire normalmente; non permette il
+rebranding diretto fra identità nominali estranee.
+
+Il nodo Validate contiene il tipo già risolto e due Block;
+il checker verifica entrambi i rami e ne inferisce il risultato.
+L'emitter riutilizza il predicato delle guardie 0.56 e seleziona
+la funzione con una condizionale nativa, senza runtime condiviso,
+senza catturare eccezioni e senza introdurre un tipo Result.
+Le callback possono catturare lo scope lessicale. La validazione
+è una operazione esplicita e viene emessa anche nella transpilazione
+ordinaria; le garanzie di tipo dei rami richiedono il checker.
+Non si elimina ancora il predicato quando il valore è provato.
+Gli errori durante il calcolo dell'input o nei blocchi non sono
+intercettati: solo il fallimento della validazione è previsto.
+
+Questa forma è un primo eliminatore con due continuazioni, non
+un valore Result di prima classe. Tipi somma, pattern matching,
+errori strutturati, accumulo di errori, parsing di testo, validazione
+ricorsiva di record e confini RPC/persistenza sono futuri.
+Il Type Lab include un esempio; la suite verifica JS/PHP, input
+singolo, lazy handlers, identità nominale e diagnostica.
