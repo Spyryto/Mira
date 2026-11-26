@@ -451,3 +451,9 @@ Il laboratorio `type-lab.html` è accessibile dalla homepage e funziona
 offline. Il sorgente è analizzato dall'API `MiraStudioCompiler.check`;
 mostra tipi delle dichiarazioni o il primo errore, senza eseguire codice.
 Vedi [nucleo e limiti dell'inferenza](type-checker.md).
+
+## Mira 0.82: Host Module Lab
+
+Il laboratorio [Host Module Lab](https://spyryto.github.io/Mira/host-module-lab.html) è accessibile da Studio e Module Explorer, con asset nella cache offline PWA. Due esempi (valore assoluto, massimo) condividono il normale contratto Services / Math e due provider. Sono editabili App, contratto, entrambi i provider e manifest host. Il binding è generato dalla selezione Native, Pure o senza provider. I percorsi logici e il risultato App / result sono fissi per il laboratorio, non per il linguaggio.
+
+Verifica e confronto usano check e interfaces del compilatore reale. Compila JS e PHP usa checked e tree shaking; il confronto mostra impronte e byte UTF-8, non equivalenza semantica. Esegui JS usa un worker dedicato con timeout di tre secondi e due capability fisse Math.abs e Math.max. Non è una sandbox per codice sconosciuto. Non esegue PHP nel browser: la CI esegue l'output PHP con abs e max reali e controlla gli stessi risultati. Manifest e sorgenti modificati non aggiungono capability runtime. Nessun server o libreria nuova, nessuna modifica alla grammatica. La pagina non conserva gli edit tra sessioni.

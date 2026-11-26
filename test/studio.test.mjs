@@ -1743,3 +1743,66 @@ test('0.81 scoped host names are visible only in declared modules, including sel
   const global=JSON.stringify({values:['native rate'],types:{'native rate':'Number'}});
   assert.equal(bridge.check('result = native rate;',global).ok,true);
 });
+
+test('0.82 Host Module Lab compiles and executes both providers with real JS and PHP hosts',()=>{
+  const env={};runInNewContext(read('host-module-fixtures.js'),env);
+  const lab=env.MiraHostModuleLab;
+  for(const id of ['magnitude','maximum']){
+    const fixture=lab.fixture(id),snapshots=[];
+    for(const mode of ['unbound','native','pure']){
+      const project=lab.project(fixture,mode);
+      const report=lab.inspect(bridge,project);assert.equal(report.ok,true,report.message);
+      const contract=report.report.interfaces.find(m=>m.module===lab.service);
+      assert.ok(contract);snapshots.push(contract.canonical);
+      for(const target of ['js','php']){
+        const out=lab.compile(bridge,project,target);
+        if(mode==='unbound'){assert.equal(out.ok,false);continue;}
+        assert.equal(out.ok,true,out.message);
+        assert.equal(out.output.includes(fixture.capability),mode==='native');
+        if(target==='js'){
+          let response;
+          const worker={self:{postMessage(v){response=v;}}};
+          runInNewContext(read('host-module-worker.js'),worker);
+          worker.self.onmessage({data:{code:out.output}});
+          assert.equal(response.ok,true,response.message);assert.equal(Number(response.output),fixture.expected);
+        }else{
+          const host='$GLOBALS["__miraHost"]=["native magnitude"=>abs(...),"native maximum:and:"=>max(...)];';
+          const php=out.output.replace(/^<\?php/,'').replace('declare(strict_types=1);','declare(strict_types=1);'+host)+'\necho $'+lab.resultName+';';
+          const executed=spawnSync('php',['-r',php],{encoding:'utf8'});
+          assert.equal(executed.status,0,executed.stderr);assert.equal(Number(executed.stdout),fixture.expected);
+        }
+      }
+    }
+    assert.equal(snapshots[0],snapshots[1]);assert.equal(snapshots[1],snapshots[2]);
+    const invalid=lab.project({...fixture,source:fixture.source+'\nleak = '+(id==='magnitude'?'native magnitude 2':'native maximum: 1, and: 2')+';'},'native');
+    assert.equal(lab.inspect(bridge,invalid).ok,false);
+  }
+});
+test('0.82 Host Module Lab assets, offline navigation and controls are connected',()=>{
+  for(const asset of ['host-module-lab.html','host-module-fixtures.js','host-module-lab.js','host-module-worker.js']){
+    assert.ok(existsSync(resolve(site,asset)));assert.ok(read('sw.js').includes('./'+asset));
+    if(asset.endsWith('.js'))new Function(read(asset));
+  }
+  assert.match(read('sw.js'),/endsWith\('\/host-module-lab.html'\)/);
+  assert.match(read('index.html'),/href="\.\/host-module-lab.html"/);
+  assert.match(read('module-explorer.html'),/href="\.\/host-module-lab.html"/);
+  const html=read('host-module-lab.html'),controller=read('host-module-lab.js');
+  for(const id of ['example','provider','source','contract','native','pure','host','reset','check','compile-js','compile-php','run','compare']){
+    assert.ok(html.includes('id="'+id+'"'));assert.ok(controller.includes("'"+id+"'"));
+  }
+  // Exercise controller events against the real compiler, without a browser DOM.
+  const nodes=new Map();
+  const node=id=>{if(!nodes.has(id))nodes.set(id,{value:id==='example'?'magnitude':id==='provider'?'native':'',textContent:'',className:'',listeners:{},addEventListener(event,fn){this.listeners[event]=fn;}});return nodes.get(id);};
+  const ctx={document:{getElementById:node},MiraStudioCompiler:bridge,TextEncoder};
+  runInNewContext(read('host-module-fixtures.js'),ctx);
+  runInNewContext(controller,ctx);
+  assert.match(node('status').textContent,/Type check riuscito/);
+  node('compare').listeners.click();assert.match(node('output').textContent,/identica/);
+  node('provider').value='unbound';node('provider').listeners.change();
+  assert.match(node('status').textContent,/Type check riuscito/);
+  node('compile-php').listeners.click();assert.match(node('status').textContent,/non riuscita/);
+  node('provider').value='pure';node('provider').listeners.change();
+  node('compile-js').listeners.click();assert.match(node('status').textContent,/riuscita/);
+  node('example').value='maximum';node('example').listeners.change();
+  assert.match(node('status').textContent,/Type check riuscito/);
+});

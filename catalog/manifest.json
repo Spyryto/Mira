@@ -1,5 +1,5 @@
 {
-  "version": "0.81.0",
+  "version": "0.82.0",
   "features": [
     {
       "id": "values",
@@ -2064,6 +2064,12 @@
       "title": "Capability host tipizzate con scope di modulo",
       "since": "0.81",
       "doc": "docs/grammar.md#mira-081-capability-host-con-scope-di-modulo"
+    },
+    {
+      "id": "host-module-lab",
+      "title": "Host Module Lab: contratti e provider nativi",
+      "since": "0.82",
+      "doc": "docs/studio.md#mira-082-host-module-lab"
     }
   ]
 }
