@@ -36,7 +36,7 @@ class DefinitionParser {
                         final name = readWords(segment.slice(0,marker));
                         if (["Number","Text","Boolean"].indexOf(name) >= 0 || names.exists(name))
                             throw new MiraError("Duplicate or reserved type " + name,segment[0]);
-                        final base = new TypeParser(segment.slice(marker+1),segment[marker+1],names).parse();
+                        final base = new TypeParser(segment.slice(marker+1),segment[marker+1],names,false).parse();
                         names.set(name,NamedType(name,base));
                     } else definitions.push(parseOne(segment,names));
                 }
