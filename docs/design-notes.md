@@ -545,3 +545,13 @@ l'identità canonica senza influenzare il codice emesso. Studio mostra
 le dichiarazioni pubbliche e private, non ancora un contratto tipizzato
 indipendente. L'import logico e la validazione delle firme pubbliche
 sono incrementi separati.
+
+## 0.67 — binding lessicali degli import
+
+ModuleImport analizza percorsi e selettori. ImportBinding conserva alias
+locale e dichiarazione originale; il resolver converte i riferimenti
+all'identità canonica. Le tabelle dei tipi ricevono le identità originali,
+senza copie nominali. Il resolver host sceglie i file. Gli emitter vedono
+le globali locali e quelle importate, senza wrapper o oggetti modulo.
+La convenzione editoriale degli import preferisce `square: ;` e
+`add: by: => somma: a: ;`, pur accettando gli spazi facoltativi.
