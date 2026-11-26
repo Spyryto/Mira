@@ -1510,10 +1510,10 @@ class TypeParser
 **constructor** · Membro pubblico di mira.syntax.TypeParser.
 
 ```haxe
-public function new(tokens:Array<Token>, fallback:Token, ?names:Map<String,Type>)
+public function new(tokens:Array<Token>, fallback:Token, ?names:Map<String,Type>, ?allowProjection:Bool = true)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/TypeParser.hx#L15)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/TypeParser.hx#L16)
 
 <a id="api-mira-syntax-typeparser-parse"></a>
 ### `mira.syntax.TypeParser.parse`
@@ -1524,7 +1524,7 @@ public function new(tokens:Array<Token>, fallback:Token, ?names:Map<String,Type>
 public function parse():Type
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/TypeParser.hx#L36)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/TypeParser.hx#L38)
 
 <a id="api-mira-target"></a>
 ### `mira.Target`
@@ -1645,7 +1645,7 @@ enum Type
 BooleanType
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L8)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L10)
 
 <a id="api-mira-types-type-functiontype"></a>
 ### `mira.types.Type.FunctionType`
@@ -1656,7 +1656,7 @@ BooleanType
 FunctionType(parameters:Array<Type>, result:Type)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L11)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L13)
 
 <a id="api-mira-types-type-listtype"></a>
 ### `mira.types.Type.ListType`
@@ -1667,7 +1667,7 @@ FunctionType(parameters:Array<Type>, result:Type)
 ListType(item:Type)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L10)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L12)
 
 <a id="api-mira-types-type-namedtype"></a>
 ### `mira.types.Type.NamedType`
@@ -1689,7 +1689,7 @@ NamedType(name:String,base:Type)
 NumberType
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L6)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L8)
 
 <a id="api-mira-types-type-recordtype"></a>
 ### `mira.types.Type.RecordType`
@@ -1700,7 +1700,18 @@ NumberType
 RecordType(fields:Map<String, Type>, tail:Null<Type>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L12)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L14)
+
+<a id="api-mira-types-type-structuraltype"></a>
+### `mira.types.Type.StructuralType`
+
+**variant** · Membro pubblico di mira.types.Type.
+
+```haxe
+StructuralType(name:String,fields:Map<String,Type>)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L7)
 
 <a id="api-mira-types-type-texttype"></a>
 ### `mira.types.Type.TextType`
@@ -1711,7 +1722,7 @@ RecordType(fields:Map<String, Type>, tail:Null<Type>)
 TextType
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L7)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L9)
 
 <a id="api-mira-types-type-variable"></a>
 ### `mira.types.Type.Variable`
@@ -1722,7 +1733,7 @@ TextType
 Variable(id:Int)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L9)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L11)
 
 <a id="api-mira-types-typechecker"></a>
 ### `mira.types.TypeChecker`
