@@ -31,6 +31,11 @@
   }
   document.getElementById('checked-js').addEventListener('click',()=>compileChecked('js'));
   document.getElementById('checked-php').addEventListener('click',()=>compileChecked('php'));
+  document.getElementById('generic-sum-example').addEventListener('click',()=>{
+    host.value='';
+    source.value='Result (T, E) :: Ok (T) | Err (E);\nOption (T) :: Some (T) | None;\na (Result (Number, Text)) = Ok: 42;\nb (Result (Text, Number)) = Ok: "Ada";\nnone number (Option (Number)) = None;\nresult = match: a {ok: {n | n}, err: {e | 0}};';
+    check();
+  });
   document.getElementById('match-example').addEventListener('click',()=>{
     host.value='';
     source.value='Connection :: Disconnected | Connecting | Connected (Text) | Failed (Text);\nconnection = Connected: "Ada";\nresult = match: connection {\n  disconnected: {| "offline"},\n  connecting: {| "waiting"},\n  connected: {name | name},\n  failed: {error | error}\n};';
