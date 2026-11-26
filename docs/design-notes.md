@@ -625,3 +625,12 @@ le firme ai soli simboli pubblici locali del provider. Non si confrontano
 stringhe di tipi inferiti. Prima fase deliberatamente conservativa:
 nessun matching per subtyping delle firme annotate, nessuna equazione
 tra tipi nominali di provider differenti, nessuna selezione di provider.
+
+## 0.73 — collegamento statico dei provider
+
+ProviderBindings interpreta una configurazione di build. Modules risolve
+il percorso di servizio al provider, riusa la sua tabella delle dichiarazioni
+e costruisce una vista ristretta ai requisiti. PublicSignature.apply
+inserisce i vincoli prima del checker nello stesso AST che raggiunge gli
+emitter. Nessun wrapper, nessun nuovo costruttore Expr, nessuna seconda
+compilazione di verifica. I binding richiedono modalità checked.
