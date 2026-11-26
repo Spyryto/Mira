@@ -530,3 +530,57 @@ non può essere spacciata per un record chiuso. Gli schemi
 aperti non sono contratti RPC validi. Nessun cambiamento al
 runtime JS/PHP. I predicati where e la loro conservazione
 saranno il prossimo incremento, non sono ancora implementati.
+
+## 0.51: refinement numerici
+
+```mira
+Percentage :: Number where _ >= 0 AND _ <= 100;
+Small Percentage :: Percentage where _ <= 10;
+volume (Percentage) = 80;
+small volume (Small Percentage) = 5;
+```
+
+Il primo sottoinsieme di predicati usa confronti fra _ (lo
+stesso valore in ogni confronto) e costanti numeriche decimali:
+>, >=, <, <=, ==, combinati con AND. Il parser riconosce questo
+sottoinsieme direttamente, senza eseguire codice arbitrario.
+Sono ammessi solo tipi con rappresentazione numerica. I limiti
+sono finiti e nel range degli interi sicuri JS; intervalli
+contraddittori anche rispetto alla base sono rifiutati.
+where è riservato nella sintassi dei tipi. Sono ammessi anche
+refinement anonimi come annotazione intera, non ancora nei campi
+dei record o nelle liste. Integer e predicati generali, != e OR
+nei refinement sono rinviati.
+
+Nelle espressioni ordinarie AND, OR e NOT sono parole riservate
+case-sensitive. AND e OR sono short-circuit e si traducono nei
+corrispondenti operatori nativi JS/PHP; NOT si abbassa a Conditional.
+Precedenza: operazioni preesistenti > NOT > AND > OR.
+Le precedenze di aritmetica, confronto e pipeline rimangono quelle
+della 0.50 in questo incremento. Non sono ancora configurabili.
+Gli operatori binari aritmetici, di confronto e logici sono valori
+funzione tra parentesi, ad esempio (+), (AND), (OR); (NOT) è un
+blocco unario. I valori funzione hanno argomenti valutati prima
+della chiamata, diversamente dall'infisso short-circuit.
+& e && non sono sintassi di congiunzione. Nessun dispatch dinamico.
+
+RefinedType(base,range) conserva la base (inclusa eventuale
+identità nominale). NumericRange normalizza le congiunzioni
+in intervalli aperti/chiusi e calcola intersezione e implicazione.
+Le costruzioni esplicite accettano un letterale decimale conforme
+oppure un tipo già provato che implica il vincolo. Un letterale
+incompatibile produce un errore di violazione; un'espressione
+non dimostrata viene rifiutata. In particolare anche 50 + 10
+non è ancora valutato staticamente. Non vengono generate guardie
+runtime in questa versione. La compatibilità ai confini non
+crea implicitamente identità nominali. Lo schema JSON Refined
+contiene base e range con estremi null quando illimitati.
+Il checker resta opt-in: la transpilazione ordinaria senza
+checker non garantisce i vincoli, esattamente come per gli altri
+tipi. Nessun validatore RPC/host o runtime ancora generato.
+La proiezione strutturale rimane limitata ai record; i vincoli
+numerici nei tipi nominali dei campi non sono rimossi.
+
+Passi successivi: analisi delle espressioni e propagazione
+degli intervalli (rispettando la semantica JS/PHP), predicati
+più generali, poi guardie runtime e validazione fallibile.

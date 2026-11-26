@@ -41,6 +41,9 @@ class ExpressionParser {
     }
 
     public function parse():Expr {
+        if (allowOperatorArgument && tokens[1].kind == End && isOperatorValue(current())) {
+            return operatorValue(consume());
+        }
         final parsed = expression();
         final result = allowOperatorArgument ? sectionify(parsed) : parsed;
         if (current().kind != End) {
@@ -50,6 +53,43 @@ class ExpressionParser {
     }
 
     function expression():Expr {
+        var left = conjunction();
+        while (current().isSymbol("OR")) {
+            final token = consume();
+            left = at(Binary("OR",left,conjunction()),token);
+        }
+        return left;
+    }
+
+    function conjunction():Expr {
+        var left = negation();
+        while (current().isSymbol("AND")) {
+            final token = consume();
+            left = at(Binary("AND",left,negation()),token);
+        }
+        return left;
+    }
+
+    function negation():Expr {
+        if (current().isSymbol("NOT")) {
+            final token = consume();
+            return at(Conditional(negation(),BooleanLiteral(false),BooleanLiteral(true)),token);
+        }
+        return nonBooleanExpression();
+    }
+
+    static function isOperatorValue(token:Token):Bool {
+        return token.kind == Symbol && (token.value == "NOT" || token.value == "AND" || token.value == "OR"
+            || (token.value != ">>" && isOperator(token.value)));
+    }
+
+    function operatorValue(token:Token):Expr {
+        return token.value == "NOT"
+            ? at(Block(["_"],Conditional(Name("_"),BooleanLiteral(false),BooleanLiteral(true))),token)
+            : at(OperatorSection(token.value,Placeholder,Placeholder),token);
+    }
+
+    function nonBooleanExpression():Expr {
         var left:Expr;
         // () is syntax for zero arguments only, not a primary/value.
         if (current().isSymbol("(") && tokens[position + 1].isSymbol(")")) {
@@ -162,6 +202,11 @@ class ExpressionParser {
         if (token.isSymbol("(")) {
             consume();
             if (current().isSymbol(")")) throw new MiraError("Expected expression: Empty () is only allowed before >>", token);
+            if (isOperatorValue(current()) && tokens[position+1].isSymbol(")")) {
+                final op = consume();
+                consume();
+                return operatorValue(op);
+            }
             operatorDepth++;
             final inner = expression();
             operatorDepth--;

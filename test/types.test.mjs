@@ -461,3 +461,82 @@ test('types: structural views erase identically and retain extra runtime fields'
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('types: numeric refinement literals, composed bounds and distinct identities',()=>{
+  const source='Percentage :: Number where _ >= 0 AND _ <= 100; Small Percentage :: Percentage where _ <= 10; p (Percentage) = 80; small (Small Percentage) = 10; copy (Percentage) = small; read: x (Percentage) = x; result = read: small;';
+  const result=check(source);
+  assert.equal(result.p,'Percentage');assert.equal(result.small,'Small Percentage');
+  assert.equal(result.copy,'Percentage');assert.equal(result.result,'Percentage');
+  assert.equal(check(source+'local = () >> {| v (Percentage) = 42; v};').local,'Percentage');
+  for(const [extra,pattern] of [
+    ['bad (Percentage) = 120;',/refinement violated/],
+    ['bad (Small Percentage) = 11;',/refinement violated/],
+    ['bad (Small Percentage) = p;',/refinement not statically proven/],
+    ['bad = read: 80;',/expected Percentage/],
+    ['bad (Percentage) = 50 + 10;',/refinement not statically proven/],
+    ['Sibling :: Number where _ >= 0 AND _ <= 100; sibling (Sibling) = 10; bad (Percentage) = sibling;',/expected Percentage/]
+  ])assert.throws(()=>check(source+extra),pattern,extra);
+});
+test('types: anonymous numeric refinements accept only proven input and reject invalid declarations',()=>{
+  const source='Percentage :: Number where _ >= 0 AND _ <= 100; p (Percentage) = 20; read: x (Number where _ >= 0) = x + 1; result = read: p; value (Number where _ > 1 AND _ < 5) = 3;';
+  const result=check(source);assert.equal(result.result,'Number');
+  assert.equal(result.value,'Number where _ > 1 AND _ < 5');
+  for(const [src,pattern] of [
+    ['Bad :: Number where _ > 10 AND _ <= 10;',/Empty numeric refinement/],
+    ['Positive :: Number where _ > 0; Bad :: Positive where _ <= 0;',/Empty numeric refinement/],
+    ['Bad :: Text where _ > 0;',/requires a Number representation/],
+    ['Bad :: Number where _ > 0 && _ < 10;',/Unexpected token/],
+    ['Bad :: Number where _ > 0 AND;',/Expected _/],
+    ['p (Number where _ > 0) = 0;',/refinement violated/],
+    ['read: x (Number where _ > 0) = x; bad = read: 0;',/refinement not statically proven/],
+    ['p (Number where _ > 0) = 1; q (Number where _ >= 1) = p;',/refinement not statically proven/]
+  ])assert.throws(()=>check(src),pattern,src);
+});
+test('types: word operators support boolean conjunction with comparison precedence and short circuit',()=>{
+  assert.deepEqual(check('a = 1 < 2 AND 3 <= 4; both: x, and: y = x AND y; b = both: true, and: false;'),{a:'Boolean','both:and:':'(Boolean, Boolean) -> Boolean',b:'Boolean'});
+  assert.throws(()=>check('x = 1 AND true;'),/expected Boolean, got Number/);
+  const dir=mkdtempSync(join(tmpdir(),'mira-logic-'));
+  try{
+    const input=join(dir,'program.mira');
+    const source='Percentage :: Number where _ >= 0 AND _ <= 100; p (Percentage) = 42; result = p > 0 AND p <= 100; lazy = false AND ({a: true} ~ missing);';
+    for(const target of ['js','php']){
+      writeFileSync(input,source);
+      const r=spawnSync('node',['dist/mira.cjs',input,target],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);
+      assert.ok(r.stdout.includes('&&'));
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,r.stdout+(target==='js'?'\nconsole.log(JSON.stringify([result,lazy]));':'\necho json_encode([$result,$lazy]);'));
+      const executed=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(executed.status,0,executed.stderr);assert.deepEqual(JSON.parse(executed.stdout),[true,false]);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('types: logical precedence, NOT, and operators as first-class functions',()=>{
+  const src='a = NOT 1 < 2 OR true AND false; b = true OR false AND false; sum = fold: [1, 2, 3], with: (+), from: 0; invert = (NOT); c = false >> invert; both = (AND); d = fold: [true, false], with: (OR), from: false; plus = (+);';
+  const types=check(src);
+  assert.equal(types.a,'Boolean');assert.equal(types.b,'Boolean');
+  assert.equal(types.sum,'Number');assert.equal(types.invert,'(Boolean) -> Boolean');
+  assert.equal(types.c,'Boolean');assert.equal(types.both,'(Boolean, Boolean) -> Boolean');
+  assert.equal(types.d,'Boolean');assert.equal(types.plus,'(Number, Number) -> Number');
+  assert.throws(()=>check('bad = NOT 1;'),/expected Boolean/);
+  assert.throws(()=>check('bad = false OR 1;'),/expected Boolean/);
+  assert.throws(()=>check('AND = 1;'),/identifier/);
+  const dir=mkdtempSync(join(tmpdir(),'mira-operators-'));
+  try{
+    const input=join(dir,'program.mira');
+    writeFileSync(input,src+' lazy = true OR ({a: false} ~ missing);');
+    for(const target of ['js','php']){
+      const r=spawnSync('node',['dist/mira.cjs',input,target],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,r.stdout+(target==='js'?'\nconsole.log(JSON.stringify([a,b,sum,c,d,lazy]));':'\necho json_encode([$a,$b,$sum,$c,$d,$lazy]);'));
+      const executed=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(executed.status,0,executed.stderr);
+      assert.deepEqual(JSON.parse(executed.stdout),[false,true,6,true,true,true]);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+test('types: refinements accept decimal bounds and reject out-of-range decimal literals',()=>{
+  assert.equal(check('Ratio :: Number where _ >= 0.25 AND _ <= 0.75; r (Ratio) = 0.5;').r,'Ratio');
+  assert.throws(()=>check('Ratio :: Number where _ >= 0.25 AND _ <= 0.75; r (Ratio) = 0.8;'),/refinement violated/);
+});
