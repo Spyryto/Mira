@@ -1150,3 +1150,52 @@ test('types: recursive trees and chains use ordinary native sum records on JS an
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.65 module identities preserve local names, constructors, sections and recursive types',()=>{
+  const src='module Music / Jazz Harmony; Note :: Number; Tree (T) :: Leaf (T) | Branch ([Tree (T)]); Result (T, E) :: Ok (T) | Err (E); Pitch :: Number where _ >= 0 AND _ <= 127; rate = 2; scale: x = x * rate; local: rate = rate; a (Note) = 42; tree = Branch: [(Leaf: 3)]; f = scale: _; result = 3 >> f; shadow = local: 9; valid = validate: (42), as: (Pitch);';
+  const t=check(src);
+  const prefix='Music / Jazz Harmony / ';
+  assert.equal(t[prefix+'a'],prefix+'Note');
+  assert.equal(t[prefix+'tree'],prefix+'Tree (Number)');
+  assert.equal(t[prefix+'result'],'Number');
+  assert.equal(t[prefix+'shadow'],'Number');
+  assert.equal(t[prefix+'valid'],prefix+'Result ('+prefix+'Pitch, Text)');
+  assert.equal(check('module name = "legacy"; result = module name;').result,'Text');
+});
+test('0.65 isolated modules sharing local names compile and execute on both targets',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-isolated-modules-'));
+  const m=(path,name,kind='v')=>'__miraModule_'+kind+'_'+Buffer.from(path+' / '+name).toString('hex').toUpperCase();
+  try{
+    const input=join(dir,'program.mira');
+    writeFileSync(join(dir,'parent.mira'),'module Music; Note :: Number; rate = 2; scale: x = x * rate; Scale: x = x + rate; result = scale: 4; other = Scale: 4;');
+    writeFileSync(join(dir,'sibling.mira'),'module Music / Rhythm; Note :: Text; rate = 3; scale: x = x * rate; result = scale: 4;');
+    const src='module Music / Jazz Harmony; import "parent.mira"; import "sibling.mira"; Note :: Number; Option (T) :: Some (T) | None; rate = 5; scale: x = x * rate; a = Some: 4; result = match: a {some: {x | scale: x}, none: {| 0}};';
+    writeFileSync(input,src);
+    for(const target of ['js','php']){
+      const r=spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      const names=[m('Music','result'),m('Music','other'),m('Music / Rhythm','result'),m('Music / Jazz Harmony','result')];
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      const code=target==='js'?'\nconsole.log(JSON.stringify(['+names.join(',')+']));':'\necho json_encode(['+names.map(x=>'$'+x).join(',')+']);';
+      writeFileSync(file,r.stdout+code);
+      const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);
+      assert.deepEqual(JSON.parse(run.stdout),[8,6,12,20]);
+      if(target==='php') assert.ok(!r.stdout.split('\n').filter(l=>l.trim().startsWith('global ')).some(l=>l.includes(m('Music','rate'))&&l.includes(m('Music / Rhythm','rate'))));
+    }
+    for(const [source,pattern] of [
+      ['module Music / Jazz Harmony; import "parent.mira"; bad = rate;',/Unknown identifier/],
+      ['module Music / Jazz Harmony; import "parent.mira"; bad = scale: 1;',/Unknown identifier/],
+      ['module Music / Jazz Harmony; import "parent.mira"; bad (Note) = 1;',/Unknown annotation type Note/],
+      ['import "parent.mira"; bad = rate;',/Unknown identifier/],
+      ['module Music; import "parent.mira";',/Duplicate module Music/],
+      ['module Music / ; x = 1;',/Expected module path/]
+    ]){
+      writeFileSync(input,source);
+      const result=spawnSync('node',['dist/mira.cjs',input,'--check'],{encoding:'utf8'});
+      assert.notEqual(result.status,0,source);
+      assert.match(result.stderr,pattern,source);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
