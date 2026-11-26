@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.62.0');
+  assert.equal(bridge.version, '0.63.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.62.0');
+  assert.equal(bridge.version,'0.63.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1163,4 +1163,18 @@ test('Studio exposes first-class validation result and its nominal type',()=>{
   assert.equal(compiled.ok,true,compiled.message);
   assert.equal(runInNewContext(compiled.output+'\nresult',{}),42);
   assert.match(read('type-lab.html'),/validation-result-example/);
+});
+
+test('Studio exposes nominal parametric record schemas and executes the compiled program',()=>{
+  const src='Pair (First Type, Second Type) :: {first: First Type, second: Second Type}; a (Pair (Number, Text)) = {first: 42, second: "Ada"}; result = a ~ first;';
+  const report=bridge.check(src);assert.equal(report.ok,true,report.message);
+  const a=JSON.parse(report.output).find(x=>x.name==='a');
+  assert.equal(a.type,'Pair (Number, Text)');
+  assert.equal(a.schema.kind,'Named');
+  assert.deepEqual(a.schema.arguments,[{kind:'Number'},{kind:'Text'}]);
+  assert.equal(a.schema.base.kind,'Record');
+  const compiled=bridge.compile(src,'js',null,false,null,true);
+  assert.equal(compiled.ok,true,compiled.message);
+  assert.equal(runInNewContext(compiled.output+'\nresult',{}),42);
+  assert.match(read('type-lab.html'),/parametric-data-example/);
 });

@@ -140,7 +140,7 @@ class TypeParser {
                 if (!names.exists(name)) throw new MiraError("Unknown annotation type " + name,token);
                 final declared = names.get(name);
                 switch (declared) {
-                    case SumType(_,_,parameters) if (parameters.length > 0):
+                    case SumType(_,_,parameters) | ParametricNamedType(_,_,parameters) if (parameters.length > 0):
                         if (!take("(")) return fail("Type " + name + " requires " + parameters.length + " type arguments");
                         final arguments:Array<Type> = [];
                         for (i in 0...parameters.length) {
