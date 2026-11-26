@@ -482,7 +482,7 @@ class TypeChecker {
                     rigid.set(id,true);
                     slots.set(-i-1,Variable(id));
                 }
-                final signature = FunctionType([for (a in d.parameterAnnotations) a],d.resultAnnotation);
+                final signature:Type = FunctionType([for (a in d.parameterAnnotations) a],d.resultAnnotation);
                 active.set(name,instantiate(signature,slots));
                 continue;
             }
