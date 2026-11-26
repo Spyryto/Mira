@@ -1215,7 +1215,7 @@ test('0.66 flat interfaces accept inferred selectors, values and public nominal 
     ['interface add:by:; add: by: ; implementation add: a, by: b = a + b;',/Duplicate interface export add:by:/],
     ['interface add: by; implementation x = 1;',/Expected complete export selector/],
     ['interface x; x; implementation x = 1;',/Duplicate interface export x/],
-    ['interface x;',/Expected implementation section/],
+    ['interface x: ;',/requires explicit selector signature/],
     ['interface interface implementation x = 1;',/Duplicate interface section/],
     ['interface x; implementation x = 1; implementation y = 2;',/Unexpected module section marker/],
     ['interface T; implementation T :: Number; T = 1;',/Ambiguous value or type export/],
@@ -1644,5 +1644,43 @@ test('0.74 interface-only modules supply public signatures and abstract represen
     writeFileSync(join(dir,'Providers','Memory.mira'),memory);
     writeFileSync(contractFile,contract+' implementation');
     bad=compile('--check',['--bindings',manifest]);assert.notEqual(bad.status,0);assert.match(bad.stderr,/cannot contain implementation/);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+
+test('0.75 checks a consumer and a contract before a provider exists, but never emits unbound contracts',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-abstract-check-'));
+  try {
+    mkdirSync(join(dir,'Services'),{recursive:true});
+    const input=join(dir,'program.mira');
+    const contract='module Services / Storage; interface Storage; Box (T); Envelope (T) :: {box: Box (T)}; version (Number); open: :: (Text) -> Storage; read: key: :: (Storage, Text) -> Text; box (T): :: (T) -> Box (T); item (T): :: (Box (T)) -> T;';
+    writeFileSync(join(dir,'Services','Storage.mira'),contract);
+    writeFileSync(join(dir,'Services','Other.mira'),'module Services / Other; interface Storage; open: :: (Text) -> Storage;');
+    const source='module App; import Services / Storage {Storage; Box; Envelope; version; open: ; read: key: ; box: ; item: ;}; store (Storage) = open: "db"; result = read: store, key: "x"; n (Box (Number)) = box: 7; s (Box (Text)) = box: "text"; e (Envelope (Number)) = {box: n}; number result = item: (e ~ box); text result = item: s;';
+    const run=(src,flags)=>{writeFileSync(input,src);return spawnSync('node',['dist/mira.cjs',input,...flags],{encoding:'utf8'});};
+    const checked=run(source,['--check-json']);assert.equal(checked.status,0,checked.stderr);
+    const report=JSON.parse(checked.stdout);assert.equal(report.ok,true);
+    const row=name=>report.types.find(x=>x.name===name);
+    assert.equal(row('App / store').schema.name,'Services / Storage / Storage');
+    assert.equal(row('App / store').schema.kind,'Opaque');
+    assert.equal(row('App / number result').type,'Number');
+    assert.equal(row('App / text result').type,'Text');
+    assert.equal(row('Services / Storage / open:').abstractContract,true);
+    for(const target of ['js','php'])for(const flags of [[],['--checked'],['--checked','--tree-shake']]){
+      const emitted=run(source,[target,...flags]);assert.notEqual(emitted.status,0);assert.match(emitted.stderr,/selected provider/);
+    }
+    for(const bad of [
+      source+' leaked = store ~ name;',
+      source+' forged (Storage) = "forged";',
+      source+' invalid (Box (Text)) = n;',
+      source+' invalid = read: 42, key: "x";',
+      'module App; import Services / Storage {Storage; read: key: ;}; import Services / Other {Storage => Other Storage; open: ;}; other (Other Storage) = open: "db"; result = read: other, key: "x";'
+    ]){
+      const result=run(bad,['--check-json']);assert.notEqual(result.status,0,bad);assert.equal(JSON.parse(result.stdout).ok,false);
+    }
+    const standalone=run('module Standalone; interface Token; make: :: (Number) -> Token;',['--check']);
+    assert.equal(standalone.status,0,standalone.stderr);
+    const typo=run('module Standalone; interface value (Misspelled);',['--check']);
+    assert.notEqual(typo.status,0);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });

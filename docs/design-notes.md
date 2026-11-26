@@ -644,3 +644,13 @@ nella compilazione del provider, senza concatenare sorgenti sintetici.
 Il manifest con solo provider verifica il percorso implements. L'opacità
 e i tipi parametrici riusano TypeVisibility e il checker. Identità nominale
 concreta per build; niente nuovi costruttori Expr o emitter.
+
+## 0.75 — analisi prima del collegamento
+
+ContractModule elabora la sola interfaccia in tipi nominali opachi e
+Definition senza corpo, esplicitamente marcate. Dependencies non visita
+corpi inesistenti; TypeChecker istanzia le firme dichiarate senza
+inferire un corpo fittizio. Compiler.check consente contratti irrisolti;
+i percorsi di emissione li rifiutano prima del pruning. Classificazione
+comune degli header astratti con il provider. Il checker conserva
+identità del contratto nell'analisi astratta, non tra build differenti.

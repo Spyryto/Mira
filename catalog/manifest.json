@@ -1,5 +1,5 @@
 {
-  "version": "0.74.0",
+  "version": "0.75.0",
   "features": [
     {
       "id": "values",
@@ -2022,6 +2022,12 @@
       "title": "Contratti come moduli e implementazione ereditata",
       "since": "0.74",
       "doc": "docs/grammar.md#mira-074-contratti-come-moduli-senza-implementazione"
+    },
+    {
+      "id": "unbound-contract-checking",
+      "title": "Verifica statica dei contratti senza provider",
+      "since": "0.75",
+      "doc": "docs/grammar.md#mira-075-verifica-di-contratti-senza-provider"
     }
   ]
 }

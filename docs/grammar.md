@@ -792,3 +792,24 @@ produce codice e conserva coordinate originali nei diagnostici.
 Studio: Module Explorer → Dependency injection statica → Contratto come
 modulo, cambia provider, compila JS/PHP. L'arco implements indica il
 contratto letto, non una dipendenza runtime.
+
+## Mira 0.75: verifica di contratti senza provider
+
+`node dist/mira.cjs app.mira --check` e `--check-json` possono risolvere
+un modulo costituito dalla sola interfaccia senza manifest e senza
+implementazioni disponibili. Le dichiarazioni astratte possiedono firme
+ma non corpi; entrano nella risoluzione e nel checker, non negli emitter.
+I tipi opachi hanno identità nominale nel percorso del contratto durante
+questa analisi. Due contratti omonimi per tipo mantengono identità distinte.
+Con provider selezionato si verifica nuovamente il programma intero
+usando identità concrete, come in 0.74: non è ancora una compilazione
+separata con identità persistenti. L'emissione, checked o unchecked,
+rifiuta sempre un contratto non collegato, anche con tree shaking.
+Il contratto può essere controllato direttamente. Sono supportati valori
+annotati, selettori espliciti, tipi nominali pubblici e tipi astratti.
+Per la sintassi ambigua `Box (T);` il parametro astratto è riconosciuto
+solo se il nome compare come applicazione di tipo in altre dichiarazioni
+pubbliche: altrimenti si tenta la normale firma di valore. La stessa
+classificazione vale nel provider. Un tipo astratto parametrico inutilizzato
+rimane un caso sintattico aperto. Studio: Module Explorer → Contratto come
+modulo → Verifica senza provider. Nessun nuovo nodo Expr o codice runtime.

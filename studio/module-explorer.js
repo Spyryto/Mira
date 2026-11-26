@@ -30,7 +30,7 @@
   }
   function renderSymbols(){
     const m=model?.interfaces.find(x=>x.module===selected);
-    by('selected').textContent=m?m.module:'Interfaccia';
+    by('selected').textContent=m?m.module+(m.abstractContract?' · contratto non collegato':''):'Interfaccia';
     const list=by('symbols'),priv=by('private');
     list.replaceChildren();priv.replaceChildren();
     by('private-title').textContent='Dichiarazioni private ('+(m?.privateDeclarations.length||0)+')';
@@ -59,7 +59,7 @@
     if(!result.ok){model=null;by('report').hidden=true;status.className='error';status.textContent=result.message;return;}
     model=JSON.parse(result.output);
     if(!model.interfaces.some(m=>m.module===selected))selected=model.interfaces[0]?.module||null;
-    status.textContent=model.interfaces.length+' moduli · '+model.dependencies.length+' direttive · type check riuscito';
+    status.textContent=model.interfaces.length+' moduli · '+model.dependencies.length+' direttive · type check riuscito'+(model.interfaces.some(m=>m.abstractContract)?' · provider non selezionato':'');
     by('report').hidden=false;render();
   }
   function example(){
@@ -132,6 +132,7 @@
     by('provider-settings').open=true;by('provider-output').textContent='';selected='App';analyze();
   }
   by('contract-module-example').addEventListener('click',contractModuleExample);
+  by('contract-unbind').addEventListener('click',()=>{by('bindings').value='';by('provider-output').textContent='';analyze();});
   by('provider-example').addEventListener('click',providerExample);
   by('provider-swap').addEventListener('click',()=>{
     try {

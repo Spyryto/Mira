@@ -17,8 +17,9 @@ class ModuleSections {
     public final typeTokens:Array<Token> = [];
     public final imports:Array<Token> = [];
     public final bodyOffset:Int;
+    public var isAbstract(default,null):Bool = false;
 
-    public function new(tokens:Array<Token>, start:Int, standalone:Bool = false) {
+    public function new(tokens:Array<Token>, start:Int, standalone:Bool = false, allowMissingImplementation:Bool = false) {
         var cursor = start + 1; // interface
         var importing = false;
         final seen = new Map<String,Bool>();
@@ -71,7 +72,8 @@ class ModuleSections {
                 references.push({name:name,origin:anchor});
             }
         }
-        if (standalone) {
+        if (standalone || allowMissingImplementation) {
+            isAbstract = true;
             bodyOffset = cursor;
             typeTokens.push(tokens[cursor]);
             return;

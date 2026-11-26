@@ -71,6 +71,7 @@ class TypeChecker {
                 Reflect.setField(item,"module",d.modulePath);
                 Reflect.setField(item,"exported",d.isExported);
                 if (d.isExported) Reflect.setField(item,"explicitSignature",d.hasPublicSignature);
+                if (d.isAbstractContract) Reflect.setField(item,"abstractContract",true);
             }
             result.push(item);
         }
@@ -494,6 +495,11 @@ class TypeChecker {
             origin = d.origin;
             moduleOwner = d.modulePath;
             if (recursive && !d.isFunction()) fail("recursive value dependency not supported: " + name);
+            if (d.isAbstractContract) {
+                final signature:Type = d.isFunction() ? FunctionType([for (a in d.parameterAnnotations) a],d.resultAnnotation) : d.resultAnnotation;
+                active.set(name,instantiate(signature));
+                continue;
+            }
             // Each synthesized constructor gets its own fresh template instance.
             final constructor:Null<Type> = switch (d.body) {
                 case Variant(template,tag,_):
@@ -533,6 +539,7 @@ class TypeChecker {
             final d = definitions.get(name);
             origin = d.origin;
             moduleOwner = d.modulePath;
+            if (d.isAbstractContract) continue; // explicitly declared, no body to check
             final scope = new Map<String,LocalScheme>();
             final params:Array<Type> = switch (active.get(name)) {
                 case FunctionType(args,_) if (d.isFunction()): args;
