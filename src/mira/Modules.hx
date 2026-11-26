@@ -12,6 +12,7 @@ import mira.types.TypeVisibility;
 import mira.types.Type;
 import mira.resolve.ModuleIdentity;
 import mira.resolve.ImportBinding;
+import mira.resolve.ProviderBindings;
 
 // File resolution belongs to the host. The compiler never accesses the
 // filesystem or network, and each source retains its own token coordinates.
@@ -19,13 +20,14 @@ class Modules {
     public static function collect(source:String, ?read:String->Null<String>,
         ?entry:String, ?types:Map<String,mira.types.Type>,
         ?moduleTypes:Map<String,Map<String,mira.types.Type>>,
-        ?publicTypes:Map<String,Array<String>>, ?bindings:Map<String,Array<ImportBinding>>, ?visibility:TypeVisibility, ?reexports:Map<String,Array<Dynamic>>, ?moduleEdges:Array<Dynamic>):Array<Definition> {
+        ?publicTypes:Map<String,Array<String>>, ?bindings:Map<String,Array<ImportBinding>>, ?visibility:TypeVisibility, ?reexports:Map<String,Array<Dynamic>>, ?moduleEdges:Array<Dynamic>, ?providers:ProviderBindings):Array<Definition> {
         if (types == null) types = new Map<String,mira.types.Type>();
         if (moduleTypes == null) moduleTypes = new Map<String,Map<String,mira.types.Type>>();
         if (publicTypes == null) publicTypes = new Map<String,Array<String>>();
         if (bindings == null) bindings = new Map<String,Array<ImportBinding>>();
         if (visibility == null) visibility = new TypeVisibility();
         final exportedSymbols = new Map<String,Map<String,Definition>>();
+        final contractExports = new Map<String,Map<String,Definition>>();
         if (reexports == null) reexports = new Map<String,Array<Dynamic>>();
         final loaded = new Map<String, Bool>();
         final stack:Array<String> = entry == null ? [] : [entry];
@@ -64,6 +66,8 @@ class Modules {
                     throw new MiraError("Expected module path and terminating ;",tokens[offset]);
                 segments.push(words.join(" "));
                 modulePath = segments.join(" / ");
+                if (providers != null && providers.exists(modulePath))
+                    throw new MiraError("Concrete module conflicts with configured contract path " + modulePath,anchor);
                 if (moduleTypes.exists(modulePath))
                     throw new MiraError("Duplicate module " + modulePath,anchor);
                 moduleTypes.set(modulePath,new Map<String,mira.types.Type>());
@@ -95,7 +99,9 @@ class Modules {
                     final isPublic = offset < publicEnd;
                     final directive = new ModuleImport(tokens,offset);
                     offset = directive.next;
-                    final path = directive.path;
+                    final service = directive.path;
+                    final selection = providers == null ? null : providers.get(service);
+                    final path = selection == null ? service : selection.provider;
                     if (moduleEdges != null) moduleEdges.push({from:modulePath,to:path,kind:forwarding ? "export" : "import",phase:isPublic ? "interface" : "implementation",wildcard:directive.wildcard,names:[for (item in directive.names) {name:item.name,alias:item.alias}],line:origin.line,column:origin.column,file:origin.file});
                     if (!exportedSymbols.exists(path)) {
                         if (moduleTypes.exists(path))
@@ -115,8 +121,23 @@ class Modules {
                         if (!exportedSymbols.exists(path))
                             throw new MiraError("Module declaration does not match requested path " + path,origin);
                     }
-                    final exported = exportedSymbols.get(path);
-                    final availableTypes = publicTypes.get(path);
+                    var exported = exportedSymbols.get(path);
+                    var availableTypes = publicTypes.get(path);
+                    if (selection != null) {
+                        if (!contractExports.exists(service)) {
+                            final restricted = new Map<String,Definition>();
+                            for (signature in selection.signatures) {
+                                final d = exported.get(signature.name);
+                                if (d == null || d.modulePath != path)
+                                    throw new MiraError("Contract symbol not publicly defined by " + path + ": " + signature.name,origin);
+                                signature.apply(d);
+                                restricted.set(signature.name,d);
+                            }
+                            contractExports.set(service,restricted);
+                        }
+                        exported = contractExports.get(service);
+                        availableTypes = [];
+                    }
                     final requested = directive.names.copy();
                     if (directive.wildcard) {
                         final all = [for (name in exported.keys()) name].concat(availableTypes);
@@ -127,7 +148,7 @@ class Modules {
                         final d = exported.get(item.name);
                         final isType = availableTypes.indexOf(item.name) >= 0;
                         if (d != null && isType) throw new MiraError("Ambiguous imported symbol " + item.name,item.origin);
-                        if (d == null && !isType) throw new MiraError("Symbol not exported by " + path + ": " + item.name,item.origin);
+                        if (d == null && !isType) throw new MiraError("Symbol not exported by " + service + ": " + item.name,item.origin);
                         if (aliasNames.exists(item.alias)) throw new MiraError("Duplicate imported name " + item.alias,item.origin);
                         aliasNames.set(item.alias,true);
                         if (isType) {
