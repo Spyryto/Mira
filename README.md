@@ -250,6 +250,12 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Laboratory in Mira Studio](https://spyryto.github.io/Mira/laboratory.html) raccoglie l'evoluzione 0.15–0.34, i benchmark CI e le misure dell'autore su iPhone e smart TV. [Rapporto tecnico](docs/gui-rendering.md) · [Archivio JSON](catalog/laboratory/gui-rendering.json). Il rapporto storico è statico e separato dal benchmark eseguibile.
 
+## Mira 0.55: esiti delle prove numeriche
+
+Distinzione strutturata tra vincoli violati e non dimostrati,
+compresi overflow Integer certi. Nessun controllo runtime ancora.
+[Dettagli](docs/type-checker.md#055-esiti-delle-prove-numeriche).
+
 ## Mira 0.54: narrowing numerico
 
 I confronti nelle condizioni restringono i fatti numerici nei rami
