@@ -165,12 +165,50 @@ class Modules {
             final local:Array<Definition> = [];
             final signatures:Array<PublicSignature> = [];
             var signatureTypes:Map<String,Type> = null;
+            final opaque = new Map<String,Int>();
+            final opaqueOrigins = new Map<String,Token>();
+            final explicitSignatures:Array<Array<Token>> = [];
+            final implementation = tokens.slice(offset);
             for (name => type in publicAliases) localTypes.set(name,type);
             if (sections != null) {
+                final headers = DefinitionParser.typeHeaders(implementation);
+                function reserve(name:String,arity:Int,origin:Token):Void {
+                    if (opaque.exists(name) || localTypes.exists(name) || privateAliases.exists(name))
+                        throw new MiraError("Duplicate or conflicting opaque type " + name,origin);
+                    if (headers.get(name) != arity)
+                        throw new MiraError("Opaque type parameter count mismatch for " + name,origin);
+                    opaque.set(name,arity);
+                    opaqueOrigins.set(name,origin);
+                    final identity = ModuleIdentity.qualify(modulePath,name);
+                    visibility.markOpaque(identity);
+                    localTypes.set(name,OpaqueType(identity,[for (i in 0...arity) Variable(-i-1)]));
+                }
+                for (reference in sections.references)
+                    if (headers.exists(reference.name)) reserve(reference.name,0,reference.origin);
+                for (item in sections.signatures) {
+                    final opening = DefinitionParser.topLevel(item,"(");
+                    if (opening > 0 && DefinitionParser.topLevel(item,"::") < 0) {
+                        final name = ModuleSections.reference(item.slice(0,opening));
+                        if (headers.exists(name)) {
+                            final header = DefinitionParser.typeHeader(item,localTypes);
+                            reserve(name,header.parameters.length,item[0]);
+                            continue;
+                        }
+                    }
+                    explicitSignatures.push(item);
+                }
                 final constructors = DefinitionParser.parse(sections.typeTokens,localTypes,modulePath);
                 for (name in localTypes.keys()) if (!publicAliases.exists(name)) publicTypes.get(modulePath).push(name);
                 publicTypes.get(modulePath).sort(Reflect.compare);
                 signatureTypes = localTypes.copy();
+                // A direct representation alias through a forward opaque reference
+                // can form a cycle. Nested record/list/sum references are finite.
+                for (name in publicTypes.get(modulePath)) switch (localTypes.get(name)) {
+                    case NamedType(_,OpaqueType(other,_)) if (ModuleIdentity.owner(other) == modulePath):
+                        throw new MiraError("Direct public representation alias to local opaque type is not supported: " + name,tokens[offset]);
+                    default:
+                }
+                for (name in opaque.keys()) localTypes.remove(name);
                 for (d in constructors) {
                     d.isExported = true;
                     local.push(d);
@@ -180,12 +218,20 @@ class Modules {
                 if (localTypes.exists(name)) throw new MiraError("Imported type conflicts with local type " + name,tokens[offset]);
                 localTypes.set(name,type);
             }
-            for (d in DefinitionParser.parse(offset == 0 ? tokens : tokens.slice(offset),localTypes,modulePath))
+            for (d in DefinitionParser.parse(implementation,localTypes,modulePath))
                 local.push(d);
             if (sections != null) {
                 final byName = new Map<String,Definition>();
                 for (d in local) if (!d.isStatement) byName.set(d.isFunction() ? d.selector() : d.name,d);
+                for (name => arity in opaque) {
+                    if (byName.exists(name)) throw new MiraError("Ambiguous value or type export " + name,opaqueOrigins.get(name));
+                    final type = localTypes.get(name);
+                    if (type == null) throw new MiraError("Missing opaque type implementation " + name,opaqueOrigins.get(name));
+                    visibility.defineOpaque(ModuleIdentity.qualify(modulePath,name),type);
+                    signatureTypes.set(name,type);
+                }
                 for (reference in sections.references) {
+                    if (opaque.exists(reference.name)) continue;
                     final d = byName.get(reference.name);
                     if (localTypes.exists(reference.name)) {
                         if (d != null) throw new MiraError("Ambiguous value or type export " + reference.name,reference.origin);
@@ -193,23 +239,14 @@ class Modules {
                             throw new MiraError("Cannot re-export imported type " + reference.name,reference.origin);
                         if (publicTypes.get(modulePath).indexOf(reference.name) >= 0)
                             throw new MiraError("Duplicate interface export " + reference.name,reference.origin);
-                        final type = localTypes.get(reference.name);
-                        switch (type) {
-                            case NamedType(_,_):
-                            case SumType(_,_,arguments) if (arguments.length == 0):
-                            default: throw new MiraError("Opaque exports currently require a non-parametric nominal type",reference.origin);
-                        }
-                        visibility.markOpaque(ModuleIdentity.qualify(modulePath,reference.name));
-                        publicTypes.get(modulePath).push(reference.name);
-                        signatureTypes.set(reference.name,type);
-                        continue;
+                        throw new MiraError("Missing opaque type declaration " + reference.name,reference.origin);
                     }
                     if (d == null) throw new MiraError("Unknown interface export " + reference.name,reference.origin);
                     if (d.isExported) throw new MiraError("Duplicate interface export " + reference.name,reference.origin);
                     d.isExported = true;
                 }
                 publicTypes.get(modulePath).sort(Reflect.compare);
-                for (tokens in sections.signatures) signatures.push(PublicSignature.read(tokens,signatureTypes));
+                for (tokens in explicitSignatures) signatures.push(PublicSignature.read(tokens,signatureTypes));
                 for (signature in signatures) {
                     final d = byName.get(signature.name);
                     if (localTypes.exists(signature.name))
@@ -229,6 +266,8 @@ class Modules {
                 for (name in localTypes.keys())
                     if (!publicAliases.exists(name) && !privateAliases.exists(name) && publicTypes.get(modulePath).indexOf(name) < 0)
                         visibility.privateNames.set(ModuleIdentity.qualify(modulePath,name),true);
+                for (name in publicTypes.get(modulePath))
+                    visibility.requirePublic(localTypes.get(name),opaqueOrigins.exists(name) ? opaqueOrigins.get(name) : tokens[offset],t -> t);
                 for (d in local) if (!d.isStatement && aliasNames.exists(d.isFunction() ? d.selector() : d.name))
                     throw new MiraError("Imported name conflicts with local declaration " + (d.isFunction() ? d.selector() : d.name),d.origin);
                 // Type aliases and local type declarations cannot silently collide with imported values.
