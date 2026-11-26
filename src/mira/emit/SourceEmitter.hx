@@ -152,11 +152,11 @@ class SourceEmitter {
                 }
 
             case Binary(symbol, left, right):
-                if (["+", "-", "*", "/", "%", "==", "!=", "<", ">", "<=", ">="].indexOf(symbol) < 0) {
+                if (["+", "-", "*", "/", "%", "==", "!=", "<", ">", "<=", ">=", "&"].indexOf(symbol) < 0) {
                     throw new MiraError("Unsupported operator " + symbol);
                 }
                 "(" + expression(left, target, scope, reservedHostNames) + " "
-                    + (symbol == "==" ? "===" : symbol == "!=" ? "!==" : symbol)
+                    + (symbol == "==" ? "===" : symbol == "!=" ? "!==" : symbol == "&" ? "&&" : symbol)
                     + " " + expression(right, target, scope, reservedHostNames) + ")";
 
             case OperatorSection(symbol, left, right):
@@ -247,7 +247,7 @@ class SourceEmitter {
         scope:Array<String>,
         reservedHostNames:Array<String>
     ):String {
-        if (["+", "-", "*", "/", "%", "==", "!=", "<", ">", "<=", ">="].indexOf(symbol) < 0) {
+        if (["+", "-", "*", "/", "%", "==", "!=", "<", ">", "<=", ">=", "&"].indexOf(symbol) < 0) {
             throw new MiraError("Unsupported operator section " + symbol);
         }
         final parameters:Array<String> = [];
@@ -265,7 +265,7 @@ class SourceEmitter {
         if (parameters.length == 0) throw new MiraError("Operator section needs a placeholder");
         final formals = [for (parameter in parameters)
             target == Php ? "$" + parameter : parameter];
-        final emittedOperator = symbol == "==" ? "===" : symbol == "!=" ? "!==" : symbol;
+        final emittedOperator = symbol == "==" ? "===" : symbol == "!=" ? "!==" : symbol == "&" ? "&&" : symbol;
         final body = "(" + operands[0] + " " + emittedOperator + " " + operands[1] + ")";
         return switch (target) {
             case JavaScript: "((" + formals.join(", ") + ") => " + body + ")";
