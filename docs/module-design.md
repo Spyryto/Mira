@@ -321,3 +321,12 @@ export aggiuntivo, firme esplicite per valori e selettori, tipi astratti,
 manifest di build senza duplicazione del contratto. Restano da definire
 identità astratte indipendenti dalla selezione, analisi senza provider,
 import/re-export nelle interfacce autonome e composizione di contratti.
+
+### 0.75 — verifica senza provider
+
+La sola interfaccia può alimentare il checker dei consumatori prima
+che esistano provider. Nessuna emissione senza collegamento. Identità
+astratta stabile per percorso durante l'analisi, ancora distinta dalle
+identità concrete della compilazione. Cache e compilazione incrementale
+restano da progettare. La disambiguazione di header parametrici non
+utilizzati richiede una decisione sintattica ulteriore.

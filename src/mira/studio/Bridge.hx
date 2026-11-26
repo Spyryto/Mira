@@ -22,7 +22,7 @@ class Bridge {
             trace: trace,
             exploreModules: exploreModules,
             verifyContract: verifyContract,
-            version: "0.74.0"
+            version: "0.75.0"
         });
     }
 
@@ -177,10 +177,11 @@ class Bridge {
             final publicTypes = new Map<String,Array<String>>();
             final moduleTypes = new Map<String,Map<String,mira.types.Type>>();
             final moduleEdges:Array<Dynamic> = [];
+            final abstractModules:Array<String> = [];
             final providers = bindingsJson == null ? null : mira.resolve.ProviderBindings.fromJson(bindingsJson);
             final reexports = new Map<String,Array<Dynamic>>();
             final visibility = new mira.types.TypeVisibility();
-            final raw = [for (d in mira.Modules.collect(source, resolver(modulesJson),null,null,moduleTypes,publicTypes,null,visibility,reexports,moduleEdges,providers)) d.canonical()];
+            final raw = [for (d in mira.Modules.collect(source, resolver(modulesJson),null,null,moduleTypes,publicTypes,null,visibility,reexports,moduleEdges,providers,true,true,abstractModules)) d.canonical()];
             final exportsByModule = new Map<String,Array<Dynamic>>();
             for (d in raw) if (d.modulePath != null && d.isExported) {
                 if (!exportsByModule.exists(d.modulePath)) exportsByModule.set(d.modulePath,[]);
@@ -204,6 +205,7 @@ class Bridge {
                 exports:exportsByModule.exists(path) ? exportsByModule.get(path) : []
             });
             for (item in moduleInterfaces) {
+                if (abstractModules.indexOf(item.module) >= 0) Reflect.setField(item,"abstractContract",true);
                 final forwarded = reexports.get(item.module);
                 if (forwarded != null && forwarded.length > 0) {
                     Reflect.setField(item,"reexports",forwarded);

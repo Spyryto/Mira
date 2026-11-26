@@ -22,7 +22,7 @@ class Modules {
     public static function collect(source:String, ?read:String->Null<String>,
         ?entry:String, ?types:Map<String,mira.types.Type>,
         ?moduleTypes:Map<String,Map<String,mira.types.Type>>,
-        ?publicTypes:Map<String,Array<String>>, ?bindings:Map<String,Array<ImportBinding>>, ?visibility:TypeVisibility, ?reexports:Map<String,Array<Dynamic>>, ?moduleEdges:Array<Dynamic>, ?providers:ProviderBindings, allowContracts:Bool = true):Array<Definition> {
+        ?publicTypes:Map<String,Array<String>>, ?bindings:Map<String,Array<ImportBinding>>, ?visibility:TypeVisibility, ?reexports:Map<String,Array<Dynamic>>, ?moduleEdges:Array<Dynamic>, ?providers:ProviderBindings, allowContracts:Bool = true, allowUnbound:Bool = false, ?abstractModules:Array<String>):Array<Definition> {
         if (types == null) types = new Map<String,mira.types.Type>();
         if (moduleTypes == null) moduleTypes = new Map<String,Map<String,mira.types.Type>>();
         if (publicTypes == null) publicTypes = new Map<String,Array<String>>();
@@ -106,7 +106,25 @@ class Modules {
                     }
                 }
                 if (sections == null && tokens[offset].kind == Word && tokens[offset].value == "interface") {
-                    sections = new ModuleSections(tokens,offset);
+                    sections = new ModuleSections(tokens,offset,false,true);
+                    if (sections.isAbstract) {
+                        if (!allowUnbound) throw new MiraError("Expected implementation section or selected provider for contract " + modulePath,tokens[offset]);
+                        ContractModule.validate(sections,tokens[offset]);
+                        if (abstractModules != null) abstractModules.push(modulePath);
+                        final names = moduleTypes.get(modulePath);
+                        final abstractDefinitions = ContractModule.elaborate(sections,modulePath,names,visibility);
+                        final exported = new Map<String,Definition>();
+                        for (d in abstractDefinitions) {
+                            definitions.push(d);
+                            exported.set(d.isFunction() ? d.selector() : d.name,d);
+                        }
+                        publicTypes.set(modulePath,[for (name in names.keys()) name]);
+                        publicTypes.get(modulePath).sort(Reflect.compare);
+                        exportedSymbols.set(modulePath,exported);
+                        reexports.set(modulePath,[]);
+                        bindings.set(modulePath,[]);
+                        return;
+                    }
                     publicEnd = offset + sections.imports.length;
                     tokens = tokens.slice(0,offset).concat(sections.imports).concat(tokens.slice(sections.bodyOffset));
                 }
@@ -251,11 +269,17 @@ class Modules {
                     visibility.markOpaque(identity);
                     localTypes.set(name,OpaqueType(identity,[for (i in 0...arity) Variable(-i-1)]));
                 }
-                for (reference in sections.references) {
+                if (inheritedContract != null) {
+                    final classified = ContractModule.classify(sections);
+                    for (header in classified.headers) {
+                        if (!headers.exists(header.name))
+                            throw new MiraError("Missing abstract type implementation " + header.name,header.origin);
+                        reserve(header.name,header.arity,header.origin);
+                    }
+                    for (item in classified.signatures) explicitSignatures.push(item);
+                } else {
+                for (reference in sections.references)
                     if (headers.exists(reference.name)) reserve(reference.name,0,reference.origin);
-                    else if (inheritedContract != null)
-                        throw new MiraError("Missing abstract type implementation " + reference.name,reference.origin);
-                }
                 for (item in sections.signatures) {
                     final opening = DefinitionParser.topLevel(item,"(");
                     if (opening > 0 && DefinitionParser.topLevel(item,"::") < 0) {
@@ -267,6 +291,7 @@ class Modules {
                         }
                     }
                     explicitSignatures.push(item);
+                }
                 }
                 final constructors = DefinitionParser.parse(sections.typeTokens,localTypes,modulePath);
                 for (name in localTypes.keys()) if (!publicAliases.exists(name) || forwardedTypes.indexOf(name) >= 0) publicTypes.get(modulePath).push(name);

@@ -20,7 +20,7 @@ class Dependencies {
         for (d in program) if (!d.isStatement) {
             final name = d.isFunction() ? d.selector() : d.name;
             final found = new Map<String,Bool>();
-            walk(d.body,d.parameters.copy(),found);
+            if (!d.isAbstractContract) walk(d.body,d.parameters.copy(),found);
             final deps = [for (key in found.keys()) if (edges.exists(key)) key];
             deps.sort(Reflect.compare);
             edges.set(name,deps);

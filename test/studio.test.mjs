@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.74.0');
+  assert.equal(bridge.version, '0.75.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.74.0');
+  assert.equal(bridge.version,'0.75.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1529,4 +1529,27 @@ test('0.74 Studio inherits generic abstract types and traces implements without 
   const bad=bridge.check(src+' leaked = n ~ item;',null,files,bindings);
   assert.equal(bad.ok,false);assert.match(bad.message,/Type check/);
   assert.match(read('module-explorer.html'),/id="contract-module-example"/);
+});
+
+
+test('0.75 Module Explorer checks the same consumer before and after selecting a provider',()=>{
+  const contract='module Services / Storage; interface Storage; open: :: (Text) -> Storage; read: key: :: (Storage, Text) -> Text;';
+  const source='module App; import Services / Storage {Storage; open: ; read: key: ;}; store (Storage) = open: "db"; result = read: store, key: "x";';
+  const noProvider=JSON.stringify({'Services / Storage':contract});
+  const checked=bridge.exploreModules(source,null,noProvider);
+  assert.equal(checked.ok,true,checked.message);
+  const data=JSON.parse(checked.output);
+  const info=data.interfaces.find(x=>x.module==='Services / Storage');
+  assert.equal(info.abstractContract,true);
+  assert.equal(info.typeIdentities[0].identity,'Services / Storage / Storage');
+  assert.equal(info.exports.find(x=>x.name==='Services / Storage / open:').signature.abstractContract,true);
+  assert.equal(bridge.compile(source,'js',null,false,noProvider,true).ok,false);
+  assert.equal(bridge.check(source+' leaked = store ~ name;',null,noProvider).ok,false);
+  const files=JSON.stringify({'Services / Storage':contract,'Providers / Memory':'module Providers / Memory; implements Services / Storage; implementation Storage :: {name: Text}; open: name = {name: name}; read: store, key: k = store ~ name;'});
+  const selected=JSON.stringify({'Services / Storage':{provider:'Providers / Memory'}});
+  const linked=bridge.compile(source,'js',null,false,files,true,true,selected);
+  assert.equal(linked.ok,true,linked.message);
+  const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+  assert.equal(runInNewContext(linked.output+'\n'+name,{}),'db');
+  assert.match(read('module-explorer.html'),/id="contract-unbind"/);
 });
