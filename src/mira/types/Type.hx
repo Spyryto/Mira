@@ -2,6 +2,7 @@ package mira.types;
 
 // A row tail is either another record, an inference variable, or null (closed).
 enum Type {
+    NamedType(name:String,base:Type);
     NumberType;
     TextType;
     BooleanType;
