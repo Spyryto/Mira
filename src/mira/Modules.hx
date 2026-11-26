@@ -19,7 +19,7 @@ class Modules {
     public static function collect(source:String, ?read:String->Null<String>,
         ?entry:String, ?types:Map<String,mira.types.Type>,
         ?moduleTypes:Map<String,Map<String,mira.types.Type>>,
-        ?publicTypes:Map<String,Array<String>>, ?bindings:Map<String,Array<ImportBinding>>, ?visibility:TypeVisibility, ?reexports:Map<String,Array<Dynamic>>):Array<Definition> {
+        ?publicTypes:Map<String,Array<String>>, ?bindings:Map<String,Array<ImportBinding>>, ?visibility:TypeVisibility, ?reexports:Map<String,Array<Dynamic>>, ?moduleEdges:Array<Dynamic>):Array<Definition> {
         if (types == null) types = new Map<String,mira.types.Type>();
         if (moduleTypes == null) moduleTypes = new Map<String,Map<String,mira.types.Type>>();
         if (publicTypes == null) publicTypes = new Map<String,Array<String>>();
@@ -96,6 +96,7 @@ class Modules {
                     final directive = new ModuleImport(tokens,offset);
                     offset = directive.next;
                     final path = directive.path;
+                    if (moduleEdges != null) moduleEdges.push({from:modulePath,to:path,kind:forwarding ? "export" : "import",phase:isPublic ? "interface" : "implementation",wildcard:directive.wildcard,names:[for (item in directive.names) {name:item.name,alias:item.alias}],line:origin.line,column:origin.column,file:origin.file});
                     if (!exportedSymbols.exists(path)) {
                         if (moduleTypes.exists(path))
                             throw new MiraError("Import cycle involving " + path,origin);
@@ -154,6 +155,7 @@ class Modules {
                     continue;
                 }
                 final path = tokens[offset + 1].value;
+                if (moduleEdges != null) moduleEdges.push({from:modulePath,to:path,kind:"file",phase:offset < publicEnd ? "interface" : "implementation",line:origin.line,column:origin.column,file:origin.file});
                 if (!tokens[offset + 2].isSymbol(";"))
                     throw new MiraError("Expected ; after import", origin);
                 offset += 3;

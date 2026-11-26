@@ -6,6 +6,7 @@ import mira.Target;
 import mira.MiraError;
 import mira.syntax.Expr;
 import mira.syntax.Definition;
+import mira.types.Type;
 import mira.resolve.Symbols;
 import mira.emit.SourceLocations.GeneratedLocation;
 
@@ -19,7 +20,8 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.70.1"
+            exploreModules: exploreModules,
+            version: "0.71.0"
         });
     }
 
@@ -123,6 +125,38 @@ class Bridge {
         });
     }
 
+    // Compose existing real trace and checked report; no source re-parsing in UI.
+    public static function exploreModules(source:String,?hostJson:String,?modulesJson:String):Dynamic {
+        final traced = Bridge.trace(source,hostJson,modulesJson);
+        if (!traced.ok) return traced;
+        final checked = check(source,hostJson,modulesJson);
+        if (!checked.ok) return checked;
+        return safely(function() {
+            final info:Dynamic = haxe.Json.parse(traced.output);
+            final types:Array<Dynamic> = haxe.Json.parse(checked.output);
+            final byName = new Map<String,Dynamic>();
+            final privateByModule = new Map<String,Array<Dynamic>>();
+            for (row in types) {
+                if (row.name != "<expression>") byName.set(row.name,row);
+                if (row.module != null && row.exported == false) {
+                    final path:String = row.module;
+                    if (!privateByModule.exists(path)) privateByModule.set(path,[]);
+                    privateByModule.get(path).push({name:row.name,type:row.type,line:row.line,column:row.column,file:row.file});
+                }
+            }
+            final interfaces:Array<Dynamic> = info.interfaces;
+            for (item in interfaces) {
+                final exports:Array<Dynamic> = item.exports;
+                for (symbol in exports) Reflect.setField(symbol,"signature",byName.get(symbol.name));
+                final forwarded:Array<Dynamic> = item.reexports;
+                if (forwarded != null) for (symbol in forwarded) if (symbol.kind != "type")
+                    Reflect.setField(symbol,"signature",byName.get(symbol.target));
+                Reflect.setField(item,"privateDeclarations",privateByModule.exists(item.module) ? privateByModule.get(item.module) : []);
+            }
+            return haxe.Json.stringify({interfaces:interfaces,dependencies:info.moduleDependencies},null,"  ");
+        });
+    }
+
     // Exposes actual compiler intermediate data, not a reconstructed diagram.
     // The raw declarations are collected before expression resolution.
     public static function trace(source:String, ?hostJson:String, ?modulesJson:String):Dynamic {
@@ -130,20 +164,32 @@ class Bridge {
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
             final publicTypes = new Map<String,Array<String>>();
+            final moduleTypes = new Map<String,Map<String,mira.types.Type>>();
+            final moduleEdges:Array<Dynamic> = [];
             final reexports = new Map<String,Array<Dynamic>>();
             final visibility = new mira.types.TypeVisibility();
-            final raw = [for (d in mira.Modules.collect(source, resolver(modulesJson),null,null,null,publicTypes,null,visibility,reexports)) d.canonical()];
+            final raw = [for (d in mira.Modules.collect(source, resolver(modulesJson),null,null,moduleTypes,publicTypes,null,visibility,reexports,moduleEdges)) d.canonical()];
+            final exportsByModule = new Map<String,Array<Dynamic>>();
+            for (d in raw) if (d.modulePath != null && d.isExported) {
+                if (!exportsByModule.exists(d.modulePath)) exportsByModule.set(d.modulePath,[]);
+                exportsByModule.get(d.modulePath).push({name:d.isFunction() ? d.selector() : d.name,kind:d.isFunction() ? "selector" : "value"});
+            }
             final moduleInterfaces:Array<Dynamic> = [];
             final paths = [for (path in publicTypes.keys()) path];
             paths.sort(Reflect.compare);
             for (path in paths) moduleInterfaces.push({
                 module:path,
                 types:publicTypes.get(path),
+                typeIdentities:[for (name in publicTypes.get(path)) {
+                    final type = moduleTypes.get(path).get(name);
+                    switch (type) {
+                        case NamedType(id,_): {name:name,identity:id,arity:0,opaque:visibility.opaqueNames.exists(id)};
+                        case OpaqueType(id,args) | ParametricNamedType(id,_,args) | SumType(id,_,args) | SumReference(id,_,args): {name:name,identity:id,arity:args.length,opaque:visibility.opaqueNames.exists(id)};
+                        default: throw new MiraError("Expected nominal public type " + name);
+                    }
+                }],
                 opaqueTypes:[for (name in publicTypes.get(path)) if (visibility.opaqueNames.exists(mira.resolve.ModuleIdentity.qualify(path,name))) name],
-                exports:[for (d in raw) if (d.modulePath == path && d.isExported) {
-                    name:d.isFunction() ? d.selector() : d.name,
-                    kind:d.isFunction() ? "selector" : "value"
-                }]
+                exports:exportsByModule.exists(path) ? exportsByModule.get(path) : []
             });
             for (item in moduleInterfaces) {
                 final forwarded = reexports.get(item.module);
@@ -196,7 +242,8 @@ class Bridge {
                 symbols: signatures,
                 declaredFunctions: raw.length,
                 compiledNames: symbols.hostNames,
-                interfaces: moduleInterfaces
+                interfaces: moduleInterfaces,
+                moduleDependencies:moduleEdges
             }, null, "  ");
         });
     }

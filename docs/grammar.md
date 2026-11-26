@@ -642,3 +642,29 @@ Studio: Type Lab → Tree shaking: esempio / Confronta JS / Confronta PHP.
 Mostra conteggi effettivi, byte UTF-8, mediana di 7 compilazioni alternate
 per variante e durata del pruning nell'ultima iterazione. Sono misure
 locali del browser, non benchmark di esecuzione del codice generato.
+
+## Mira 0.71: Module Explorer
+
+Mira Studio → Module Explorer. Inserire il sorgente di ingresso, la mappa
+JSON dei moduli virtuali e, facoltativamente, il manifest host. Il compilatore
+fornisce le dipendenze dirette raccolte dal resolver (import, export e file
+legacy), la fase, gli alias dichiarati, la posizione, le interfacce elaborate
+dal checker, le identità nominali e l'arità dei tipi, la provenienza delle
+riesportazioni e le dichiarazioni private. La vista permette di selezionare
+un modulo dai nodi o dagli archi e filtrare i simboli. Le dipendenze a file
+legacy sono mostrate come percorsi, non come identità logiche inventate.
+Il report è disponibile solo dopo una verifica statica riuscita. Il bridge
+combina trace e check (due passaggi del compilatore) senza interpretare la
+grammatica in JavaScript. Nessun nuovo meccanismo runtime. La pagina e i suoi
+asset fanno parte della cache offline della PWA.
+
+### Benchmark di scalabilità dei moduli (0.71)
+
+Module Explorer include un benchmark offline deterministico: 4, 16 e 64
+moduli foglia, più Core condiviso e App. Ogni foglia espone una funzione
+usata e possiede sei valori letterali non utilizzati. Tre compilazioni
+checked per variante, ordine alternato, mediana locale, per JS e PHP.
+Si riportano byte UTF-8 e conteggi del tree shaker. La fixture è condivisa
+con la CI, che verifica anche il risultato eseguito dei due target e la
+singola identità della dipendenza comune. Non sono soglie prestazionali.
+Il test stampa misure campione; le misure browser dipendono dal dispositivo.
