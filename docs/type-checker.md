@@ -618,3 +618,24 @@ generali o guardie runtime. Il checker resta opt-in. I contratti
 dichiarati presuppongono un ambiente host conforme.
 Nessun cambiamento al codice generato: test confrontano byte per byte
 JS e PHP con la versione priva di annotazioni, ed eseguono i risultati.
+
+### Vincolo al confine, non a ogni operazione
+
+```mira
+Percentage :: Number where _ >= 0 AND _ <= 100;
+average of: a (Percentage), and: b (Percentage)
+  -> Percentage = (a + b) / 2;
+```
+
+| Espressione | Tipo | Intervallo dedotto |
+| --- | --- | --- |
+| a, b | Percentage | [0, 100] |
+| a + b | Number | [0, 200] |
+| (a + b) / 2 | Number | [0, 100] |
+| risultato annotato | Percentage | [0, 100] |
+
+La somma può superare 100; non è un errore, perché è Number.
+Il vincolo è richiesto soltanto dal risultato annotato.
+L'analisi conserva i fatti intermedi senza trasformarli in tipi
+nominali. La costruzione finale è dimostrata staticamente.
+Si veda anche il [quaderno di progettazione](design-notes.md).

@@ -1011,3 +1011,15 @@ test('Studio proves bounded arithmetic without introducing code generation overh
     assert.equal(checked.ok,true);assert.equal(bare.ok,true);assert.equal(checked.output,bare.output);
   }
 });
+
+test('design notebook is generated from project documentation and available offline',()=>{
+  const notebook=read('design-notes.html');
+  assert.match(read('index.html'),/href="\.\/design-notes\.html"/);
+  assert.match(read('type-lab.html'),/href="\.\/design-notes\.html"/);
+  assert.ok(read('sw.js').includes("'./design-notes.html'"));
+  assert.match(notebook,/Quaderno di progettazione/);
+  assert.match(notebook,/Grammar Lab/);
+  assert.match(notebook,/a \+ b ha tipo Number e intervallo \[0,200\]/);
+  assert.ok(notebook.includes('Percentage :: Number where _ &gt;= 0 AND _ &lt;= 100;'));
+  assert.ok(notebook.includes('non implementata'));
+});
