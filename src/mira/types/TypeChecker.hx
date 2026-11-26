@@ -787,6 +787,10 @@ class TypeChecker {
     // A failed child keeps its own anchor in the exception. A successful
     // child restores the enclosing operator/call before unification.
     function checkValidationInput(actual:Type,required:Type):Void {
+        switch (representation(actual)) {
+            case OpaqueType(name): fail("Cannot validate opaque representation " + name);
+            default:
+        }
         // Even a Text or Boolean input may fail normally. Do not rebrand siblings.
         final identity = nominalName(actual);
         final destination = nominalName(required);
