@@ -19,7 +19,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.55.0"
+            version: "0.56.0"
         });
     }
 
@@ -43,7 +43,7 @@ class Bridge {
     }
 
     public static function compile(source:String, targetName:String, ?hostJson:String,
-        ?withLocations:Bool = false, ?modulesJson:String):Dynamic {
+        ?withLocations:Bool = false, ?modulesJson:String, ?checked:Bool = false):Dynamic {
         final locations:Array<GeneratedLocation> = withLocations ? [] : null;
         final result = safely(function() {
             final target = switch (targetName) {
@@ -53,7 +53,8 @@ class Bridge {
             };
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
-            return Compiler.transpile(source, target, host, locations, resolver(modulesJson));
+            return checked ? Compiler.transpileChecked(source,target,host,locations,resolver(modulesJson))
+                : Compiler.transpile(source, target, host, locations, resolver(modulesJson));
         });
         if (withLocations && result.ok) Reflect.setField(result, "locations", locations);
         return result;
