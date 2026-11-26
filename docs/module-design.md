@@ -1,7 +1,8 @@
 # Moduli Mira — progetto concordato e piano di implementazione
 
-**Stato: progettazione.** Base implementata: Mira 0.64. Questo documento non
-descrive funzionalità già disponibili. Sostituisce la direzione sperimentale
+**Stato: progettazione delle interfacce.** La 0.65 introduce il nucleo di
+identità e scope isolati; vedi grammar.md per le funzionalità implementate.
+Il campionario completo resta una proposta. Sostituisce la direzione sperimentale
 della PR #95 (nomi puntati come fondamento del namespace), che non va integrata
 nella sua forma attuale. Gli import statici della 0.30 continuano a funzionare
 secondo la grammatica documentata per quella versione.

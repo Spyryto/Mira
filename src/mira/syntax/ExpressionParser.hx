@@ -275,7 +275,8 @@ class ExpressionParser {
                 return at(holes == 0 ? HostCall(matched.selector, args)
                     : HostSection(matched.selector, args),token);
             }
-            return at(holes == 0 ? Call(matched.selector, args) : Section(matched.selector, args),token);
+            final selector = symbols.resolvedSelector(matched.selector);
+            return at(holes == 0 ? Call(selector, args) : Section(selector, args),token);
         }
 
         final name = symbols.resolveName(tokens, position, localNames);
@@ -285,7 +286,7 @@ class ExpressionParser {
             if (localNames.indexOf(name) == -1 && symbols.isHostName(name)) {
                 return at(HostRef(name),token);
             }
-            return at(Name(name),token);
+            return at(Name(localNames.indexOf(name) >= 0 ? name : symbols.resolvedName(name)),token);
         }
         for (future in pendingLocals) {
             if (Symbols.matchesWords(tokens, position, future)) {
@@ -417,7 +418,7 @@ class ExpressionParser {
             && tokens[position+1].value == "then" && tokens[position+2].isSymbol(":"))) {
             final template = types.get("Result");
             switch (template) {
-                case SumType("Result",alternatives,[Variable(a),Variable(b)])
+                case SumType(_,alternatives,[Variable(a),Variable(b)])
                     if (a < 0 && b < 0 && a != b && Lambda.count(alternatives) == 2):
                     switch [alternatives.get("Ok"),alternatives.get("Err")] {
                         case [Variable(x),Variable(y)] if (x == a && y == b):

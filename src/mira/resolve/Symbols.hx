@@ -23,8 +23,11 @@ class Symbols {
     public final globals:Array<String> = [];
     public final hostNames:Array<String> = [];
     public final environment:HostEnvironment;
+    final scopedGlobals = new Map<String,Array<String>>();
+    final resolvedValues = new Map<String,String>();
+    final resolvedSelectors = new Map<String,String>();
 
-    public function new(definitions:Array<Definition>, ?environment:HostEnvironment) {
+    public function new(definitions:Array<Definition>, ?environment:HostEnvironment, ?modulePath:String) {
         this.environment = environment == null ? HostEnvironment.empty() : environment;
         final seenSelectors = new Map<String, Bool>();
         final seenGlobals = new Map<String, Bool>();
@@ -59,8 +62,13 @@ class Symbols {
             if (definition.isStatement) continue;
             final identifier = definition.isFunction()
                 ? definition.selector() : definition.name;
+            if (modulePath != null) {
+                if (definition.isFunction()) resolvedSelectors.set(identifier,ModuleIdentity.qualify(modulePath,identifier));
+                else resolvedValues.set(identifier,ModuleIdentity.qualify(modulePath,identifier));
+            }
             final hostName = definition.isFunction()
-                ? Mangle.selector(definition.labels) : Mangle.name(definition.name);
+                ? Mangle.selector(resolvedSelector(identifier).substr(0,resolvedSelector(identifier).length-1).split(":"))
+                : Mangle.name(resolvedName(definition.name));
 
             if (definition.isFunction()) {
                 if (definition.labels[0] == "validate") throw new MiraError("Reserved validation selector " + identifier,definition.origin);
@@ -133,6 +141,19 @@ class Symbols {
             }
         }
     }
+
+    public function globalsOf(modulePath:Null<String>):Array<String> {
+        final key = modulePath == null ? "" : modulePath;
+        if (!scopedGlobals.exists(key))
+            scopedGlobals.set(key,[for (name in globals) if (ModuleIdentity.owner(name) == modulePath) name]);
+        return scopedGlobals.get(key);
+    }
+
+    public function resolvedName(name:String):String
+        return resolvedValues.exists(name) ? resolvedValues.get(name) : name;
+
+    public function resolvedSelector(selector:String):String
+        return resolvedSelectors.exists(selector) ? resolvedSelectors.get(selector) : selector;
 
     public function isHostName(name:String):Bool {
         return environment.values.indexOf(name) >= 0

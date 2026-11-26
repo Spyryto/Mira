@@ -14,14 +14,25 @@ class Compiler {
     public static function parse(source:String, ?host:HostEnvironment,
         ?readModule:String->Null<String>, ?entry:String, ?origins:ExpressionOrigins):Array<Definition> {
         final types = new Map<String,mira.types.Type>();
-        final definitions = Modules.collect(source, readModule, entry,types);
-        final symbols = new Symbols(definitions, host);
+        final moduleTypes = new Map<String,Map<String,mira.types.Type>>();
+        final definitions = Modules.collect(source, readModule, entry,types,moduleTypes);
+        final groups = new Map<String,Array<Definition>>();
+        for (definition in definitions) {
+            final key = definition.modulePath == null ? "" : definition.modulePath;
+            if (!groups.exists(key)) groups.set(key,[]);
+            groups.get(key).push(definition);
+        }
+        final scopes = new Map<String,Symbols>();
+        for (key => group in groups)
+            scopes.set(key,new Symbols(group,host,key == "" ? null : key));
         for (definition in definitions) {
             if (definition.body != null) continue; // synthesized sum constructor
+            final key = definition.modulePath == null ? "" : definition.modulePath;
             final locals = definition.isFunction() ? definition.parameters : [];
-            definition.body = new ExpressionParser(definition.bodyTokens, symbols, locals, false, null, origins,types).parse();
+            final localTypes = key == "" ? types : moduleTypes.get(key);
+            definition.body = new ExpressionParser(definition.bodyTokens, scopes.get(key), locals, false, null, origins,localTypes).parse();
         }
-        return definitions;
+        return [for (definition in definitions) definition.canonical()];
     }
 
     public static function transpile(source:String, target:Target, ?host:HostEnvironment,

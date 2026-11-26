@@ -19,7 +19,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.64.0"
+            version: "0.65.0"
         });
     }
 
@@ -97,6 +97,7 @@ class Bridge {
                     body: expression(definition.body)
                 };
                 if (definition.origin.file != null) Reflect.setField(node, "file", definition.origin.file);
+                if (definition.modulePath != null) Reflect.setField(node, "module",definition.modulePath);
                 if (definition.isFunction()) {
                     Reflect.setField(node, "selector", definition.selector());
                     Reflect.setField(node, "name", definition.selector());
@@ -118,7 +119,7 @@ class Bridge {
         return safely(function() {
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
-            final raw = mira.Modules.collect(source, resolver(modulesJson));
+            final raw = [for (d in mira.Modules.collect(source, resolver(modulesJson))) d.canonical()];
             final symbols = new Symbols(raw, host);
             final declarations:Array<Dynamic> = [];
             for (definition in raw) {

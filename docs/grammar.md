@@ -355,11 +355,41 @@ Precedenze configurabili, Unicode, localizzazione e dichiarazioni
 di operatori custom sono proposte, non la grammatica attuale:
 vedi [quaderno di progettazione](design-notes.md).
 
-## Direzione futura: moduli isolati (non implementata)
+## Direzione futura: interfacce dei moduli (non implementata)
 
-Vedi [progetto dei moduli](module-design.md). I percorsi discorsivi con /,
-le sezioni piatte interface e implementation, gli alias => e le firme
+Vedi [progetto dei moduli](module-design.md). Le sezioni piatte interface e implementation, gli alias => e le firme
 pubbliche inferite o esplicite sono la direzione concordata, non la
-grammatica accettata dal compilatore 0.64. Gli import statici a percorso
-file della 0.30 restano l'unica forma implementata. Il punto sperimentato
+grammatica accettata dal compilatore 0.65. Gli import statici a percorso
+file della 0.30 restano l'unica forma di caricamento implementata. Il punto sperimentato
 nella PR #95 non è stato adottato.
+
+
+## Mira 0.65: percorsi logici e scope isolati
+
+```mira
+module Music / Jazz Harmony;
+Pitch :: Number;
+rate = 2;
+scale: x = x * rate;
+a (Pitch) = 42;
+result = scale: 5;
+```
+
+L'header precede gli import a percorso file e le definizioni. Segmenti
+discorsivi separati da /, normalizzati nel percorso logico completo;
+non si presume che esista un modulo padre. Due file distinti non
+possono dichiarare lo stesso percorso logico. I file senza header
+mantengono lo scope globale legacy, mentre ogni modulo dichiarato
+ha tabelle separate per valori, selettori e tipi. I nomi risolti
+sono canonici, non esprimibili nel sorgente. Tag delle somme immutati.
+La forma breve validate cerca Result nella tabella locale.
+Il mangler usa un prefisso riservato e codifica iniettiva; JS e PHP
+non ricevono oggetti namespace o resolver. PHP non importa nei
+corpi delle funzioni le variabili globali degli altri moduli.
+L'host rimane una capability esplicita comune al programma.
+Un import a percorso file può caricare un modulo dichiarato, ma non
+rende visibili i suoi simboli (ancora tutti privati). Gli effetti
+degli inizializzatori continuano a essere eseguiti come prima.
+Non esistono ancora import logici, export, interface/implementation,
+alias, qualificazione nelle espressioni o package. In questa fase
+gli identificatori generati dei moduli non costituiscono un'API host.

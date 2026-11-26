@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.64.0');
+  assert.equal(bridge.version, '0.65.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.64.0');
+  assert.equal(bridge.version,'0.65.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1019,7 +1019,7 @@ test('design notebook is generated from project documentation and available offl
   assert.ok(read('sw.js').includes("'./design-notes.html'"));
   assert.match(notebook,/Quaderno di progettazione/);
   assert.match(notebook,/Moduli Mira — progetto concordato/);
-  assert.match(notebook,/Stato: progettazione/);
+  assert.match(notebook,/Stato: progettazione delle interfacce/);
   assert.match(notebook,/module Music \/ Jazz Harmony;/);
   assert.match(notebook,/import Math \/ Floating Point =&gt; Float Num;/);
   assert.match(notebook,/transpose: by: =&gt; trasponi: di:/);
@@ -1196,4 +1196,25 @@ test('Studio exposes finite recursive sum schemas and checks nested alternatives
   assert.equal(compiled.ok,true,compiled.message);
   assert.equal(runInNewContext(compiled.output+'\nresult',{}),42);
   assert.match(read('type-lab.html'),/recursive-sum-example/);
+});
+
+
+test('0.65 Studio uses the same isolated logical module identities in compile, check, AST and trace',()=>{
+  const modules=JSON.stringify({'parent.mira':'module Music; rate = 2;','sibling.mira':'module Music / Rhythm; rate = 3;'});
+  const src='module Music / Jazz Harmony; import "parent.mira"; import "sibling.mira"; rate = 5; scale: x = x * rate; result = scale: 4;';
+  const report=bridge.check(src,null,modules);assert.equal(report.ok,true,report.message);
+  const types=JSON.parse(report.output);
+  assert.equal(types.find(d=>d.name==='Music / Jazz Harmony / result').type,'Number');
+  const compiled=bridge.compile(src,'js',null,false,modules,true);
+  assert.equal(compiled.ok,true,compiled.message);
+  const name='__miraModule_v_'+Buffer.from('Music / Jazz Harmony / result').toString('hex').toUpperCase();
+  assert.equal(runInNewContext(compiled.output+'\n'+name,{}),20);
+  const ast=JSON.parse(bridge.ast(src,null,modules).output);
+  assert.equal(ast.definitions.find(d=>d.name==='Music / Rhythm / rate').module,'Music / Rhythm');
+  const trace=JSON.parse(bridge.trace(src,null,modules).output);
+  assert.equal(trace.declarations.filter(d=>d.name.endsWith(' / rate')).length,3);
+  const invalid=bridge.check('module Music / Jazz Harmony; import "parent.mira"; result = rate;',null,modules);
+  assert.equal(invalid.ok,false);
+  assert.match(invalid.message,/Unknown identifier/);
+  assert.match(read('type-lab.html'),/isolated-module-example/);
 });
