@@ -555,3 +555,36 @@ pubblici o opachi. Non ancora supportati: tipi opachi parametrici,
 riferimenti a un tipo opaco locale nelle dichiarazioni di altri tipi
 pubblici della stessa interfaccia (le firme delle funzioni possono
 riferirvisi), compilazione separata, riesportazioni.
+
+## Mira 0.69.1: tipi opachi parametrici
+
+```mira
+module Data / Box;
+
+interface
+
+Box (Element Type);
+Envelope (T) :: {box: Box (T)};
+box (T): :: (T) -> Box (T);
+item (T): :: (Box (T)) -> T;
+
+implementation
+
+Box (U) :: {item: U};
+box: x = {item: x};
+item: b = b ~ item;
+```
+
+I parametri dell'astrazione e dell'implementazione devono avere la stessa
+arità, non necessariamente gli stessi nomi. Una vista opaca conserva
+identità e argomenti; le applicazioni sono invarianti. Le somme
+parametriche possono essere opache. I tipi pubblici possono contenere
+riferimenti ai tipi opachi locali in record, liste e somme: si raccolgono
+prima gli header, si risolvono le dichiarazioni pubbliche, poi le
+rappresentazioni private. Il proprietario può rivelare la rappresentazione
+quando necessario nel checker; i consumatori no. Gli argomenti di un
+tipo opaco sono pubblici e non possono nascondere tipi privati in una
+firma esportata. Alias diretti della rappresentazione di un tipo opaco
+locale nelle dichiarazioni pubbliche restano esclusi per evitare cicli
+di alias; non si introduce un sistema generale di tipi ricorsivi.
+Il controllo resta opt-in. Nessuna modifica agli emitter.
