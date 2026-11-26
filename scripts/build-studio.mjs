@@ -46,6 +46,8 @@ const assets = [
   'host-module-worker.js',
   'text-module-lab.js',
   'storage-module-lab.js',
+  'http-module-lab.js',
+  'http-example.txt',
   'module-explorer.html',
   'module-explorer.js',
   'interface-impact.js',
@@ -165,6 +167,15 @@ storageData.js=storageJS.output;storageData.php=storagePHP.output;
 writeFileSync(resolve(destination,'storage-module-data.js'),'globalThis.MiraStorageModuleData = '+JSON.stringify(storageData)+';\n');
 writeFileSync(resolve(destination,'storage-module-program.js'),'globalThis.MiraStorageProgram = function(__miraHost){\n'+storageJS.output+'\nreturn __miraModule_v_417070202F20726573756C74;\n};\n');
 copyFileSync(resolve(root,'lib/storage/storage-host.js'),resolve(destination,'storage-host.js'));
+const httpFile=path=>readFileSync(resolve(root,'lib/http',path),'utf8');
+const httpData={source:httpFile('App.mira'),modules:JSON.stringify({'Services / Http':httpFile('Services/Http.mira')})};
+const httpJS=context.MiraStudioCompiler.compile(httpData.source,'js',null,false,httpData.modules,true,true);
+const httpPHP=context.MiraStudioCompiler.compile(httpData.source,'php',null,false,httpData.modules,true,true);
+if(!httpJS.ok||!httpPHP.ok)throw Error(httpJS.message||httpPHP.message);
+httpData.js=httpJS.output;httpData.php=httpPHP.output;
+writeFileSync(resolve(destination,'http-module-data.js'),'globalThis.MiraHttpModuleData = '+JSON.stringify(httpData)+';\n');
+writeFileSync(resolve(destination,'http-module-program.js'),'globalThis.MiraHttpProgram = function(){\n'+httpJS.output+'\nreturn __miraModule_v_417070202F20726573756C74;\n};\n');
+copyFileSync(resolve(root,'lib/http/http-host.js'),resolve(destination,'http-host.js'));
 const ledger=context.MiraStudioCompiler.compile(
   readFileSync(resolve(root,'studio/persistent-ledger.mira'),'utf8'),'js',
   JSON.stringify({callables:['render']}));

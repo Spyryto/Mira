@@ -23,7 +23,7 @@ class Bridge {
             exploreModules: exploreModules,
             interfaces: interfaces,
             verifyContract: verifyContract,
-            version: "0.87.0"
+            version: "0.88.0"
         });
     }
 

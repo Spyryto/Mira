@@ -1,0 +1,9 @@
+module App;
+interface
+result;
+import Services / Http { get text: ; successful: ; };
+implementation
+result = {
+  request: {id | get text: id},
+  successful: {response | successful: response}
+};

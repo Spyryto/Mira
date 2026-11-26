@@ -2015,3 +2015,21 @@ test('0.87 Storage static providers and compiled browser program persist across 
   assert.equal(node('storage-value').value,'prova');node('storage-remove').listeners.click();node('storage-read').listeners.click();
   assert.match(node('storage-status').textContent,/assente/);
 });
+
+test('0.88 HTTP lab builds checked pure Mira program and uses real adapter with injected fetch',async()=>{
+  const requests=[];
+  const ctx={URL,AbortController,TextDecoder,setTimeout,clearTimeout,fetch:async(url,options)=>{requests.push({url,options});return new Response('Caffè 🎸',{status:200});}};
+  for(const asset of ['http-host.js','http-module-data.js','http-module-program.js'])runInNewContext(read(asset),ctx);
+  const d=ctx.MiraHttpModuleData,p=ctx.MiraHttpProgram();
+  assert.deepEqual(JSON.parse(JSON.stringify(p.request(7))),{service:'http text',id:7,reply:'http loaded',payload:true});
+  assert.equal(p.successful({status:200,body:'x'}),true);assert.equal(p.successful({status:503,body:'x'}),false);
+  for(const target of ['js','php']){const out=bridge.compile(d.source,target,null,false,d.modules,true,true);assert.equal(out.ok,true,out.message);}
+  const nodes=new Map();const node=id=>{if(!nodes.has(id))nodes.set(id,{textContent:'',listeners:{},addEventListener(event,fn){this.listeners[event]=fn;}});return nodes.get(id);};
+  ctx.document={getElementById:node};ctx.window={location:{href:'https://example.test/studio/host-module-lab.html'},addEventListener(){}};
+  runInNewContext(read('http-module-lab.js'),ctx);
+  await node('http-load').listeners.click();
+  assert.equal(requests[0].url,'https://example.test/studio/http-example.txt');
+  assert.equal(requests[0].options.credentials,'omit');assert.equal(node('http-output').textContent,'Caffè 🎸');
+  assert.match(node('http-status').textContent,/HTTP 200/);
+  for(const asset of ['http-host.js','http-module-data.js','http-module-program.js','http-module-lab.js','http-example.txt'])assert.ok(read('sw.js').includes('./'+asset));
+});

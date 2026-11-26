@@ -1,5 +1,5 @@
 {
-  "version": "0.87.0",
+  "version": "0.88.0",
   "features": [
     {
       "id": "values",
@@ -2100,6 +2100,12 @@
       "title": "Persistenza testuale con provider Browser e Files",
       "since": "0.87",
       "doc": "docs/studio.md#mira-087-persistenza-chiave-valore"
+    },
+    {
+      "id": "http-text-service",
+      "title": "Effetti HTTP GET testuali con adapter nativi",
+      "since": "0.88",
+      "doc": "docs/studio.md#mira-088-http-testuale"
     }
   ]
 }
