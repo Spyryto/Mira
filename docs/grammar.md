@@ -813,3 +813,21 @@ pubbliche: altrimenti si tenta la normale firma di valore. La stessa
 classificazione vale nel provider. Un tipo astratto parametrico inutilizzato
 rimane un caso sintattico aperto. Studio: Module Explorer → Contratto come
 modulo → Verifica senza provider. Nessun nuovo nodo Expr o codice runtime.
+
+## Mira 0.76: identità nominali persistenti dei contratti
+
+Con un manifest che seleziona un provider di un modulo interface-only,
+tutti i tipi pubblici ereditati mantengono il percorso del contratto
+come identità nominale, incluse applicazioni parametriche, tipi trasparenti
+e somme. Il compilatore mantiene separatamente il proprietario concreto
+della rappresentazione opaca, autorizzato a rivelarla. I simboli chiamati
+restano quelli del provider: nessun wrapper o modifica degli emitter.
+L'analisi senza provider e quella con provider selezionato producono
+identità uguali per i tipi del consumatore. Un altro provider importato
+direttamente senza essere selezionato conserva le proprie identità: le
+rappresentazioni di implementazioni differenti non sono intercambiabili
+nello stesso build. Import diretti del provider selezionato condividono
+invece l'identità del contratto. Il manifest inline 0.73 non cambia.
+Non si condividono ancora risultati di compilazione tra build, né si
+promette compatibilità di dati serializzati tra provider. La cache delle
+interfacce elaborate è un incremento successivo.
