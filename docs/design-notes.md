@@ -496,3 +496,13 @@ Il nodo ValidateResult emette direttamente tag/value nel ramo
 selezionato, con una sola valutazione dell'input e senza chiamare
 costruttori o creare due continuation. Errori strutturati e altri
 tipi di validazione sono separati da questa iterazione.
+
+
+## 0.63 — tipi nominali parametrici con rappresentazione dati
+
+Estendiamo il meccanismo di template delle somme a record
+chiusi e liste nominali. Identità e argomenti sono verificati
+staticamente; la rappresentazione rimane nativa. Si conserva
+NamedType per le dichiarazioni esistenti e si distingue
+ParametricNamedType con argomenti espliciti. Non introduciamo
+alias trasparenti, applicazioni ricorsive o nuovi costi runtime.
