@@ -255,6 +255,12 @@ Il filtro dei moduli di Atlas è ora calcolato da Mira.
 
 [Laboratory in Mira Studio](https://spyryto.github.io/Mira/laboratory.html) raccoglie l'evoluzione 0.15–0.34, i benchmark CI e le misure dell'autore su iPhone e smart TV. [Rapporto tecnico](docs/gui-rendering.md) · [Archivio JSON](catalog/laboratory/gui-rendering.json). Il rapporto storico è statico e separato dal benchmark eseguibile.
 
+## Mira 0.59: match esaustivo
+
+`match: value { ... }` elimina un tipo somma tramite blocchi
+tipizzati. Le normali chiamate match: e match:with: restano distinte.
+[Dettagli](docs/type-checker.md#059-match-esaustivo).
+
 ## Mira 0.58: tipi somma nominali
 
 Le dichiarazioni con alternative separate da | generano costruttori

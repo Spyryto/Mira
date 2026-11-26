@@ -233,6 +233,10 @@ class ExpressionParser {
             final key = consume().value;
             return at(FieldAccessor(key),token);
         }
+        if (token.value == "match" && tokens[position + 1].isSymbol(":")) {
+            final opening = matchOpening(position + 2);
+            if (opening >= 0) return at(matchExpression(opening),token);
+        }
         if (token.value == "validate" && tokens[position + 1].isSymbol(":")) return at(validation(),token);
         if (token.value == "if" && (tokens[position + 1].isSymbol(":")
             || tokens[position + 1].isSymbol("("))) {
@@ -338,6 +342,52 @@ class ExpressionParser {
         }
         final whenFalse = expression();
         return Conditional(predicate, whenTrue, whenFalse);
+    }
+
+    // Contextual syntax only. A top-level brace after a nonempty
+    // scrutinee introduces match branches. A comma ends a normal
+    // selector argument; braces inside parentheses remain ordinary data.
+    function matchOpening(start:Int):Int {
+        var depth = 0;
+        for (i in start...tokens.length) {
+            final token = tokens[i];
+            if (token.kind == End) break;
+            if (depth == 0) {
+                if (token.isSymbol("{") && i > start) return i;
+                if (token.isSymbol(",") || token.isSymbol(";") || token.isSymbol(")")
+                    || token.isSymbol("]") || token.isSymbol("}")) break;
+            }
+            if (token.isSymbol("(") || token.isSymbol("[") || token.isSymbol("{")) depth++;
+            else if (token.isSymbol(")") || token.isSymbol("]") || token.isSymbol("}")) depth--;
+        }
+        return -1;
+    }
+
+    function matchExpression(opening:Int):Expr {
+        final input = new ExpressionParser(tokens.slice(position+2,opening),symbols,
+            localNames.copy(),false,pendingLocals.copy(),origins,types).parse();
+        position = opening + 1;
+        final tags:Array<String> = [];
+        final handlers:Array<Expr> = [];
+        while (true) {
+            final anchor = current();
+            final label = literalKey("Expected match alternative");
+            if (!~/^[a-z][A-Za-z0-9_]*( [A-Za-z_][A-Za-z0-9_]*)*$/.match(label))
+                throw new MiraError("Match alternative must start with a lowercase letter",anchor);
+            final tag = label.charAt(0).toUpperCase() + label.substr(1);
+            if (tags.indexOf(tag) >= 0) throw new MiraError("Duplicate match alternative " + label,anchor);
+            requireSymbol(":");
+            if (!current().isSymbol("{") || !isBlockStart())
+                throw new MiraError("Match alternative requires a block",current());
+            final handlerOrigin = current();
+            final handler = at(block(),handlerOrigin);
+            tags.push(tag);
+            handlers.push(handler);
+            if (current().isSymbol("}")) break;
+            requireSymbol(",");
+        }
+        requireSymbol("}");
+        return Match(input,tags,handlers);
     }
 
     // Explicit validation: the type operand is syntax, never a runtime value.

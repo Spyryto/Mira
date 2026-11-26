@@ -828,3 +828,57 @@ test('types: native tagged sum representations agree on JS and PHP',()=>{
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('types: exhaustive contextual match types payloads and preserves user selectors',()=>{
+  const src='Session :: {user: Text}; Connection :: Disconnected | Connecting | Connected (Session) | Failed (Text); session (Session) = {user: "Ada"}; connection = Connected: session; describe connection: c (Connection) = match: c {disconnected: {| "offline"}, connecting: {| "waiting"}, connected: {s | s ~ user}, failed: {error | error}}; match: x = x; match: x, with: y = y; process = {handlers | handlers}; ordinary = match: 42; ordinary with = match: connection, with: 7; ordinary record = match: (process {connected: {| 1}, disconnected: {| 0}}); result = describe connection: connection; direct = match: (Connected: session) {disconnected: {| 0}, connecting: {| 1}, connected: {s | 2}, failed: {e | 3}};';
+  const t=check(src);
+  assert.equal(t['describe connection:'],'(Connection) -> Text');assert.equal(t.result,'Text');
+  assert.equal(t.ordinary,'Number');assert.equal(t['ordinary with'],'Number');assert.equal(t.direct,'Number');
+  assert.equal(t['ordinary record'],'{connected: () -> Number, disconnected: () -> Number}');
+  for(const [extra,pattern] of [
+    ['bad = match: connection {disconnected: {| 0}};',/Non-exhaustive match/],
+    ['bad = match: connection {disconnected: {| 0}, disconnected: {| 1}};',/Duplicate match alternative/],
+    ['bad = match: connection {missing: {| 0}};',/Unknown match alternative/],
+    ['bad = match: connection {disconnected: {| 0}, connecting: {| 1}, connected: {| 2}, failed: {e | 3}};',/Wrong match handler arity/],
+    ['bad = match: connection {disconnected: {| 0}, connecting: {| 1}, connected: {s | 2}, failed: {e | e}};',/expected Number, got Text/],
+    ['bad = match: 42 {disconnected: {| 0}};',/requires a known sum type/],
+    ['bad = match: connection {disconnected: {| 0}, connecting: {| 1}, connected: {s (Text) | 2}, failed: {e | 3}};',/Match handler parameters are typed/]
+  ])assert.throws(()=>check(src+extra),pattern,extra);
+});
+test('types: match dispatch evaluates the scrutinee once and only the selected body',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-match-'));
+  try{
+    const input=join(dir,'program.mira'),host=join(dir,'host.json');
+    const src='Connection :: Disconnected | Connected (Text) | Failed (Text); get connection: value (Text) = Connected: (probe value); describe connection: c (Connection) = match: c {disconnected: {| on branch "offline"}, connected: {s | on branch s}, failed: {e | on branch e}}; run match: name (Text) = match: (get connection: name) {disconnected: {| on branch "offline"}, connected: {s | on branch s}, failed: {e | on branch e}}; capture match: c (Connection), prefix: p (Text) = match: c {disconnected: {| p}, connected: {s | p}, failed: {e | p}};';
+    writeFileSync(input,src);
+    writeFileSync(host,JSON.stringify({callables:['probe','on branch'],types:{probe:{parameters:['Text'],result:'Text'},'on branch':{parameters:['Text'],result:'Text'}}}));
+    for(const target of ['js','php']){
+      const r=spawnSync('node',['dist/mira.cjs',input,target,'--checked','--host',host],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      const js='let probes=0; const branches=[]; const __miraHost={probe:x=>{probes++;return x;}, "on branch":x=>{branches.push(x);return x;}}; console.log(JSON.stringify([run_match("Ada"),describe_connection(Disconnected),describe_connection(Failed("timeout")),capture_match__prefix(Disconnected,"captured"),probes,branches]));';
+      const php='$probes=0;$branches=[];$GLOBALS["__miraHost"]=["probe"=>function($x) use (&$probes){$probes++;return $x;}, "on branch"=>function($x) use (&$branches){$branches[]=$x;return $x;}]; echo json_encode([run_match("Ada"),describe_connection($Disconnected),describe_connection(Failed("timeout")),capture_match__prefix($Disconnected,"captured"),$probes,$branches]);';
+      writeFileSync(file,r.stdout+'\n'+(target==='js'?js:php));
+      const executed=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(executed.status,0,executed.stderr);
+      assert.deepEqual(JSON.parse(executed.stdout),['Ada','offline','timeout','captured',1,['Ada','offline','timeout']]);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('types: ordinary match selectors coexist with the special form in JS and PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-match-selectors-'));
+  try{
+    const input=join(dir,'program.mira');
+    writeFileSync(input,'State :: Idle | Running (Number); match: x = x; match: x, with: y = y; process = {handlers | handlers}; ordinary = match: 42; ordinary with = match: 1, with: 7; ordinary record = match: (process {idle: {| 1}}); selected = match: (Running: 2) {idle: {| 0}, running: {n | n}}; result = [ordinary, ordinary with, selected];');
+    for(const target of ['js','php']){
+      const compiled=spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
+      assert.equal(compiled.status,0,compiled.stderr);
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,compiled.stdout+(target==='js'?'\nconsole.log(JSON.stringify(result));':'\necho json_encode($result);'));
+      const executed=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(executed.status,0,executed.stderr);
+      assert.deepEqual(JSON.parse(executed.stdout),[42,7,2]);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

@@ -911,3 +911,69 @@ tipi e lo schema; i test verificano l'identità nominale,
 i costruttori, il rifiuto di record falsificati e la
 rappresentazione JS/PHP. Il quaderno registra la regola
 grammaticale concordata per il futuro match.
+
+
+## 0.59: match esaustivo
+
+```mira
+Connection :: Disconnected | Connecting | Connected (Text) | Failed (Text);
+connection = Connected: "Ada";
+result = match: connection {
+  disconnected: {| "offline"},
+  connecting: {| "waiting"},
+  connected: {name | name},
+  failed: {error | error}
+};
+```
+
+Match è un costrutto contestuale, non un nuovo selettore
+riservato. Una graffa a livello zero dopo uno scrutinee
+non vuoto apre le alternative; una virgola a livello zero
+interrompe la ricerca. Una graffa racchiusa in parentesi
+resta parte dell'argomento ordinario. Per esempio:
+
+```mira
+match: x = x;
+match: x, with: y = y;
+ordinary = match: 42;
+other = match: 42, with: 7;
+```
+
+Le chiamate ordinarie restano valide. Uno scrutinee
+complesso può essere parentetizzato. Le alternative sono
+separate da virgole, etichettate con la prima lettera
+minuscola del costruttore (Connected → connected), e
+hanno come corpo un blocco normale di zero o un parametro.
+Non sono ammesse annotazioni dei parametri dei blocchi:
+il checker assegna il tipo del payload. I duplicati sono
+rifiutati dal parser; il checker richiede un tipo somma
+noto, esattamente tutte le alternative, arità corretta e
+risultati unificabili. La verifica di esaustività richiede
+--check oppure --checked, come gli altri controlli di tipo.
+
+L'AST Match mantiene scrutinee, tag e blocchi. Gli emitter
+generano una funzione nativa inline che riceve il valore
+una volta e confronta il discriminante con uguaglianza
+stretta, invocando soltanto il ramo selezionato. I blocchi
+sono creati come closure; non sono ancora eliminati tramite
+inlining. Nessun registro o libreria runtime. Un valore
+host falsificato non è validato dal match: le premesse dei
+tipi restano fidate. Un discriminante non riconosciuto
+produce un'eccezione. La rappresentazione tag/value non
+costituisce un contratto wire.
+
+Non sono ancora supportati wildcard, pattern annidati,
+guardie dei pattern, inferenza del tipo somma dalle sole
+etichette, generici o ricorsione. Type Lab mostra un esempio
+ed espone l'AST. I test verificano esaustività, shadowing
+dei selettori ordinari, payload, tipi dei risultati,
+singola valutazione dello scrutinee e selezione del ramo
+su JS/PHP.
+
+Il nome match è riservato da PHP 8, non da Mira: il mangler
+traduce il selettore unario match: (anche nelle varianti
+maiuscole/minuscole) in un identificatore prefissato, uguale
+nei due target. La risoluzione delle collisioni generate resta
+quella ordinaria. Il test esegue insieme selettori utente
+e costrutto algebrico su entrambi i target. Il problema più
+generale delle collisioni con nomi nativi rimane distinto.

@@ -15,6 +15,9 @@ class Mangle {
     public static function selector(labels:Array<String>):String {
         final names:Array<String> = [];
         for (label in labels) names.push(label.split(" ").join("_"));
-        return names.join("__");
+        final generated = names.join("__");
+        // PHP 8 reserves match (case-insensitively). Keep source selectors
+        // legal and use the same deterministic spelling on both targets.
+        return generated.toLowerCase() == "match" ? "__miraSelector_" + generated : generated;
     }
 }
