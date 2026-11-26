@@ -1,7 +1,7 @@
 {
   "name": "mira-discursive",
   "private": true,
-  "version": "0.73.0",
+  "version": "0.74.0",
   "type": "module",
   "description": "Mira discursive syntax frontend: Haxe source, JS/PHP emitters",
   "scripts": {
