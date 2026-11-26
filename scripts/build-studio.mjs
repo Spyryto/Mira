@@ -41,6 +41,7 @@ const assets = [
   'type-lab.js',
   'module-explorer.html',
   'module-explorer.js',
+  'module-benchmark.js',
   'effects-demo.mira',
   'effects-demo.js',
   'effects-demo.html',
