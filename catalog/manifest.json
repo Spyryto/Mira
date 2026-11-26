@@ -1,5 +1,5 @@
 {
-  "version": "0.70.0",
+  "version": "0.70.1",
   "features": [
     {
       "id": "values",
@@ -1992,6 +1992,12 @@
       "title": "Riesportazione statica con alias e identità originale",
       "since": "0.70",
       "doc": "docs/grammar.md#mira-070-riesportazione-statica"
+    },
+    {
+      "id": "conservative-tree-shaking",
+      "title": "Tree shaking conservativo checked e misure in Studio",
+      "since": "0.70.1",
+      "doc": "docs/grammar.md#mira-0701-tree-shaking-conservativo"
     }
   ]
 }
