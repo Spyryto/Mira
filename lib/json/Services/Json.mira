@@ -1,3 +1,5 @@
 module Services / Json;
 interface
+Result (T, E) :: Ok (T) | Err (E);
 decode lesson: :: (Text) -> {name: Text, hours: Number, paid: Boolean, tags: [Text]};
+try decode lesson: :: (Text) -> Result ({name: Text, hours: Number, paid: Boolean, tags: [Text]}, Text);

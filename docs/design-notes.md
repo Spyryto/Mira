@@ -715,3 +715,7 @@ Contratto Mira e provider concreto in lib/text, manifest con scope, adapter JS/P
 ## 0.84 — decoder JSON specializzato da un contratto
 
 Il contratto è l'unica fonte delle firme. Il generatore converte lo schema chiuso già verificato in un manifest host strutturale e riusa il medesimo schema per i validatori esistenti JS/PHP della 0.46. La capability nativa rimane confinata al provider. Non aggiungere Dynamic o un parser JSON proprio. Primo incremento concreto: eccezione al confine per dati non validi, non ancora Result; valutare un'estensione fallibile tipizzata quando si possa conservare un'unica firma senza duplicare l'algebra dei tipi nel manifest.
+
+## 0.85 — errori JSON come valori
+
+Il Result appartiene al contratto Mira, non al manifest. Si conserva l'ABI strutturale esistente e si usa un envelope privato {values: [payload], error: Text} a cardinalità zero/uno, costruito soltanto dall'adapter che valida. Il provider costruisce Ok/Err con i costruttori ordinari tramite fold. Nessuna duplicazione dei validatori o del tipo di successo nel manifest; il generatore verifica che i due decoder condividano lo schema. La firma del contratto contiene entrambe le dichiarazioni esplicite e un controllo di coerenza impedisce divergenze; non si introduce ancora alias di tipo strutturale. I dati non validi sono gestiti con match; i bug host inattesi non vengono trasformati indiscriminatamente in errori di dati. L'envelope non è zero-cost: è un adattatore pragmatico, non una proposta per un ABI generale.

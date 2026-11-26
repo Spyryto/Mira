@@ -2,3 +2,11 @@ module Providers / Json Native;
 implements Services / Json;
 implementation
 decode lesson: source = native decode lesson source;
+
+try decode lesson: source =
+  () >> {|
+    decoded = native try decode lesson source;
+    fold: (decoded ~ values),
+      with: {acc, item | Ok: item},
+      from: (Err: (decoded ~ error))
+  };

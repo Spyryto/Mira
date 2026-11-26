@@ -144,7 +144,7 @@ const jsonSource=jsonFile('App.mira'),jsonModules=JSON.stringify({'Services / Js
 const jsonReport=context.MiraStudioCompiler.interfaces(jsonSource,null,jsonModules);
 if(!jsonReport.ok)throw Error(jsonReport.message);
 const jsonGenerated=generateJsonDecoder(JSON.parse(jsonReport.output),JSON.parse(jsonFile('decoder.json')));
-const jsonData={source:jsonSource,modules:jsonModules,host:JSON.stringify(jsonGenerated.host,null,2),bindings:JSON.stringify(jsonGenerated.bindings,null,2),decoder:jsonGenerated.decoder};
+const jsonData={source:jsonSource,fallibleSource:jsonFile('Fallible.mira'),modules:jsonModules,host:JSON.stringify(jsonGenerated.host,null,2),bindings:JSON.stringify(jsonGenerated.bindings,null,2),decoder:jsonGenerated.decoder};
 writeFileSync(resolve(destination,'json-module-data.js'),'globalThis.MiraJsonModuleData = '+JSON.stringify(jsonData)+';\n');
 copyFileSync(resolve(root,'lib/json/json-host.js'),resolve(destination,'json-host.js'));
 const ledger=context.MiraStudioCompiler.compile(
