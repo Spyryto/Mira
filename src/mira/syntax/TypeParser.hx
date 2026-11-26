@@ -46,7 +46,7 @@ class TypeParser {
             final inherited = NumericRange.ofType(type);
             if (inherited == null) return fail("Numeric refinement requires a Number representation");
             final range = readRange();
-            if (inherited.intersect(range).empty()) return fail("Empty numeric refinement");
+            if ((NumericRange.integerType(type) ? inherited.intersect(range).integerHull() : inherited.intersect(range)).empty()) return fail("Empty numeric refinement");
             type = RefinedType(type,range);
         }
         if (current() != null) fail("Unexpected token in type annotation");
@@ -133,6 +133,7 @@ class TypeParser {
         final name = words.join(" ");
         return switch (name) {
             case "Number": NumberType;
+            case "Integer": IntegerType;
             case "Text": TextType;
             case "Boolean": BooleanType;
             default: if (names.exists(name)) names.get(name) else throw new MiraError("Unknown annotation type " + name,token);
