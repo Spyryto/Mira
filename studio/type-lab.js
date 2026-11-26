@@ -31,6 +31,11 @@
   }
   document.getElementById('checked-js').addEventListener('click',()=>compileChecked('js'));
   document.getElementById('checked-php').addEventListener('click',()=>compileChecked('php'));
+  document.getElementById('match-example').addEventListener('click',()=>{
+    host.value='';
+    source.value='Connection :: Disconnected | Connecting | Connected (Text) | Failed (Text);\nconnection = Connected: "Ada";\nresult = match: connection {\n  disconnected: {| "offline"},\n  connecting: {| "waiting"},\n  connected: {name | name},\n  failed: {error | error}\n};';
+    check();
+  });
   document.getElementById('sum-example').addEventListener('click',()=>{
     host.value='';
     source.value='Session :: {user: Text};\nConnection :: Disconnected | Connecting | Connected (Session) | Failed (Text);\nsession (Session) = {user: "Ada"};\ninitial = Disconnected;\nactive connection = Connected: session;\nfailure = Failed: "Timeout";\nstates = [initial, active connection, failure];';
