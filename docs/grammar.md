@@ -338,3 +338,19 @@ Scelta deliberatamente incrementale: separazione fisica e risoluzione determinis
 ## Mira 0.32: sequenze native
 
 I selettori append:to:, remove:if:, map/collect, filter/select e fold sono disponibili senza host. [Semantica, alias e compatibilità](structured-data.md#sequenze-native-e-immutabili-032).
+
+## 0.51–0.52: operatori logici e funzioni
+
+AND, OR, NOT sono riservati e case-sensitive. L'attuale precedenza
+è accesso ~ e applicazione per giustapposizione, poi gli operatori
+binari storici allo stesso livello (associazione a sinistra), poi
+NOT, AND e OR. AND e OR infissi sono short-circuit; NOT è una
+condizionale canonica. Le forme parentetiche (+), (*), (AND), (OR),
+(NOT) sono valori funzione e non conservano la valutazione differita
+degli argomenti. La congiunzione dei refinement numerici usa AND.
+
+Le annotazioni (Type), le dichiarazioni nominali ::, la proiezione
+~ Type e where sono documentate in [type-checker.md](type-checker.md).
+Precedenze configurabili, Unicode, localizzazione e dichiarazioni
+di operatori custom sono proposte, non la grammatica attuale:
+vedi [quaderno di progettazione](design-notes.md).
