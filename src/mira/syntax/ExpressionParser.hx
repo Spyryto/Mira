@@ -50,6 +50,15 @@ class ExpressionParser {
     }
 
     function expression():Expr {
+        var left = nonBooleanExpression();
+        while (current().isSymbol("&")) {
+            final token = consume();
+            left = at(Binary("&",left,nonBooleanExpression()),token);
+        }
+        return left;
+    }
+
+    function nonBooleanExpression():Expr {
         var left:Expr;
         // () is syntax for zero arguments only, not a primary/value.
         if (current().isSymbol("(") && tokens[position + 1].isSymbol(")")) {
