@@ -19,7 +19,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.68.0"
+            version: "0.69.0"
         });
     }
 
