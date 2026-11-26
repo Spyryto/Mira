@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.61.0');
+  assert.equal(bridge.version, '0.62.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.61.0');
+  assert.equal(bridge.version,'0.62.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1151,4 +1151,16 @@ test('Studio checks explicit generic functions and preserves ordinary selector n
   assert.equal(compiled.ok,true,compiled.message);
   assert.match(compiled.output,/function identity\(x\)/);
   assert.equal(runInNewContext(compiled.output+'\nresult.a',{}),42);
+});
+
+test('Studio exposes first-class validation result and its nominal type',()=>{
+  const src='Result (T, E) :: Ok (T) | Err (E); Percentage :: Number where _ >= 0 AND _ <= 100; validation = validate: (42), as: (Percentage); result = match: validation {ok: {p | p + 0}, err: {e | 0}};';
+  const report=bridge.check(src);assert.equal(report.ok,true,report.message);
+  assert.equal(JSON.parse(report.output).find(x=>x.name==='validation').type,'Result (Percentage, Text)');
+  const ast=bridge.ast(src);assert.equal(ast.ok,true,ast.message);
+  assert.equal(JSON.parse(ast.output).definitions.find(x=>x.name==='validation').body.kind,'ValidateResult');
+  const compiled=bridge.compile(src,'js',null,false,null,true);
+  assert.equal(compiled.ok,true,compiled.message);
+  assert.equal(runInNewContext(compiled.output+'\nresult',{}),42);
+  assert.match(read('type-lab.html'),/validation-result-example/);
 });
