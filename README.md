@@ -113,6 +113,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Tipi somma ricorsivi regolari | `0.64` | [Dettagli](docs/type-checker.md#064-tipi-somma-ricorsivi) |
 | ✅ | Percorsi logici discorsivi e scope isolati | `0.65` | [Dettagli](docs/grammar.md#mira-065-percorsi-logici-e-scope-isolati) |
 | ✅ | Sezioni piatte interface e implementation | `0.66` | [Dettagli](docs/grammar.md#mira-066-interfaccia-e-implementazione-piatte) |
+| ✅ | Import logici selettivi, completi e alias statici | `0.67` | [Dettagli](docs/grammar.md#mira-067-import-selettivi-e-alias) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
