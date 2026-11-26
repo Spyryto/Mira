@@ -588,3 +588,33 @@ firma esportata. Alias diretti della rappresentazione di un tipo opaco
 locale nelle dichiarazioni pubbliche restano esclusi per evitare cicli
 di alias; non si introduce un sistema generale di tipi ricorsivi.
 Il controllo resta opt-in. Nessuna modifica agli emitter.
+
+## Mira 0.70: riesportazione statica
+
+```mira
+module Math / API;
+
+interface
+
+export Math / Integer Math {
+  square: ;
+  add: by: => somma: a: ;
+};
+
+implementation
+```
+
+Le direttive export con percorso logico riusano la sintassi degli import
+selettivi, singoli e completi. Sono ammesse nell'interfaccia prima degli
+import ordinari. Introducono un nome nel contratto pubblico del modulo
+e nel suo scope locale. Non generano dichiarazioni o wrapper: la tabella
+di export associa il nome pubblico alla dichiarazione originale (anche
+attraverso più riesportazioni). Per i tipi conserva identità, argomenti
+e opacità. Un import ordinario non diventa transitivo. Collisioni e
+riesportazioni di simboli privati sono errori. Gli alias non cambiano
+l'arità; le dipendenze circolari restano escluse. Il trace di Studio
+riporta reexports con nome, categoria e identità originale.
+Le interfacce senza implementazione propria mantengono il delimitatore
+implementation, anche quando la sezione è vuota. Nessuna modifica agli
+emitter. Il tree shaking è rinviato alla 0.70.1: la riesportazione non
+elimina ancora dichiarazioni o inizializzatori caricati.
