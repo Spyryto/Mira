@@ -22,7 +22,7 @@ class Bridge {
             trace: trace,
             exploreModules: exploreModules,
             verifyContract: verifyContract,
-            version: "0.75.0"
+            version: "0.76.0"
         });
     }
 
@@ -201,7 +201,10 @@ class Bridge {
                         default: throw new MiraError("Expected nominal public type " + name);
                     }
                 }],
-                opaqueTypes:[for (name in publicTypes.get(path)) if (visibility.opaqueNames.exists(mira.resolve.ModuleIdentity.qualify(path,name))) name],
+                opaqueTypes:[for (name in publicTypes.get(path)) if (switch (moduleTypes.get(path).get(name)) {
+                    case NamedType(id,_) | OpaqueType(id,_) | ParametricNamedType(id,_,_) | SumType(id,_,_) | SumReference(id,_,_): visibility.opaqueNames.exists(id);
+                    default: false;
+                }) name],
                 exports:exportsByModule.exists(path) ? exportsByModule.get(path) : []
             });
             for (item in moduleInterfaces) {
