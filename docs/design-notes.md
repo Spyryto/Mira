@@ -654,3 +654,13 @@ inferire un corpo fittizio. Compiler.check consente contratti irrisolti;
 i percorsi di emissione li rifiutano prima del pruning. Classificazione
 comune degli header astratti con il provider. Il checker conserva
 identità del contratto nell'analisi astratta, non tra build differenti.
+
+## 0.76 — identità pubblica e accesso alla rappresentazione
+
+DefinitionParser accetta identità nominali esplicite per i tipi astratti
+realizzati. Le dichiarazioni pubbliche ereditate del provider selezionato
+usano il namespace del contratto. TypeVisibility separa ownerOf dalla
+qualificazione nominale, con un grant esclusivo per il provider selezionato.
+Il resolver dei valori non cambia; provider non selezionati mantengono
+identità proprie. Test di uguaglianza degli schemi pubblici, isolamento
+tra provider e verifica JS/PHP. Nessuna cache persistente ancora.
