@@ -1395,3 +1395,51 @@ test('0.71 Module Explorer exposes real logical dependencies, typed contracts an
   assert.match(read('module-explorer.js'),/MiraStudioCompiler\.exploreModules/);
   new Function(read('module-explorer.js'));
 });
+
+
+test('0.71 scalability: shared dependency graph, checked execution and pruning at increasing module counts',t=>{
+  const env={TextEncoder,performance};
+  runInNewContext(read('module-benchmark.js'),env);
+  const bench=env.MiraModuleBenchmark;
+  for(const count of [4,16,64]){
+    const fixture=bench.project(count);
+    const report=bridge.exploreModules(fixture.source,null,fixture.modules);
+    assert.equal(report.ok,true,report.message);
+    const data=JSON.parse(report.output);
+    assert.equal(data.interfaces.length,count+2);
+    assert.equal(data.dependencies.length,2*count);
+    assert.equal(data.interfaces.filter(m=>m.module==='Core').length,1);
+    for(const target of ['js','php']){
+      const a=bench.measure(bridge,fixture,target,false),b=bench.measure(bridge,fixture,target,true);
+      assert.equal(b.optimization.before,7*count+2);
+      assert.equal(b.optimization.after,count+2);
+      assert.equal(b.optimization.removed.length,6*count);
+      assert.ok(b.bytes<a.bytes);
+      const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+      for(const emitted of [a.output,b.output]){
+        if(target==='js')assert.equal(runInNewContext(emitted+'\n'+name,{}),fixture.expected);
+        else {
+          const run=spawnSync('php',['-r',emitted.replace(/^<\?php/,'')+'\necho $'+name+';'],{encoding:'utf8'});
+          assert.equal(run.status,0,run.stderr);assert.equal(Number(run.stdout),fixture.expected);
+        }
+      }
+      t.diagnostic(JSON.stringify({modules:count+2,target,checkedMs:a.ms,optimizedMs:b.ms,bytesBefore:a.bytes,bytesAfter:b.bytes,removed:b.optimization.removed.length}));
+    }
+  }
+  assert.ok(read('sw.js').includes('./module-benchmark.js'));
+  assert.match(read('module-explorer.html'),/id="benchmark"/);
+});
+test('0.71 module boundary consolidation: diamond and cycle diagnostics',()=>{
+  const files=JSON.stringify({
+    'Core':'module Core; interface Token; make: :: (Number) -> Token; implementation Token :: {value: Number}; make: x = {value: x};',
+    'Left':'module Left; interface export Core {Token => Left Token; make: ;}; implementation',
+    'Right':'module Right; interface export Core {Token => Right Token; make: ;}; implementation'
+  });
+  const src='module App; import Left {Left Token; make: ;}; import Right {Right Token;}; token (Left Token) = make: 7; copy (Right Token) = token;';
+  const valid=bridge.exploreModules(src,null,files);assert.equal(valid.ok,true,valid.message);
+  const data=JSON.parse(valid.output);
+  assert.equal(data.interfaces.find(m=>m.module==='Left').typeIdentities[0].identity,data.interfaces.find(m=>m.module==='Right').typeIdentities[0].identity);
+  const bad=bridge.exploreModules(src+' leaked = copy ~ value;',null,files);assert.equal(bad.ok,false);assert.match(bad.message,/Type check/);
+  const cycle=bridge.exploreModules('module App; import A { * };',null,JSON.stringify({'A':'module A; interface export B { * }; implementation','B':'module B; interface export A { * }; implementation'}));
+  assert.equal(cycle.ok,false);assert.match(cycle.message,/Import cycle/);
+});
