@@ -583,3 +583,11 @@ La raccolta degli header permette riferimenti opachi finiti nelle forme
 pubbliche, mantenendo le rappresentazioni in una tabella del checker.
 Alias diretti pubblici verso rappresentazioni opache locali esclusi;
 nessuna modifica del runtime.
+
+## 0.70 — riesportazione statica
+
+La tabella dei simboli esportati associa i nomi pubblici a definizioni
+originali; la tabella dei tipi pubblici include gli alias riesportati.
+ModuleImport analizza anche export. Le riesportazioni sono binding
+lessicali e pubblici, non dichiarazioni sintetizzate. Il trace espone
+la provenienza canonica. Il tree shaking resta un incremento separato.
