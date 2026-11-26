@@ -8,7 +8,7 @@
   }
   function check(highlight=false){
     const response=MiraStudioCompiler.check(source.value,host.value.trim()||null);
-    result.textContent=response.ok?(document.getElementById('structured').checked?response.output:JSON.parse(response.output).map(x=>x.name+'  :  '+x.type).join('\n')):response.message;
+    result.textContent=response.ok?(document.getElementById('structured').checked?response.output:JSON.parse(response.output).map(x=>(x.module?(x.exported?'[pubblico] ':'[privato] '):'')+x.name+'  :  '+x.type).join('\n')):response.message;
     const d=response.diagnostic;
     if(!response.ok && d?.proof){
       const label=d.proof==='violated'?'Vincolo certamente violato':'Vincolo non dimostrato';
@@ -31,6 +31,11 @@
   }
   document.getElementById('checked-js').addEventListener('click',()=>compileChecked('js'));
   document.getElementById('checked-php').addEventListener('click',()=>compileChecked('php'));
+  document.getElementById('flat-interface-example').addEventListener('click',()=>{
+    host.value='';
+    source.value='module Math / Integer Math;\n\ninterface\n\nOption (T) :: Some (T) | None;\nrate;\nsquare:;\nadd: by: ;\n\nimplementation\n\nrate = 2;\nsquare: x = x * x;\nadd: x, by: y = x + y;\nprivate constant = 42;\nresult = add: (square: rate), by: private constant;';
+    check();
+  });
   document.getElementById('isolated-module-example').addEventListener('click',()=>{
     host.value='';
     source.value='module Music / Jazz Harmony;\nPitch :: Number;\nrate = 2;\nscale: x = x * rate;\na (Pitch) = 42;\nresult = scale: 5;';

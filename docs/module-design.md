@@ -1,7 +1,8 @@
 # Moduli Mira — progetto concordato e piano di implementazione
 
 **Stato: progettazione delle interfacce.** La 0.65 introduce il nucleo di
-identità e scope isolati; vedi grammar.md per le funzionalità implementate.
+identità e scope isolati; la 0.66 aggiunge sezioni piatte, export di
+valori/selettori senza annotazioni e tipi nominali pubblici completi; vedi grammar.md per le funzionalità implementate.
 Il campionario completo resta una proposta. Sostituisce la direzione sperimentale
 della PR #95 (nomi puntati come fondamento del namespace), che non va integrata
 nella sua forma attuale. Gli import statici della 0.30 continuano a funzionare

@@ -19,7 +19,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.65.0"
+            version: "0.66.0"
         });
     }
 
@@ -97,7 +97,10 @@ class Bridge {
                     body: expression(definition.body)
                 };
                 if (definition.origin.file != null) Reflect.setField(node, "file", definition.origin.file);
-                if (definition.modulePath != null) Reflect.setField(node, "module",definition.modulePath);
+                if (definition.modulePath != null) {
+                    Reflect.setField(node, "module",definition.modulePath);
+                    Reflect.setField(node, "exported",definition.isExported);
+                }
                 if (definition.isFunction()) {
                     Reflect.setField(node, "selector", definition.selector());
                     Reflect.setField(node, "name", definition.selector());
@@ -119,7 +122,19 @@ class Bridge {
         return safely(function() {
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
-            final raw = [for (d in mira.Modules.collect(source, resolver(modulesJson))) d.canonical()];
+            final publicTypes = new Map<String,Array<String>>();
+            final raw = [for (d in mira.Modules.collect(source, resolver(modulesJson),null,null,null,publicTypes)) d.canonical()];
+            final moduleInterfaces:Array<Dynamic> = [];
+            final paths = [for (path in publicTypes.keys()) path];
+            paths.sort(Reflect.compare);
+            for (path in paths) moduleInterfaces.push({
+                module:path,
+                types:publicTypes.get(path),
+                exports:[for (d in raw) if (d.modulePath == path && d.isExported) {
+                    name:d.isFunction() ? d.selector() : d.name,
+                    kind:d.isFunction() ? "selector" : "value"
+                }]
+            });
             final symbols = new Symbols(raw, host);
             final declarations:Array<Dynamic> = [];
             for (definition in raw) {
@@ -160,7 +175,8 @@ class Bridge {
                 declarations: declarations,
                 symbols: signatures,
                 declaredFunctions: raw.length,
-                compiledNames: symbols.hostNames
+                compiledNames: symbols.hostNames,
+                interfaces: moduleInterfaces
             }, null, "  ");
         });
     }

@@ -1199,3 +1199,52 @@ test('0.65 isolated modules sharing local names compile and execute on both targ
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.66 flat interfaces accept inferred selectors, values and public nominal types',()=>{
+  const src='module Math / Integer Math;\ninterface\nPair (T, U) :: {first: T, second: U}; Option (T) :: Some (T) | None; rate; square:; add: by: ;\nimplementation\nrate = 2; square: x = x * x; add: x, by: y = x + y; private constant = 42; a (Pair (Number, Text)) = {first: 1, second: "x"}; b = Some: 7; result = add: (square: rate), by: private constant;';
+  const t=check(src), p='Math / Integer Math / ';
+  assert.equal(t[p+'square:'],'(Number) -> Number');
+  assert.equal(t[p+'add:by:'],'(Number, Number) -> Number');
+  assert.equal(t[p+'a'],p+'Pair (Number, Text)');
+  assert.equal(t[p+'b'],p+'Option (Number)');
+  assert.equal(t[p+'result'],'Number');
+  assert.equal(check('module M; interface implementation x = 1;')['M / x'],'Number');
+  for(const [source,pattern] of [
+    ['interface missing:; implementation x = 1;',/Unknown interface export missing:/],
+    ['interface add:by:; add: by: ; implementation add: a, by: b = a + b;',/Duplicate interface export add:by:/],
+    ['interface add: by; implementation x = 1;',/Expected complete export selector/],
+    ['interface x; x; implementation x = 1;',/Duplicate interface export x/],
+    ['interface x;',/Expected implementation section/],
+    ['interface interface implementation x = 1;',/Duplicate interface section/],
+    ['interface x; implementation x = 1; implementation y = 2;',/Unexpected module section marker/],
+    ['interface Hidden; implementation Hidden :: Number;',/Opaque type exports are not implemented yet/],
+    ['interface T; implementation T :: Number; T = 1;',/Ambiguous value or type export/],
+    ['interface x (Number); implementation x = 1;',/explicit signatures are not implemented yet/],
+    ['interface f: :: (Number) -> Number; implementation f: x = x;',/explicit signatures are not implemented yet/],
+    ['interface T :: Number; implementation T :: Text;',/Duplicate or reserved type T/],
+    ['interface import "unused.mira"; x; implementation x = 1;',/Interface exports must precede imports/],
+    ['interface import Data / Math {f:;}; implementation x = 1;',/Logical and selective imports are not implemented yet/]
+  ]) assert.throws(()=>check('module M; '+source),pattern,source);
+});
+test('0.66 adding an interface does not change emitted JS or PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-flat-interface-'));
+  try {
+    const input=join(dir,'program.mira');
+    const types='Option (T) :: Some (T) | None;';
+    const body='rate = 2; square: x = x * x; add: x, by: y = x + y; a = Some: (square: rate); result = match: a {some: {x | add: x, by: 1}, none: {| 0}};';
+    const plain='module Math / Integer Math; '+types+body;
+    const exposed='module Math / Integer Math; interface '+types+'rate; square:; add: by:; implementation '+body;
+    for(const target of ['js','php']){
+      const compile=src=>{writeFileSync(input,src);return spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});};
+      const a=compile(plain),b=compile(exposed);
+      assert.equal(a.status,0,a.stderr);assert.equal(b.status,0,b.stderr);
+      assert.equal(a.stdout,b.stdout);
+      const name='__miraModule_v_'+Buffer.from('Math / Integer Math / result').toString('hex').toUpperCase();
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,b.stdout+(target==='js'?'\nconsole.log('+name+');':'\necho $'+name+';'));
+      const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);assert.equal(run.stdout.trim(),'5');
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

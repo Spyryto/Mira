@@ -12,6 +12,7 @@ class Definition {
     public final parameterOrigins:Array<Token>;
     public final isStatement:Bool;
     public var modulePath:Null<String> = null;
+    public var isExported:Bool = false;
     public var typeParameters:Array<String> = [];
     public var parameterAnnotations:Array<Null<Type>> = [];
     public var resultAnnotation:Null<Type> = null;
@@ -44,6 +45,7 @@ class Definition {
         final d = new Definition(isFunction() ? name : mira.resolve.ModuleIdentity.qualify(modulePath,name),
             labels,parameters,bodyTokens,origin,isStatement,parameterOrigins);
         d.modulePath = modulePath;
+        d.isExported = isExported;
         d.typeParameters = typeParameters;
         d.parameterAnnotations = parameterAnnotations;
         d.resultAnnotation = resultAnnotation;

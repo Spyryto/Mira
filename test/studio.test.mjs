@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.65.0');
+  assert.equal(bridge.version, '0.66.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.65.0');
+  assert.equal(bridge.version,'0.66.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1217,4 +1217,30 @@ test('0.65 Studio uses the same isolated logical module identities in compile, c
   assert.equal(invalid.ok,false);
   assert.match(invalid.message,/Unknown identifier/);
   assert.match(read('type-lab.html'),/isolated-module-example/);
+});
+
+
+test('0.66 Studio exposes module export metadata without making private symbols public',()=>{
+  const src='module Math / Integer Math; interface Point :: {x: Number}; Option (T) :: Some (T) | None; rate; square:; add: by: ; implementation rate = 2; square: x = x * x; add: x, by: y = x + y; private constant = 42; result = square: rate;';
+  const result=bridge.check(src);
+  assert.equal(result.ok,true,result.message);
+  const rows=JSON.parse(result.output), p='Math / Integer Math / ';
+  assert.equal(rows.find(x=>x.name===p+'square:').type,'(Number) -> Number');
+  assert.equal(rows.find(x=>x.name===p+'square:').exported,true);
+  assert.equal(rows.find(x=>x.name===p+'private constant').exported,false);
+  assert.equal(rows.find(x=>x.name===p+'Some:').exported,true);
+  const ast=JSON.parse(bridge.ast(src).output);
+  assert.equal(ast.definitions.find(d=>d.name===p+'rate').exported,true);
+  assert.equal(ast.definitions.find(d=>d.name===p+'result').exported,false);
+  const trace=JSON.parse(bridge.trace(src).output);
+  assert.deepEqual(trace.interfaces,[{module:'Math / Integer Math',types:['Option','Point'],exports:[
+    {name:p+'Some:',kind:'selector'},{name:p+'None',kind:'value'},{name:p+'rate',kind:'value'},{name:p+'square:',kind:'selector'},{name:p+'add:by:',kind:'selector'}
+  ]}]);
+  const files=JSON.stringify({'library.mira':src,'helper.mira':'module Private / Helper; data = 1;'});
+  const loaded='module Consumer; interface result; import "library.mira"; implementation import "helper.mira"; result = 7;';
+  const graph=bridge.trace(loaded,null,files);assert.equal(graph.ok,true,graph.message);
+  assert.equal(JSON.parse(graph.output).interfaces.length,3);
+  const denied=bridge.check('module Consumer; import "library.mira"; result = square: 2;',null,files);
+  assert.equal(denied.ok,false);assert.match(denied.message,/Unknown identifier/);
+  assert.match(read('type-lab.html'),/flat-interface-example/);
 });
