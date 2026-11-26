@@ -19,7 +19,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.69.1"
+            version: "0.70.0"
         });
     }
 
@@ -127,8 +127,9 @@ class Bridge {
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
             final publicTypes = new Map<String,Array<String>>();
+            final reexports = new Map<String,Array<Dynamic>>();
             final visibility = new mira.types.TypeVisibility();
-            final raw = [for (d in mira.Modules.collect(source, resolver(modulesJson),null,null,null,publicTypes,null,visibility)) d.canonical()];
+            final raw = [for (d in mira.Modules.collect(source, resolver(modulesJson),null,null,null,publicTypes,null,visibility,reexports)) d.canonical()];
             final moduleInterfaces:Array<Dynamic> = [];
             final paths = [for (path in publicTypes.keys()) path];
             paths.sort(Reflect.compare);
@@ -141,6 +142,10 @@ class Bridge {
                     kind:d.isFunction() ? "selector" : "value"
                 }]
             });
+            for (item in moduleInterfaces) {
+                final forwarded = reexports.get(item.module);
+                if (forwarded != null && forwarded.length > 0) Reflect.setField(item,"reexports",forwarded);
+            }
             final symbols = new Symbols(raw, host);
             final declarations:Array<Dynamic> = [];
             for (definition in raw) {
