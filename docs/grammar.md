@@ -393,3 +393,43 @@ degli inizializzatori continuano a essere eseguiti come prima.
 Non esistono ancora import logici, export, interface/implementation,
 alias, qualificazione nelle espressioni o package. In questa fase
 gli identificatori generati dei moduli non costituiscono un'API host.
+
+
+## Mira 0.66: interfaccia e implementazione piatte
+
+```mira
+module Math / Integer Math;
+
+interface
+
+rate;
+square:;
+add: by: ;
+Option (T) :: Some (T) | None;
+
+implementation
+
+rate = 2;
+square: x = x * x;
+add: x, by: y = x + y;
+private constant = 42;
+```
+
+Le sezioni sono delimitate dalle due keyword, senza graffe, senza ;
+dopo il marcatore e senza indentazione obbligatoria. Il modulo senza
+interface conserva tutti i simboli privati. Le esportazioni di valori e
+selettori senza annotazioni devono trovare una definizione locale;
+gli spazi tra le label sono insignificanti. Duplicati, riferimenti
+mancanti e ambiguità valore/tipo sono errori. Le dichiarazioni nominali
+complete nell'interfaccia riusano il parser dei tipi, incluse somme e
+parametri. In questa prima forma i costruttori delle somme dichiarate
+pubblicamente sono pubblici; l'esportazione selettiva è rimandata.
+Gli import legacy a percorso file sono ammessi dopo le esportazioni e
+all'inizio dell'implementazione, ma caricano soltanto i moduli dichiarati,
+senza introdurne i nomi. Gli import logici e gli alias seguiranno.
+Il type checker marca i risultati delle dichiarazioni come exported e
+l'AST/trace di Studio mostra il contratto di visibilità. Non è ancora
+un'interfaccia tipizzata separatamente compilabile: firme esplicite
+nell'interfaccia, verifica di fuga di tipi privati, tipi opachi e
+riesportazione sono incrementi successivi. L'emissione non cambia
+aggiungendo sole esportazioni a un programma equivalente.
