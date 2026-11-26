@@ -798,6 +798,7 @@ test('types: closed nominal sums synthesize typed constructors',()=>{
   assert.equal(t.states,'[Connection]');
   assert.equal(t.result,'Connection');
   assert.equal(check('Only :: | Single; value = Single;').value,'Only');
+  assert.equal(check('Tree :: Leaf (Tree) | Empty; value = Leaf: Empty;').value,'Tree');
   for(const [extra,pattern] of [
     ['bad = Connected: "wrong";',/expected Session/],
     ['bad (Connection) = {tag: "Connected", value: session};',/expected Connection/],
@@ -808,7 +809,7 @@ test('types: closed nominal sums synthesize typed constructors',()=>{
     ['Lower :: a | B;',/uppercase/],
     ['Duplicate Value :: Disconnected | Something;',/Duplicate or conflicting value/],
     ['Connected: x = x;',/Duplicate or conflicting selector/],
-    ['Tree :: Leaf (Tree) | Empty;',/Unknown annotation type/]
+    ['Tree :: Leaf (Missing Tree) | Empty;',/Unknown annotation type Missing Tree/]
   ])assert.throws(()=>check(src+extra),pattern,extra);
 });
 test('types: native tagged sum representations agree on JS and PHP',()=>{
