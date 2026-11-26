@@ -109,6 +109,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Protezione statica dei nomi nativi dei target | `0.60.2` | [Dettagli](docs/type-checker.md#0602-protezione-dei-nomi-host) |
 | ✅ | Funzioni parametriche esplicite con nomi discorsivi | `0.61` | [Dettagli](docs/type-checker.md#061-funzioni-parametriche-esplicite) |
 | ✅ | Validazione numerica fallibile con Result | `0.62` | [Dettagli](docs/type-checker.md#062-validazione-con-result) |
+| ✅ | Record e liste nominali parametrici | `0.63` | [Dettagli](docs/type-checker.md#063-record-e-liste-nominali-parametrici) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
