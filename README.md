@@ -4,6 +4,10 @@
 
 Mira is currently a standalone **syntax and transpiler experiment**, not a replacement for NailLang. It explores multiword identifiers and Smalltalk-inspired keyword selectors, with a deliberately small executable core.
 
+## Quaderno di progettazione
+
+[Decisioni, motivazioni e proposte fino alla 0.52](docs/design-notes.md) · [Leggi in Mira Studio](https://spyryto.github.io/Mira/design-notes.html).
+
 ## Funzionalità e versioni
 
 La tabella distingue le feature **già implementate** (✅) da quelle
