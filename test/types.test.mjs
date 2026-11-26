@@ -754,3 +754,37 @@ test('types: checked refinement evaluates a host expression once',()=>{
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('types: fallible validation gives the success handler the nominal type',()=>{
+  const src='Percentage :: Number where _ >= 0 AND _ <= 100; display percent: p (Percentage) = p + 0; read percent: x = validate: (x), as: (Percentage), then: {p | display percent: p}, else: {error | 0}; result = read percent: 120;';
+  const t=check(src);
+  assert.equal(t['read percent:'],"('a) -> Number");assert.equal(t.result,'Number');
+  assert.equal(check(src+'message = validate: ("oops"), as: (Percentage), then: {p | "valid"}, else: {error | error};').message,'Text');
+  for(const [extra,pattern] of [
+    ['bad = validate: (42), as: (Percentage), then: {p | p + 0}, else: {error | error};',/expected Number, got Text/],
+    ['bad = validate: (42), as: (Text), then: {p | 1}, else: {error | 0};',/requires a numeric type/],
+    ['bad = validate: (42), as: (Percentage), then: {| 1}, else: {error | 0};',/unary handler/],
+    ['Other :: Number; o (Other) = 42; bad = validate: (o), as: (Percentage), then: {p | 1}, else: {error | 0};',/unrelated nominal types/],
+    ['validate: x = x;',/Reserved validation selector/]
+  ])assert.throws(()=>check(src+extra),pattern,extra);
+});
+test('types: fallible numeric validation runs only the selected handler on JS and PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-validation-'));
+  try{
+    const input=join(dir,'program.mira'),host=join(dir,'host.json');
+    const src='Percentage :: Number where _ >= 0 AND _ <= 100; Retry Count :: Integer where _ >= 0 AND _ <= 3; show percent: p (Percentage) = p + 0; validate percent: x = validate: (probe x), as: (Percentage), then: {p | on valid (show percent: p)}, else: {error | on invalid error}; validate retry: x = validate: (x), as: (Retry Count), then: {r | "valid"}, else: {error | error};';
+    writeFileSync(input,src);
+    writeFileSync(host,JSON.stringify({callables:['probe','on valid','on invalid'],types:{probe:{parameters:['Number'],result:'Number'},'on valid':{parameters:['Number'],result:'Text'},'on invalid':{parameters:['Text'],result:'Text'}}}));
+    for(const target of ['js','php']){
+      const r=spawnSync('node',['dist/mira.cjs',input,target,'--checked','--host',host],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      const js='let probes=0,yes=0,no=0; const __miraHost={probe:x=>{probes++;return x;}, "on valid":x=>{yes++;return "ok";}, "on invalid":x=>{no++;return x;}}; console.log(JSON.stringify([validate_percent(42),validate_percent(120),validate_percent(NaN),validate_retry(3),validate_retry(2.5),validate_retry("3"),probes,yes,no]));';
+      const php='$probes=0;$yes=0;$no=0;$GLOBALS["__miraHost"]=["probe"=>function($x) use (&$probes){$probes++;return $x;}, "on valid"=>function($x) use (&$yes){$yes++;return "ok";}, "on invalid"=>function($x) use (&$no){$no++;return $x;}]; echo json_encode([validate_percent(42),validate_percent(120),validate_percent(NAN),validate_retry(3),validate_retry(2.5),validate_retry("3"),$probes,$yes,$no]);';
+      writeFileSync(file,r.stdout+'\n'+(target==='js'?js:php));
+      const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);
+      assert.deepEqual(JSON.parse(run.stdout),['ok','Invalid numeric value','Invalid numeric value','valid','Invalid Integer value','Invalid Integer value',3,1,2]);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
