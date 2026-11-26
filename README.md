@@ -117,6 +117,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Firme pubbliche esplicite e inferite dei moduli | `0.68` | [Dettagli](docs/grammar.md#mira-068-firme-pubbliche-esplicite-e-inferite) |
 | ✅ | Tipi opachi monomorfi e controllo delle firme pubbliche | `0.69` | [Dettagli](docs/grammar.md#mira-069-tipi-opachi-monomorfi-e-controllo-delle-firme-pubbliche) |
 | ✅ | Tipi opachi parametrici e riferimenti pubblici annidati | `0.69.1` | [Dettagli](docs/grammar.md#mira-0691-tipi-opachi-parametrici) |
+| ✅ | Riesportazione statica con alias e identità originale | `0.70` | [Dettagli](docs/grammar.md#mira-070-riesportazione-statica) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
