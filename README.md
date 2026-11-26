@@ -119,6 +119,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Tipi opachi parametrici e riferimenti pubblici annidati | `0.69.1` | [Dettagli](docs/grammar.md#mira-0691-tipi-opachi-parametrici) |
 | ✅ | Riesportazione statica con alias e identità originale | `0.70` | [Dettagli](docs/grammar.md#mira-070-riesportazione-statica) |
 | ✅ | Tree shaking conservativo checked e misure in Studio | `0.70.1` | [Dettagli](docs/grammar.md#mira-0701-tree-shaking-conservativo) |
+| ✅ | Module Explorer: dipendenze, contratti e identità | `0.71` | [Dettagli](docs/grammar.md#mira-071-module-explorer) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
