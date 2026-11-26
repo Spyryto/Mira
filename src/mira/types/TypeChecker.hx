@@ -101,7 +101,7 @@ class TypeChecker {
         return switch (prune(type)) {
             case Variable(other): id == other;
             case ListType(item): occurs(id, item);
-            case SumType(_,_,arguments): Lambda.exists(arguments,t -> occurs(id,t));
+            case SumType(_,_,arguments) | ParametricNamedType(_,_,arguments): Lambda.exists(arguments,t -> occurs(id,t));
             case FunctionType(args, result): Lambda.exists(args, t -> occurs(id,t)) || occurs(id,result);
             case RecordType(fields, tail):
                 var found = false;
@@ -131,7 +131,7 @@ class TypeChecker {
             case [Variable(id), _]: bind(id,right);
             case [_, Variable(id)]: bind(id,left);
             case [NamedType(x,_),NamedType(y,_)] if (x == y):
-            case [SumType(x,_,xs),SumType(y,_,ys)] if (x == y && xs.length == ys.length):
+            case [SumType(x,_,xs),SumType(y,_,ys)] | [ParametricNamedType(x,_,xs),ParametricNamedType(y,_,ys)] if (x == y && xs.length == ys.length):
                 for (i in 0...xs.length) unify(xs[i],ys[i]);
             case [RefinedType(x,r),RefinedType(y,s)] if (r.equal(s)): unify(x,y);
             case [StructuralType(_,x),StructuralType(_,y)]: unifyRecords(RecordType(x,null),RecordType(y,null));
@@ -150,7 +150,7 @@ class TypeChecker {
     // Named data have closed representations, not inheritance of behavior.
     function representation(type:Type):Type {
         return switch (prune(type)) {
-            case NamedType(_,base) | RefinedType(base,_): representation(base);
+            case NamedType(_,base) | ParametricNamedType(_,base,_) | RefinedType(base,_): representation(base);
             default: prune(type);
         };
     }
@@ -161,12 +161,13 @@ class TypeChecker {
         switch [wanted,given] {
             case [Variable(_),_] | [_,Variable(_)]: unify(wanted,given);
             case [NamedType(x,_),NamedType(y,_)] if (x == y):
+            case [ParametricNamedType(x,_,_),ParametricNamedType(y,_,_)] if (x == y): unify(wanted,given);
             case [NumberType,IntegerType]:
             case [StructuralType(_,fields),_]: acceptShape(fields,given);
             case [RefinedType(base,range),_]:
                 prove(range,given,null);
                 accept(base,given);
-            case [_,NamedType(_,base)] | [_,RefinedType(base,_)]: accept(wanted,base);
+            case [_,NamedType(_,base)] | [_,ParametricNamedType(_,base,_)] | [_,RefinedType(base,_)]: accept(wanted,base);
             case [ListType(x),ListType(y)]: accept(x,y);
             // Records with named fields are invariant in this first increment.
             default: unify(wanted,given);
@@ -196,6 +197,10 @@ class TypeChecker {
         final wanted = prune(expected);
         final given = prune(actual);
         switch (wanted) {
+            case ParametricNamedType(_,base,_):
+                // Explicit construction brands a raw representation, not a sibling.
+                if (nominalName(given) == null) construct(base,given,expr);
+                else accept(wanted,given);
             case NamedType(name,base):
                 switch (given) {
                     case Variable(_): unify(base,given);
@@ -284,14 +289,14 @@ class TypeChecker {
     }
 
     function nominalName(type:Type):Null<String> return switch (prune(type)) {
-        case NamedType(name,_) | SumType(name,_,_): name;
+        case NamedType(name,_) | SumType(name,_,_) | ParametricNamedType(name,_,_): name;
         case RefinedType(base,_): nominalName(base);
         default: null;
     };
 
     function ancestor(type:Type,name:String):Bool return switch (prune(type)) {
         case NamedType(n,base): n == name || ancestor(base,name);
-        case SumType(n,_,_): n == name;
+        case SumType(n,_,_) | ParametricNamedType(n,_,_): n == name;
         case RefinedType(base,_): ancestor(base,name);
         default: false;
     };
@@ -396,6 +401,8 @@ class TypeChecker {
                 }
                 seen.get(id);
             case ListType(item): ListType(instantiate(item,seen,quantified));
+            case ParametricNamedType(name,base,arguments):
+                ParametricNamedType(name,instantiate(base,seen,quantified),[for (argument in arguments) instantiate(argument,seen,quantified)]);
             case SumType(name,alternatives,arguments):
                 SumType(name,[for (tag => payload in alternatives) tag => payload == null ? null : instantiate(payload,seen,quantified)],
                     [for (argument in arguments) instantiate(argument,seen,quantified)]);
@@ -412,7 +419,7 @@ class TypeChecker {
         switch (prune(type)) {
             case Variable(id): found.set(id,true);
             case ListType(item): free(item,found);
-            case SumType(_,_,arguments): for (argument in arguments) free(argument,found);
+            case SumType(_,_,arguments) | ParametricNamedType(_,_,arguments): for (argument in arguments) free(argument,found);
             case FunctionType(args,result):
                 for (arg in args) free(arg,found);
                 free(result,found);
@@ -912,6 +919,8 @@ class TypeChecker {
                 if (arguments.length > 0) Reflect.setField(schema,"arguments",[for (arg in arguments) describe(arg,seen)]);
                 schema;
             case NamedType(name,base): {kind:"Named",name:name,base:describe(base,seen)};
+            case ParametricNamedType(name,base,arguments):
+                {kind:"Named",name:name,arguments:[for (arg in arguments) describe(arg,seen)],base:describe(base,seen)};
             case RefinedType(base,range): {kind:"Refined",base:describe(base,seen),range:range.schema()};
             case StructuralType(name,fields):
                 final keys = [for (key in fields.keys()) key];
@@ -954,6 +963,7 @@ class TypeChecker {
     function render(type:Type,names:Map<Int,String>,order:Array<Int>):String {
         return switch (prune(type)) {
             case NamedType(name,_): name;
+            case ParametricNamedType(name,_,arguments): name + " (" + [for (arg in arguments) render(arg,names,order)].join(", ") + ")";
             case SumType(name,_,arguments): name + (arguments.length == 0 ? "" : " (" + [for (arg in arguments) render(arg,names,order)].join(", ") + ")");
             case RefinedType(base,range): render(base,names,order) + " where " + range.predicate();
             case StructuralType(name,_): "~ " + name;
