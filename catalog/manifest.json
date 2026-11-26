@@ -1,5 +1,5 @@
 {
-  "version": "0.70.1",
+  "version": "0.71.0",
   "features": [
     {
       "id": "values",
@@ -1998,6 +1998,12 @@
       "title": "Tree shaking conservativo checked e misure in Studio",
       "since": "0.70.1",
       "doc": "docs/grammar.md#mira-0701-tree-shaking-conservativo"
+    },
+    {
+      "id": "module-explorer",
+      "title": "Module Explorer: dipendenze, contratti e identità",
+      "since": "0.71",
+      "doc": "docs/grammar.md#mira-071-module-explorer"
     }
   ]
 }

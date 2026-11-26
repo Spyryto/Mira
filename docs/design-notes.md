@@ -599,3 +599,11 @@ visita iterativa di raggiungibilità, filtro stabile e pulizia delle
 importedGlobals. Controllo dei tipi prima del pruning, whitelist di
 inizializzatori innocui, entry e legacy preservati, opt-in esplicito.
 Nessun sistema generale di effetti o euristica di purezza delle chiamate.
+
+## 0.71 — Module Explorer
+
+Il resolver registra le direttive di dipendenza su richiesta del trace.
+Il bridge exploreModules unisce i metadati delle interfacce al report
+checked, senza ricostruire i tipi dalla sintassi. La vista mobile mostra
+archi navigabili, contratti, simboli privati e identità di tipi opachi e
+alias. Due analisi del sorgente (trace e check), nessuna dipendenza web.

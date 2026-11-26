@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.70.1');
+  assert.equal(bridge.version, '0.71.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.70.1');
+  assert.equal(bridge.version,'0.71.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1233,7 +1233,7 @@ test('0.66 Studio exposes module export metadata without making private symbols 
   assert.equal(ast.definitions.find(d=>d.name===p+'rate').exported,true);
   assert.equal(ast.definitions.find(d=>d.name===p+'result').exported,false);
   const trace=JSON.parse(bridge.trace(src).output);
-  assert.deepEqual(trace.interfaces,[{module:'Math / Integer Math',types:['Option','Point'],opaqueTypes:[],exports:[
+  assert.deepEqual(trace.interfaces,[{module:'Math / Integer Math',types:['Option','Point'],typeIdentities:[{name:'Option',identity:'Math / Integer Math / Option',arity:1,opaque:false},{name:'Point',identity:'Math / Integer Math / Point',arity:0,opaque:false}],opaqueTypes:[],exports:[
     {name:p+'Some:',kind:'selector'},{name:p+'None',kind:'value'},{name:p+'rate',kind:'value'},{name:p+'square:',kind:'selector'},{name:p+'add:by:',kind:'selector'}
   ]}]);
   const files=JSON.stringify({'library.mira':src,'helper.mira':'module Private / Helper; data = 1;'});
@@ -1367,4 +1367,31 @@ test('0.70.1 Studio compiles optimized virtual modules and reports actual remove
   const denied=bridge.compile(src,'js',null,false,modules,false,true);
   assert.equal(denied.ok,false);
   assert.match(read('type-lab.html'),/tree-shake-example/);
+});
+
+
+test('0.71 Module Explorer exposes real logical dependencies, typed contracts and forwarded identity',()=>{
+  const modules=JSON.stringify({
+    'Core':'module Core; interface Box (T); box (T): :: (T) -> Box (T); item (T): :: (Box (T)) -> T; implementation Box (T) :: {item: T}; box: x = {item: x}; item: b = b ~ item; secret = 42;',
+    'API':'module API; interface export Core {Box => Container; box: ; item: => value of: ;}; implementation'
+  });
+  const src='module App; interface result; import API {Container; box: ; value of: ;}; implementation n (Container (Number)) = box: 7; result = value of: n;';
+  const response=bridge.exploreModules(src,null,modules);assert.equal(response.ok,true,response.message);
+  const data=JSON.parse(response.output);
+  assert.equal(data.interfaces.length,3);
+  assert.deepEqual(data.dependencies.map(x=>[x.from,x.to,x.kind,x.phase]),[['App','API','import','interface'],['API','Core','export','interface']]);
+  const api=data.interfaces.find(x=>x.module==='API');
+  assert.deepEqual(api.typeIdentities,[{name:'Container',identity:'Core / Box',arity:1,opaque:true}]);
+  const forwarded=api.reexports.find(x=>x.name==='value of:');
+  assert.equal(forwarded.target,'Core / item:');assert.equal(forwarded.signature.explicitSignature,true);
+  assert.equal(data.interfaces.find(x=>x.module==='App').exports[0].signature.type,'Number');
+  assert.equal(data.interfaces.find(x=>x.module==='Core').privateDeclarations[0].name,'Core / secret');
+  const bad=bridge.exploreModules(src+' bad = n ~ item;',null,modules);assert.equal(bad.ok,false);
+  for(const asset of ['module-explorer.html','module-explorer.js']){
+    assert.ok(existsSync(resolve(site,asset)));assert.ok(read('sw.js').includes('./'+asset));
+  }
+  assert.match(read('index.html'),/module-explorer.html/);
+  assert.match(read('sw.js'),/endsWith\('\/module-explorer.html'\)/);
+  assert.match(read('module-explorer.js'),/MiraStudioCompiler\.exploreModules/);
+  new Function(read('module-explorer.js'));
 });

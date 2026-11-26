@@ -42,6 +42,8 @@ const ASSETS = [
   './type-lab.html',
   './design-notes.html',
   './type-lab.js',
+  './module-explorer.html',
+  './module-explorer.js',
   './effects-demo.mira',
   './effects-demo.js',
   './effects-demo.html',
@@ -93,6 +95,7 @@ self.addEventListener('fetch', event => {
       return;
     }
     const page = url.pathname.endsWith('/design-notes.html') ? './design-notes.html'
+      : url.pathname.endsWith('/module-explorer.html') ? './module-explorer.html'
       : url.pathname.endsWith('/type-lab.html') ? './type-lab.html'
       : url.pathname.endsWith('/effects-demo.html') ? './effects-demo.html'
       : url.pathname.endsWith('/persistent-ledger.html') ? './persistent-ledger.html'
