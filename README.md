@@ -121,6 +121,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Tree shaking conservativo checked e misure in Studio | `0.70.1` | [Dettagli](docs/grammar.md#mira-0701-tree-shaking-conservativo) |
 | ✅ | Module Explorer: dipendenze, contratti e identità | `0.71` | [Dettagli](docs/grammar.md#mira-071-module-explorer) |
 | ✅ | Verifica sperimentale di contratti indipendenti | `0.72` | [Dettagli](docs/grammar.md#mira-072-verifica-sperimentale-dei-contratti-indipendenti) |
+| ✅ | Selezione statica di provider tramite contratto | `0.73` | [Dettagli](docs/grammar.md#mira-073-selezione-statica-del-provider) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
