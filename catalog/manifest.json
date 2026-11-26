@@ -1,5 +1,5 @@
 {
-  "version": "0.54.0",
+  "version": "0.55.0",
   "features": [
     {
       "id": "values",
@@ -1878,6 +1878,12 @@
       "title": "Narrowing numerico lessicale nei condizionali",
       "since": "0.54",
       "doc": "docs/type-checker.md#054-narrowing-numerico"
+    },
+    {
+      "id": "numeric-proof-outcomes",
+      "title": "Diagnostica di prove numeriche e overflow certo",
+      "since": "0.55",
+      "doc": "docs/type-checker.md#055-esiti-delle-prove-numeriche"
     }
   ]
 }
