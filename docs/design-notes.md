@@ -203,3 +203,35 @@ invarianti; la validazione fallibile esplicita dei dati esterni,
 le garanzie sulle interfacce RPC/DB e gli errori strutturati a
 runtime restano incrementi distinti. Non adottiamo un runtime
 universale per controllare ogni operazione. Vedi type-checker.md.
+
+## 0.57 — validazione fallibile con due blocchi (esperimento)
+
+Prima di progettare Result(T,E) e i tipi somma generali,
+sperimentiamo una forma diretta:
+
+```mira
+validate: (input), as: (Percentage),
+  then: {value | display percent: value},
+  else: {error | 0}
+```
+
+Il tipo è sintassi statica; il ramo di successo riceve
+il valore già garantito (non un Number da ricostruire),
+il ramo di fallimento un messaggio Text. Si valutano
+l'input una volta e un solo corpo di handler. I due
+risultati si unificano come per if. Non si catturano
+eccezioni arbitrarie né si convertono stringhe in numeri.
+Le guardie e la validazione riutilizzano lo stesso
+generatore di predicati, differendo solo nell'esito:
+eccezione per l'invariante, ramo di errore per dati invalidi.
+
+La scelta dei due blocchi è una decisione sperimentale
+di implementazione, non un rifiuto della proposta Result
+discussa in precedenza. Evita per ora un'algebra dei tipi
+somma e un secondo meccanismo di pattern matching.
+L'alternativa validate: input, as: Percentage con risultato
+persistente resta aperta. Altri temi aperti: messaggi
+strutturati e localizzati, validazione di record e liste,
+composizione/accumulo degli errori, integrazione con GUI
+e confini host/RPC, eliminazione statica di controlli
+espliciti già provati. Vedi type-checker.md.
