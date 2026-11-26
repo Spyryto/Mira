@@ -1900,3 +1900,35 @@ test('0.84 generated JSON decoder uses the real contract and validates JS/PHP in
   const bad=d.source+'\nleak = native decode lesson "x";';assert.equal(bridge.check(bad,d.host,d.modules,d.bindings).ok,false);
   for(const asset of ['json-module-data.js','json-host.js'])assert.ok(read('sw.js').includes('./'+asset));
 });
+
+test('0.85 fallible JSON returns typed Result and handles invalid inputs on both targets',()=>{
+  const ctx={TextEncoder};runInNewContext(read('json-module-data.js'),ctx);const d=ctx.MiraJsonModuleData;
+  const checked=bridge.check(d.fallibleSource,d.host,d.modules,d.bindings);
+  assert.equal(checked.ok,true,checked.message);
+  const rows=JSON.parse(checked.output),decode=rows.find(x=>x.name.endsWith(' / try decode lesson:'));
+  assert.equal(decode.schema.result.kind,'Sum');
+  assert.equal(decode.schema.result.alternatives.find(x=>x.tag==='Err').payload.kind,'Text');
+  const expected=[{accepted:true,total:60,error:''},{accepted:false,total:0,error:'invalid_json_data'},{accepted:false,total:0,error:'invalid_json_data'}];
+  for(const target of ['js','php']){
+    const out=bridge.compile(d.fallibleSource,target,d.host,false,d.modules,true,true,d.bindings);
+    assert.equal(out.ok,true,out.message);
+    if(target==='js'){
+      let response;
+      const worker={TextEncoder,self:{postMessage(v){response=v;}}};
+      worker.importScripts=(...files)=>files.forEach(file=>runInNewContext(read(file.replace('./','')),worker));
+      runInNewContext(read('host-module-worker.js'),worker);worker.self.onmessage({data:{code:out.output,service:'json'}});
+      assert.equal(response.ok,true,response.message);assert.deepEqual(JSON.parse(response.output),expected);
+    }else{
+      const code=out.output.replace(/^<\?php/,'').replace('declare(strict_types=1);','declare(strict_types=1);require $argv[1];$GLOBALS["__miraHost"]=\\Mira\\Json\\host(json_decode($argv[2],true));')+'\necho json_encode($__miraModule_v_417070202F20726573756C74);';
+      const run=spawnSync('php',['-r',code,resolve(root,'lib/json/json-host.php'),JSON.stringify(d.decoder)],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);assert.deepEqual(JSON.parse(run.stdout),expected);
+    }
+  }
+  const noErr=d.fallibleSource.replace(',\n    err: {message | {accepted: false, total: 0, error: message}}','');
+  assert.equal(bridge.check(noErr,d.host,d.modules,d.bindings).ok,false);
+  const nodes=new Map();const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',className:'',listeners:{},addEventListener(event,fn){this.listeners[event]=fn;}});return nodes.get(id);};
+  const ui={document:{getElementById:node},MiraStudioCompiler:bridge,TextEncoder};
+  runInNewContext(read('text-module-data.js'),ui);runInNewContext(read('json-module-data.js'),ui);runInNewContext(read('text-module-lab.js'),ui);
+  node('json-fallible').listeners.click();assert.equal(node('json-source').value,d.fallibleSource);
+  assert.match(node('json-status').textContent,/Type check riuscito/);
+});

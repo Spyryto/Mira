@@ -1,0 +1,15 @@
+module App;
+interface
+result;
+import Services / Json { try decode lesson: ; };
+implementation
+summarize: source =
+  match: (try decode lesson: source) {
+    ok: {lesson | {accepted: true, total: (lesson ~ hours * 30), error: ""}},
+    err: {message | {accepted: false, total: 0, error: message}}
+  };
+result = [
+  (summarize: "{\"name\":\"Ada\",\"hours\":2,\"paid\":false,\"tags\":[\"chitarra\"]}"),
+  (summarize: "{\"name\":\"Ada\",\"hours\":\"2\",\"paid\":false,\"tags\":[]}"),
+  (summarize: "not json")
+];

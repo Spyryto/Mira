@@ -2,5 +2,7 @@
   "service": "Services / Json",
   "selector": "decode lesson:",
   "provider": "Providers / Json Native",
-  "capability": "native decode lesson"
+  "capability": "native decode lesson",
+  "fallibleSelector": "try decode lesson:",
+  "fallibleCapability": "native try decode lesson"
 }

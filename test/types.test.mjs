@@ -1900,6 +1900,35 @@ test('0.84 CLI generates the JSON decoder manifest from the independent contract
       assert.equal(actual.status,0,actual.stderr);assert.deepEqual(JSON.parse(actual.stdout),{name:'Ada',total:60,paid:false,tags:['chitarra']});
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
-  const changed=structuredClone(report);changed.interfaces.find(m=>m.module===config.service).surface.symbols[0].schema.result={kind:'Variable',id:0};
+  const changed=structuredClone(report);changed.interfaces.find(m=>m.module===config.service).surface.symbols.find(s=>s.name===config.selector).schema.result={kind:'Variable',id:0};
   assert.throws(()=>generateJsonDecoder(changed,config),/concrete data types/);
+});
+
+test('0.85 fallible JSON schema is consistent with direct decoder and rejects divergence',async()=>{
+  const {generateJsonDecoder}=await import('../scripts/json-contract.mjs');
+  const {readFileSync}=await import('node:fs');
+  const run=spawnSync('node',['dist/mira.cjs','lib/json/App.mira','--interfaces'],{encoding:'utf8'});assert.equal(run.status,0,run.stderr);
+  const config=JSON.parse(readFileSync('lib/json/decoder.json','utf8'));
+  const report=JSON.parse(run.stdout),generated=generateJsonDecoder(report,config);
+  assert.equal(generated.decoder.fallibleCapability,config.fallibleCapability);
+  assert.deepEqual(generated.host.types[config.fallibleCapability].result.record.values.list,generated.host.types[config.capability].result);
+  const altered=structuredClone(report);
+  altered.interfaces.find(m=>m.module===config.service).surface.symbols.find(s=>s.name===config.fallibleSelector).schema.result.alternatives.find(x=>x.tag==='Ok').payload={kind:'Text'};
+  assert.throws(()=>generateJsonDecoder(altered,config),/Result/);
+  const dir=mkdtempSync(join(tmpdir(),'mira-json-result-'));
+  try{
+    const host=join(dir,'host.json'),bindings=join(dir,'bindings.json');
+    writeFileSync(host,JSON.stringify(generated.host));writeFileSync(bindings,JSON.stringify(generated.bindings));
+    const expected=[{accepted:true,total:60,error:''},{accepted:false,total:0,error:'invalid_json_data'},{accepted:false,total:0,error:'invalid_json_data'}];
+    for(const target of ['js','php']){
+      const out=spawnSync('node',['dist/mira.cjs','lib/json/Fallible.mira',target,'--checked','--tree-shake','--host',host,'--bindings',bindings],{encoding:'utf8'});
+      assert.equal(out.status,0,out.stderr);
+      const name='__miraModule_v_417070202F20726573756C74',file=join(dir,target==='js'?'out.mjs':'out.php');
+      const js='await import('+JSON.stringify(pathToFileURL(resolve('studio/effects.js')).href)+');\nawait import('+JSON.stringify(pathToFileURL(resolve('lib/json/json-host.js')).href)+');\nconst __miraHost=globalThis.MiraJsonDecoder.host('+JSON.stringify(generated.decoder)+');\n'+out.stdout+'\nconsole.log(JSON.stringify('+name+'));';
+      const php=out.stdout.replace('declare(strict_types=1);','declare(strict_types=1);\nrequire $argv[1];$GLOBALS["__miraHost"]=\\Mira\\Json\\host(json_decode($argv[2],true));')+'\necho json_encode($'+name+');';
+      writeFileSync(file,target==='js'?js:php);
+      const actual=spawnSync(target==='js'?'node':'php',target==='js'?[file]:[file,'lib/json/json-host.php',JSON.stringify(generated.decoder)],{encoding:'utf8'});
+      assert.equal(actual.status,0,actual.stderr);assert.deepEqual(JSON.parse(actual.stdout),expected);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
 });

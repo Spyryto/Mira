@@ -27,6 +27,7 @@
   }
   function reset(){stop();by('source').value=data.source;check();}
   by('library').textContent=Object.entries(JSON.parse(data.modules)).map(([path,source])=>path+'\n'+source).join('\n\n')+'\n\nManifest\n'+data.host+'\n\nBinding\n'+data.bindings+(data.decoder?'\n\nSchema generato\n'+JSON.stringify(data.decoder.schema,null,2):'');
+  if(data.fallibleSource)by('fallible').addEventListener('click',()=>{stop();by('source').value=data.fallibleSource;check();});
   by('reset').addEventListener('click',reset);by('check').addEventListener('click',check);
   by('js').addEventListener('click',()=>emit('js'));by('php').addEventListener('click',()=>emit('php'));
   by('run').addEventListener('click',()=>emit('js',true));

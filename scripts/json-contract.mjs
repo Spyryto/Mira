@@ -19,5 +19,23 @@ export function generateJsonDecoder(report,config){
   requirePortable(signature.result);
   const decoder={capability,schema:signature.result};
   const host={callables:[capability],types:{[capability]:{parameters:['Text'],result:hostType(decoder.schema)}},scopes:{[capability]:[provider]}};
+  if(config.fallibleSelector!==undefined||config.fallibleCapability!==undefined){
+    const name=config.fallibleCapability;
+    const fallible=mod.surface.symbols.find(s=>s.kind==='selector'&&s.name===config.fallibleSelector)?.schema;
+    const sum=fallible?.result;
+    const ok=sum?.alternatives?.find(a=>a.tag==='Ok');
+    const err=sum?.alternatives?.find(a=>a.tag==='Err');
+    if(typeof name!=='string'||name===capability||fallible?.kind!=='Function'||fallible.parameters.length!==1||fallible.parameters[0].kind!=='Text'
+      ||sum?.kind!=='Sum'||sum.name!==service+' / Result'||sum.alternatives.length!==2||!ok||err?.payload?.kind!=='Text'
+      ||sum.arguments?.length!==2||JSON.stringify(ok.payload)!==JSON.stringify(signature.result)
+      ||JSON.stringify(sum.arguments[0])!==JSON.stringify(ok.payload)||sum.arguments[1].kind!=='Text')
+      throw Error('JSON fallible decoder must return the contract Result (decoded data, Text)');
+    // Native capability returns only structural data. Mira constructs the
+    // nominal sum itself, avoiding forged identities and dummy success values.
+    decoder.fallibleCapability=name;
+    host.callables.push(name);
+    host.types[name]={parameters:['Text'],result:{record:{values:{list:hostType(decoder.schema)},error:'Text'}}};
+    host.scopes[name]=[provider];
+  }
   return {decoder,host,bindings:{[service]:{provider}}};
 }

@@ -23,3 +23,12 @@ Niente Result, null tipizzato, nominali o refinement in questa versione;
 chiavi duplicate seguono la politica nativa last-key-wins. Il tipo è derivato
 dal contratto, non dal JSON ricevuto. Il contratto può cambiare a build time;
 non è possibile richiedere uno schema arbitrario a runtime.
+
+## 0.85: variante fallibile
+
+try decode lesson: restituisce Result (record della lezione, Text), definito nel contratto.
+Il decoder diretto rimane disponibile. Dopo build:json si può compilare
+lib/json/Fallible.mira con gli stessi manifest generati (sostituire il
+percorso App.mira negli esempi). Il provider converte il risultato strutturale
+privato del decoder in Ok/Err con fold; niente eccezioni per input non valido.
+Gli errori inattesi dell'host restano eccezioni. Nessun nuovo costrutto.
