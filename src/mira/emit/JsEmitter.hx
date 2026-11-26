@@ -16,7 +16,7 @@ class JsEmitter {
             if (definition.body == null) throw new MiraError("Missing resolved body", definition.origin);
             // Function parameters shadow outer named values, but global values remain
             // accessible from every function in both backends.
-            final visibleGlobals = symbols.globalsOf(definition.modulePath);
+            final visibleGlobals = symbols.globalsOf(definition.modulePath).concat(definition.importedGlobals);
             final scope = definition.isFunction()
                 ? definition.parameters.concat(visibleGlobals) : visibleGlobals;
             final expr = SourceEmitter.expression(
