@@ -757,6 +757,15 @@ class TypeChecker {
 
     // A failed child keeps its own anchor in the exception. A successful
     // child restores the enclosing operator/call before unification.
+    function checkValidationInput(actual:Type,required:Type):Void {
+        // Even a Text or Boolean input may fail normally. Do not rebrand siblings.
+        final identity = nominalName(actual);
+        final destination = nominalName(required);
+        if (identity != null && destination != null
+            && !ancestor(actual,destination) && !ancestor(required,identity))
+            fail("Cannot validate unrelated nominal types");
+    }
+
     function validationResult(handler:Expr,parameter:Type,scope:Map<String,LocalScheme>):Type {
         return switch (handler) {
             case Block(parameters,body):
@@ -830,15 +839,11 @@ class TypeChecker {
                     default: fail("Expected sum type");
                 }
                 sum;
+            case ValidateResult(value,required,result):
+                checkValidationInput(infer(value,scope),required);
+                result;
             case Validate(value,required,success,failure):
-                final actual = infer(value,scope);
-                // Validation is an explicit trust boundary: even a Text or
-                // Boolean input may fail normally. Do not rebrand siblings.
-                final identity = nominalName(actual);
-                final destination = nominalName(required);
-                if (identity != null && destination != null
-                    && !ancestor(actual,destination) && !ancestor(required,identity))
-                    fail("Cannot validate unrelated nominal types");
+                checkValidationInput(infer(value,scope),required);
                 final accepted = validationResult(success,required,scope);
                 unifyAt(accepted,validationResult(failure,TextType,scope),failure);
                 accepted;

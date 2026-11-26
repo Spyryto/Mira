@@ -1028,3 +1028,40 @@ test('types: explicit generic function signatures are erased on JS and PHP',()=>
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('types: validation results retain the requested nominal identity',()=>{
+  const src='Result (Value Type, Failure Type) :: Ok (Value Type) | Err (Failure Type); Percentage :: Number where _ >= 0 AND _ <= 100; display percent: p (Percentage) = p + 0; read percent: x = validate: (x), as: (Percentage); a = read percent: 42; b = read percent: "bad"; result = match: a {ok: {p | display percent: p}, err: {e | 0}};';
+  const t=check(src);
+  assert.equal(t.a,'Result (Percentage, Text)');
+  assert.equal(t.b,'Result (Percentage, Text)');
+  assert.equal(t.result,'Number');
+  for(const [extra,pattern] of [
+    ['bad = validate: (42), as: (Text);',/requires a numeric type/],
+    ['Other :: Number; o (Other) = 42; bad = validate: (o), as: (Percentage);',/unrelated nominal types/],
+    ['bad (Result (Number, Text)) = a;',/expected Number, got Percentage|expected Percentage, got Number/],
+    ['bad = match: a {ok: {p | p}};',/Non-exhaustive match/]
+  ]) assert.throws(()=>check(src+extra),pattern,extra);
+  for(const template of ['', 'Result (T, E) :: Ok (E) | Err (T);','Result (T, E) :: Ok (T) | Err (E) | Pending;','Result :: Ok (Number) | Err (Text);'])
+    assert.throws(()=>check(template+' bad = validate: (42), as: (Number);'),/Short validation requires Result/);
+  assert.equal(check('result = validate: (42), as: (Number), then: {n | n}, else: {e | 0};').result,'Number');
+});
+test('types: first-class validation results evaluate the input once on JS and PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-validation-result-'));
+  try{
+    const input=join(dir,'program.mira'),host=join(dir,'host.json');
+    const src='Result (T, E) :: Ok (T) | Err (E); Percentage :: Number where _ >= 0 AND _ <= 100; Retry Count :: Integer where _ >= 0 AND _ <= 3; read percent: x = validate: (probe x), as: (Percentage); read retry: x = validate: (x), as: (Retry Count); read closure: x = () >> {| validate: (x), as: (Percentage)}; result = read percent: 42;';
+    writeFileSync(input,src);
+    writeFileSync(host,JSON.stringify({callables:['probe'],types:{probe:{parameters:['Number'],result:'Number'}}}));
+    for(const target of ['js','php']){
+      const r=spawnSync('node',['dist/mira.cjs',input,target,'--checked','--host',host],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      const setup=target==='js'?'let calls=0; const __miraHost={probe:x=>{calls++;return x;}};':'$calls=0; $GLOBALS["__miraHost"]=["probe"=>function($x) use (&$calls){$calls++;return $x;}];';
+      const suffix=target==='js'?'\nconsole.log(JSON.stringify([result,read_percent(120),read_percent(NaN),read_retry(3),read_retry(2.5),read_retry("3"),read_closure(7),calls]));':'\necho json_encode([$result,read_percent(120),read_percent(NAN),read_retry(3),read_retry(2.5),read_retry("3"),read_closure(7),$calls]);';
+      writeFileSync(file,(target==='js'?setup+'\n'+r.stdout:r.stdout.replace('declare(strict_types=1);','declare(strict_types=1);\n'+setup))+suffix);
+      const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);
+      assert.deepEqual(JSON.parse(run.stdout),[{tag:'Ok',value:42},{tag:'Err',value:'Invalid numeric value'},{tag:'Err',value:'Invalid numeric value'},{tag:'Ok',value:3},{tag:'Err',value:'Invalid Integer value'},{tag:'Err',value:'Invalid Integer value'},{tag:'Ok',value:7},3]);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

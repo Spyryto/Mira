@@ -73,6 +73,7 @@ class Dependencies {
             case Match(input,_,handlers):
                 walk(input,locals,found); for (handler in handlers) walk(handler,locals,found);
             case Variant(_,_,payload): if (payload != null) walk(payload,locals,found);
+            case ValidateResult(value,_,_): walk(value,locals,found);
             case Validate(value,_,success,failure):
                 walk(value,locals,found); walk(success,locals,found); walk(failure,locals,found);
             case Conditional(predicate,yes,no):

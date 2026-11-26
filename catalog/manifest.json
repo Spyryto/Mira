@@ -1,5 +1,5 @@
 {
-  "version": "0.61.0",
+  "version": "0.62.0",
   "features": [
     {
       "id": "values",
@@ -1932,6 +1932,12 @@
       "title": "Funzioni parametriche esplicite con nomi discorsivi",
       "since": "0.61",
       "doc": "docs/type-checker.md#061-funzioni-parametriche-esplicite"
+    },
+    {
+      "id": "validation-result",
+      "title": "Validazione numerica fallibile con Result",
+      "since": "0.62",
+      "doc": "docs/type-checker.md#062-validazione-con-result"
     }
   ]
 }

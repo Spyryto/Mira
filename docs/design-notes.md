@@ -484,3 +484,15 @@ somme; variabili rigide durante il controllo e istanziazione
 flessibile alla chiamata. Annotazioni complete richieste per
 questa prima forma. Nessuna modifica agli emitter; ricorsione,
 vincoli e annotazioni generiche nel corpo rimandati.
+
+
+## 0.62 — risultato di validazione come valore
+
+Forma breve validate: (x), as: (Type) che restituisce Result
+(Type, Text), verificando la forma canonica della somma esplicita.
+Niente prelude implicita: Result resta dichiarabile in Mira.
+Si mantengono validate:as:then:else: e il suo predicato numerico.
+Il nodo ValidateResult emette direttamente tag/value nel ramo
+selezionato, con una sola valutazione dell'input e senza chiamare
+costruttori o creare due continuation. Errori strutturati e altri
+tipi di validazione sono separati da questa iterazione.

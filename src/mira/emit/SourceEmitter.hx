@@ -90,6 +90,21 @@ class SourceEmitter {
                 final fields = payload == null ? ["tag"] : ["tag","value"];
                 final values:Array<Expr> = payload == null ? [Text(tag)] : [Text(tag),payload];
                 expression(Record(fields,values),target,scope,reservedHostNames,guards);
+            case ValidateResult(input,required,_):
+                final constraint = new NumericGuard();
+                constraint.integer = mira.types.NumericRange.integerType(required);
+                constraint.range = mira.types.NumericRange.ofType(required);
+                final v = target == Php ? "$__miraValidationValue" : "__miraValidationValue";
+                final predicate = numericTests(target,constraint,v).join(" && ");
+                final message = constraint.integer ? "Invalid Integer value" : "Invalid numeric value";
+                final yes = target == Php ? "['tag' => 'Ok', 'value' => " + v + "]"
+                    : "({tag: 'Ok', value: " + v + "})";
+                final no = target == Php ? "['tag' => 'Err', 'value' => " + phpString(message) + "]"
+                    : "({tag: 'Err', value: " + haxe.Json.stringify(message) + "})";
+                final body = "(" + predicate + " ? " + yes + " : " + no + ")";
+                final wrapper = target == Php ? "(static fn(" + v + ") => " + body + ")"
+                    : "((" + v + ") => " + body + ")";
+                wrapper + "(" + expression(input,target,scope,reservedHostNames,guards) + ")";
             case Validate(input,required,success,failure):
                 final constraint = new NumericGuard();
                 constraint.integer = mira.types.NumericRange.integerType(required);
@@ -278,6 +293,7 @@ class SourceEmitter {
             case Match(input,_,handlers):
                 referencedNames(input,bound,names); for (handler in handlers) referencedNames(handler,bound,names);
             case Variant(_,_,payload): if (payload != null) referencedNames(payload,bound,names);
+            case ValidateResult(input,_,_): referencedNames(input,bound,names);
             case Validate(input,_,success,failure):
                 referencedNames(input,bound,names);
                 referencedNames(success,bound,names);

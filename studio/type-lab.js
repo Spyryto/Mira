@@ -46,6 +46,11 @@
     source.value='Session :: {user: Text};\nConnection :: Disconnected | Connecting | Connected (Session) | Failed (Text);\nsession (Session) = {user: "Ada"};\ninitial = Disconnected;\nactive connection = Connected: session;\nfailure = Failed: "Timeout";\nstates = [initial, active connection, failure];';
     check();
   });
+  document.getElementById('validation-result-example').addEventListener('click',()=>{
+    host.value='';
+    source.value='Result (Value Type, Failure Type) :: Ok (Value Type) | Err (Failure Type);\nPercentage :: Number where _ >= 0 AND _ <= 100;\na = validate: (42), as: (Percentage);\nb = validate: (120), as: (Percentage);\nresult = match: a {ok: {p | p + 0}, err: {message | 0}};';
+    check();
+  });
   document.getElementById('validation-example').addEventListener('click',()=>{
     host.value='';
     source.value='Percentage :: Number where _ >= 0 AND _ <= 100;\nuse percent: p (Percentage) = p + 0;\nresult = validate: (120), as: (Percentage), then: {p | use percent: p}, else: {error | 0};';
