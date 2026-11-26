@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.60.1');
+  assert.equal(bridge.version, '0.60.2');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.60.1');
+  assert.equal(bridge.version,'0.60.2');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1132,4 +1132,12 @@ test('Studio exposes parametric sum schemas with concrete payload types',()=>{
   assert.equal(runInNewContext(bridge.compile(src,'js',null,false,null,true).output+'\nresult',{}),42);
   assert.equal(bridge.check(src+'bad (Result (Text, Number)) = a;').ok,false);
   assert.match(read('type-lab.html'),/generic-sum-example/);
+});
+
+test('Studio compiles a user Error constructor without masking native Error',()=>{
+  const src='Result (T, E) :: Ok (T) | Error (E); failure (Result (Number, Text)) = Error: "timeout"; result = match: failure {ok: {n | n}, error: {e | 0}};';
+  assert.equal(bridge.check(src).ok,true);
+  const js=bridge.compile(src,'js');
+  assert.equal(js.ok,true);
+  assert.match(js.code??js.output??JSON.stringify(js),/__miraEsc_Error/);
 });
