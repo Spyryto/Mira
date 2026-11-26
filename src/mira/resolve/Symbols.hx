@@ -23,6 +23,7 @@ class Symbols {
     public final globals:Array<String> = [];
     public final hostNames:Array<String> = [];
     public final environment:HostEnvironment;
+    final scopedGlobals = new Map<String,Array<String>>();
     final resolvedValues = new Map<String,String>();
     final resolvedSelectors = new Map<String,String>();
 
@@ -141,8 +142,12 @@ class Symbols {
         }
     }
 
-    public function globalsOf(modulePath:Null<String>):Array<String>
-        return [for (name in globals) if (ModuleIdentity.owner(name) == modulePath) name];
+    public function globalsOf(modulePath:Null<String>):Array<String> {
+        final key = modulePath == null ? "" : modulePath;
+        if (!scopedGlobals.exists(key))
+            scopedGlobals.set(key,[for (name in globals) if (ModuleIdentity.owner(name) == modulePath) name]);
+        return scopedGlobals.get(key);
+    }
 
     public function resolvedName(name:String):String
         return resolvedValues.exists(name) ? resolvedValues.get(name) : name;
