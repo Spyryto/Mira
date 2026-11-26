@@ -358,8 +358,8 @@ vedi [quaderno di progettazione](design-notes.md).
 ## Direzione futura: contratti e import logici dei moduli
 
 Vedi [progetto dei moduli](module-design.md). Le sezioni piatte interface e implementation sono introdotte nella 0.66;
-gli alias => e le firme pubbliche esplicite nell'interfaccia restano
-una direzione futura. Gli import statici a percorso
+gli alias => di simboli sono introdotti nella 0.67; le firme pubbliche
+esplicite nell'interfaccia restano una direzione futura. Gli import statici a percorso
 file della 0.30 restano l'unica forma di caricamento implementata. Il punto sperimentato
 nella PR #95 non è stato adottato.
 
@@ -433,3 +433,44 @@ un'interfaccia tipizzata separatamente compilabile: firme esplicite
 nell'interfaccia, verifica di fuga di tipi privati, tipi opachi e
 riesportazione sono incrementi successivi. L'emissione non cambia
 aggiungendo sole esportazioni a un programma equivalente.
+
+## Mira 0.67: import selettivi e alias
+
+```mira
+module App;
+
+interface
+
+result;
+
+import Math / Integer Math {
+  square: ;
+  add: by: => somma: a: ;
+};
+
+implementation
+
+result = somma: (square: 3), a: 2;
+```
+
+Sono ammessi import di valori, tipi e selettori pubblici, inclusi costruttori
+pubblici, con alias `=>` di identica arità. Anche `import Math / Integer Math / square: ;`
+e `import Math / Integer Math { * };` sono accettati. I nomi non transitano
+implicitamente ad altri moduli. Le collisioni sono errori, non overload.
+Gli import dell'interfaccia precedono l'analisi dei tipi pubblici, quelli
+privati non sono visibili a tali dichiarazioni. Alias di tipi mantengono
+l'identità nominale; alias di funzioni non emettono wrapper. I riferimenti
+sono diretti, anche nelle sezioni e nelle closure. Convenzione: spazio
+prima del ; finale dei selettori importati e tra le keyword; il lexer
+non richiede tali spazi.
+
+Il resolver core riceve il percorso logico normalizzato. Il CLI usa la
+convenzione `Math/Integer Math.mira` relativa alla directory di ingresso;
+Studio accetta la chiave logica o il percorso file corrispondente nella
+mappa virtuale. L'header deve corrispondere al percorso richiesto. I vecchi
+import fra virgolette mantengono la semantica di caricamento. Evitare di
+caricare lo stesso modulo con chiavi fisiche e logiche differenti.
+I moduli devono avere un header per gli import logici. Alias dell'intero
+modulo e qualificazione nelle espressioni restano aperti. Firme esplicite,
+opacità e verifica delle fughe di tipi privati non ancora implementate:
+le annotazioni restano opt-in. Gli import non creano oggetti runtime.

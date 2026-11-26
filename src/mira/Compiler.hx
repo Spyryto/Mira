@@ -15,7 +15,8 @@ class Compiler {
         ?readModule:String->Null<String>, ?entry:String, ?origins:ExpressionOrigins):Array<Definition> {
         final types = new Map<String,mira.types.Type>();
         final moduleTypes = new Map<String,Map<String,mira.types.Type>>();
-        final definitions = Modules.collect(source, readModule, entry,types,moduleTypes);
+        final bindings = new Map<String,Array<mira.resolve.ImportBinding>>();
+        final definitions = Modules.collect(source, readModule, entry,types,moduleTypes,null,bindings);
         final groups = new Map<String,Array<Definition>>();
         for (definition in definitions) {
             final key = definition.modulePath == null ? "" : definition.modulePath;
@@ -24,7 +25,7 @@ class Compiler {
         }
         final scopes = new Map<String,Symbols>();
         for (key => group in groups)
-            scopes.set(key,new Symbols(group,host,key == "" ? null : key));
+            scopes.set(key,new Symbols(group,host,key == "" ? null : key,bindings.get(key)));
         for (definition in definitions) {
             if (definition.body != null) continue; // synthesized sum constructor
             final key = definition.modulePath == null ? "" : definition.modulePath;

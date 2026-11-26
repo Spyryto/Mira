@@ -53,7 +53,9 @@ class Main {
             final root:String = fs.realpathSync(path.dirname(path.resolve(args[0])));
             final entry:String = path.basename(args[0]);
             final readModule = function(name:String):Null<String> {
-                final requested:String = path.resolve(root, name);
+                // Logical paths are resolved by this host convention, not by the core.
+                final relative = StringTools.endsWith(name,".mira") ? name : name.split(" / ").join("/") + ".mira";
+                final requested:String = path.resolve(root, relative);
                 if (!fs.existsSync(requested)) return null;
                 final actual:String = fs.realpathSync(requested);
                 if (actual != requested) throw new MiraError("Module symlinks are not supported");

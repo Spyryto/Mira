@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.66.0');
+  assert.equal(bridge.version, '0.67.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.66.0');
+  assert.equal(bridge.version,'0.67.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1243,4 +1243,28 @@ test('0.66 Studio exposes module export metadata without making private symbols 
   const denied=bridge.check('module Consumer; import "library.mira"; result = square: 2;',null,files);
   assert.equal(denied.ok,false);assert.match(denied.message,/Unknown identifier/);
   assert.match(read('type-lab.html'),/flat-interface-example/);
+});
+
+
+test('0.67 Studio virtual logical imports resolve direct aliases, public types and visibility',()=>{
+  const files=JSON.stringify({
+    'Math / Integer Math':'module Math / Integer Math; interface Amount :: Number; square: ; add: by: ; rate; implementation square: x = x * x; add: x, by: y = x + y; rate = 2; secret = 42;',
+    'Middle':'module Middle; interface result; import Math / Integer Math {rate;}; implementation result = rate;'
+  });
+  const src='module App;\ninterface\nresult;\nimport Math / Integer Math {\n  square: ;\n  add: by: => somma: a: ;\n  Amount => Quantity;\n  rate;\n};\nimplementation\namount (Quantity) = 3;\nresult = somma: (square: 3), a: rate;';
+  const checked=bridge.check(src,null,files);assert.equal(checked.ok,true,checked.message);
+  const report=JSON.parse(checked.output);
+  assert.equal(report.find(x=>x.name==='App / amount').type,'Math / Integer Math / Amount');
+  const js=bridge.compile(src,'js',null,false,files,true);assert.equal(js.ok,true,js.message);
+  const result='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+  assert.equal(runInNewContext(js.output+'\n'+result,{}),11);
+  const ast=JSON.parse(bridge.ast(src,null,files).output);
+  assert.equal(ast.definitions.find(d=>d.name==='App / result').body.selector,'Math / Integer Math / add:by:');
+  for(const [source,pattern] of [
+    ['module App; import Math / Integer Math {secret;}; result = secret;',/Symbol not exported/],
+    ['module App; import Middle {rate;}; result = rate;',/Symbol not exported/],
+    ['module App; import Math / Integer Math {square: ;}; result = add: 2, by: 3;',/Unknown identifier/],
+    ['module App; import Math / Integer Math {rate;}; rate = 2;',/Imported name conflicts/]
+  ]){const x=bridge.check(source,null,files);assert.equal(x.ok,false,source);assert.match(x.message,pattern);}
+  assert.match(read('type-lab.html'),/selective-import-example/);
 });

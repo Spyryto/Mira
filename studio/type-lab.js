@@ -1,13 +1,13 @@
 (function(){
   'use strict';
-  const source=document.getElementById('source'),result=document.getElementById('result'),host=document.getElementById('host');
+  const source=document.getElementById('source'),result=document.getElementById('result'),host=document.getElementById('host'),modules=document.getElementById('modules');
   const valid='Retry Count :: Integer where _ >= 0 AND _ <= 3;\nretry (Retry Count) = 2;\nnext retry (Integer) = retry + 1;\nPercentage :: Number where _ >= 0 AND _ <= 100;\nnormalize percentage: x (Number) -> Percentage = if (x >= 0 AND x <= 100) then x else 0;\nnormalized = normalize percentage: 120;\nSmall Percentage :: Percentage where _ <= 10;\nhalf of: p (Percentage) -> Percentage = p / 2;\nvolume (Percentage) = 50 + 30;\nhalf volume = half of: volume;\nsmall volume (Small Percentage) = 5;\nvalid volume = volume > 0 AND volume <= 100;\nlogical = NOT false AND true OR false;\noperator sum = fold: [1, 2, 3], with: (+), from: 0;\nSize :: {width: Number, height: Number};\nWindow :: {width: Number, height: Number, title: Text};\nwindow (Window) = {width: 12, height: 10, title: "Mira"};\narea of: size (~ Size) = size ~ width * size ~ height;\nwindow area = area of: window;\nStudent Id :: Number;\nRequest Id :: Number;\nstudent (Student Id) = 42;\nrequest (Request Id) = 7;\nread student: id (Student Id) = id;\nselected student = read student: student;\nlocal quote = 2 >> {hours (Number) | unit rate (Number) = 30; hours * unit rate};\nrate (Number) = 30;\nquote: p ({hours: Number}) -> {total: Number} = {total: (p ~ hours * rate)};\nquoted = quote: {hours: 2};\nempty ([Text]) = [];\nsame: a, as: b = a == b;\nsame number = same: 2, as: 2;\nsame text = same: "Ada", as: "Mira";\nrename: r = update: r, with: {name: "Ada"};\nupdated = rename: {name: 42, age: 37};\nlocal = () >> {| id = {x | x}; {number: (1 >> id), text: ("ok" >> id)}};\neven: n = if (n <= 0) then true else (odd: (n - 1));\nodd: n = if (n <= 0) then false else (even: (n - 1));\nname of: person = person ~ name;\nidentity: x = x;\na = name of: {name: "Ada", age: 37};\nb = name of: {name: 42};\nc = identity: true;';
   function offset(line,column){
     const lines=source.value.split('\n');
     return lines.slice(0,line-1).reduce((n,text)=>n+text.length+1,0)+column-1;
   }
   function check(highlight=false){
-    const response=MiraStudioCompiler.check(source.value,host.value.trim()||null);
+    const response=MiraStudioCompiler.check(source.value,host.value.trim()||null,modules.value.trim()||null);
     result.textContent=response.ok?(document.getElementById('structured').checked?response.output:JSON.parse(response.output).map(x=>(x.module?(x.exported?'[pubblico] ':'[privato] '):'')+x.name+'  :  '+x.type).join('\n')):response.message;
     const d=response.diagnostic;
     if(!response.ok && d?.proof){
@@ -26,11 +26,18 @@
   document.getElementById('overflow').addEventListener('click',()=>{host.value='';source.value='x (Integer) = 9007199254740991 + 1;';check(true);});
   document.getElementById('unknown').addEventListener('click',()=>{host.value='';source.value='increment: x (Integer) -> Integer = x + 1;';check(true);});
   function compileChecked(target){
-    const response=MiraStudioCompiler.compile(source.value,target,host.value.trim()||null,false,null,true);
+    const response=MiraStudioCompiler.compile(source.value,target,host.value.trim()||null,false,modules.value.trim()||null,true);
     result.textContent=response.ok?response.output:response.message;
   }
   document.getElementById('checked-js').addEventListener('click',()=>compileChecked('js'));
   document.getElementById('checked-php').addEventListener('click',()=>compileChecked('php'));
+  document.getElementById('selective-import-example').addEventListener('click',()=>{
+    host.value='';
+    modules.value=JSON.stringify({'Math / Integer Math':'module Math / Integer Math;\ninterface\nsquare: ;\nadd: by: ;\nimplementation\nsquare: x = x * x;\nadd: x, by: y = x + y;'},null,2);
+    modules.closest('details').open=true;
+    source.value='module App;\ninterface\nresult;\nimport Math / Integer Math {\n  square: ;\n  add: by: => somma: a: ;\n};\nimplementation\nresult = somma: (square: 3), a: 2;';
+    check();
+  });
   document.getElementById('flat-interface-example').addEventListener('click',()=>{
     host.value='';
     source.value='module Math / Integer Math;\n\ninterface\n\nOption (T) :: Some (T) | None;\nrate;\nsquare:;\nadd: by: ;\n\nimplementation\n\nrate = 2;\nsquare: x = x * x;\nadd: x, by: y = x + y;\nprivate constant = 42;\nresult = add: (square: rate), by: private constant;';

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
-import {mkdtempSync,writeFileSync,rmSync} from 'node:fs';
+import {mkdtempSync,writeFileSync,rmSync, mkdirSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 function check(source,host){
@@ -1224,7 +1224,7 @@ test('0.66 flat interfaces accept inferred selectors, values and public nominal 
     ['interface f: :: (Number) -> Number; implementation f: x = x;',/explicit signatures are not implemented yet/],
     ['interface T :: Number; implementation T :: Text;',/Duplicate or reserved type T/],
     ['interface import "unused.mira"; x; implementation x = 1;',/Interface exports must precede imports/],
-    ['interface import Data / Math {f:;}; implementation x = 1;',/Logical and selective imports are not implemented yet/]
+    ['interface import Data / Math {f:;}; implementation x = 1;',/Module not found: Data \/ Math/]
   ]) assert.throws(()=>check('module M; '+source),pattern,source);
 });
 test('0.66 adding an interface does not change emitted JS or PHP',()=>{
@@ -1245,6 +1245,50 @@ test('0.66 adding an interface does not change emitted JS or PHP',()=>{
       writeFileSync(file,b.stdout+(target==='js'?'\nconsole.log('+name+');':'\necho $'+name+';'));
       const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
       assert.equal(run.status,0,run.stderr);assert.equal(run.stdout.trim(),'5');
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+
+test('0.67 logical imports resolve aliases and types to their original canonical identities',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-selective-imports-'));
+  try{
+    const input=join(dir,'program.mira');
+    mkdirSync(join(dir,'Math'),{recursive:true});
+    writeFileSync(join(dir,'Math','Integer Math.mira'),'module Math / Integer Math; interface Amount :: Number; Option (T) :: Some (T) | None; rate; square: ; add: by: ; implementation rate = 2; square: x = x * x; add: x, by: y = x + y; secret = 42;');
+    const pre='module App; interface Pair :: {amount: Quantity}; result; import Math / Integer Math {Amount => Quantity; rate => unit rate; square: ; add: by: => somma: a: ; Option; Some: => Just: ; None;}; implementation ';
+    const body='amount (Quantity) = 3; pair (Pair) = {amount: amount}; calc: x = somma: (square: x), a: unit rate; section = somma: _, a: 1; wrapped (Option (Number)) = Just: (calc: 3); result = match: wrapped {some: {x | x >> section}, none: {| 0}};';
+    const src=pre+body;
+    writeFileSync(input,src);
+    const checked=spawnSync('node',['dist/mira.cjs',input,'--check'],{encoding:'utf8'});
+    assert.equal(checked.status,0,checked.stderr);
+    const report=JSON.parse(checked.stdout);
+    assert.equal(report.find(x=>x.name==='App / amount').type,'Math / Integer Math / Amount');
+    assert.equal(report.find(x=>x.name==='App / result').type,'Number');
+    for(const target of ['js','php']){
+      const compile=source=>{writeFileSync(input,source);return spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});};
+      const a=compile(src), b=compile(src.replace('somma: a: ;','plus: with: ;').replaceAll('somma:','plus:').replaceAll(', a:',', with:'));
+      assert.equal(a.status,0,a.stderr);assert.equal(b.status,0,b.stderr);
+      assert.equal(a.stdout,b.stdout);
+      const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,a.stdout+(target==='js'?'\nconsole.log('+name+');':'\necho $'+name+';'));
+      const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);assert.equal(run.stdout.trim(),'12');
+    }
+    const valid=['module App; import Math / Integer Math { * }; result = add: (square: 3), by: rate;','module App; import Math / Integer Math / square: ; result = square: 3;'];
+    for(const source of valid){writeFileSync(input,source);const a=spawnSync('node',['dist/mira.cjs',input,'--check'],{encoding:'utf8'});assert.equal(a.status,0,a.stderr);}
+    for(const [source,pattern] of [
+      ['module App; import Math / Integer Math {secret;}; result = secret;',/Symbol not exported/],
+      ['module App; import Math / Integer Math {square: ;}; result = add: 1, by: 2;',/Unknown identifier/],
+      ['module App; import Math / Integer Math {add: by: => add: ;};',/preserve selector arity/],
+      ['module App; import Math / Integer Math {rate; rate;};',/Duplicate imported name/],
+      ['module App; import Math / Integer Math {rate;}; rate = 1;',/Imported name conflicts/],
+      ['module App; interface Pair :: {amount: Amount}; implementation import Math / Integer Math {Amount;}; x = 1;',/Unknown annotation type Amount/],
+      ['module App; import App {x;}; x = 1;',/Import cycle/]
+    ]){
+      writeFileSync(input,source);const a=spawnSync('node',['dist/mira.cjs',input,'--check'],{encoding:'utf8'});
+      assert.notEqual(a.status,0,source);assert.match(a.stderr,pattern,source);
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
