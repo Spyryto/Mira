@@ -107,6 +107,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Tipi somma parametrici e costruttori polimorfici | `0.60` | [Dettagli](docs/type-checker.md#060-tipi-somma-parametrici) |
 | ✅ | Parametri di tipo con nomi discorsivi | `0.60.1` | [Dettagli](docs/type-checker.md#0601-parametri-di-tipo-discorsivi) |
 | ✅ | Protezione statica dei nomi nativi dei target | `0.60.2` | [Dettagli](docs/type-checker.md#0602-protezione-dei-nomi-host) |
+| ✅ | Funzioni parametriche esplicite con nomi discorsivi | `0.61` | [Dettagli](docs/type-checker.md#061-funzioni-parametriche-esplicite) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
