@@ -112,6 +112,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Record e liste nominali parametrici | `0.63` | [Dettagli](docs/type-checker.md#063-record-e-liste-nominali-parametrici) |
 | ✅ | Tipi somma ricorsivi regolari | `0.64` | [Dettagli](docs/type-checker.md#064-tipi-somma-ricorsivi) |
 | ✅ | Percorsi logici discorsivi e scope isolati | `0.65` | [Dettagli](docs/grammar.md#mira-065-percorsi-logici-e-scope-isolati) |
+| ✅ | Sezioni piatte interface e implementation | `0.66` | [Dettagli](docs/grammar.md#mira-066-interfaccia-e-implementazione-piatte) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
