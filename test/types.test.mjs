@@ -1506,7 +1506,7 @@ test('0.70.1 checked tree shaking retains entry roots, sections, recursive depen
       assert.ok(!b.stdout.includes(m('Core','dead data')));
       assert.ok(!b.stdout.includes(m('Core','unused','s')));
       assert.ok(b.stdout.includes(m('Core','rate')));
-      assert.ok(b.stdout.includes('legacy_value'));
+      assert.ok(b.stdout.includes('legacyValue'));
       const file=join(dir,target==='js'?'program.mjs':'program.php');
       for(const code of [a.stdout,b.stdout]){
         const init=target==='js'?'const events=[]; const __miraHost={"tick:":x=>(events.push(x),x)};\n':'$events=[]; $GLOBALS["__miraHost"]=["tick:"=>function($x){global $events;$events[]=$x;return $x;}];\n';
