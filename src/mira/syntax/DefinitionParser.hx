@@ -67,19 +67,18 @@ class DefinitionParser {
         if (!tokens[tokens.length-1].isSymbol(")"))
             throw new MiraError("Expected closing ) in type declaration",tokens[opening]);
         final parameters:Array<String> = [];
-        var i = opening + 1;
-        while (i < tokens.length-1) {
-            final parameter = tokens[i++];
-            if (parameter.kind != Word || parameter.value == "_" || names.exists(parameter.value)
-                || ["Number","Integer","Text","Boolean","where"].indexOf(parameter.value) >= 0
-                || parameter.value == name || parameters.indexOf(parameter.value) >= 0)
-                throw new MiraError("Invalid or duplicate type parameter " + parameter.value,parameter);
-            parameters.push(parameter.value);
-            if (i == tokens.length-1) break;
-            if (!tokens[i++].isSymbol(",") || i == tokens.length-1)
-                throw new MiraError("Expected comma and type parameter",tokens[i-1]);
+        final arguments = tokens.slice(opening + 1,tokens.length-1);
+        if (arguments.length == 0) throw new MiraError("Expected type parameter",tokens[opening]);
+        for (part in splitHeader(arguments)) {
+            final parameter = readWords(part);
+            for (word in part) if (word.value == "where")
+                throw new MiraError("Invalid or duplicate type parameter " + parameter,word);
+            if (parameter == "_" || names.exists(parameter)
+                || ["Number","Integer","Text","Boolean"].indexOf(parameter) >= 0
+                || parameter == name || parameters.indexOf(parameter) >= 0)
+                throw new MiraError("Invalid or duplicate type parameter " + parameter,part[0]);
+            parameters.push(parameter);
         }
-        if (parameters.length == 0) throw new MiraError("Expected type parameter",tokens[opening]);
         return {name:name,parameters:parameters};
     }
 
