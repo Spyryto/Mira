@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.55.0');
+  assert.equal(bridge.version, '0.56.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.55.0');
+  assert.equal(bridge.version,'0.56.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1062,4 +1062,22 @@ test('Studio exports structured numeric proof failure reasons',()=>{
     assert.equal(compiled.ok,true);
     assert.equal(compiled.output,bridge.compile('x = 9007199254740990 + 1;',target).output);
   }
+});
+
+test('Studio checked compiler emits guards without changing strict checking or unchecked compilation',()=>{
+  const src='Percentage :: Number where _ >= 0 AND _ <= 100; bounded value: x (Number) -> Percentage = x;';
+  assert.equal(bridge.check(src).ok,false);
+  for(const target of ['js','php']){
+    const ordinary=bridge.compile(src,target);
+    const checked=bridge.compile(src,target,null,true,null,true);
+    assert.equal(ordinary.ok,true,ordinary.message);assert.equal(checked.ok,true,checked.message);
+    assert.ok(!ordinary.output.includes('__miraNumericValue'));
+    assert.match(checked.output,/__miraNumericValue/);
+    assert.ok(checked.locations.length>0);
+    const proven='x (Integer) = 42;';
+    assert.equal(bridge.compile(proven,target,null,false,null,true).output,bridge.compile(proven,target).output);
+    assert.equal(bridge.compile('bad (Integer) = 9007199254740991 + 1;',target,null,false,null,true).diagnostic.reason,'integer_overflow');
+  }
+  assert.match(read('type-lab.html'),/checked-js/);
+  assert.match(read('type-lab.html'),/checked-php/);
 });

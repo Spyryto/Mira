@@ -752,3 +752,59 @@ e non assumere equivalenza dopo perdita di precisione. Un controllo
 del solo risultato non garantisce esattezza dopo un intermedio
 non portabile. Validazione fallibile e gestione degli errori
 di esecuzione rimangono da progettare.
+
+## 0.56: guardie numeriche
+
+```mira
+Percentage :: Number where _ >= 0 AND _ <= 100;
+bounded value: x (Number) -> Percentage = x;
+increment checked: x (Integer) -> Integer = x + 1;
+half of: p (Percentage) -> Percentage = p / 2;
+```
+
+La compilazione controllata è distinta dal controllo strettamente
+statico e dalla transpilazione ordinaria.
+
+```sh
+node dist/mira.cjs example.mira js --checked
+node dist/mira.cjs example.mira php --checked
+```
+
+Compiler.transpileChecked riutilizza lo stesso AST tra checker
+ed emitter, con una ObjectMap di obblighi NumericGuard per identità
+dell'espressione. Il flag --locations funziona anche con --checked.
+L'API Studio compile accetta checked come sesto argomento Boolean
+(default false); il Type Lab offre due pulsanti per osservare
+l'emissione JS e PHP senza eseguire il codice.
+
+Proven: nessuna guardia, emissione identica alla transpilazione
+ordinaria. Violated: errore di compilazione. Unknown: guardia
+solo alle costruzioni esplicite supportate, altrimenti ancora errore.
+Non si introducono nuove conversioni implicite negli argomenti.
+
+Le guardie sono funzioni native inline che ricevono il valore una
+volta sola, verificano tipo numerico e finitezza; Integer richiede
+anche dominio sicuro e parte frazionaria nulla. I limiti ereditati
+ancora da dimostrare si fondono nello stesso controllo. Una
+violazione lancia Error in JS e RuntimeException in PHP. Il valore
+originale viene restituito, senza wrapper. Nessuna libreria runtime
+aggiuntiva o tabella di tipi. Le condizioni già provate non
+richiedono una seconda verifica.
+
+Per questo primo incremento si ammettono valori (nomi, riferimenti
+host, campi, risultati di chiamata/applicazione) e singole
+operazioni su operandi di cui è nota la portabilità. Per Integer,
+le operazioni non dimostrate sono limitate a + - * su operandi
+di integrità provata. Una divisione di integrità incerta,
+una divisione con possibile zero o un intermedio non portabile
+non sono automaticamente accettati. Le guardie sui valori Number
+validano il valore effettivo, non dimostrano l'esattezza della
+sua storia di calcolo. Non si promette aritmetica esatta oltre
+i limiti JS, né uniformità generale della semantica Number.
+
+Le premesse delle firme di parametri/host già tipizzate sono
+fidate: non si validano automaticamente le chiamate provenienti
+da codice esterno. Nessuna convalida generale di record/list,
+guardia fallibile Result, o inserimento di verifiche implicite
+ai confini RPC/DB. Il normale --check conserva il comportamento
+strettamente statico. La modalità checked resta sperimentale.

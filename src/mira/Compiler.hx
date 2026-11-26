@@ -33,6 +33,21 @@ class Compiler {
         };
     }
 
+    // A distinct checked path preserves byte-for-byte unchecked emission
+    // when all obligations are proven. The same parsed AST reaches both phases.
+    public static function transpileChecked(source:String,target:Target,?host:HostEnvironment,
+        ?locations:Array<GeneratedLocation>,?readModule:String->Null<String>,?entry:String):String {
+        final origins = new ExpressionOrigins();
+        final definitions = parse(source,host,readModule,entry,origins);
+        final guards = new haxe.ds.ObjectMap<Dynamic,mira.types.NumericGuard>();
+        new mira.types.TypeChecker(origins,host == null ? HostEnvironment.empty() : host,guards).check(definitions);
+        final symbols = new Symbols(definitions,host);
+        return switch (target) {
+            case JavaScript: JsEmitter.emit(definitions,symbols,locations,guards);
+            case Php: PhpEmitter.emit(definitions,symbols,locations,guards);
+        };
+    }
+
     // Checking is opt-in while the type system is experimental.
     public static function check(source:String, ?host:HostEnvironment,
         ?readModule:String->Null<String>, ?entry:String):Array<Dynamic> {

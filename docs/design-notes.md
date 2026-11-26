@@ -179,3 +179,27 @@ la semantica dei casi di precisione perduta e divisione per zero,
 distinguere input non fidati da premesse tipizzate e scegliere
 un percorso di compilazione checked esplicito. Nessun wrapper o
 runtime aggiunto per le prove statiche. Vedi type-checker.md.
+
+## 0.56 — guardie selettive (implementazione sperimentale)
+
+La modalità --checked permette di distinguere un obbligo dinamico
+da un errore statico, senza cambiare la transpilazione ordinaria.
+Il checker e gli emitter condividono l'AST esistente e una mappa
+di obblighi, non un nuovo interprete, un tipo di valore runtime
+o una tabella di dispatch. Le verifiche ereditate si uniscono e
+il valore è valutato una volta sola. Le prove riuscite producono
+esattamente il codice non controllato.
+
+Scelta conservativa: non usare una guardia finale per recuperare
+l'esattezza matematica dopo un calcolo intermedio non portabile.
+Per ora i calcoli Integer incerti supportati sono + - * di
+operandi già dimostrati interi e portabili. Le guardie su valori
+Number controllano la rappresentazione effettivamente ricevuta.
+L'overflow possibile di x + 1 è verificabile al confine
+Integer; il caso (MAX + 2) - 2 non viene reso valido con una
+semplice guardia finale. Le firme host e parametri restano
+premesse fidate. Le eccezioni rappresentano violazioni delle
+invarianti; la validazione fallibile esplicita dei dati esterni,
+le garanzie sulle interfacce RPC/DB e gli errori strutturati a
+runtime restano incrementi distinti. Non adottiamo un runtime
+universale per controllare ogni operazione. Vedi type-checker.md.

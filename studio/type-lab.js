@@ -25,6 +25,12 @@
   document.getElementById('invalid').addEventListener('click',()=>{host.value='';source.value='same: a, as: b = a == b;\na = same: [1], as: [2];';check(true);});
   document.getElementById('overflow').addEventListener('click',()=>{host.value='';source.value='x (Integer) = 9007199254740991 + 1;';check(true);});
   document.getElementById('unknown').addEventListener('click',()=>{host.value='';source.value='increment: x (Integer) -> Integer = x + 1;';check(true);});
+  function compileChecked(target){
+    const response=MiraStudioCompiler.compile(source.value,target,host.value.trim()||null,false,null,true);
+    result.textContent=response.ok?response.output:response.message;
+  }
+  document.getElementById('checked-js').addEventListener('click',()=>compileChecked('js'));
+  document.getElementById('checked-php').addEventListener('click',()=>compileChecked('php'));
   document.getElementById('host-example').addEventListener('click',()=>{
     host.value=JSON.stringify({values:['rate'],callables:['format'],types:{rate:'Number',format:{parameters:['Number'],result:'Text'}}},null,2);
     host.closest('details').open=true;
