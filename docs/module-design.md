@@ -2,7 +2,8 @@
 
 **Stato: progettazione delle interfacce.** La 0.65 introduce il nucleo di
 identità e scope isolati; la 0.66 aggiunge sezioni piatte, export di
-valori/selettori senza annotazioni e tipi nominali pubblici completi; vedi grammar.md per le funzionalità implementate.
+valori/selettori senza annotazioni e tipi nominali pubblici completi; la 0.67 introduce import selettivi,
+import completi e alias di simboli. Vedi grammar.md per le funzionalità implementate.
 Il campionario completo resta una proposta. Sostituisce la direzione sperimentale
 della PR #95 (nomi puntati come fondamento del namespace), che non va integrata
 nella sua forma attuale. Gli import statici della 0.30 continuano a funzionare
@@ -30,7 +31,10 @@ secondo la grammatica documentata per quella versione.
 - Nelle firme, negli import e negli alias, gli spazi tra keyword sono
   facoltativi. `transpose:by:`, `transpose: by:`, `transpose:by: ;`
   e `transpose: by: ;` (con terminatore dove richiesto) denotano lo stesso
-  selettore, con la stessa arità.
+  selettore, con la stessa arità. Convenzione editoriale concordata:
+  nei sorgenti degli import preferire sempre uno spazio dopo ogni label
+  finale prima del punto e virgola e tra le label: `square: ;`,
+  `add: by: => somma: a: ;`. Non è una restrizione grammaticale.
 - I tipi nominali possono esporre la rappresentazione o tenerla opaca.
   Un alias non crea una nuova identità nominale.
 - Visibilità privata per default; dipendenze esplicite, import non
@@ -113,10 +117,10 @@ make pair (A, B):with: :: (A, B) -> Pair (A, B);
 
 # Import selettivi
 import Music / Theory / Note;
-import Music / Theory / transpose:by:;
+import Music / Theory / transpose: by: ;
 import Math / Integer {
-  remainder:by:;
-  absolute value:;
+  remainder: by: ;
+  absolute value: ;
 };
 
 # Alias, anche delle keyword
@@ -135,15 +139,15 @@ implementation
 
 # Import privati
 import Music / Internal / Chord Parser {
-  parse:;
+  parse: ;
 };
 import Math / Power {
-  power:to:;
+  power: to: ;
 };
 
 # Import compile time (proposta, non ancora implementata)
 import compile time Language / Tools {
-  transform:;
+  transform: ;
 };
 
 # Rappresentazioni private dei tipi opachi
