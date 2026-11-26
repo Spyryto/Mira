@@ -56,7 +56,12 @@ class TypeChecker {
             origin = d.origin;
             final name = d.isStatement ? "<expression>" : d.isFunction() ? d.selector() : d.name;
             final type = d.isStatement ? infer(d.body, new Map<String, LocalScheme>()) : declaration(name);
-            result.push({name:name, type:show(type), schema:describe(type), line:d.origin.line, column:d.origin.column, file:d.origin.file});
+            final item:Dynamic = {name:name, type:show(type), schema:describe(type), line:d.origin.line, column:d.origin.column, file:d.origin.file};
+            if (d.modulePath != null) {
+                Reflect.setField(item,"module",d.modulePath);
+                Reflect.setField(item,"exported",d.isExported);
+            }
+            result.push(item);
         }
         return result;
     }
