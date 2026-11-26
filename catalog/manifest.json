@@ -1,5 +1,5 @@
 {
-  "version": "0.71.0",
+  "version": "0.72.0",
   "features": [
     {
       "id": "values",
@@ -2004,6 +2004,12 @@
       "title": "Module Explorer: dipendenze, contratti e identità",
       "since": "0.71",
       "doc": "docs/grammar.md#mira-071-module-explorer"
+    },
+    {
+      "id": "independent-contract-verifier",
+      "title": "Verifica sperimentale di contratti indipendenti",
+      "since": "0.72",
+      "doc": "docs/grammar.md#mira-072-verifica-sperimentale-dei-contratti-indipendenti"
     }
   ]
 }

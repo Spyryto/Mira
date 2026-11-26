@@ -668,3 +668,31 @@ Si riportano byte UTF-8 e conteggi del tree shaker. La fixture è condivisa
 con la CI, che verifica anche il risultato eseguito dei due target e la
 singola identità della dipendenza comune. Non sono soglie prestazionali.
 Il test stampa misure campione; le misure browser dipendono dal dispositivo.
+
+## Mira 0.72: verifica sperimentale dei contratti indipendenti
+
+Il primo incremento non introduce keyword. Un frammento autonomo di
+firme esplicite usa la sintassi delle interfacce esistenti:
+
+```mira
+initial (Number);
+read: :: (Number) -> Number;
+combine: with: :: (Number, Number) -> Number;
+identity (T): :: (T) -> T;
+```
+
+In Studio → Module Explorer → Contratto indipendente si seleziona il
+modulo produttore e si verifica il frammento. Il bridge verifyContract
+analizza nuovamente il progetto, trova le dichiarazioni pubbliche locali
+richieste, applica le firme e verifica i corpi con il type checker reale.
+I simboli mancanti/privati, le firme duplicate o incompatibili e i corpi
+che non soddisfano il contratto sono errori. Le annotazioni già presenti
+seguono la regola conservativa di uguaglianza delle firme di Mira.
+Il frammento ammette tipi primitivi, strutturali e parametri di funzione,
+non ancora tipi nominali del contratto, import o riesportazioni. Le
+firme applicate valgono solo per quella verifica: non mutano sorgenti,
+non configurano la compilazione normale, non producono codice e non
+costituiscono ancora una prova di sostituibilità universale del modulo.
+Per la selezione statica di un provider occorrerà riusare le firme verificate
+nella compilazione effettiva e definire identità e astrazione dei tipi.
+Nessuna nuova astrazione runtime.

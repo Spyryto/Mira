@@ -4,7 +4,7 @@
   let model=null, selected=null;
   const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!=null)node.textContent=text;if(cls)node.className=cls;return node;};
   const append=(parent,tag,text,cls)=>{const n=el(tag,text,cls);parent.append(n);return n;};
-  function select(path){selected=path;render();}
+  function select(path){selected=path;by('contract-report').textContent='';render();}
   function moduleButton(path,label){
     const node=el('button',label||path);
     node.type='button';
@@ -54,7 +54,7 @@
     }
   }
   function analyze(){
-    const status=by('status');status.className='';
+    const status=by('status');status.className='';by('contract-report').textContent='';
     const result=MiraStudioCompiler.exploreModules(by('source').value,by('host').value.trim()||null,by('modules').value.trim()||null);
     if(!result.ok){model=null;by('report').hidden=true;status.className='error';status.textContent=result.message;return;}
     model=JSON.parse(result.output);
@@ -96,6 +96,14 @@
     }catch(error){out.textContent+='\n'+String(error);}
     finally{button.disabled=false;}
   }
+  by('verify-contract').addEventListener('click',()=>{
+    const out=by('contract-report');
+    if(!selected){out.textContent='Seleziona un modulo dopo aver analizzato il progetto.';return;}
+    const response=MiraStudioCompiler.verifyContract(by('source').value,selected,by('contract').value,by('host').value.trim()||null,by('modules').value.trim()||null);
+    if(!response.ok){out.textContent=response.message;return;}
+    const data=JSON.parse(response.output);
+    out.textContent='Contratto verificato: '+data.provider+'\n'+data.verified.map(s=>s.name+'  :  '+s.signature.type).join('\n');
+  });
   by('benchmark').addEventListener('click',benchmark);
   by('analyze').addEventListener('click',analyze);
   by('example').addEventListener('click',example);

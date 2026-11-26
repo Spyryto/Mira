@@ -293,3 +293,14 @@ o esplicite), OCaml e Standard ML (tipi astratti e contratti di modulo),
 Dart ed Elm (import selettivi, alias), Go (indipendenza delle unità),
 Racket (fasi di compilazione). Non si vuole importare integralmente il
 sistema di nessuno di questi linguaggi.
+
+## Contratti indipendenti — direzione 0.72
+
+Prima fase sperimentale: verifica autonoma di firme esplicite utilizzando
+il checker reale. Non richiede ancora sintassi di dichiarazione del
+contratto o binding. Separare la verifica dal successivo collegamento
+statico. Rimangono aperti: sintassi per i contratti nominati e per la
+selezione delle implementazioni; identità di tipi astratti del contratto
+rispetto a quelli dei provider; eventuale più ampia relazione di
+compatibilità; uso del contratto durante la compilazione del consumatore.
+Non considerare questi aspetti implementati nella 0.72.
