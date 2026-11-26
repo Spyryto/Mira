@@ -436,7 +436,7 @@ test('types: projected annotations work in local bindings, blocks and return typ
   const source='Size :: {width: Number}; f = {s (~ Size) | s ~ width}; view of: s (~ Size) -> ~ Size = s; result = () >> {| v (~ Size) = {width: 12, title: "a"}; v >> f};';
   const result=check(source);
   assert.equal(result.f,'(~ Size) -> Number');assert.equal(result['view of:'],'(~ Size) -> ~ Size');assert.equal(result.result,'Number');
-  assert.throws(()=>check(source+'v = view of: {width: 1, title: "a"}; bad = v ~ title;'),/missing record field title/);
+  assert.throws(()=>check(source+'projected view = view of: {width: 1, title: "a"}; bad = projected view ~ title;'),/missing record field title/);
   for(const [src,pattern] of [
     ['x (~ Number) = 1;',/requires a named record type/],
     ['A :: Number; x (~ A) = 1;',/requires a named record type/],
