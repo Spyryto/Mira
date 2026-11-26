@@ -1534,3 +1534,57 @@ test('0.70.1 checked tree shaking retains entry roots, sections, recursive depen
     assert.notEqual(bad.status,0);assert.match(bad.stderr,/Type check/);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.73 build-time provider selection is checked and emits the original direct calls on both targets',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-provider-binding-'));
+  try {
+    const input=join(dir,'program.mira'),manifest=join(dir,'bindings.json');
+    mkdirSync(join(dir,'Providers'),{recursive:true});
+    for(const [name,body] of [['Memory','x + initial'],['Native','x * initial'],['Broken','"bad"']])
+      writeFileSync(join(dir,'Providers',name+'.mira'),'module Providers / '+name+'; interface initial; read: ; identity: ; extra; implementation initial = 2; read: x = '+body+'; identity: x = x; extra = 99;');
+    const contract='initial (Number); read: :: (Number) -> Number; identity (T): :: (T) -> T;';
+    const src='module App; import Services / Storage {read: => load: ; identity: ;}; result = load: (identity: 5);';
+    const config=(provider,text=contract)=>writeFileSync(manifest,JSON.stringify({'Services / Storage':{provider,contract:text}}));
+    const compile=(target,extra=[])=>spawnSync('node',['dist/mira.cjs',input,target,...extra],{encoding:'utf8'});
+    for(const [provider,expected] of [['Providers / Memory',7],['Providers / Native',10]]){
+      config(provider);
+      for(const target of ['js','php']){
+        writeFileSync(input,src);
+        const a=compile(target,['--checked','--tree-shake','--bindings',manifest]);
+        assert.equal(a.status,0,a.stderr);
+        writeFileSync(input,src.replace('Services / Storage',provider));
+        const direct=compile(target,['--checked','--tree-shake']);
+        assert.equal(direct.status,0,direct.stderr);
+        assert.equal(a.stdout,direct.stdout);
+        const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+        const file=join(dir,target==='js'?'out.mjs':'out.php');
+        writeFileSync(file,a.stdout+(target==='js'?'\nconsole.log('+name+');':'\necho $'+name+';'));
+        const executed=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+        assert.equal(executed.status,0,executed.stderr);assert.equal(Number(executed.stdout),expected);
+      }
+    }
+    config('Providers / Memory');
+    for(const [source,pattern] of [
+      ['module App; import Services / Storage {extra;}; result = extra;',/Symbol not exported/],
+      ['module App; import Services / Storage { * }; result = extra;',/Unknown identifier/],
+      ['module App; import Services / Storage {read: ;}; result = read: "bad";',/Type check/]
+    ]){
+      writeFileSync(input,source);
+      const x=compile('--check',['--bindings',manifest]);
+      assert.notEqual(x.status,0,source);assert.match(x.stderr,pattern);
+    }
+    writeFileSync(input,src);
+    const unchecked=compile('js',['--bindings',manifest]);
+    assert.notEqual(unchecked.status,0);assert.match(unchecked.stderr,/requires --checked/);
+    config('Providers / Broken');
+    const broken=compile('js',['--checked','--bindings',manifest]);
+    assert.notEqual(broken.status,0);assert.match(broken.stderr,/Type check/);
+    config('Providers / Memory',contract+' missing (Number);');
+    const missing=compile('js',['--checked','--bindings',manifest]);
+    assert.notEqual(missing.status,0);assert.match(missing.stderr,/Contract symbol not publicly defined/);
+    config('Services / Storage');
+    const loop=compile('js',['--checked','--bindings',manifest]);
+    assert.notEqual(loop.status,0);assert.match(loop.stderr,/Provider must be a concrete module/);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
