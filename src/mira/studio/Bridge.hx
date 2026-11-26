@@ -97,6 +97,7 @@ class Bridge {
                     body: expression(definition.body)
                 };
                 if (definition.origin.file != null) Reflect.setField(node, "file", definition.origin.file);
+                if (definition.modulePath != null) Reflect.setField(node, "module",definition.modulePath);
                 if (definition.isFunction()) {
                     Reflect.setField(node, "selector", definition.selector());
                     Reflect.setField(node, "name", definition.selector());
