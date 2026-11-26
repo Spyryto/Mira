@@ -76,6 +76,10 @@
     "docs/design-notes.md": {
       "kind": "ai_assisted",
       "note": "Sintesi delle discussioni con l'autore e delle linee guida di progetto; distingue implementazioni, decisioni e proposte."
+    },
+    "docs/module-design.md": {
+      "kind": "ai_assisted",
+      "note": "Progetto dei moduli redatto con assistenza IA a partire dal campionario sintattico revisionato dall'autore e dalle sue decisioni esplicite; distingue proposte e stato implementato."
     }
   },
   "generatedSections": {
