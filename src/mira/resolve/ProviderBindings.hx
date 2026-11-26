@@ -6,7 +6,7 @@ import mira.types.ContractVerifier;
 
 typedef ProviderBinding = {
     final provider:String;
-    final signatures:Array<PublicSignature>;
+    final signatures:Null<Array<PublicSignature>>;
 }
 
 // Build configuration, not a runtime registry. A logical service path
@@ -33,11 +33,11 @@ class ProviderBindings {
                 throw new MiraError("Invalid contract binding " + path);
             final provider:Dynamic = Reflect.field(value,"provider");
             final contract:Dynamic = Reflect.field(value,"contract");
-            if (!Std.isOfType(provider,String) || !validPath(provider) || !Std.isOfType(contract,String))
-                throw new MiraError("Binding requires provider path and contract text: " + path);
+            if (!Std.isOfType(provider,String) || !validPath(provider) || (Reflect.hasField(value,"contract") && !Std.isOfType(contract,String)))
+                throw new MiraError("Binding requires provider path and optional contract text: " + path);
             for (field in Reflect.fields(value)) if (field != "provider" && field != "contract")
                 throw new MiraError("Unknown binding field " + field);
-            config.entries.set(path,{provider:provider,signatures:ContractVerifier.signatures(contract)});
+            config.entries.set(path,{provider:provider,signatures:contract == null ? null : ContractVerifier.signatures(contract)});
         }
         for (path => binding in config.entries)
             if (config.exists(binding.provider))
