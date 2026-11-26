@@ -473,7 +473,7 @@ test('types: numeric refinement literals, composed bounds and distinct identitie
     ['bad (Small Percentage) = 11;',/refinement violated/],
     ['bad (Small Percentage) = p;',/refinement not statically proven/],
     ['bad = read: 80;',/expected Percentage/],
-    ['bad (Percentage) = 50 + 10;',/refinement not statically proven/],
+    ['bad (Percentage) = 100 + 10;',/refinement violated/],
     ['Sibling :: Number where _ >= 0 AND _ <= 100; sibling (Sibling) = 10; bad (Percentage) = sibling;',/expected Percentage/]
   ])assert.throws(()=>check(source+extra),pattern,extra);
 });
@@ -539,4 +539,40 @@ test('types: logical precedence, NOT, and operators as first-class functions',()
 test('types: refinements accept decimal bounds and reject out-of-range decimal literals',()=>{
   assert.equal(check('Ratio :: Number where _ >= 0.25 AND _ <= 0.75; r (Ratio) = 0.5;').r,'Ratio');
   assert.throws(()=>check('Ratio :: Number where _ >= 0.25 AND _ <= 0.75; r (Ratio) = 0.8;'),/refinement violated/);
+});
+
+test('types: static interval proofs for bounded arithmetic and typed function results',()=>{
+  const source='Percentage :: Number where _ >= 0 AND _ <= 100; half of: p (Percentage) -> Percentage = p / 2; complement of: p (Percentage) -> Percentage = 100 - p; average of: a (Percentage), and: b (Percentage) -> Percentage = (a + b) / 2; volume (Percentage) = 50 + 10; result = half of: volume; nested (Percentage) = (2 * 15) + 0.5; local = () >> {| p (Percentage) = 60 + 20; p};';
+  const result=check(source);
+  assert.equal(result['half of:'],'(Percentage) -> Percentage');
+  assert.equal(result['complement of:'],'(Percentage) -> Percentage');
+  assert.equal(result['average of:and:'],'(Percentage, Percentage) -> Percentage');
+  for(const name of ['volume','result','nested','local'])assert.equal(result[name],'Percentage');
+  for(const [extra,pattern] of [
+    ['bad (Percentage) = 50 * 3;',/refinement violated/],
+    ['bad (Percentage) = 10 - 20;',/refinement violated/],
+    ['bad: p (Percentage) -> Percentage = p * 2;',/refinement not statically proven/],
+    ['bad: p (Percentage) -> Percentage = 1 / p;',/refinement not statically proven/],
+    ['bad: p (Number) -> Percentage = p / 2;',/refinement not statically proven/],
+    ['bad (Percentage) = 9007199254740991 + 1;',/refinement not statically proven/],
+    ['bad (Percentage) = 10 % 3;',/refinement not statically proven/],
+    ['bad: p (Number where _ > 0 AND _ <= 100) -> Number where _ > 0 = p / 2;',/refinement not statically proven/]
+  ])assert.throws(()=>check(source+extra),pattern,extra);
+});
+test('types: proven arithmetic emits exactly the ordinary JS/PHP and runs at interval boundaries',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-range-proof-'));
+  try{
+    const input=join(dir,'program.mira');
+    const typed='Percentage :: Number where _ >= 0 AND _ <= 100; half of: p (Percentage) -> Percentage = p / 2; low (Percentage) = 0; high (Percentage) = 100; a = half of: low; b = half of: high; result = [a, b];';
+    const bare='half of: p = p / 2; low = 0; high = 100; a = half of: low; b = half of: high; result = [a, b];';
+    assert.equal(check(typed).result,'[Percentage]');
+    for(const target of ['js','php']){
+      const compile=source=>{writeFileSync(input,source);const r=spawnSync('node',['dist/mira.cjs',input,target],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);return r.stdout;};
+      const output=compile(typed);assert.equal(output,compile(bare));
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,output+(target==='js'?'\nconsole.log(JSON.stringify(result));':'\necho json_encode($result);'));
+      const r=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);assert.deepEqual(JSON.parse(r.stdout),[0,50]);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
 });
