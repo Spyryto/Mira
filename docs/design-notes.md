@@ -473,3 +473,14 @@ comuni. Il prefisso interno viene escapato se usato dal
 sorgente. Manteniamo la compatibilità dei nomi ordinari degli
 adattatori JS/PHP. Un isolamento completo rispetto a estensioni
 PHP o codice host arbitrario richiederà namespace/export espliciti.
+
+
+## 0.61 — funzioni parametriche esplicite
+
+Proposta implementativa: identity (Value Type): x (Value Type)
+-> Value Type = x. Parametri dichiarati dopo la prima label,
+selettore invariato. Riutilizzo del parser dei parametri delle
+somme; variabili rigide durante il controllo e istanziazione
+flessibile alla chiamata. Annotazioni complete richieste per
+questa prima forma. Nessuna modifica agli emitter; ricorsione,
+vincoli e annotazioni generiche nel corpo rimandati.
