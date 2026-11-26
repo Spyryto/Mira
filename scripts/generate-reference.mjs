@@ -95,11 +95,21 @@ function extractApi() {
   return api;
 }
 
+// First implementation versions can identify a patch release as well.
+function compareVersions(a, b) {
+  const left = a.split('.').map(Number);
+  const right = b.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    const delta = (left[i] ?? 0) - (right[i] ?? 0);
+    if (delta !== 0) return delta;
+  }
+  return 0;
+}
+
 function validateCatalog(api) {
-  const currentMinor = Number(manifest.version.split('.')[1]);
   const checkVersion = (item, label) => {
-    if (typeof item.since !== 'string' || !/^0\.[0-9]+$/.test(item.since) ||
-        Number(item.since.split('.')[1]) > currentMinor) {
+    if (typeof item.since !== 'string' || !/^0\.[0-9]+(?:\.[0-9]+)?$/.test(item.since) ||
+        compareVersions(item.since, manifest.version) > 0) {
       throw new Error('Invalid or missing first implementation version for ' + label);
     }
   };
@@ -275,7 +285,7 @@ function updateReadmeFeatureMatrix() {
   ];
 
   features.sort((a, b) =>
-    Number(a.since.split('.')[1]) - Number(b.since.split('.')[1])
+    compareVersions(a.since, b.since)
   );
 
   const rows = [

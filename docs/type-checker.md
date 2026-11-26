@@ -996,8 +996,10 @@ result = match: a {
 };
 ```
 
-I parametri di tipo sono nomi singoli, locali alla
+I parametri di tipo sono identificatori, locali alla
 dichiarazione, distinti fra loro e dai tipi già noti.
+Dalla 0.60.1 possono contenere più parole, con la stessa
+sintassi degli altri nomi (vedi sotto).
 Le applicazioni esplicite richiedono tutti gli argomenti
 di tipo: Result (Number, Text), Option (Number).
 Sono ammesse applicazioni annidate a somme dichiarate prima,
@@ -1036,3 +1038,23 @@ Type Lab include un esempio interattivo. Test positivi
 e negativi coprono istanze indipendenti, arità, inferenza,
 payload annidati, identità nominali, match e output
 JS/PHP; integrare soltanto dopo CI verde.
+
+
+## 0.60.1: parametri di tipo discorsivi
+
+```mira
+Result (Success Type, Failure Type) ::
+  Ok (Success Type) | Err (Failure Type);
+Option (element type) :: Some (element type) | None;
+```
+
+I nomi dei parametri seguono la grammatica ordinaria degli
+identificatori: una o più parole, separate da spazi; la virgola
+separa i parametri. Non è richiesta una convenzione tipografica.
+Il nome completo è locale alla dichiarazione, case-sensitive e
+non può duplicare un parametro o un tipo noto. La parola where
+è esclusa perché delimita i refinement nelle annotazioni.
+Il parser riutilizza readWords e TypeParser già riconosce
+nomi composti; rappresentazione, inferenza ed emissione sono
+invariate. I nomi dei parametri sono eliminati a compile time.
+Il Type Lab usa un esempio discorsivo; i nomi brevi restano validi.

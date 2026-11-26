@@ -128,7 +128,7 @@ test('README feature matrix is generated from the catalog with historical versio
     }))
   ];
   for (const feature of versionedFeatures) {
-    assert.match(feature.since, /^0\.\d+$/);
+    assert.match(feature.since, /^0\.\d+(?:\.\d+)?$/);
     const exact = checkedRows.filter(row =>
       row.includes('| ' + feature.name + ' |') &&
       row.includes('| \`' + feature.since + '\` |') &&
