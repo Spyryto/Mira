@@ -131,6 +131,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Confronto delle interfacce e impatto sulle dipendenze | `0.78` | [Dettagli](docs/grammar.md#mira-078-confronto-delle-interfacce-e-impatto-potenziale) |
 | ✅ | Impronte dei sorgenti letti e confronto del collegamento | `0.79` | [Dettagli](docs/grammar.md#mira-079-impronte-dei-sorgenti-e-collegamenti) |
 | ✅ | Profilazione delle fasi di compilazione checked | `0.80` | [Dettagli](docs/performance.md#mira-080-profilazione-della-pipeline-checked) |
+| ✅ | Capability host tipizzate con scope di modulo | `0.81` | [Dettagli](docs/grammar.md#mira-081-capability-host-con-scope-di-modulo) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

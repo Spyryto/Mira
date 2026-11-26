@@ -313,7 +313,18 @@ public final callables:Array<String>
 public static function empty():HostEnvironment
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L43)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L46)
+
+<a id="api-mira-hostenvironment-formodule"></a>
+### `mira.HostEnvironment.forModule`
+
+**method** · Membro pubblico di mira.HostEnvironment.
+
+```haxe
+public function forModule(path:Null<String>):HostEnvironment
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L95)
 
 <a id="api-mira-hostenvironment-fromjson"></a>
 ### `mira.HostEnvironment.fromJson`
@@ -324,7 +335,7 @@ public static function empty():HostEnvironment
 public static function fromJson(source:String):HostEnvironment
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L47)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L50)
 
 <a id="api-mira-hostenvironment-new"></a>
 ### `mira.HostEnvironment.new`
@@ -332,10 +343,10 @@ public static function fromJson(source:String):HostEnvironment
 **constructor** · Membro pubblico di mira.HostEnvironment.
 
 ```haxe
-public function new(?values:Array<String>, ?callables:Array<String>, ?selectors:Array<String>, ?typeManifest:Dynamic)
+public function new(?values:Array<String>, ?callables:Array<String>, ?selectors:Array<String>, ?typeManifest:Dynamic, ?scopeManifest:Dynamic)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L15)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L16)
 
 <a id="api-mira-hostenvironment-selectors"></a>
 ### `mira.HostEnvironment.selectors`
