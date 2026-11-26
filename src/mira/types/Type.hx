@@ -3,6 +3,8 @@ package mira.types;
 // A row tail is either another record, an inference variable, or null (closed).
 enum Type {
     NamedType(name:String,base:Type);
+    // A read-only structural requirement; additional fields are unknown.
+    StructuralType(name:String,fields:Map<String,Type>);
     NumberType;
     TextType;
     BooleanType;
