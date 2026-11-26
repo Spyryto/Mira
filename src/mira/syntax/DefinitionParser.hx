@@ -74,8 +74,8 @@ class DefinitionParser {
     // Parameter names are lexical to a sum declaration, not global type names.
     static function typeHeader(tokens:Array<Token>,names:Map<String,Type>):{name:String,parameters:Array<String>} {
         final opening = topLevel(tokens,"(");
-        if (opening < 0) return {name:readWords(tokens),parameters:[]};
-        final name = readWords(tokens.slice(0,opening));
+        if (opening < 0) return {name:readWords(tokens,true),parameters:[]};
+        final name = readWords(tokens.slice(0,opening),true);
         if (!tokens[tokens.length-1].isSymbol(")"))
             throw new MiraError("Expected closing ) in type declaration",tokens[opening]);
         final parameters:Array<String> = [];
@@ -124,13 +124,16 @@ class DefinitionParser {
         }
         final sum = SumType(name,alternatives,arguments);
         names.set(name,sum);
+        final dot = name.lastIndexOf(".");
+        final qualifier = dot < 0 ? "" : name.substr(0,dot+1);
         for (i in 0...tags.length) {
             final tag = tags[i];
             final payload = alternatives.get(tag);
             final anchor = origins[i];
+            final constructor = qualifier + tag;
             final d = payload == null
-                ? new Definition(tag,[],[],[],anchor)
-                : new Definition("",[tag],["payload"],[],anchor,false,[anchor]);
+                ? new Definition(constructor,[],[],[],anchor)
+                : new Definition("",[constructor],["payload"],[],anchor,false,[anchor]);
             if (payload != null) d.parameterAnnotations = [payload];
             d.resultAnnotation = sum;
             d.resultAnnotationOrigin = anchor;
@@ -194,7 +197,7 @@ class DefinitionParser {
 
         if (parts.length == 1 && !containsColon(parts[0])) {
             if (arrow >= 0) throw new MiraError("Use name (Type) for a value annotation",resultOrigin);
-            final value = annotatedName(header,names);
+            final value = annotatedName(header,names,true);
             final d = new Definition(value.name, [], [], body, tokens[0]);
             d.resultAnnotation = value.type;
             d.resultAnnotationOrigin = value.typeOrigin;
@@ -210,7 +213,7 @@ class DefinitionParser {
             if (colon <= 0 || colon == part.length - 1) {
                 throw new MiraError("Expected label: parameter", part[0]);
             }
-            labels.push(readWords(part.slice(0, colon)));
+            labels.push(readWords(part.slice(0, colon),labels.length == 0));
             final parameter = annotatedName(part.slice(colon+1),names);
             parameters.push(parameter.name);
             parameterOrigins.push(part[colon+1]);
@@ -231,11 +234,11 @@ class DefinitionParser {
 
     // A binding has the same grammar in both value and parameter headers:
     // multiword name, optionally followed by a single parenthesized type.
-    public static function annotatedName(tokens:Array<Token>,?names:Map<String,Type>):{name:String,type:Null<Type>,typeOrigin:Null<Token>} {
+    public static function annotatedName(tokens:Array<Token>,?names:Map<String,Type>,allowQualified:Bool = false):{name:String,type:Null<Type>,typeOrigin:Null<Token>} {
         final opening = topLevel(tokens,"(");
-        if (opening < 0) return {name:readWords(tokens),type:null,typeOrigin:null};
+        if (opening < 0) return {name:readWords(tokens,allowQualified),type:null,typeOrigin:null};
         if (opening == 0) throw new MiraError("Expected name before type annotation",tokens[0]);
-        final name = readWords(tokens.slice(0,opening));
+        final name = readWords(tokens.slice(0,opening),allowQualified);
         if (!tokens[tokens.length-1].isSymbol(")"))
             throw new MiraError("Expected closing ) after type annotation",tokens[opening]);
         final origin = opening + 1 < tokens.length - 1 ? tokens[opening+1] : tokens[opening];
@@ -277,11 +280,13 @@ class DefinitionParser {
         return -1;
     }
 
-    static function readWords(tokens:Array<Token>):String {
+    static function readWords(tokens:Array<Token>,allowQualified:Bool = false):String {
         if (tokens.length == 0) throw new MiraError("Expected an identifier");
         final parts:Array<String> = [];
         for (token in tokens) {
             if (token.kind != Word) throw new MiraError("Expected an identifier word", token);
+            if (token.value.indexOf(".") >= 0 && (!allowQualified || parts.length != 0))
+                throw new MiraError("Qualification is allowed only at the start of a global name",token);
             parts.push(token.value);
         }
         return parts.join(" ");
