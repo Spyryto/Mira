@@ -125,6 +125,7 @@ class TypeChecker {
             case [Variable(id), _]: bind(id,right);
             case [_, Variable(id)]: bind(id,left);
             case [NamedType(x,_),NamedType(y,_)] if (x == y):
+            case [SumType(x,_),SumType(y,_)] if (x == y):
             case [RefinedType(x,r),RefinedType(y,s)] if (r.equal(s)): unify(x,y);
             case [StructuralType(_,x),StructuralType(_,y)]: unifyRecords(RecordType(x,null),RecordType(y,null));
             case [IntegerType,IntegerType] | [NumberType, NumberType] | [TextType,TextType] | [BooleanType,BooleanType]:
@@ -276,13 +277,14 @@ class TypeChecker {
     }
 
     function nominalName(type:Type):Null<String> return switch (prune(type)) {
-        case NamedType(name,_): name;
+        case NamedType(name,_) | SumType(name,_): name;
         case RefinedType(base,_): nominalName(base);
         default: null;
     };
 
     function ancestor(type:Type,name:String):Bool return switch (prune(type)) {
         case NamedType(n,base): n == name || ancestor(base,name);
+        case SumType(n,_): n == name;
         case RefinedType(base,_): ancestor(base,name);
         default: false;
     };
@@ -742,6 +744,16 @@ class TypeChecker {
             case FieldAccessor(key) | FieldSection(key):
                 final record = fresh();
                 FunctionType([record],projection(record,key));
+            case Variant(sum,tag,payload):
+                switch (sum) {
+                    case SumType(_,alternatives):
+                        if (!alternatives.exists(tag)) fail("Unknown sum constructor " + tag);
+                        final expected = alternatives.get(tag);
+                        if (expected != null && payload != null) accept(expected,infer(payload,scope));
+                        else if (expected != null || payload != null) fail("Sum constructor payload mismatch");
+                    default: fail("Expected sum type");
+                }
+                sum;
             case Validate(value,required,success,failure):
                 final actual = infer(value,scope);
                 // Validation is an explicit trust boundary: even a Text or
@@ -810,6 +822,12 @@ class TypeChecker {
     function describe(type:Type, ?ids:Map<Int,Int>):Dynamic {
         final seen = ids == null ? new Map<Int,Int>() : ids;
         return switch (prune(type)) {
+            case SumType(name,alternatives):
+                final tags = [for (tag in alternatives.keys()) tag];
+                tags.sort(Reflect.compare);
+                {kind:"Sum",name:name,alternatives:[for (tag in tags) {
+                    tag:tag,payload:alternatives.get(tag) == null ? null : describe(alternatives.get(tag),seen)
+                }]};
             case NamedType(name,base): {kind:"Named",name:name,base:describe(base,seen)};
             case RefinedType(base,range): {kind:"Refined",base:describe(base,seen),range:range.schema()};
             case StructuralType(name,fields):
