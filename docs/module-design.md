@@ -304,3 +304,10 @@ selezione delle implementazioni; identità di tipi astratti del contratto
 rispetto a quelli dei provider; eventuale più ampia relazione di
 compatibilità; uso del contratto durante la compilazione del consumatore.
 Non considerare questi aspetti implementati nella 0.72.
+
+### 0.73 — primo collegamento di contratti
+
+Manifest sperimentale esterno per scegliere provider e firme esplicite.
+Import logici invariati; risoluzione canonica al provider e verifica nel
+build effettivo. Rimandati contratto nominale indipendente, equazioni di
+tipo, qualificazione di modulo e sintassi dichiarativa per la selezione.
