@@ -21,7 +21,7 @@ class TypeVisibility {
     public function view(type:Type,owner:Null<String>,?resolve:Type->Type):Type {
         if (!hasOpaque) return type;
         final t = resolve == null ? type : resolve(type);
-        inline function child(value:Type):Type return view(value,owner,resolve);
+        function child(value:Type):Type return view(value,owner,resolve);
         return switch (t) {
             case NamedType(name,_) | SumType(name,_,_) | SumReference(name,_,_)
                 if (opaqueNames.exists(name) && ModuleIdentity.owner(name) != owner): OpaqueType(name);
