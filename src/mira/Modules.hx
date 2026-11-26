@@ -102,7 +102,7 @@ class Modules {
                     final service = directive.path;
                     final selection = providers == null ? null : providers.get(service);
                     final path = selection == null ? service : selection.provider;
-                    if (moduleEdges != null) moduleEdges.push({from:modulePath,to:path,kind:forwarding ? "export" : "import",phase:isPublic ? "interface" : "implementation",wildcard:directive.wildcard,names:[for (item in directive.names) {name:item.name,alias:item.alias}],line:origin.line,column:origin.column,file:origin.file});
+                    if (moduleEdges != null) moduleEdges.push({from:modulePath,to:path,kind:forwarding ? "export" : "import",phase:isPublic ? "interface" : "implementation",wildcard:directive.wildcard,names:[for (item in directive.names) {name:item.name,alias:item.alias}],line:origin.line,column:origin.column,file:origin.file,contract:selection == null ? null : service});
                     if (!exportedSymbols.exists(path)) {
                         if (moduleTypes.exists(path))
                             throw new MiraError("Import cycle involving " + path,origin);
