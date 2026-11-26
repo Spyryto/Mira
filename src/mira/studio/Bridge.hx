@@ -19,7 +19,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.59.0"
+            version: "0.60.0"
         });
     }
 
@@ -180,7 +180,7 @@ class Bridge {
             case Match(input,tags,handlers):
                 {kind:"Match",input:expression(input),alternatives:[for (i in 0...tags.length) {tag:tags[i],handler:expression(handlers[i])}]};
             case Variant(sum,tag,payload):
-                {kind:"Variant", sum:switch(sum){case SumType(name,_):name;default:null;},tag:tag,payload:expression(payload)};
+                {kind:"Variant", sum:switch(sum){case SumType(name,_,_):name;default:null;},tag:tag,payload:expression(payload)};
             case Validate(input,required,success,failure):
                 {kind:"Validate", input:expression(input), numericRange:mira.types.NumericRange.ofType(required).schema(),
                     integer:mira.types.NumericRange.integerType(required), success:expression(success), failure:expression(failure)};

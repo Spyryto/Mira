@@ -977,3 +977,62 @@ nei due target. La risoluzione delle collisioni generate resta
 quella ordinaria. Il test esegue insieme selettori utente
 e costrutto algebrico su entrambi i target. Il problema più
 generale delle collisioni con nomi nativi rimane distinto.
+
+
+## 0.60: tipi somma parametrici
+
+```mira
+Result (T, E) :: Ok (T) | Err (E);
+Option (T) :: Some (T) | None;
+
+a (Result (Number, Text)) = Ok: 42;
+b (Result (Text, Number)) = Ok: "Mira";
+empty (Option (Number)) = None;
+present = Some: 7;
+
+result = match: a {
+  ok: {n | n},
+  err: {error | 0}
+};
+```
+
+I parametri di tipo sono nomi singoli, locali alla
+dichiarazione, distinti fra loro e dai tipi già noti.
+Le applicazioni esplicite richiedono tutti gli argomenti
+di tipo: Result (Number, Text), Option (Number).
+Sono ammesse applicazioni annidate a somme dichiarate prima,
+anche nei payload di record e liste. Le somme con parametri
+diversi sono nominalmente lo stesso costruttore di tipo,
+ma le istanze sono invarianti negli argomenti.
+
+I costruttori sono polimorfici: Some: 7 inferisce
+Option (Number), mentre Ok: 42 inferisce Result (Number, 'a),
+con il tipo di errore ancora libero; None può essere
+usato in istanze diverse. Le annotazioni o il contesto
+vincolano i parametri liberi. La dichiarazione di un
+costruttore non lega le variabili di altre istanze.
+Il match richiede ancora un tipo somma noto; il payload
+del ramo riceve il tipo concreto o inferito dell'istanza.
+
+TypeParser effettua una sostituzione pura degli slot di
+template (id negativi locali, distinti dagli id di inferenza).
+TypeChecker istanzia i costruttori con variabili fresche
+e riutilizza unificazione, occurs check, free variables
+e generalizzazione esistenti. Lo schema JSON Sum conserva
+alternatives e aggiunge arguments per i tipi parametrici.
+Nessuna informazione dei parametri di tipo viene emessa
+a runtime: resta la rappresentazione tag/value della 0.58.
+Non occorre un costruttore JS/PHP diverso per ogni istanza.
+
+La sintassi Result/Option è un esempio definito nel
+programma, non una nuova libreria implicita. Per ora i
+costruttori condividono il namespace ordinario, e si
+usano Ok/Err per evitare una collisione con Error di JS.
+Non sono ancora disponibili annotazioni di funzioni
+con parametri di tipo dichiarati esplicitamente, alias
+generici, somme ricorsive, qualificazione dei costruttori
+o conversioni automatiche da validate a Result. Il
+Type Lab include un esempio interattivo. Test positivi
+e negativi coprono istanze indipendenti, arità, inferenza,
+payload annidati, identità nominali, match e output
+JS/PHP; integrare soltanto dopo CI verde.

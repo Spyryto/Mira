@@ -1,5 +1,5 @@
 {
-  "version": "0.59.0",
+  "version": "0.60.0",
   "features": [
     {
       "id": "values",
@@ -1908,6 +1908,12 @@
       "title": "Match contestuale esaustivo e payload tipizzati",
       "since": "0.59",
       "doc": "docs/type-checker.md#059-match-esaustivo"
+    },
+    {
+      "id": "parametric-sum-types",
+      "title": "Tipi somma parametrici e costruttori polimorfici",
+      "since": "0.60",
+      "doc": "docs/type-checker.md#060-tipi-somma-parametrici"
     }
   ]
 }

@@ -98,6 +98,7 @@ class TypeChecker {
         return switch (prune(type)) {
             case Variable(other): id == other;
             case ListType(item): occurs(id, item);
+            case SumType(_,_,arguments): Lambda.exists(arguments,t -> occurs(id,t));
             case FunctionType(args, result): Lambda.exists(args, t -> occurs(id,t)) || occurs(id,result);
             case RecordType(fields, tail):
                 var found = false;
@@ -125,7 +126,8 @@ class TypeChecker {
             case [Variable(id), _]: bind(id,right);
             case [_, Variable(id)]: bind(id,left);
             case [NamedType(x,_),NamedType(y,_)] if (x == y):
-            case [SumType(x,_),SumType(y,_)] if (x == y):
+            case [SumType(x,_,xs),SumType(y,_,ys)] if (x == y && xs.length == ys.length):
+                for (i in 0...xs.length) unify(xs[i],ys[i]);
             case [RefinedType(x,r),RefinedType(y,s)] if (r.equal(s)): unify(x,y);
             case [StructuralType(_,x),StructuralType(_,y)]: unifyRecords(RecordType(x,null),RecordType(y,null));
             case [IntegerType,IntegerType] | [NumberType, NumberType] | [TextType,TextType] | [BooleanType,BooleanType]:
@@ -277,14 +279,14 @@ class TypeChecker {
     }
 
     function nominalName(type:Type):Null<String> return switch (prune(type)) {
-        case NamedType(name,_) | SumType(name,_): name;
+        case NamedType(name,_) | SumType(name,_,_): name;
         case RefinedType(base,_): nominalName(base);
         default: null;
     };
 
     function ancestor(type:Type,name:String):Bool return switch (prune(type)) {
         case NamedType(n,base): n == name || ancestor(base,name);
-        case SumType(n,_): n == name;
+        case SumType(n,_,_): n == name;
         case RefinedType(base,_): ancestor(base,name);
         default: false;
     };
@@ -388,6 +390,9 @@ class TypeChecker {
                 }
                 seen.get(id);
             case ListType(item): ListType(instantiate(item,seen,quantified));
+            case SumType(name,alternatives,arguments):
+                SumType(name,[for (tag => payload in alternatives) tag => payload == null ? null : instantiate(payload,seen,quantified)],
+                    [for (argument in arguments) instantiate(argument,seen,quantified)]);
             case FunctionType(args,result): FunctionType([for (a in args) instantiate(a,seen,quantified)],instantiate(result,seen,quantified));
             case RecordType(fields,tail):
                 final r = row(type);
@@ -401,6 +406,7 @@ class TypeChecker {
         switch (prune(type)) {
             case Variable(id): found.set(id,true);
             case ListType(item): free(item,found);
+            case SumType(_,_,arguments): for (argument in arguments) free(argument,found);
             case FunctionType(args,result):
                 for (arg in args) free(arg,found);
                 free(result,found);
@@ -446,6 +452,22 @@ class TypeChecker {
             final d = definitions.get(name);
             origin = d.origin;
             if (recursive && !d.isFunction()) fail("recursive value dependency not supported: " + name);
+            // Each synthesized constructor gets its own fresh template instance.
+            final constructor:Null<Type> = switch (d.body) {
+                case Variant(template,tag,_):
+                    final sum = instantiate(template);
+                    switch (sum) {
+                        case SumType(_,alternatives,_):
+                            final payload = alternatives.get(tag);
+                            payload == null ? sum : FunctionType([payload],sum);
+                        default: fail("Expected sum constructor type");
+                    }
+                default: null;
+            };
+            if (constructor != null) {
+                active.set(name,constructor);
+                continue;
+            }
             final result:Type = d.resultAnnotation == null ? fresh() : d.resultAnnotation;
             final placeholder:Type = d.isFunction()
                 ? FunctionType([for (i in 0...d.parameters.length)
@@ -466,7 +488,11 @@ class TypeChecker {
             final type:Type = d.isFunction() ? FunctionType(params,body) : body;
             if (d.resultAnnotationOrigin != null) origin = d.resultAnnotationOrigin;
             if (d.resultAnnotation != null) {
-                construct(d.resultAnnotation,body,d.body);
+                final expected = switch (active.get(name)) {
+                    case FunctionType(_,result) if (d.isFunction()): result;
+                    default: active.get(name);
+                };
+                construct(expected,body,d.body);
             } else unify(active.get(name),type);
         }
         for (name in group) {
@@ -726,7 +752,7 @@ class TypeChecker {
 
     function matchResult(input:Type,tags:Array<String>,handlers:Array<Expr>,scope:Map<String,LocalScheme>):Type {
         return switch (representation(input)) {
-            case SumType(name,alternatives):
+            case SumType(name,alternatives,arguments):
                 for (tag in tags) if (!alternatives.exists(tag))
                     fail("Unknown match alternative " + tag + " for " + name);
                 final missing = [for (tag in alternatives.keys()) if (tags.indexOf(tag) < 0) tag];
@@ -774,9 +800,10 @@ class TypeChecker {
                 final record = fresh();
                 FunctionType([record],projection(record,key));
             case Match(input,tags,handlers): matchResult(infer(input,scope),tags,handlers,scope);
-            case Variant(sum,tag,payload):
+            case Variant(template,tag,payload):
+                final sum = instantiate(template);
                 switch (sum) {
-                    case SumType(_,alternatives):
+                    case SumType(_,alternatives,_):
                         if (!alternatives.exists(tag)) fail("Unknown sum constructor " + tag);
                         final expected = alternatives.get(tag);
                         if (expected != null && payload != null) accept(expected,infer(payload,scope));
@@ -852,12 +879,14 @@ class TypeChecker {
     function describe(type:Type, ?ids:Map<Int,Int>):Dynamic {
         final seen = ids == null ? new Map<Int,Int>() : ids;
         return switch (prune(type)) {
-            case SumType(name,alternatives):
+            case SumType(name,alternatives,arguments):
                 final tags = [for (tag in alternatives.keys()) tag];
                 tags.sort(Reflect.compare);
-                {kind:"Sum",name:name,alternatives:[for (tag in tags) {
+                final schema:Dynamic = {kind:"Sum",name:name,alternatives:[for (tag in tags) {
                     tag:tag,payload:alternatives.get(tag) == null ? null : describe(alternatives.get(tag),seen)
                 }]};
+                if (arguments.length > 0) Reflect.setField(schema,"arguments",[for (arg in arguments) describe(arg,seen)]);
+                schema;
             case NamedType(name,base): {kind:"Named",name:name,base:describe(base,seen)};
             case RefinedType(base,range): {kind:"Refined",base:describe(base,seen),range:range.schema()};
             case StructuralType(name,fields):
@@ -900,7 +929,8 @@ class TypeChecker {
 
     function render(type:Type,names:Map<Int,String>,order:Array<Int>):String {
         return switch (prune(type)) {
-            case NamedType(name,_) | SumType(name,_): name;
+            case NamedType(name,_): name;
+            case SumType(name,_,arguments): name + (arguments.length == 0 ? "" : " (" + [for (arg in arguments) render(arg,names,order)].join(", ") + ")");
             case RefinedType(base,range): render(base,names,order) + " where " + range.predicate();
             case StructuralType(name,_): "~ " + name;
             case NumberType: "Number";

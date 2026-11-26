@@ -136,7 +136,21 @@ class TypeParser {
             case "Integer": IntegerType;
             case "Text": TextType;
             case "Boolean": BooleanType;
-            default: if (names.exists(name)) names.get(name) else throw new MiraError("Unknown annotation type " + name,token);
+            default:
+                if (!names.exists(name)) throw new MiraError("Unknown annotation type " + name,token);
+                final declared = names.get(name);
+                switch (declared) {
+                    case SumType(_,_,parameters) if (parameters.length > 0):
+                        if (!take("(")) return fail("Type " + name + " requires " + parameters.length + " type arguments");
+                        final arguments:Array<Type> = [];
+                        for (i in 0...parameters.length) {
+                            if (i > 0) require(",");
+                            arguments.push(readType(depth+1));
+                        }
+                        require(")");
+                        mira.types.TypeTemplates.apply(declared,arguments);
+                    default: declared;
+                }
         };
     }
 }
