@@ -19,7 +19,7 @@ class Bridge {
             tokens: tokens,
             ast: ast,
             trace: trace,
-            version: "0.56.0"
+            version: "0.57.0"
         });
     }
 
@@ -177,6 +177,9 @@ class Bridge {
                 {kind: "FieldGet", record: expression(record), key: key};
             case FieldSection(key):
                 {kind: "FieldSection", key: key};
+            case Validate(input,required,success,failure):
+                {kind:"Validate", input:expression(input), numericRange:mira.types.NumericRange.ofType(required).schema(),
+                    integer:mira.types.NumericRange.integerType(required), success:expression(success), failure:expression(failure)};
             case Conditional(predicate, whenTrue, whenFalse):
                 {kind: "Conditional", condition: expression(predicate),
                     whenTrue: expression(whenTrue), whenFalse: expression(whenFalse)};

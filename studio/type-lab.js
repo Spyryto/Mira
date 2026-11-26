@@ -31,6 +31,11 @@
   }
   document.getElementById('checked-js').addEventListener('click',()=>compileChecked('js'));
   document.getElementById('checked-php').addEventListener('click',()=>compileChecked('php'));
+  document.getElementById('validation-example').addEventListener('click',()=>{
+    host.value='';
+    source.value='Percentage :: Number where _ >= 0 AND _ <= 100;\nuse percent: p (Percentage) = p + 0;\nresult = validate: (120), as: (Percentage), then: {p | use percent: p}, else: {error | 0};';
+    check();
+  });
   document.getElementById('host-example').addEventListener('click',()=>{
     host.value=JSON.stringify({values:['rate'],callables:['format'],types:{rate:'Number',format:{parameters:['Number'],result:'Text'}}},null,2);
     host.closest('details').open=true;

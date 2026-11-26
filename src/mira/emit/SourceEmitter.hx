@@ -63,6 +63,24 @@ class SourceEmitter {
                 };
                 accessor;
 
+            case Validate(input,required,success,failure):
+                final constraint = new NumericGuard();
+                constraint.integer = mira.types.NumericRange.integerType(required);
+                constraint.range = mira.types.NumericRange.ofType(required);
+                final prefix = target == Php ? "$" : "";
+                final v = prefix + "__miraValidationValue";
+                final yes = prefix + "__miraValidationSuccess";
+                final no = prefix + "__miraValidationFailure";
+                final predicate = numericTests(target,constraint,v).join(" && ");
+                final message = constraint.integer ? "Invalid Integer value" : "Invalid numeric value";
+                final body = "(" + predicate + " ? " + yes + "(" + v + ") : " + no + "('" + message + "'))";
+                final params = v + ", " + yes + ", " + no;
+                final wrapper = target == Php ? "(static fn(" + params + ") => " + body + ")"
+                    : "((" + params + ") => " + body + ")";
+                wrapper + "(" + expression(input,target,scope,reservedHostNames,guards) + ", "
+                    + expression(success,target,scope,reservedHostNames,guards) + ", "
+                    + expression(failure,target,scope,reservedHostNames,guards) + ")";
+
             case Conditional(predicate, whenTrue, whenFalse):
                 "(" + expression(predicate, target, scope, reservedHostNames, guards)
                     + " ? " + expression(whenTrue, target, scope, reservedHostNames, guards)
@@ -192,8 +210,7 @@ class SourceEmitter {
     }
 
     // The generated parameter has its own scope; the operand is evaluated once.
-    static function numericGuard(value:String,target:Target,guard:NumericGuard):String {
-        final v = target == Php ? "$__miraNumericValue" : "__miraNumericValue";
+    static function numericTests(target:Target,guard:NumericGuard,v:String):Array<String> {
         final tests:Array<String> = target == Php
             ? ["(\\is_int(" + v + ") || \\is_float(" + v + "))", "\\is_finite(" + v + ")"]
             : ["typeof " + v + " === \"number\"", "(" + v + " - " + v + ") === 0"];
@@ -207,6 +224,12 @@ class SourceEmitter {
             if (Math.isFinite(r.low)) tests.push(v + (r.lowClosed ? " >= " : " > ") + Std.string(r.low));
             if (Math.isFinite(r.high)) tests.push(v + (r.highClosed ? " <= " : " < ") + Std.string(r.high));
         }
+        return tests;
+    }
+
+    static function numericGuard(value:String,target:Target,guard:NumericGuard):String {
+        final v = target == Php ? "$__miraNumericValue" : "__miraNumericValue";
+        final tests = numericTests(target,guard,v);
         final message = guard.integer ? "Mira Integer constraint violated" : "Mira numeric refinement violated";
         final body = "if (!(" + tests.join(" && ") + ")) throw new "
             + (target == Php ? "\\RuntimeException" : "Error") + "('" + message + "'); return " + v + ";";
@@ -225,6 +248,10 @@ class SourceEmitter {
                     names.push(name);
             case FieldGet(receiver, _):
                 referencedNames(receiver, bound, names);
+            case Validate(input,_,success,failure):
+                referencedNames(input,bound,names);
+                referencedNames(success,bound,names);
+                referencedNames(failure,bound,names);
             case Conditional(test, whenTrue, whenFalse):
                 referencedNames(test, bound, names);
                 referencedNames(whenTrue, bound, names);

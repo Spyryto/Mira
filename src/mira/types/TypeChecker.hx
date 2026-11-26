@@ -710,6 +710,18 @@ class TypeChecker {
 
     // A failed child keeps its own anchor in the exception. A successful
     // child restores the enclosing operator/call before unification.
+    function validationResult(handler:Expr,parameter:Type,scope:Map<String,LocalScheme>):Type {
+        return switch (handler) {
+            case Block(parameters,body):
+                if (origins.annotations(handler) != null)
+                    fail("Validation handler parameters are typed by the validation");
+                final inner = scope.copy();
+                inner.set(parameters[0],mono(parameter));
+                infer(body,inner);
+            default: fail("Expected validation handler");
+        };
+    }
+
     function inferNode(expr:Expr,scope:Map<String,LocalScheme>):Type {
         return switch (expr) {
             case Numeric(_): NumberType;
@@ -730,6 +742,18 @@ class TypeChecker {
             case FieldAccessor(key) | FieldSection(key):
                 final record = fresh();
                 FunctionType([record],projection(record,key));
+            case Validate(value,required,success,failure):
+                final actual = infer(value,scope);
+                // Validation is an explicit trust boundary: even a Text or
+                // Boolean input may fail normally. Do not rebrand siblings.
+                final identity = nominalName(actual);
+                final destination = nominalName(required);
+                if (identity != null && destination != null
+                    && !ancestor(actual,destination) && !ancestor(required,identity))
+                    fail("Cannot validate unrelated nominal types");
+                final accepted = validationResult(success,required,scope);
+                unifyAt(accepted,validationResult(failure,TextType,scope),failure);
+                accepted;
             case Conditional(condition,yes,no):
                 unifyAt(BooleanType,infer(condition,scope),condition);
                 final a = infer(yes,branchScope(condition,true,scope));

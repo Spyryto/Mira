@@ -1,5 +1,5 @@
 {
-  "version": "0.56.0",
+  "version": "0.57.0",
   "features": [
     {
       "id": "values",
@@ -1890,6 +1890,12 @@
       "title": "Compilazione checked con guardie numeriche selettive",
       "since": "0.56",
       "doc": "docs/type-checker.md#056-guardie-numeriche"
+    },
+    {
+      "id": "fallible-numeric-validation",
+      "title": "Validazione numerica fallibile con handler tipizzati",
+      "since": "0.57",
+      "doc": "docs/type-checker.md#057-validazione-fallibile"
     }
   ]
 }

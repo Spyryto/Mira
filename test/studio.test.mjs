@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.56.0');
+  assert.equal(bridge.version, '0.57.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.56.0');
+  assert.equal(bridge.version,'0.57.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1080,4 +1080,18 @@ test('Studio checked compiler emits guards without changing strict checking or u
   }
   assert.match(read('type-lab.html'),/checked-js/);
   assert.match(read('type-lab.html'),/checked-php/);
+});
+
+test('Studio checks typed fallible validation and exposes its AST',()=>{
+  const src='Percentage :: Number where _ >= 0 AND _ <= 100; use percent: p (Percentage) = p + 0; result = validate: (120), as: (Percentage), then: {p | use percent: p}, else: {error | 0};';
+  const report=bridge.check(src);
+  assert.equal(report.ok,true,report.message);
+  assert.equal(JSON.parse(report.output).find(x=>x.name==='result').type,'Number');
+  const ast=bridge.ast(src);assert.equal(ast.ok,true,ast.message);
+  assert.equal(JSON.parse(ast.output).definitions.find(x=>x.name==='result').body.kind,'Validate');
+  for(const target of ['js','php']){
+    const compiled=bridge.compile(src,target,null,false,null,true);assert.equal(compiled.ok,true,compiled.message);
+  }
+  assert.equal(runInNewContext(bridge.compile(src,'js').output+'\nresult',{}),0);
+  assert.match(read('type-lab.html'),/validation-example/);
 });

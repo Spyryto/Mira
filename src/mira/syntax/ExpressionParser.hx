@@ -233,6 +233,7 @@ class ExpressionParser {
             final key = consume().value;
             return at(FieldAccessor(key),token);
         }
+        if (token.value == "validate" && tokens[position + 1].isSymbol(":")) return at(validation(),token);
         if (token.value == "if" && (tokens[position + 1].isSymbol(":")
             || tokens[position + 1].isSymbol("("))) {
             return at(conditional(),token);
@@ -337,6 +338,51 @@ class ExpressionParser {
         }
         final whenFalse = expression();
         return Conditional(predicate, whenTrue, whenFalse);
+    }
+
+    // Explicit validation: the type operand is syntax, never a runtime value.
+    function validation():Expr {
+        consume(); // validate
+        requireSymbol(":");
+        final value = parenthesizedBranch("validate");
+        requireSymbol(",");
+        requireWord("as");
+        requireSymbol(":");
+        final anchor = current();
+        requireSymbol("(");
+        final start = position;
+        var depth = 1;
+        while (current().kind != End && depth > 0) {
+            if (current().isSymbol("(")) depth++;
+            if (current().isSymbol(")")) depth--;
+            if (depth > 0) consume();
+        }
+        if (depth != 0) throw new MiraError("Unclosed validation type",anchor);
+        final required = new TypeParser(tokens.slice(start,position),anchor,types).parse();
+        consume();
+        if (mira.types.NumericRange.ofType(required) == null)
+            throw new MiraError("Validation currently requires a numeric type",anchor);
+        requireSymbol(",");
+        requireWord("then");
+        requireSymbol(":");
+        final success = validationBlock();
+        requireSymbol(",");
+        requireWord("else");
+        requireSymbol(":");
+        final failure = validationBlock();
+        return Validate(value,required,success,failure);
+    }
+
+    function validationBlock():Expr {
+        final anchor = current();
+        if (!anchor.isSymbol("{") || !isBlockStart())
+            throw new MiraError("Validation requires a unary handler block",anchor);
+        final result = at(block(),anchor);
+        switch (result) {
+            case Block(parameters,_) if (parameters.length == 1):
+            default: throw new MiraError("Validation requires a unary handler block",anchor);
+        }
+        return result;
     }
 
     function optionalSymbol(value:String):Void {
