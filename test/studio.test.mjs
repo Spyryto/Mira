@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.58.0');
+  assert.equal(bridge.version, '0.59.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.58.0');
+  assert.equal(bridge.version,'0.59.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1108,4 +1108,15 @@ test('Studio exposes nominal sum schemas and constructor ASTs',()=>{
   for(const target of ['js','php'])assert.equal(bridge.compile(src,target,null,false,null,true).ok,true);
   assert.equal(bridge.check(src+'bad (Connection) = {tag: "Connected", value: "Ada"};').ok,false);
   assert.match(read('type-lab.html'),/sum-example/);
+});
+
+test('Studio exposes Match and verifies exhaustive typed alternatives',()=>{
+  const src='Connection :: Disconnected | Connected (Text); connection = Connected: "Ada"; result = match: connection {disconnected: {| "offline"}, connected: {s | s}};';
+  const report=bridge.check(src);assert.equal(report.ok,true,report.message);
+  assert.equal(JSON.parse(report.output).find(x=>x.name==='result').type,'Text');
+  const ast=bridge.ast(src);assert.equal(ast.ok,true,ast.message);
+  assert.equal(JSON.parse(ast.output).definitions.find(x=>x.name==='result').body.kind,'Match');
+  assert.equal(runInNewContext(bridge.compile(src,'js',null,false,null,true).output+'\nresult',{}),'Ada');
+  assert.equal(bridge.check(src+'bad = match: connection {disconnected: {| 0}};').ok,false);
+  assert.match(read('type-lab.html'),/match-example/);
 });
