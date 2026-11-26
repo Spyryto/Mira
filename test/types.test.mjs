@@ -951,3 +951,34 @@ test('types: discursive type parameters use ordinary names and declaration-local
     ['bad (Result (Number, Text)) = Err: 1;',/expected Text, got Number/]
   ])assert.throws(()=>check(src+extra),pattern,extra);
 });
+
+test('types: host name hygiene keeps Error constructors and native guards independent',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-host-names-'));
+  try{
+    const input=join(dir,'program.mira');
+    const src='Result (T, E) :: Ok (T) | Error (E); failure (Result (Number, Text)) = Error: "timeout"; Array = 7; Object = {n: 9}; __miraEsc_Array = 4; count: x (Number) = x + 1; array map: x (Number) = x * 2; result = [(match: failure {ok: {n | n}, error: {e | 0}}), Array, Object ~ n, __miraEsc_Array, (count: 2), (array map: 3)];';
+    const checked=src+' mapped = collect: [1, 2], with: {Array | Array + 1};';
+    writeFileSync(input,checked);
+    for(const target of ['js','php']){
+      const compiled=spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
+      assert.equal(compiled.status,0,compiled.stderr);
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      const suffix=target==='js'
+        ? '\\nconsole.log(JSON.stringify([result,mapped]));'
+        : '\\necho json_encode([$result,$mapped]);';
+      writeFileSync(file,compiled.stdout+suffix);
+      const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);
+      assert.deepEqual(JSON.parse(run.stdout),[[0,7,9,4,3,6],[2,3]]);
+      // An unchecked missing field must still raise the native exception.
+      writeFileSync(input,'Result (T, E) :: Ok (T) | Error (E); failure = Error: "timeout"; Object = {n: 9}; bad = Object ~ missing;');
+      const bad=spawnSync('node',['dist/mira.cjs',input,target],{encoding:'utf8'});
+      assert.equal(bad.status,0,bad.stderr);
+      writeFileSync(file,bad.stdout);
+      const failed=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.notEqual(failed.status,0);
+      assert.match(failed.stderr,/Missing record field: missing/);
+      writeFileSync(input,checked);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
