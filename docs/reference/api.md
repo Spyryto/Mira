@@ -54,7 +54,7 @@ class Compiler
 public static function check(source:String, ?host:HostEnvironment, ?readModule:String->Null<String>, ?entry:String):Array<Dynamic>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L37)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L52)
 
 <a id="api-mira-compiler-inspecttokens"></a>
 ### `mira.Compiler.inspectTokens`
@@ -65,7 +65,7 @@ public static function check(source:String, ?host:HostEnvironment, ?readModule:S
 public static function inspectTokens(source:String):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L50)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L65)
 
 <a id="api-mira-compiler-parse"></a>
 ### `mira.Compiler.parse`
@@ -89,7 +89,7 @@ Feature: [Dichiarazioni successive](language.md#feature-forward)
 public static function specialize(source:String,name:String,args:Array<mira.types.Type>,?host:HostEnvironment, ?readModule:String->Null<String>,?entry:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L43)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L58)
 
 <a id="api-mira-compiler-transpile"></a>
 ### `mira.Compiler.transpile`
@@ -101,6 +101,17 @@ public static function transpile(source:String, target:Target, ?host:HostEnviron
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L26)
+
+<a id="api-mira-compiler-transpilechecked"></a>
+### `mira.Compiler.transpileChecked`
+
+**method** · Facade riutilizzata da CLI e Mira Studio; espone parsing, traspilazione e ispezione lessicale.
+
+```haxe
+public static function transpileChecked(source:String,target:Target,?host:HostEnvironment, ?locations:Array<GeneratedLocation>,?readModule:String->Null<String>,?entry:String):String
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L38)
 
 <a id="api-mira-emit-jsemitter"></a>
 ### `mira.emit.JsEmitter`
@@ -119,7 +130,7 @@ class JsEmitter
 **method** · Converte tutte le definizioni Mira in un programma JavaScript.
 
 ```haxe
-public static function emit(definitions:Array<Definition>, symbols:Symbols, ?locations:Array<GeneratedLocation>):String
+public static function emit(definitions:Array<Definition>, symbols:Symbols, ?locations:Array<GeneratedLocation>, ?guards:haxe.ds.ObjectMap<Dynamic,mira.types.NumericGuard>):String
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/JsEmitter.hx#L11)
@@ -141,7 +152,7 @@ class PhpEmitter
 **method** · Converte tutte le definizioni Mira in un programma PHP.
 
 ```haxe
-public static function emit(definitions:Array<Definition>, symbols:Symbols, ?locations:Array<GeneratedLocation>):String
+public static function emit(definitions:Array<Definition>, symbols:Symbols, ?locations:Array<GeneratedLocation>, ?guards:haxe.ds.ObjectMap<Dynamic,mira.types.NumericGuard>):String
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/PhpEmitter.hx#L11)
@@ -155,7 +166,7 @@ public static function emit(definitions:Array<Definition>, symbols:Symbols, ?loc
 class SourceEmitter
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L7)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L9)
 
 <a id="api-mira-emit-sourceemitter-expression"></a>
 ### `mira.emit.SourceEmitter.expression`
@@ -163,10 +174,10 @@ class SourceEmitter
 **method** · Produce un'espressione JS/PHP tenendo conto dello scope e delle collisioni dei nomi.
 
 ```haxe
-public static function expression(expr:Expr, target:Target, scope:Array<String>, reservedHostNames:Array<String>):String
+public static function expression(expr:Expr, target:Target, scope:Array<String>, reservedHostNames:Array<String>, ?guards:ObjectMap<Dynamic,NumericGuard>):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L10)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L12)
 
 Feature: [Sezioni con più `_`](language.md#feature-multi-sections), [Cattura lessicale](language.md#feature-captures)
 
@@ -179,7 +190,7 @@ Feature: [Sezioni con più `_`](language.md#feature-multi-sections), [Cattura le
 public static function hostAccess(name:String, target:Target):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L235)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L262)
 
 <a id="api-mira-emit-sourcelocations"></a>
 ### `mira.emit.SourceLocations`
@@ -862,7 +873,7 @@ class Bridge
 public static function ast(source:String, ?hostJson:String, ?modulesJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L84)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L85)
 
 <a id="api-mira-studio-bridge-check"></a>
 ### `mira.studio.Bridge.check`
@@ -873,7 +884,7 @@ public static function ast(source:String, ?hostJson:String, ?modulesJson:String)
 public static function check(source:String, ?hostJson:String, ?modulesJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L62)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L63)
 
 <a id="api-mira-studio-bridge-compile"></a>
 ### `mira.studio.Bridge.compile`
@@ -881,7 +892,7 @@ public static function check(source:String, ?hostJson:String, ?modulesJson:Strin
 **method** · API browser: `{ok,output}` o `{ok:false,message}` per `js` e `php`.
 
 ```haxe
-public static function compile(source:String, targetName:String, ?hostJson:String, ?withLocations:Bool = false, ?modulesJson:String):Dynamic
+public static function compile(source:String, targetName:String, ?hostJson:String, ?withLocations:Bool = false, ?modulesJson:String, ?checked:Bool = false):Dynamic
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L45)
@@ -906,7 +917,7 @@ public static function main():Void
 public static function specialize(source:String,name:String,argsJson:String,?hostJson:String,?modulesJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L69)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L70)
 
 <a id="api-mira-studio-bridge-tokens"></a>
 ### `mira.studio.Bridge.tokens`
@@ -917,7 +928,7 @@ public static function specialize(source:String,name:String,argsJson:String,?hos
 public static function tokens(source:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L80)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L81)
 
 <a id="api-mira-studio-bridge-trace"></a>
 ### `mira.studio.Bridge.trace`
@@ -928,7 +939,7 @@ public static function tokens(source:String):Dynamic
 public static function trace(source:String, ?hostJson:String, ?modulesJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L116)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L117)
 
 <a id="api-mira-syntax-definition"></a>
 ### `mira.syntax.Definition`
@@ -1625,6 +1636,61 @@ public static function read(input:Dynamic,values:Array<String>,callables:Array<S
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/HostTypeCodec.hx#L46)
 
+<a id="api-mira-types-numericguard"></a>
+### `mira.types.NumericGuard`
+
+**class** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+class NumericGuard
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericGuard.hx#L4)
+
+<a id="api-mira-types-numericguard-integer"></a>
+### `mira.types.NumericGuard.integer`
+
+**field** · Membro pubblico di mira.types.NumericGuard.
+
+```haxe
+public var integer:Bool
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericGuard.hx#L6)
+
+<a id="api-mira-types-numericguard-new"></a>
+### `mira.types.NumericGuard.new`
+
+**constructor** · Membro pubblico di mira.types.NumericGuard.
+
+```haxe
+public function new()
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericGuard.hx#L8)
+
+<a id="api-mira-types-numericguard-range"></a>
+### `mira.types.NumericGuard.range`
+
+**field** · Membro pubblico di mira.types.NumericGuard.
+
+```haxe
+public var range:Null<NumericRange>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericGuard.hx#L7)
+
+<a id="api-mira-types-numericguard-requirerange"></a>
+### `mira.types.NumericGuard.requireRange`
+
+**method** · Membro pubblico di mira.types.NumericGuard.
+
+```haxe
+public function requireRange(value:NumericRange):Void
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericGuard.hx#L9)
+
 <a id="api-mira-types-numericproof"></a>
 ### `mira.types.NumericProof`
 
@@ -2019,7 +2085,7 @@ class TypeChecker
 public function check(program:Array<Definition>):Array<Dynamic>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L47)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L49)
 
 <a id="api-mira-types-typechecker-new"></a>
 ### `mira.types.TypeChecker.new`
@@ -2027,10 +2093,10 @@ public function check(program:Array<Definition>):Array<Dynamic>
 **constructor** · Membro pubblico di mira.types.TypeChecker.
 
 ```haxe
-public function new(origins:ExpressionOrigins,host:HostEnvironment)
+public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.ds.ObjectMap<Dynamic,NumericGuard>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L35)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L36)
 
 <a id="api-mira-types-typechecker-specialize"></a>
 ### `mira.types.TypeChecker.specialize`
@@ -2041,5 +2107,5 @@ public function new(origins:ExpressionOrigins,host:HostEnvironment)
 public function specialize(program:Array<Definition>,name:String,args:Array<Type>):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L61)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L63)
 

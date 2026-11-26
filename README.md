@@ -100,6 +100,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Integer portabile e prove di integrità | `0.53` | [Dettagli](docs/type-checker.md#053-integer-portabile) |
 | ✅ | Narrowing numerico lessicale nei condizionali | `0.54` | [Dettagli](docs/type-checker.md#054-narrowing-numerico) |
 | ✅ | Diagnostica di prove numeriche e overflow certo | `0.55` | [Dettagli](docs/type-checker.md#055-esiti-delle-prove-numeriche) |
+| ✅ | Compilazione checked con guardie numeriche selettive | `0.56` | [Dettagli](docs/type-checker.md#056-guardie-numeriche) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
