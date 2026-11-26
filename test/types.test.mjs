@@ -802,7 +802,7 @@ test('types: closed nominal sums synthesize typed constructors',()=>{
     ['bad = Connected: "wrong";',/expected Session/],
     ['bad (Connection) = {tag: "Connected", value: session};',/expected Connection/],
     ['Other :: Unrelated | Unknown; bad (Connection) = Unrelated;',/expected Connection/],
-    ['bad = active connection ~ tag;',/record/],
+    ['bad = active connection ~ tag;',/expected Connection, got \{tag:/],
     ['Duplicate :: Same | Same;',/Duplicate sum alternative/],
     ['Empty :: A |;',/Empty sum alternative/],
     ['Lower :: a | B;',/uppercase/],
