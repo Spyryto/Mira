@@ -19,13 +19,15 @@ class Modules {
     public static function collect(source:String, ?read:String->Null<String>,
         ?entry:String, ?types:Map<String,mira.types.Type>,
         ?moduleTypes:Map<String,Map<String,mira.types.Type>>,
-        ?publicTypes:Map<String,Array<String>>, ?bindings:Map<String,Array<ImportBinding>>, ?visibility:TypeVisibility):Array<Definition> {
+        ?publicTypes:Map<String,Array<String>>, ?bindings:Map<String,Array<ImportBinding>>, ?visibility:TypeVisibility, ?reexports:Map<String,Array<Dynamic>>):Array<Definition> {
         if (types == null) types = new Map<String,mira.types.Type>();
         if (moduleTypes == null) moduleTypes = new Map<String,Map<String,mira.types.Type>>();
         if (publicTypes == null) publicTypes = new Map<String,Array<String>>();
         if (bindings == null) bindings = new Map<String,Array<ImportBinding>>();
         if (visibility == null) visibility = new TypeVisibility();
         final complete = new Map<String,Array<Definition>>();
+        final exportedSymbols = new Map<String,Map<String,Definition>>();
+        if (reexports == null) reexports = new Map<String,Array<Dynamic>>();
         final loaded = new Map<String, Bool>();
         final stack:Array<String> = entry == null ? [] : [entry];
         final definitions:Array<Definition> = [];
@@ -74,6 +76,9 @@ class Modules {
             final privateAliases = new Map<String,mira.types.Type>();
             final imported:Array<ImportBinding> = [];
             final aliasNames = new Map<String,Bool>();
+            final forwarded = new Map<String,Definition>();
+            final forwardedTypes:Array<String> = [];
+            final forwardedInfo:Array<Dynamic> = [];
             if (modulePath != null) {
                 publicTypes.set(modulePath,[]);
                 if (tokens[offset].kind == Word && tokens[offset].value == "interface") {
@@ -82,9 +87,11 @@ class Modules {
                     tokens = tokens.slice(0,offset).concat(sections.imports).concat(tokens.slice(sections.bodyOffset));
                 }
             }
-            while (tokens[offset].kind == Word && tokens[offset].value == "import"
+            while (tokens[offset].kind == Word && (tokens[offset].value == "import" || (modulePath != null && tokens[offset].value == "export" && offset < publicEnd))
                 && (tokens[offset + 1].kind == Text || (modulePath != null && tokens[offset + 1].kind == Word))) {
                 final origin = tokens[offset];
+                final forwarding = origin.value == "export";
+                if (forwarding && tokens[offset+1].kind == Text) throw new MiraError("Re-export requires a logical module path",origin);
                 if (tokens[offset+1].kind != Text) {
                     final isPublic = offset < publicEnd;
                     final directive = new ModuleImport(tokens,offset);
@@ -108,9 +115,7 @@ class Modules {
                         if (!complete.exists(path))
                             throw new MiraError("Module declaration does not match requested path " + path,origin);
                     }
-                    final exported = new Map<String,Definition>();
-                    for (d in complete.get(path)) if (d.isExported)
-                        exported.set(d.isFunction() ? d.selector() : d.name,d);
+                    final exported = exportedSymbols.get(path);
                     final availableTypes = publicTypes.get(path);
                     final requested = directive.names.copy();
                     if (directive.wildcard) {
@@ -128,9 +133,23 @@ class Modules {
                         if (isType) {
                             if (["Number","Integer","Text","Boolean"].indexOf(item.alias) >= 0)
                                 throw new MiraError("Reserved imported type name " + item.alias,item.origin);
-                            (isPublic ? publicAliases : privateAliases).set(item.alias,visibility.view(moduleTypes.get(path).get(item.name),modulePath));
+                            final type = visibility.view(moduleTypes.get(path).get(item.name),modulePath);
+                            (isPublic ? publicAliases : privateAliases).set(item.alias,type);
+                            if (forwarding) {
+                                forwardedTypes.push(item.alias);
+                                final identity = switch (type) {
+                                    case NamedType(name,_) | OpaqueType(name,_) | ParametricNamedType(name,_,_) | SumType(name,_,_) | SumReference(name,_,_): name;
+                                    default: throw new MiraError("Expected nominal re-export type",item.origin);
+                                };
+                                forwardedInfo.push({name:item.alias,kind:"type",target:identity});
+                            }
                         } else {
-                            imported.push(new ImportBinding(item.alias,d,item.origin));
+                            final binding = new ImportBinding(item.alias,d,item.origin);
+                            imported.push(binding);
+                            if (forwarding) {
+                                forwarded.set(item.alias,d);
+                                forwardedInfo.push({name:item.alias,kind:d.isFunction() ? "selector" : "value",target:binding.canonicalName()});
+                            }
                         }
                     }
                     continue;
@@ -169,6 +188,8 @@ class Modules {
             final opaqueOrigins = new Map<String,Token>();
             final explicitSignatures:Array<Array<Token>> = [];
             final implementation = tokens.slice(offset);
+            if (modulePath != null && tokens[offset].kind == Word && tokens[offset].value == "export" && tokens[offset+1].kind == Word)
+                throw new MiraError("Re-exports belong in the interface",tokens[offset]);
             for (name => type in publicAliases) localTypes.set(name,type);
             if (sections != null) {
                 final headers = DefinitionParser.typeHeaders(implementation);
@@ -198,7 +219,7 @@ class Modules {
                     explicitSignatures.push(item);
                 }
                 final constructors = DefinitionParser.parse(sections.typeTokens,localTypes,modulePath);
-                for (name in localTypes.keys()) if (!publicAliases.exists(name)) publicTypes.get(modulePath).push(name);
+                for (name in localTypes.keys()) if (!publicAliases.exists(name) || forwardedTypes.indexOf(name) >= 0) publicTypes.get(modulePath).push(name);
                 publicTypes.get(modulePath).sort(Reflect.compare);
                 signatureTypes = localTypes.copy();
                 // A direct representation alias through a forward opaque reference
@@ -289,7 +310,13 @@ class Modules {
                 definition.importedGlobals = [for (binding in imported) if (!binding.target.isFunction()) binding.canonicalName()];
                 definitions.push(definition);
             }
-            if (modulePath != null) complete.set(modulePath,local);
+            if (modulePath != null) {
+                final table = forwarded;
+                for (d in local) if (d.isExported) table.set(d.isFunction() ? d.selector() : d.name,d);
+                exportedSymbols.set(modulePath,table);
+                reexports.set(modulePath,forwardedInfo);
+                complete.set(modulePath,local);
+            }
         }
         visit(source, null);
         return definitions;
