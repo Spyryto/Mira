@@ -5,7 +5,7 @@ package mira.types;
 class TypeTemplates {
     public static function apply(template:Type,arguments:Array<Type>):Type {
         return switch (template) {
-            case SumType(_,_,parameters) | ParametricNamedType(_,_,parameters):
+            case SumType(_,_,parameters) | SumReference(_,_,parameters) | ParametricNamedType(_,_,parameters):
                 if (parameters.length != arguments.length) throw new mira.MiraError("Wrong number of type arguments");
                 final slots = new Map<Int,Type>();
                 for (i in 0...parameters.length) switch (parameters[i]) {
@@ -14,6 +14,17 @@ class TypeTemplates {
                 }
                 substitute(template,slots);
             default: throw new mira.MiraError("Expected a parametric type template");
+        };
+    }
+
+    // Expand exactly one layer when a consumer needs the alternatives.
+    public static function unfold(type:Type):Type {
+        return switch (type) {
+            case SumReference(name,template,arguments):
+                final slots = new Map<Int,Type>();
+                for (i in 0...arguments.length) slots.set(-i-1,arguments[i]);
+                SumType(name,[for (tag => payload in template) tag => payload == null ? null : substitute(payload,slots)],arguments);
+            default: type;
         };
     }
 
@@ -26,6 +37,8 @@ class TypeTemplates {
                     tail == null ? null : substitute(tail,slots));
             case ParametricNamedType(name,base,arguments):
                 ParametricNamedType(name,substitute(base,slots),[for (argument in arguments) substitute(argument,slots)]);
+            case SumReference(name,template,arguments):
+                SumReference(name,template,[for (argument in arguments) substitute(argument,slots)]);
             case SumType(name,alternatives,arguments):
                 SumType(name,[for (tag => payload in alternatives) tag => payload == null ? null : substitute(payload,slots)],
                     [for (argument in arguments) substitute(argument,slots)]);

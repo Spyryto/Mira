@@ -140,7 +140,7 @@ class TypeParser {
                 if (!names.exists(name)) throw new MiraError("Unknown annotation type " + name,token);
                 final declared = names.get(name);
                 switch (declared) {
-                    case SumType(_,_,parameters) | ParametricNamedType(_,_,parameters) if (parameters.length > 0):
+                    case SumType(_,_,parameters) | SumReference(_,_,parameters) | ParametricNamedType(_,_,parameters) if (parameters.length > 0):
                         if (!take("(")) return fail("Type " + name + " requires " + parameters.length + " type arguments");
                         final arguments:Array<Type> = [];
                         for (i in 0...parameters.length) {
@@ -148,6 +148,15 @@ class TypeParser {
                             arguments.push(readType(depth+1));
                         }
                         require(")");
+                        switch (declared) {
+                            case SumReference(_,_,_):
+                                // Regular self recursion only: preserve all type arguments in order.
+                                for (i in 0...arguments.length) switch (arguments[i]) {
+                                    case Variable(id) if (id == -i-1):
+                                    default: return fail("Recursive sum must preserve its type parameters");
+                                }
+                            default:
+                        }
                         mira.types.TypeTemplates.apply(declared,arguments);
                     default: declared;
                 }

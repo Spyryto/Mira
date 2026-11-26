@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.63.0');
+  assert.equal(bridge.version, '0.64.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.63.0');
+  assert.equal(bridge.version,'0.64.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1177,4 +1177,18 @@ test('Studio exposes nominal parametric record schemas and executes the compiled
   assert.equal(compiled.ok,true,compiled.message);
   assert.equal(runInNewContext(compiled.output+'\nresult',{}),42);
   assert.match(read('type-lab.html'),/parametric-data-example/);
+});
+
+test('Studio exposes finite recursive sum schemas and checks nested alternatives',()=>{
+  const src='Tree (Element Type) :: Leaf (Element Type) | Branch ([Tree (Element Type)]); a = Branch: [(Leaf: 42)]; result = match: a {leaf: {n | n}, branch: {children | fold: children, with: {acc, child (Tree (Number)) | acc + (match: child {leaf: {n | n}, branch: {rest | 0}})}, from: 0}};';
+  const report=bridge.check(src);assert.equal(report.ok,true,report.message);
+  const a=JSON.parse(report.output).find(x=>x.name==='a');
+  assert.equal(a.type,'Tree (Number)');
+  const branch=a.schema.alternatives.find(x=>x.tag==='Branch');
+  assert.equal(branch.payload.kind,'List');
+  assert.deepEqual(branch.payload.item,{kind:'SumReference',name:'Tree',arguments:[{kind:'Number'}]});
+  const compiled=bridge.compile(src,'js',null,false,null,true);
+  assert.equal(compiled.ok,true,compiled.message);
+  assert.equal(runInNewContext(compiled.output+'\nresult',{}),42);
+  assert.match(read('type-lab.html'),/recursive-sum-example/);
 });

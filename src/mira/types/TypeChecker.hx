@@ -101,7 +101,7 @@ class TypeChecker {
         return switch (prune(type)) {
             case Variable(other): id == other;
             case ListType(item): occurs(id, item);
-            case SumType(_,_,arguments) | ParametricNamedType(_,_,arguments): Lambda.exists(arguments,t -> occurs(id,t));
+            case SumType(_,_,arguments) | SumReference(_,_,arguments) | ParametricNamedType(_,_,arguments): Lambda.exists(arguments,t -> occurs(id,t));
             case FunctionType(args, result): Lambda.exists(args, t -> occurs(id,t)) || occurs(id,result);
             case RecordType(fields, tail):
                 var found = false;
@@ -131,7 +131,7 @@ class TypeChecker {
             case [Variable(id), _]: bind(id,right);
             case [_, Variable(id)]: bind(id,left);
             case [NamedType(x,_),NamedType(y,_)] if (x == y):
-            case [SumType(x,_,xs),SumType(y,_,ys)] | [ParametricNamedType(x,_,xs),ParametricNamedType(y,_,ys)] if (x == y && xs.length == ys.length):
+            case [SumType(x,_,xs),SumType(y,_,ys)] | [SumReference(x,_,xs),SumReference(y,_,ys)] | [SumType(x,_,xs),SumReference(y,_,ys)] | [SumReference(x,_,xs),SumType(y,_,ys)] | [ParametricNamedType(x,_,xs),ParametricNamedType(y,_,ys)] if (x == y && xs.length == ys.length):
                 for (i in 0...xs.length) unify(xs[i],ys[i]);
             case [RefinedType(x,r),RefinedType(y,s)] if (r.equal(s)): unify(x,y);
             case [StructuralType(_,x),StructuralType(_,y)]: unifyRecords(RecordType(x,null),RecordType(y,null));
@@ -289,14 +289,14 @@ class TypeChecker {
     }
 
     function nominalName(type:Type):Null<String> return switch (prune(type)) {
-        case NamedType(name,_) | SumType(name,_,_) | ParametricNamedType(name,_,_): name;
+        case NamedType(name,_) | SumType(name,_,_) | SumReference(name,_,_) | ParametricNamedType(name,_,_): name;
         case RefinedType(base,_): nominalName(base);
         default: null;
     };
 
     function ancestor(type:Type,name:String):Bool return switch (prune(type)) {
         case NamedType(n,base): n == name || ancestor(base,name);
-        case SumType(n,_,_) | ParametricNamedType(n,_,_): n == name;
+        case SumType(n,_,_) | SumReference(n,_,_) | ParametricNamedType(n,_,_): n == name;
         case RefinedType(base,_): ancestor(base,name);
         default: false;
     };
@@ -403,6 +403,8 @@ class TypeChecker {
             case ListType(item): ListType(instantiate(item,seen,quantified));
             case ParametricNamedType(name,base,arguments):
                 ParametricNamedType(name,instantiate(base,seen,quantified),[for (argument in arguments) instantiate(argument,seen,quantified)]);
+            case SumReference(name,template,arguments):
+                SumReference(name,template,[for (argument in arguments) instantiate(argument,seen,quantified)]);
             case SumType(name,alternatives,arguments):
                 SumType(name,[for (tag => payload in alternatives) tag => payload == null ? null : instantiate(payload,seen,quantified)],
                     [for (argument in arguments) instantiate(argument,seen,quantified)]);
@@ -419,7 +421,7 @@ class TypeChecker {
         switch (prune(type)) {
             case Variable(id): found.set(id,true);
             case ListType(item): free(item,found);
-            case SumType(_,_,arguments) | ParametricNamedType(_,_,arguments): for (argument in arguments) free(argument,found);
+            case SumType(_,_,arguments) | SumReference(_,_,arguments) | ParametricNamedType(_,_,arguments): for (argument in arguments) free(argument,found);
             case FunctionType(args,result):
                 for (arg in args) free(arg,found);
                 free(result,found);
@@ -786,7 +788,7 @@ class TypeChecker {
     }
 
     function matchResult(input:Type,tags:Array<String>,handlers:Array<Expr>,scope:Map<String,LocalScheme>):Type {
-        return switch (representation(input)) {
+        return switch (TypeTemplates.unfold(representation(input))) {
             case SumType(name,alternatives,arguments):
                 for (tag in tags) if (!alternatives.exists(tag))
                     fail("Unknown match alternative " + tag + " for " + name);
@@ -910,6 +912,8 @@ class TypeChecker {
     function describe(type:Type, ?ids:Map<Int,Int>):Dynamic {
         final seen = ids == null ? new Map<Int,Int>() : ids;
         return switch (prune(type)) {
+            case SumReference(name,_,arguments):
+                {kind:"SumReference",name:name,arguments:[for (arg in arguments) describe(arg,seen)]};
             case SumType(name,alternatives,arguments):
                 final tags = [for (tag in alternatives.keys()) tag];
                 tags.sort(Reflect.compare);
@@ -964,7 +968,7 @@ class TypeChecker {
         return switch (prune(type)) {
             case NamedType(name,_): name;
             case ParametricNamedType(name,_,arguments): name + " (" + [for (arg in arguments) render(arg,names,order)].join(", ") + ")";
-            case SumType(name,_,arguments): name + (arguments.length == 0 ? "" : " (" + [for (arg in arguments) render(arg,names,order)].join(", ") + ")");
+            case SumType(name,_,arguments) | SumReference(name,_,arguments): name + (arguments.length == 0 ? "" : " (" + [for (arg in arguments) render(arg,names,order)].join(", ") + ")");
             case RefinedType(base,range): render(base,names,order) + " where " + range.predicate();
             case StructuralType(name,_): "~ " + name;
             case NumberType: "Number";

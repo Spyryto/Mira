@@ -1,5 +1,5 @@
 {
-  "version": "0.63.0",
+  "version": "0.64.0",
   "features": [
     {
       "id": "values",
@@ -1944,6 +1944,12 @@
       "title": "Record e liste nominali parametrici",
       "since": "0.63",
       "doc": "docs/type-checker.md#063-record-e-liste-nominali-parametrici"
+    },
+    {
+      "id": "recursive-sums",
+      "title": "Tipi somma ricorsivi regolari",
+      "since": "0.64",
+      "doc": "docs/type-checker.md#064-tipi-somma-ricorsivi"
     }
   ]
 }

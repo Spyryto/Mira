@@ -102,6 +102,8 @@ class DefinitionParser {
         final arguments:Array<Type> = [for (i in 0...parameters.length) Variable(-i-1)];
         for (i in 0...parameters.length) local.set(parameters[i],arguments[i]);
         final alternatives = new Map<String,Null<Type>>();
+        // Only this declaration can see its own back-reference before completion.
+        local.set(name,SumReference(name,alternatives,arguments));
         final tags:Array<String> = [];
         final origins:Array<Token> = [];
         var rest = tokens[0].isSymbol("|") ? tokens.slice(1) : tokens;

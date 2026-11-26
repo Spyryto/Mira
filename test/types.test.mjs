@@ -798,6 +798,7 @@ test('types: closed nominal sums synthesize typed constructors',()=>{
   assert.equal(t.states,'[Connection]');
   assert.equal(t.result,'Connection');
   assert.equal(check('Only :: | Single; value = Single;').value,'Only');
+  assert.equal(check('Tree :: Leaf (Tree) | Empty; value = Leaf: Empty;').value,'Tree');
   for(const [extra,pattern] of [
     ['bad = Connected: "wrong";',/expected Session/],
     ['bad (Connection) = {tag: "Connected", value: session};',/expected Connection/],
@@ -808,7 +809,7 @@ test('types: closed nominal sums synthesize typed constructors',()=>{
     ['Lower :: a | B;',/uppercase/],
     ['Duplicate Value :: Disconnected | Something;',/Duplicate or conflicting value/],
     ['Connected: x = x;',/Duplicate or conflicting selector/],
-    ['Tree :: Leaf (Tree) | Empty;',/Unknown annotation type/]
+    ['Tree :: Leaf (Missing Tree) | Empty;',/Unknown annotation type Missing Tree/]
   ])assert.throws(()=>check(src+extra),pattern,extra);
 });
 test('types: native tagged sum representations agree on JS and PHP',()=>{
@@ -1106,6 +1107,46 @@ test('types: nominal parametric data erase to ordinary records and lists on both
       const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
       assert.equal(run.status,0,run.stderr);
       assert.deepEqual(JSON.parse(run.stdout),{a:{first:42,second:'Ada'},b:[1,2]});
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('types: recursive sum references preserve arguments and allow nested exhaustive match',()=>{
+  const src='Tree (Element Type) :: Leaf (Element Type) | Branch ([Tree (Element Type)]); Chain :: End | Link ({value: Number, next: Chain}); sum tree: tree (Tree (Number)) -> Number = match: tree {leaf: {n | n}, branch: {children | fold: children, with: {acc, child | acc + (sum tree: child)}, from: 0}}; head: chain (Chain) -> Number = match: chain {end: {| 0}, link: {node | match: (node ~ next) {end: {| node ~ value}, link: {next | next ~ value}}}}; a = Leaf: 42; b = Branch: [a, (Branch: [(Leaf: 7)])]; c = Leaf: "Mira"; chain = Link: {value: 1, next: (Link: {value: 2, next: End})}; result = sum tree: b; other = head: chain;';
+  const t=check(src);
+  assert.equal(t.a,'Tree (Number)');
+  assert.equal(t.b,'Tree (Number)');
+  assert.equal(t.c,'Tree (Text)');
+  assert.equal(t.chain,'Chain');
+  assert.equal(t.result,'Number');
+  assert.equal(t.other,'Number');
+  for(const [extra,pattern] of [
+    ['bad = Branch: [a, c];',/expected Number, got Text|expected Text, got Number/],
+    ['bad = sum tree: c;',/expected Number, got Text/],
+    ['bad = match: b {leaf: {n | n}};',/Non-exhaustive match/],
+    ['Wrong (T) :: Stop | Again (Wrong ([T]));',/Recursive sum must preserve its type parameters/],
+    ['Wrong (T, U) :: Stop | Again (Wrong (U, T));',/Recursive sum must preserve its type parameters/],
+    ['Wrong (T) :: Stop | Again (Wrong);',/requires 1 type arguments/],
+    ['Wrong :: Stop | Again (Unknown);',/Unknown annotation type Unknown/]
+  ]) assert.throws(()=>check(src+extra),pattern,extra);
+});
+test('types: recursive trees and chains use ordinary native sum records on JS and PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-recursive-sums-'));
+  try{
+    const input=join(dir,'program.mira');
+    const src='Tree (T) :: Leaf (T) | Branch ([Tree (T)]); sum tree: tree (Tree (Number)) -> Number = match: tree {leaf: {n | n}, branch: {children | fold: children, with: {acc, child | acc + (sum tree: child)}, from: 0}}; a = Branch: [(Leaf: 2), (Branch: [(Leaf: 3), (Leaf: 4)])]; result = sum tree: a;';
+    writeFileSync(input,src);
+    for(const target of ['js','php']){
+      const r=spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      const plain=spawnSync('node',['dist/mira.cjs',input,target],{encoding:'utf8'});
+      assert.equal(plain.status,0,plain.stderr);
+      assert.equal(r.stdout,plain.stdout);
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,r.stdout+(target==='js'?'\nconsole.log(JSON.stringify([a,result]));':'\necho json_encode([$a,$result]);'));
+      const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);
+      assert.deepEqual(JSON.parse(run.stdout),[{tag:'Branch',value:[{tag:'Leaf',value:2},{tag:'Branch',value:[{tag:'Leaf',value:3},{tag:'Leaf',value:4}]}]},9]);
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
