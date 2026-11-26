@@ -1,5 +1,5 @@
 {
-  "version": "0.62.0",
+  "version": "0.63.0",
   "features": [
     {
       "id": "values",
@@ -1938,6 +1938,12 @@
       "title": "Validazione numerica fallibile con Result",
       "since": "0.62",
       "doc": "docs/type-checker.md#062-validazione-con-result"
+    },
+    {
+      "id": "parametric-nominal-data",
+      "title": "Record e liste nominali parametrici",
+      "since": "0.63",
+      "doc": "docs/type-checker.md#063-record-e-liste-nominali-parametrici"
     }
   ]
 }
