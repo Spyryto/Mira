@@ -103,6 +103,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Compilazione checked con guardie numeriche selettive | `0.56` | [Dettagli](docs/type-checker.md#056-guardie-numeriche) |
 | ✅ | Validazione numerica fallibile con handler tipizzati | `0.57` | [Dettagli](docs/type-checker.md#057-validazione-fallibile) |
 | ✅ | Tipi somma nominali chiusi e costruttori | `0.58` | [Dettagli](docs/type-checker.md#058-tipi-somma-nominali) |
+| ✅ | Match contestuale esaustivo e payload tipizzati | `0.59` | [Dettagli](docs/type-checker.md#059-match-esaustivo) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
