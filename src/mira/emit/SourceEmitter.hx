@@ -65,7 +65,7 @@ class SourceEmitter {
 
             case Variant(_,tag,payload):
                 final fields = payload == null ? ["tag"] : ["tag","value"];
-                final values = payload == null ? [Text(tag)] : [Text(tag),payload];
+                final values:Array<Expr> = payload == null ? [Text(tag)] : [Text(tag),payload];
                 expression(Record(fields,values),target,scope,reservedHostNames,guards);
             case Validate(input,required,success,failure):
                 final constraint = new NumericGuard();
