@@ -118,7 +118,7 @@ class TypeChecker {
         return switch (prune(type)) {
             case Variable(other): id == other;
             case ListType(item): occurs(id, item);
-            case SumType(_,_,arguments) | SumReference(_,_,arguments) | ParametricNamedType(_,_,arguments): Lambda.exists(arguments,t -> occurs(id,t));
+            case OpaqueType(_,arguments) | SumType(_,_,arguments) | SumReference(_,_,arguments) | ParametricNamedType(_,_,arguments): Lambda.exists(arguments,t -> occurs(id,t));
             case FunctionType(args, result): Lambda.exists(args, t -> occurs(id,t)) || occurs(id,result);
             case RecordType(fields, tail):
                 var found = false;
@@ -147,7 +147,13 @@ class TypeChecker {
             case [Variable(id), Variable(other)] if (rigid.exists(id) && !rigid.exists(other)): bind(other,left);
             case [Variable(id), _]: bind(id,right);
             case [_, Variable(id)]: bind(id,left);
-            case [OpaqueType(x),OpaqueType(y)] if (x == y):
+            case [OpaqueType(x,xs),NamedType(y,_)] | [NamedType(x,_),OpaqueType(y,xs)] if (x == y && xs.length == 0):
+            case [OpaqueType(x,xs),OpaqueType(y,ys)]
+                | [OpaqueType(x,xs),ParametricNamedType(y,_,ys)] | [ParametricNamedType(x,_,xs),OpaqueType(y,ys)]
+                | [OpaqueType(x,xs),SumType(y,_,ys)] | [SumType(x,_,xs),OpaqueType(y,ys)]
+                | [OpaqueType(x,xs),SumReference(y,_,ys)] | [SumReference(x,_,xs),OpaqueType(y,ys)]
+                if (x == y && xs.length == ys.length):
+                for (i in 0...xs.length) unify(xs[i],ys[i]);
             case [NamedType(x,_),NamedType(y,_)] if (x == y):
             case [SumType(x,_,xs),SumType(y,_,ys)] | [SumReference(x,_,xs),SumReference(y,_,ys)] | [SumType(x,_,xs),SumReference(y,_,ys)] | [SumReference(x,_,xs),SumType(y,_,ys)] | [ParametricNamedType(x,_,xs),ParametricNamedType(y,_,ys)] if (x == y && xs.length == ys.length):
                 for (i in 0...xs.length) unify(xs[i],ys[i]);
@@ -167,15 +173,16 @@ class TypeChecker {
     // Equality is symmetric; passing a subtype to a consumer is directional.
     // Named data have closed representations, not inheritance of behavior.
     function representation(type:Type):Type {
-        return switch (prune(type)) {
+        final visible = visibility.reveal(prune(type),moduleOwner);
+        return switch (visible) {
             case NamedType(_,base) | ParametricNamedType(_,base,_) | RefinedType(base,_): representation(base);
-            default: prune(type);
+            default: visible;
         };
     }
 
     function accept(expected:Type,actual:Type):Void {
-        final wanted = prune(expected);
-        final given = prune(actual);
+        final wanted = visibility.reveal(prune(expected),moduleOwner);
+        final given = visibility.reveal(prune(actual),moduleOwner);
         switch [wanted,given] {
             case [Variable(_),_] | [_,Variable(_)]: unify(wanted,given);
             case [NamedType(x,_),NamedType(y,_)] if (x == y):
@@ -212,8 +219,8 @@ class TypeChecker {
     // An explicit typed declaration introduces a nominal identity. A sibling
     // is never silently rebranded; the immediate base must be compatible.
     function construct(expected:Type,actual:Type,?expr:Expr):Void {
-        final wanted = prune(expected);
-        final given = prune(actual);
+        final wanted = visibility.reveal(prune(expected),moduleOwner);
+        final given = visibility.reveal(prune(actual),moduleOwner);
         switch (wanted) {
             case ParametricNamedType(_,base,_):
                 // Explicit construction brands a raw representation, not a sibling.
@@ -307,14 +314,14 @@ class TypeChecker {
     }
 
     function nominalName(type:Type):Null<String> return switch (prune(type)) {
-        case OpaqueType(name) | NamedType(name,_) | SumType(name,_,_) | SumReference(name,_,_) | ParametricNamedType(name,_,_): name;
+        case OpaqueType(name,_) | NamedType(name,_) | SumType(name,_,_) | SumReference(name,_,_) | ParametricNamedType(name,_,_): name;
         case RefinedType(base,_): nominalName(base);
         default: null;
     };
 
     function ancestor(type:Type,name:String):Bool return switch (prune(type)) {
         case NamedType(n,base): n == name || ancestor(base,name);
-        case OpaqueType(n) | SumType(n,_,_) | SumReference(n,_,_) | ParametricNamedType(n,_,_): n == name;
+        case OpaqueType(n,_) | SumType(n,_,_) | SumReference(n,_,_) | ParametricNamedType(n,_,_): n == name;
         case RefinedType(base,_): ancestor(base,name);
         default: false;
     };
@@ -418,6 +425,7 @@ class TypeChecker {
                     seen.set(id,copy);
                 }
                 seen.get(id);
+            case OpaqueType(name,args): OpaqueType(name,[for (a in args) instantiate(a,seen,quantified)]);
             case ListType(item): ListType(instantiate(item,seen,quantified));
             case ParametricNamedType(name,base,arguments):
                 ParametricNamedType(name,instantiate(base,seen,quantified),[for (argument in arguments) instantiate(argument,seen,quantified)]);
@@ -439,7 +447,7 @@ class TypeChecker {
         switch (prune(type)) {
             case Variable(id): found.set(id,true);
             case ListType(item): free(item,found);
-            case SumType(_,_,arguments) | SumReference(_,_,arguments) | ParametricNamedType(_,_,arguments): for (argument in arguments) free(argument,found);
+            case OpaqueType(_,arguments) | SumType(_,_,arguments) | SumReference(_,_,arguments) | ParametricNamedType(_,_,arguments): for (argument in arguments) free(argument,found);
             case FunctionType(args,result):
                 for (arg in args) free(arg,found);
                 free(result,found);
@@ -587,7 +595,7 @@ class TypeChecker {
     // A closed built-in predicate, not a runtime typeclass dictionary.
     // Unification may solve it now or propagate it to another variable.
     function requireScalarEq(type:Type):Void {
-        switch (prune(type)) {
+        switch (visibility.reveal(prune(type),moduleOwner)) {
             case NamedType(_,base) | RefinedType(base,_): requireScalarEq(base);
             case IntegerType | NumberType | TextType | BooleanType:
             case Variable(id):
@@ -788,7 +796,7 @@ class TypeChecker {
     // child restores the enclosing operator/call before unification.
     function checkValidationInput(actual:Type,required:Type):Void {
         switch (representation(actual)) {
-            case OpaqueType(name): fail("Cannot validate opaque representation " + name);
+            case OpaqueType(name,_): fail("Cannot validate opaque representation " + name);
             default:
         }
         // Even a Text or Boolean input may fail normally. Do not rebrand siblings.
@@ -946,7 +954,10 @@ class TypeChecker {
                 }]};
                 if (arguments.length > 0) Reflect.setField(schema,"arguments",[for (arg in arguments) describe(arg,seen)]);
                 schema;
-            case OpaqueType(name): {kind:"Opaque",name:name};
+            case OpaqueType(name,args):
+                final schema:Dynamic = {kind:"Opaque",name:name};
+                if (args.length > 0) Reflect.setField(schema,"arguments",[for (arg in args) describe(arg,seen)]);
+                schema;
             case NamedType(name,base): {kind:"Named",name:name,base:describe(base,seen)};
             case ParametricNamedType(name,base,arguments):
                 {kind:"Named",name:name,arguments:[for (arg in arguments) describe(arg,seen)],base:describe(base,seen)};
@@ -991,7 +1002,8 @@ class TypeChecker {
 
     function render(type:Type,names:Map<Int,String>,order:Array<Int>):String {
         return switch (prune(type)) {
-            case OpaqueType(name) | NamedType(name,_): name;
+            case NamedType(name,_): name;
+            case OpaqueType(name,args): name + (args.length == 0 ? "" : " (" + [for (arg in args) render(arg,names,order)].join(", ") + ")");
             case ParametricNamedType(name,_,arguments): name + " (" + [for (arg in arguments) render(arg,names,order)].join(", ") + ")";
             case SumType(name,_,arguments) | SumReference(name,_,arguments): name + (arguments.length == 0 ? "" : " (" + [for (arg in arguments) render(arg,names,order)].join(", ") + ")");
             case RefinedType(base,range): render(base,names,order) + " where " + range.predicate();
