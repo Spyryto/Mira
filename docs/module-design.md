@@ -311,3 +311,13 @@ Manifest sperimentale esterno per scegliere provider e firme esplicite.
 Import logici invariati; risoluzione canonica al provider e verifica nel
 build effettivo. Rimandati contratto nominale indipendente, equazioni di
 tipo, qualificazione di modulo e sintassi dichiarativa per la selezione.
+
+## Decisione concordata — 0.74
+
+Il contratto è un modulo con interface e senza implementation. Un provider
+dichiara implements seguito dal percorso, quindi implementation, senza
+ripetere l'interfaccia. Prima implementazione: un solo contratto, nessun
+export aggiuntivo, firme esplicite per valori e selettori, tipi astratti,
+manifest di build senza duplicazione del contratto. Restano da definire
+identità astratte indipendenti dalla selezione, analisi senza provider,
+import/re-export nelle interfacce autonome e composizione di contratti.
