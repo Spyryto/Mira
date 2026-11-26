@@ -462,3 +462,14 @@ La virgola delimita i nomi; lo scope resta quello della dichiarazione.
 Si riutilizzano readWords, la separazione delle parti e il parser
 delle annotazioni. Nessuna modifica alla IR o al runtime.
 Il problema generale del mangling dei nomi host resta separato.
+
+
+## 0.60.2 — indipendenza dai nomi host
+
+Prima correzione centralizzata: il mangler distingue nomi
+sorgente e nomi generati, protegge i simboli nativi usati
+dagli emitter e un insieme esplicito di keyword e funzioni
+comuni. Il prefisso interno viene escapato se usato dal
+sorgente. Manteniamo la compatibilità dei nomi ordinari degli
+adattatori JS/PHP. Un isolamento completo rispetto a estensioni
+PHP o codice host arbitrario richiederà namespace/export espliciti.
