@@ -36,6 +36,9 @@ class Main {
                 args.splice(flag, 2);
             }
 
+            final checkedFlag = args.indexOf("--checked");
+            if (checkedFlag >= 0) args.splice(checkedFlag,1);
+
             final locationFlag = args.indexOf("--locations");
             if (locationFlag >= 0) args.splice(locationFlag, 1);
 
@@ -57,6 +60,8 @@ class Main {
                 if (!fs.statSync(actual).isFile()) return null;
                 return fs.readFileSync(actual, "utf8");
             };
+            if (checkedFlag >= 0 && args[1] != "js" && args[1] != "php")
+                throw new MiraError("--checked requires a js or php target");
             var output:String;
             if (args[1] == "--check-json") {
                 if (locationFlag >= 0) throw new MiraError("--locations is not applicable to --check-json");
@@ -68,11 +73,13 @@ class Main {
                 }
             } else if (locationFlag >= 0) {
                 final locations:Array<GeneratedLocation> = [];
-                final code = Compiler.transpile(source, parseTarget(args[1]), host, locations, readModule, entry);
+                final code = checkedFlag >= 0 ? Compiler.transpileChecked(source,parseTarget(args[1]),host,locations,readModule,entry)
+                    : Compiler.transpile(source, parseTarget(args[1]), host, locations, readModule, entry);
                 output = haxe.Json.stringify({output: code, locations: locations}, null, "  ") + "\n";
             } else {
                 output = args[1] == "--check" ? haxe.Json.stringify(Compiler.check(source,host,readModule,entry), null, "  ") + "\n"
                     : args[1] == "--tokens" ? Compiler.inspectTokens(source) + "\n"
+                    : checkedFlag >= 0 ? Compiler.transpileChecked(source,parseTarget(args[1]),host,null,readModule,entry)
                     : Compiler.transpile(source, parseTarget(args[1]), host, null, readModule, entry);
             }
 
@@ -97,7 +104,7 @@ class Main {
 
     static function usage(nodeProcess:Dynamic):Void {
         nodeProcess.stderr.write(
-            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens|--check|--check-json> [output] [--host manifest.json] [--locations]\n"
+            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens|--check|--check-json> [output] [--host manifest.json] [--locations] [--checked]\n"
         );
         nodeProcess.exitCode = 2;
     }
