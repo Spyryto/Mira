@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.77.0');
+  assert.equal(bridge.version, JSON.parse(readFileSync(resolve(root,'package.json'),'utf8')).version);
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.77.0');
+  assert.equal(bridge.version,JSON.parse(readFileSync(resolve(root,'package.json'),'utf8')).version);
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1414,6 +1414,16 @@ test('0.71 scalability: shared dependency graph, checked execution and pruning a
     for(const target of ['js','php']){
       const a=bench.measure(bridge,fixture,target,false),b=bench.measure(bridge,fixture,target,true);
       assert.equal(b.optimization.before,7*count+2);
+      const phases=['collect','scopes','expressions','checking','emission'];
+      for(const [sample,expected] of [[a,phases],[b,[...phases.slice(0,-1),'pruning','emission']]]){
+        assert.deepEqual(Array.from(sample.profile.phases,p=>p.phase),expected);
+        assert.ok(sample.profile.phases.every(p=>Number.isFinite(p.ms)&&p.ms>=0));
+        assert.ok(Math.abs(sample.profile.phases.reduce((sum,p)=>sum+p.ms,0)-sample.profile.totalMs)<1e-6);
+        const ordinary=bridge.compile(fixture.source,target,null,false,fixture.modules,true,sample===b);
+        assert.equal(ordinary.ok,true,ordinary.message);
+        assert.equal(sample.output,ordinary.output);
+        assert.equal(ordinary.profile,undefined);
+      }
       assert.equal(b.optimization.after,count+2);
       assert.equal(b.optimization.removed.length,6*count);
       assert.ok(b.bytes<a.bytes);
@@ -1425,7 +1435,7 @@ test('0.71 scalability: shared dependency graph, checked execution and pruning a
           assert.equal(run.status,0,run.stderr);assert.equal(Number(run.stdout),fixture.expected);
         }
       }
-      t.diagnostic(JSON.stringify({modules:count+2,target,checkedMs:a.ms,optimizedMs:b.ms,bytesBefore:a.bytes,bytesAfter:b.bytes,removed:b.optimization.removed.length}));
+      t.diagnostic(JSON.stringify({modules:count+2,target,checkedMs:a.ms,optimizedMs:b.ms,bytesBefore:a.bytes,bytesAfter:b.bytes,removed:b.optimization.removed.length,checkedProfile:a.profile,optimizedProfile:b.profile}));
     }
   }
   assert.ok(read('sw.js').includes('./module-benchmark.js'));
@@ -1700,4 +1710,17 @@ test('0.79 separates source changes, public interfaces and selected links',()=>{
   assert.equal(delta.hostChanged,true);
   assert.equal(delta.bindingsChanged,true);
   assert.equal(compare(null,a).sources,null);
+});
+
+test('0.80 profiling is opt-in, checked-only and keeps diagnostics and locations',()=>{
+  const src='result = 2 + 3;';
+  const profiled=bridge.compile(src,'js',null,true,null,true,false,null,true);
+  const ordinary=bridge.compile(src,'js',null,true,null,true);
+  assert.equal(profiled.ok,true,profiled.message);
+  assert.equal(profiled.output,ordinary.output);
+  assert.deepEqual(profiled.locations,ordinary.locations);
+  assert.equal(bridge.compile(src,'js',null,false,null,false,false,null,true).ok,false);
+  const bad=bridge.compile('result = 1 + "x";','js',null,false,null,true,false,null,true);
+  assert.equal(bad.ok,false);
+  assert.equal(bad.profile,undefined);
 });

@@ -81,14 +81,20 @@
         const fixture=bench.project(count);
         for(const target of ['js','php']){
           const samples=[[],[]];
-          for(let i=0;i<3;i++)for(const mode of (i%2?[1,0]:[0,1])){
+          for(const mode of [false,true])bench.measure(MiraStudioCompiler,fixture,target,mode);
+          for(let i=0;i<5;i++)for(const mode of (i%2?[1,0]:[0,1])){
             await new Promise(resolve=>setTimeout(resolve,0));
             samples[mode].push(bench.measure(MiraStudioCompiler,fixture,target,mode===1));
           }
-          const a=samples[0][2],b=samples[1][2];
+          const a=samples[0][4],b=samples[1][4];
+          const plain=bench.summarize(samples[0]),optimized=bench.summarize(samples[1]);
+          const labels={collect:'Lexer + dichiarazioni + import',scopes:'Scope',expressions:'Espressioni + risoluzione',checking:'Type checker',pruning:'Tree shaking',emission:'Emissione'};
+          const breakdown=p=>p.phases.map(x=>'  '+labels[x.phase]+': '+x.ms.toFixed(3)+' ms').join('\n');
           const line=[(count+2)+' moduli · '+target.toUpperCase(),
             'Checked: '+bench.median(samples[0]).toFixed(2)+' ms',
             'Ottimizzata: '+bench.median(samples[1]).toFixed(2)+' ms',
+            'Pipeline checked: '+plain.totalMs.toFixed(3)+' ms',breakdown(plain),
+            'Pipeline ottimizzata: '+optimized.totalMs.toFixed(3)+' ms',breakdown(optimized),
             'Byte UTF-8: '+a.bytes+' → '+b.bytes,
             'Dichiarazioni: '+b.optimization.before+' → '+b.optimization.after].join('\n');
           out.textContent+=(out.textContent?'\n\n':'')+line;

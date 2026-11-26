@@ -50,6 +50,10 @@ class Main {
             if (shakeFlag >= 0) args.splice(shakeFlag,1);
             if (shakeFlag >= 0 && checkedFlag < 0) throw new MiraError("--tree-shake requires --checked");
 
+            final profileFlag = args.indexOf("--profile");
+            if (profileFlag >= 0) args.splice(profileFlag,1);
+            if (profileFlag >= 0 && checkedFlag < 0) throw new MiraError("--profile requires --checked");
+
             final locationFlag = args.indexOf("--locations");
             if (locationFlag >= 0) args.splice(locationFlag, 1);
 
@@ -78,7 +82,14 @@ class Main {
             if (providers != null && checkedFlag < 0 && args[1] != "--check" && args[1] != "--check-json" && args[1] != "--interfaces")
                 throw new MiraError("--bindings requires --checked or --check/--check-json");
             var output:String;
-            if (args[1] == "--interfaces") {
+            if (profileFlag >= 0) {
+                final profile = new mira.CompileProfile();
+                final locations:Array<GeneratedLocation> = locationFlag >= 0 ? [] : null;
+                final code = Compiler.transpileChecked(source,parseTarget(args[1]),host,locations,readModule,entry,shakeFlag >= 0,null,providers,profile);
+                final report:Dynamic = {output:code,profile:profile.report()};
+                if (locations != null) Reflect.setField(report,"locations",locations);
+                output = haxe.Json.stringify(report,null,"  ") + "\n";
+            } else if (args[1] == "--interfaces") {
                 if (locationFlag >= 0) throw new MiraError("--locations is not applicable to --interfaces");
                 output = haxe.Json.stringify(Compiler.interfaces(source,host,readModule,entry,providers),null,"  ") + "\n";
             } else if (args[1] == "--check-json") {
@@ -122,7 +133,7 @@ class Main {
 
     static function usage(nodeProcess:Dynamic):Void {
         nodeProcess.stderr.write(
-            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens|--check|--check-json|--interfaces> [output] [--host manifest.json] [--locations] [--checked] [--tree-shake] [--bindings bindings.json]\n"
+            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens|--check|--check-json|--interfaces> [output] [--host manifest.json] [--locations] [--checked] [--tree-shake] [--profile] [--bindings bindings.json]\n"
         );
         nodeProcess.exitCode = 2;
     }

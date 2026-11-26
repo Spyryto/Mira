@@ -1,5 +1,5 @@
 {
-  "version": "0.79.0",
+  "version": "0.80.0",
   "features": [
     {
       "id": "values",
@@ -2052,6 +2052,12 @@
       "title": "Impronte dei sorgenti letti e confronto del collegamento",
       "since": "0.79",
       "doc": "docs/grammar.md#mira-079-impronte-dei-sorgenti-e-collegamenti"
+    },
+    {
+      "id": "checked-phase-profile",
+      "title": "Profilazione delle fasi di compilazione checked",
+      "since": "0.80",
+      "doc": "docs/performance.md#mira-080-profilazione-della-pipeline-checked"
     }
   ]
 }

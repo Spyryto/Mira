@@ -1787,3 +1787,23 @@ test('0.79 interface reports hash the entry and the exact resolver reads indepen
     assert.equal(second.sourceInputs.entry,first.sourceInputs.entry);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('0.80 CLI profiles the checked pipeline without changing either emitter output',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-profile-'));
+  try{
+    const input=join(dir,'program.mira');
+    writeFileSync(input,'module App; interface result; implementation result = 2 + 3; unused = 7;');
+    const run=flags=>spawnSync('node',['dist/mira.cjs',input,...flags],{encoding:'utf8'});
+    for(const target of ['js','php'])for(const optimized of [false,true]){
+      const flags=[target,'--checked',...(optimized?['--tree-shake']:[])];
+      const raw=run(flags),profiled=run([...flags,'--profile']);
+      assert.equal(raw.status,0,raw.stderr);assert.equal(profiled.status,0,profiled.stderr);
+      const data=JSON.parse(profiled.stdout);
+      assert.equal(data.output,raw.stdout);
+      assert.deepEqual(data.profile.phases.map(p=>p.phase),['collect','scopes','expressions','checking',...(optimized?['pruning']:[]),'emission']);
+      assert.ok(data.profile.phases.every(p=>Number.isFinite(p.ms)&&p.ms>=0));
+      assert.ok(Math.abs(data.profile.phases.reduce((sum,p)=>sum+p.ms,0)-data.profile.totalMs)<1e-6);
+    }
+    assert.notEqual(run(['js','--profile']).status,0);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

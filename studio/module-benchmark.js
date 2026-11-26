@@ -18,15 +18,20 @@
   }
   function measure(compiler,fixture,target,optimized,clock=()=>performance.now()){
     const start=clock();
-    const r=compiler.compile(fixture.source,target,null,false,fixture.modules,true,optimized);
+    const r=compiler.compile(fixture.source,target,null,false,fixture.modules,true,optimized,null,true);
     const ms=clock()-start;
     if(!r.ok)throw Error(r.message);
-    return {ms,bytes:new TextEncoder().encode(r.output).length,optimization:r.optimization||null,output:r.output};
+    return {ms,bytes:new TextEncoder().encode(r.output).length,optimization:r.optimization||null,profile:r.profile,output:r.output};
   }
   function median(samples){
     const values=samples.map(x=>x.ms).sort((a,b)=>a-b);
     const i=Math.floor(values.length/2);
     return values.length%2?values[i]:(values[i-1]+values[i])/2;
   }
-  globalThis.MiraModuleBenchmark={project,measure,median};
+  function summarize(samples){
+    const phases=samples[0].profile.phases.map(p=>p.phase);
+    return {totalMs:median(samples.map(s=>({ms:s.profile.totalMs}))),
+      phases:phases.map(phase=>({phase,ms:median(samples.map(s=>({ms:s.profile.phases.find(p=>p.phase===phase).ms})))}))};
+  }
+  globalThis.MiraModuleBenchmark={project,measure,median,summarize};
 })();

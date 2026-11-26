@@ -101,3 +101,17 @@ del sorgente. Le frequenze del processore, il JIT e la precisione del
 timer influenzano il risultato: usare più misure e distinguere CI,
 dispositivo e target. PHP non è eseguibile dal browser e non viene
 spacciato per un benchmark locale della PWA.
+
+## Mira 0.80: profilazione della pipeline checked
+
+`node dist/mira.cjs app.mira js --checked --profile` restituisce JSON con output e profile; accetta anche PHP, tree shaking, manifest host/provider e locations. Il percorso normale non misura tempi. Studio espone l'ultimo parametro facoltativo withProfile di compile; Module Explorer → Scalabilità misura progetti a diamante di 6, 18 e 66 moduli, entrambi i target con e senza pruning.
+
+Fasi consecutive, misurate nello stesso passaggio:
+- collect: inizializzazione, lexer, dichiarazioni, import, risoluzione moduli (incluse eventuali letture del resolver);
+- scopes: tabelle di simboli per modulo;
+- expressions: parsing e risoluzione delle espressioni, canonicalizzazione;
+- checking: preparazione guardie, inferenza e verifica;
+- pruning: tree shaking quando abilitato;
+- emission: tabella globale dei simboli ed emitter.
+
+La mediana di cinque campioni alternati per modalità, dopo un warmup per modalità, è mostrata per ogni fase e totale. Le mediane separate non sono necessariamente additive. Il tempo esterno della chiamata include anche preparazione manifest/resolver e bridge. La CI verifica output identico alla compilazione ordinaria, ordine delle fasi, tempi finiti non negativi, somma dei singoli intervalli e risultato eseguito JS/PHP. I log CI contengono campioni singoli di profiling; non sono un benchmark di regressione con soglie. Le fasi aggregano operazioni realmente intercalate: non attribuiamo tempi distinti a lexer e resolver senza strumentazione più fine. Nessuna cache, nessuna promessa di velocità e nessun codice di profiling nei programmi generati.
