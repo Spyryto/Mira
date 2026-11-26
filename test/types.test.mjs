@@ -1218,7 +1218,6 @@ test('0.66 flat interfaces accept inferred selectors, values and public nominal 
     ['interface x;',/Expected implementation section/],
     ['interface interface implementation x = 1;',/Duplicate interface section/],
     ['interface x; implementation x = 1; implementation y = 2;',/Unexpected module section marker/],
-    ['interface Hidden; implementation Hidden :: Number;',/Opaque type exports are not implemented yet/],
     ['interface T; implementation T :: Number; T = 1;',/Ambiguous value or type export/],
     ['interface T :: Number; implementation T :: Text;',/Duplicate or reserved type T/],
     ['interface import "unused.mira"; x; implementation x = 1;',/Interface exports must precede imports/],
@@ -1335,6 +1334,67 @@ test('0.68 a public contract is equivalent to implementation annotations in chec
       writeFileSync(file,x.stdout+(target==='js'?'\nconsole.log('+name+');':'\necho $'+name+';'));
       const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
       assert.equal(run.status,0,run.stderr);assert.equal(run.stdout.trim(),'4');
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+
+test('0.69 rejects private type escape from inferred public contracts',()=>{
+  for(const src of [
+    'interface exported; implementation Hidden :: Number; exported (Hidden) = 1;',
+    'interface exposed: ; implementation Hidden :: Number; exposed: x (Hidden) = x;',
+    'interface exposed; implementation Hidden :: Number; value (Hidden) = 1; exposed = {items: [value]};',
+    'interface exposed; implementation Hidden :: Number; value (Hidden) = 1; exposed = {| value};',
+    'interface exposed; implementation Hidden (T) :: [T]; exposed (Hidden (Number)) = [1];'
+  ]) assert.throws(()=>check('module M; '+src),/Public signature exposes private type M \/ Hidden/,src);
+  const types=check('module M; interface Token; make: :: (Number) -> Token; implementation Hidden :: Number; Token :: {secret: Hidden}; make: n = () >> {| value (Hidden) = n; {secret: value}};');
+  assert.equal(types['M / make:'],'(Number) -> M / Token');
+});
+
+test('0.69 opaque types retain nominal identity while hiding native representation',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-opaque-types-'));
+  try{
+    const input=join(dir,'program.mira'), lib=join(dir,'Vault.mira');
+    const body='Secret :: {value: Number}; Score :: Number; State :: Ready | Busy (Number); make: n = {value: n}; reveal: s = s ~ value; score: n = n; points: n = n + 0; ready = Ready; state value: s = match: s {ready: {| 1}, busy: {n | n}};';
+    const library='module Vault; interface Secret; Score; State; make: :: (Number) -> Secret; reveal: :: (Secret) -> Number; score: :: (Number) -> Score; points: :: (Score) -> Number; ready (State); state value: :: (State) -> Number; implementation '+body;
+    writeFileSync(lib,library);
+    const src='module App; import Vault {Secret => Token; make: ; reveal: ; Score; score: ; points: ; State; ready; state value: ;}; token (Token) = make: 7; number (Score) = score: 5; result = (reveal: token) + (points: number) + (state value: ready);';
+    writeFileSync(input,src);
+    const report=spawnSync('node',['dist/mira.cjs',input,'--check'],{encoding:'utf8'});
+    assert.equal(report.status,0,report.stderr);
+    const rows=JSON.parse(report.stdout);
+    assert.equal(rows.find(x=>x.name==='App / token').type,'Vault / Secret');
+    assert.deepEqual(rows.find(x=>x.name==='App / token').schema,{kind:'Opaque',name:'Vault / Secret'});
+    assert.deepEqual(rows.find(x=>x.name==='Vault / make:').schema.result,{kind:'Opaque',name:'Vault / Secret'});
+    for(const target of ['js','php']){
+      const compile=()=>spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
+      const a=compile();assert.equal(a.status,0,a.stderr);
+      const transparent=library.replace('Secret; Score; State;','Secret :: {value: Number}; Score :: Number; State :: Ready | Busy (Number);').replace('implementation Secret :: {value: Number}; Score :: Number; State :: Ready | Busy (Number);','implementation');
+      writeFileSync(lib,transparent);
+      const b=compile();assert.equal(b.status,0,b.stderr);assert.equal(a.stdout,b.stdout);
+      writeFileSync(lib,library);
+      const name='__miraModule_v_'+Buffer.from('App / result').toString('hex').toUpperCase();
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      writeFileSync(file,a.stdout+(target==='js'?'\nconsole.log('+name+');':'\necho $'+name+';'));
+      const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);assert.equal(run.stdout.trim(),'13');
+    }
+    for(const [code,pattern] of [
+      ['import Vault {Secret;}; token (Secret) = {value: 7};',/Type check/],
+      ['import Vault {make: ;}; token = make: 7; bad = token ~ value;',/Type check/],
+      ['import Vault {Secret;}; bad: s (~ Secret) = s;',/Structural projection requires/],
+      ['import Vault {Score;}; score (Score) = 5;',/Type check/],
+      ['import Vault {score: ;}; n = score: 5; bad = n + 1;',/Type check/],
+      ['import Vault {score: ;}; n = score: 5; bad = n == n;',/Type check/],
+      ['import Vault {score: ;}; n = score: 5; bad (Integer) = n;',/Type check/],
+      ['import Vault {score: ;}; n = score: 5; bad = validate: (n), as: (Integer), then: {x | x}, else: {e | 0};',/Cannot validate opaque representation/],
+      ['import Vault {State; ready;}; bad = match: ready {ready: {| 1}, busy: {n | n}};',/Match requires a known sum type/],
+      ['import Vault {Ready;}; bad = Ready;',/Symbol not exported/],
+      ['import Vault {Secret;}; bad: s (Secret) = s ~ value;',/Type check/]
+    ]){
+      writeFileSync(input,'module App; '+code);
+      const x=spawnSync('node',['dist/mira.cjs',input,'--check'],{encoding:'utf8'});
+      assert.notEqual(x.status,0,code);assert.match(x.stderr,pattern,code);
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
