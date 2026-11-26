@@ -28,7 +28,7 @@ test('the browser bundle exposes the real Haxe compiler', () => {
   assert.equal(typeof bridge?.compile, 'function');
   assert.equal(typeof bridge?.tokens, 'function');
   assert.equal(typeof bridge?.ast, 'function');
-  assert.equal(bridge.version, '0.57.0');
+  assert.equal(bridge.version, '0.58.0');
 });
 
 test('browser bundle compiles JavaScript that executes correctly', () => {
@@ -287,7 +287,7 @@ test('Studio bridge exposes native Mira 0.4 accessor, comparison and lazy condit
     'student = {score: 8};',
     'result = if: ((student >> score) >= 6), then: (true), else: (false);'
   ].join('\n');
-  assert.equal(bridge.version,'0.57.0');
+  assert.equal(bridge.version,'0.58.0');
   const parsed=bridge.ast(source);
   assert.equal(parsed.ok,true,parsed.message);
   const definitions=JSON.parse(parsed.output).definitions;
@@ -1094,4 +1094,18 @@ test('Studio checks typed fallible validation and exposes its AST',()=>{
   }
   assert.equal(runInNewContext(bridge.compile(src,'js').output+'\nresult',{}),0);
   assert.match(read('type-lab.html'),/validation-example/);
+});
+
+test('Studio exposes nominal sum schemas and constructor ASTs',()=>{
+  const src='Connection :: Disconnected | Connected (Text); result = Connected: "Ada";';
+  const report=bridge.check(src);assert.equal(report.ok,true,report.message);
+  const entries=JSON.parse(report.output);
+  const result=entries.find(x=>x.name==='result');
+  assert.equal(result.type,'Connection');
+  assert.deepEqual(result.schema,{kind:'Sum',name:'Connection',alternatives:[{tag:'Connected',payload:{kind:'Text'}},{tag:'Disconnected',payload:null}]});
+  const ast=bridge.ast(src);assert.equal(ast.ok,true,ast.message);
+  assert.equal(JSON.parse(ast.output).definitions.find(x=>x.name==='Connected:').body.kind,'Variant');
+  for(const target of ['js','php'])assert.equal(bridge.compile(src,target,null,false,null,true).ok,true);
+  assert.equal(bridge.check(src+'bad (Connection) = {tag: "Connected", value: "Ada"};').ok,false);
+  assert.match(read('type-lab.html'),/sum-example/);
 });
