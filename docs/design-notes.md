@@ -555,3 +555,13 @@ senza copie nominali. Il resolver host sceglie i file. Gli emitter vedono
 le globali locali e quelle importate, senza wrapper o oggetti modulo.
 La convenzione editoriale degli import preferisce `square: ;` e
 `add: by: => somma: a: ;`, pur accettando gli spazi facoltativi.
+
+## 0.68 — contratti pubblici espliciti
+
+PublicSignature risolve la firma nello scope dei tipi pubblici e la
+trasferisce alla definizione prima della risoluzione dei corpi. Il checker
+riusa annotazioni, rigidità delle variabili esplicite e inferenza esistenti.
+L'uguaglianza delle annotazioni ripetute è strutturale per dati anonimi,
+nominale per tipi dichiarati e confronta gli slot generici per posizione.
+Nessun nuovo nodo AST o modifica agli emitter. La verifica delle fughe di
+tipi privati resta separata, insieme all'opacità.
