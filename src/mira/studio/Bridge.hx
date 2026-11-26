@@ -6,6 +6,7 @@ import mira.Target;
 import mira.MiraError;
 import mira.syntax.Expr;
 import mira.syntax.Definition;
+import mira.types.Type;
 import mira.resolve.Symbols;
 import mira.emit.SourceLocations.GeneratedLocation;
 
@@ -134,7 +135,15 @@ class Bridge {
             final info:Dynamic = haxe.Json.parse(traced.output);
             final types:Array<Dynamic> = haxe.Json.parse(checked.output);
             final byName = new Map<String,Dynamic>();
-            for (row in types) if (row.name != "<expression>") byName.set(row.name,row);
+            final privateByModule = new Map<String,Array<Dynamic>>();
+            for (row in types) {
+                if (row.name != "<expression>") byName.set(row.name,row);
+                if (row.module != null && row.exported == false) {
+                    final path:String = row.module;
+                    if (!privateByModule.exists(path)) privateByModule.set(path,[]);
+                    privateByModule.get(path).push({name:row.name,type:row.type,line:row.line,column:row.column,file:row.file});
+                }
+            }
             final interfaces:Array<Dynamic> = info.interfaces;
             for (item in interfaces) {
                 final exports:Array<Dynamic> = item.exports;
@@ -142,7 +151,7 @@ class Bridge {
                 final forwarded:Array<Dynamic> = item.reexports;
                 if (forwarded != null) for (symbol in forwarded) if (symbol.kind != "type")
                     Reflect.setField(symbol,"signature",byName.get(symbol.target));
-                Reflect.setField(item,"privateDeclarations",[for (row in types) if (row.module == item.module && row.exported == false) {name:row.name,type:row.type,line:row.line,column:row.column,file:row.file}]);
+                Reflect.setField(item,"privateDeclarations",privateByModule.exists(item.module) ? privateByModule.get(item.module) : []);
             }
             return haxe.Json.stringify({interfaces:interfaces,dependencies:info.moduleDependencies},null,"  ");
         });
@@ -160,6 +169,11 @@ class Bridge {
             final reexports = new Map<String,Array<Dynamic>>();
             final visibility = new mira.types.TypeVisibility();
             final raw = [for (d in mira.Modules.collect(source, resolver(modulesJson),null,null,moduleTypes,publicTypes,null,visibility,reexports,moduleEdges)) d.canonical()];
+            final exportsByModule = new Map<String,Array<Dynamic>>();
+            for (d in raw) if (d.modulePath != null && d.isExported) {
+                if (!exportsByModule.exists(d.modulePath)) exportsByModule.set(d.modulePath,[]);
+                exportsByModule.get(d.modulePath).push({name:d.isFunction() ? d.selector() : d.name,kind:d.isFunction() ? "selector" : "value"});
+            }
             final moduleInterfaces:Array<Dynamic> = [];
             final paths = [for (path in publicTypes.keys()) path];
             paths.sort(Reflect.compare);
@@ -169,16 +183,13 @@ class Bridge {
                 typeIdentities:[for (name in publicTypes.get(path)) {
                     final type = moduleTypes.get(path).get(name);
                     switch (type) {
-                        case mira.types.Type.NamedType(id,_): {name:name,identity:id,arity:0,opaque:visibility.opaqueNames.exists(id)};
-                        case mira.types.Type.OpaqueType(id,args) | mira.types.Type.ParametricNamedType(id,_,args) | mira.types.Type.SumType(id,_,args) | mira.types.Type.SumReference(id,_,args): {name:name,identity:id,arity:args.length,opaque:visibility.opaqueNames.exists(id)};
+                        case NamedType(id,_): {name:name,identity:id,arity:0,opaque:visibility.opaqueNames.exists(id)};
+                        case OpaqueType(id,args) | ParametricNamedType(id,_,args) | SumType(id,_,args) | SumReference(id,_,args): {name:name,identity:id,arity:args.length,opaque:visibility.opaqueNames.exists(id)};
                         default: throw new MiraError("Expected nominal public type " + name);
                     }
                 }],
                 opaqueTypes:[for (name in publicTypes.get(path)) if (visibility.opaqueNames.exists(mira.resolve.ModuleIdentity.qualify(path,name))) name],
-                exports:[for (d in raw) if (d.modulePath == path && d.isExported) {
-                    name:d.isFunction() ? d.selector() : d.name,
-                    kind:d.isFunction() ? "selector" : "value"
-                }]
+                exports:exportsByModule.exists(path) ? exportsByModule.get(path) : []
             });
             for (item in moduleInterfaces) {
                 final forwarded = reexports.get(item.module);
