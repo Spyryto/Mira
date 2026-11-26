@@ -65,6 +65,6 @@ class InterfaceReport {
             modules.push({module:logical,resolvedModule:path,fingerprint:haxe.crypto.Sha256.encode(serialized),canonical:serialized,surface:surface});
         }
         modules.sort((a,b) -> Reflect.compare(a.module,b.module));
-        return {format:1,interfaces:modules};
+        return {format:1,interfaces:modules,dependencies:edges};
     }
 }

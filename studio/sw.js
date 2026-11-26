@@ -44,6 +44,7 @@ const ASSETS = [
   './type-lab.js',
   './module-explorer.html',
   './module-explorer.js',
+  './interface-impact.js',
   './module-benchmark.js',
   './effects-demo.mira',
   './effects-demo.js',

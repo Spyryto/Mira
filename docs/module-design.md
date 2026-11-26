@@ -280,6 +280,7 @@ make pair: first, with: second = {first: first, second: second};
 | 0.71 | Esplorazione delle interfacce elaborate in Mira Studio |
 | 0.72–0.76 | Contratti indipendenti, binding statico, opacità e identità stabili |
 | 0.77 | Impronte delle superfici pubbliche |
+| 0.78 | Confronto delle superfici e impatto potenziale sulle dipendenze |
 
 Le versioni possono cambiare se un incremento necessita di un prerequisito.
 Non dichiarare completo l'isolamento prima che tutte le vie d'accesso
@@ -348,3 +349,7 @@ per progettare invalidazione e cache: distingue cambiamenti pubblici da
 modifiche private senza saltare il controllo. Il provider è metadato di
 collegamento separato dalla superficie del contratto. Resta da definire
 la chiave completa di analisi e il riuso sicuro delle interfacce.
+
+### 0.78 — confronto e dipendenti potenziali
+
+Il report include le direttive del resolver come metadati separati. Per il confronto in Studio si normalizzano i percorsi dei provider selezionati alla superficie logica; si percorre l'unione dei grafi precedenti e successivi in direzione dipendenza → consumatore. Si escludono gli archi implements (realizzazione già rappresentata nella superficie) e i file legacy, segnalati come non coperti. Un cambio di provider a parità di impronta non è una modifica del tipo pubblico, ma richiede considerazioni di linking/codegen. Non saltare controlli sulla base di questo rapporto.

@@ -685,3 +685,7 @@ Roadmap concordata come ordine di priorità, non calendario né promessa di vers
 6. Grammar Lab, operatori personalizzati e trasformazioni compile time; successivamente un eventuale backend Go motivato da casi concreti.
 
 La correttezza prevale sulle ottimizzazioni. Ogni incremento: test positivi e negativi, JS/PHP, Studio, documentazione e integrazione solo con CI verde. La 1.0 è un traguardo di usabilità applicativa, non un numero di feature.
+
+## 0.78 — impatto potenziale delle modifiche pubbliche
+
+Il report delle interfacce espone anche le direttive di dipendenza già raccolte dal resolver, fuori dalla superficie hashata. Studio confronta due report riusciti, distingue aggiunte, rimozioni, modifiche di schema e cambio di provider, e percorre gli archi inversi logici di entrambi i grafi. I consumatori raggiunti sono candidati conservativi alla riverifica, non una decisione di cache. Il cambio di provider è segnalato separatamente per il collegamento. Il compilatore continua a controllare tutto; modifiche private, host, sorgente e opzioni non sono coperte da una semplice impronta.

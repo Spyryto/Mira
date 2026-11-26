@@ -854,3 +854,7 @@ identità delle dipendenze, sorgente e opzioni, oltre a diagnostica e
 obblighi di codegen. Non vengono ancora riutilizzate analisi o scritte
 cache persistenti. Studio → Module Explorer → Impronte delle interfacce
 confronta l'ultima analisi riuscita in memoria e mostra il report.
+
+## Mira 0.78: confronto delle interfacce e impatto potenziale
+
+Il report `--interfaces` formato 1 aggiunge `dependencies`, le direttive del resolver, separate dal JSON canonico e dalla sua impronta. Studio → Module Explorer → Impronte delle interfacce confronta due analisi riuscite: moduli nuovi, rimossi, modificati, invariati e cambi di provider. Mostra i consumatori potenzialmente interessati dalle modifiche di superficie tramite gli archi inversi di entrambi i grafi, normalizzando i provider selezionati alla superficie logica. Gli archi implements non sono dipendenze di consumo; import di file legacy non sono coperti. Il rapporto non certifica sicurezza di riuso, non rileva tutte le modifiche di build e non è una cache incrementale. Il controllo completo resta invariato.
