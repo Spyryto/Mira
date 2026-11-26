@@ -63,6 +63,29 @@ class SourceEmitter {
                 };
                 accessor;
 
+            case Match(input,tags,handlers):
+                final prefix = target == Php ? "$" : "";
+                final v = prefix + "__miraMatchValue";
+                final formals = [v];
+                final args = [expression(input,target,scope,reservedHostNames,guards)];
+                final tag = target == Php ? v + "['tag']" : v + ".tag";
+                final payload = target == Php ? v + "['value']" : v + ".value";
+                final branches:Array<String> = [];
+                for (i in 0...tags.length) {
+                    final handler = prefix + "__miraMatchHandler" + i;
+                    formals.push(handler);
+                    args.push(expression(handlers[i],target,scope,reservedHostNames,guards));
+                    final arity = switch (handlers[i]) { case Block(parameters,_): parameters.length; default: 0; };
+                    final label = target == Php ? phpString(tags[i]) : haxe.Json.stringify(tags[i]);
+                    // Strict comparison on both targets. PHP switch uses loose equality.
+                    branches.push("if (" + tag + " === " + label + ") return " + handler + "(" + (arity == 0 ? "" : payload) + ");");
+                }
+                branches.push("throw new " + (target == Php ? "\\RuntimeException" : "Error") + "('Mira unmatched sum alternative');");
+                final body = branches.join(" ");
+                final wrapper = target == Php ? "(static function(" + formals.join(", ") + ") { " + body + " })"
+                    : "((" + formals.join(", ") + ") => { " + body + " })";
+                wrapper + "(" + args.join(", ") + ")";
+
             case Variant(_,tag,payload):
                 final fields = payload == null ? ["tag"] : ["tag","value"];
                 final values:Array<Expr> = payload == null ? [Text(tag)] : [Text(tag),payload];
@@ -252,6 +275,8 @@ class SourceEmitter {
                     names.push(name);
             case FieldGet(receiver, _):
                 referencedNames(receiver, bound, names);
+            case Match(input,_,handlers):
+                referencedNames(input,bound,names); for (handler in handlers) referencedNames(handler,bound,names);
             case Variant(_,_,payload): if (payload != null) referencedNames(payload,bound,names);
             case Validate(input,_,success,failure):
                 referencedNames(input,bound,names);
