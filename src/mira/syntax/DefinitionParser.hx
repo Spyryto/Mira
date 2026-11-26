@@ -6,7 +6,7 @@ import mira.lex.Token.TokenKind;
 import mira.types.Type;
 
 class DefinitionParser {
-    public static function parse(tokens:Array<Token>, ?names:Map<String,Type>, ?modulePath:String):Array<Definition> {
+    public static function parse(tokens:Array<Token>, ?names:Map<String,Type>, ?modulePath:String, ?typeIdentities:Map<String,String>):Array<Definition> {
         if (names == null) names = new Map<String,Type>();
         final definitions:Array<Definition> = [];
         var start = 0;
@@ -35,7 +35,7 @@ class DefinitionParser {
                             throw new MiraError("Expected name :: Type",segment[marker]);
                         final header = typeHeader(segment.slice(0,marker),names);
                         final name = header.name;
-                        final identity = mira.resolve.ModuleIdentity.qualify(modulePath,name);
+                        final identity = typeIdentities != null && typeIdentities.exists(name) ? typeIdentities.get(name) : mira.resolve.ModuleIdentity.qualify(modulePath,name);
                         if (["Number","Integer","Text","Boolean"].indexOf(name) >= 0 || names.exists(name))
                             throw new MiraError("Duplicate or reserved type " + name,segment[0]);
                         final rhs = segment.slice(marker+1);
