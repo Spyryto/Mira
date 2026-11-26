@@ -10,10 +10,12 @@ class TypeParser {
     final tokens:Array<Token>;
     final fallback:Token;
     var position = 0;
+    final names:Map<String,Type>;
 
-    public function new(tokens:Array<Token>, fallback:Token) {
+    public function new(tokens:Array<Token>, fallback:Token, ?names:Map<String,Type>) {
         this.tokens = tokens;
         this.fallback = fallback;
+        this.names = names == null ? new Map<String,Type>() : names;
     }
 
     function current():Null<Token> return position < tokens.length ? tokens[position] : null;
@@ -73,12 +75,14 @@ class TypeParser {
         }
         final token = current();
         if (token == null || token.kind != Word) return fail("Expected a type annotation");
-        position++;
-        return switch (token.value) {
+        final words:Array<String> = [];
+        while (current() != null && current().kind == Word) words.push(tokens[position++].value);
+        final name = words.join(" ");
+        return switch (name) {
             case "Number": NumberType;
             case "Text": TextType;
             case "Boolean": BooleanType;
-            default: throw new MiraError("Unknown annotation type " + token.value,token);
+            default: if (names.exists(name)) names.get(name) else throw new MiraError("Unknown annotation type " + name,token);
         };
     }
 }
