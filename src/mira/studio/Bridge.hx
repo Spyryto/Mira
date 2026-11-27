@@ -25,7 +25,7 @@ class Bridge {
             verifyContract: verifyContract,
             constantData: constantData,
             styleContractSource: styleContractSource,
-            version: "0.97.1"
+            version: "0.98"
         });
     }
 
