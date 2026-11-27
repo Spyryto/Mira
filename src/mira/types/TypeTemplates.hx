@@ -33,6 +33,7 @@ class TypeTemplates {
             case Variable(id) if (slots.exists(id)): slots.get(id);
             case OpaqueType(name,args): OpaqueType(name,[for (a in args) substitute(a,slots)]);
             case ListType(item): ListType(substitute(item,slots));
+            case ListRefinedType(base,length): ListRefinedType(substitute(base,slots),length);
             case RecordType(fields,tail):
                 RecordType([for (key => field in fields) key => substitute(field,slots)],
                     tail == null ? null : substitute(tail,slots));
