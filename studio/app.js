@@ -256,6 +256,7 @@ function loadExample(exampleId) {
     }
   }
   ui.source.value = example.source;
+  if ($('checkedGui')) $('checkedGui').checked = example.checked === true;
   updateEditorIndicators();
   sourceChanged();
   state.uiExample = example.expect?.kind === 'ui';
@@ -577,7 +578,7 @@ async function initializeReference() {
     }
 
     catalogExamples.push(...data.examples.map(item => ({
-      id: item.id, name: item.title, source: item.source, expect: item.expect
+      id: item.id, name: item.title, source: item.source, expect: item.expect, checked: item.checked
     })));
 
     const group = document.createElement('optgroup');
