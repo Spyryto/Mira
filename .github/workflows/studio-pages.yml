@@ -93,6 +93,40 @@ jobs:
         with:
           path: dist/studio/
 
+  windows-portable:
+    needs: build
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/download-artifact@v4
+        with:
+          name: mira-studio-preview
+          path: dist/studio
+      - name: Assemble Windows x64 portable distribution
+        shell: pwsh
+        run: ./scripts/package-studio-windows.ps1
+      - name: Install browser test runner
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install chromium
+      - name: Verify packaged launcher, real disk persistence and imports
+        run: node scripts/test-studio-windows-package.mjs
+      - name: Upload verified Windows distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: mira-studio-windows-x64
+          path: dist/windows-portable/
+          if-no-files-found: error
+      - name: Upload Windows IDE screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: mira-studio-windows-screenshot
+          path: dist/windows-desktop.png
+          if-no-files-found: error
+
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     needs: build
