@@ -1,6 +1,6 @@
-import {basicSetup,EditorView} from 'codemirror';
+import {basicSetup} from 'codemirror';
 import {EditorState,RangeSetBuilder} from '@codemirror/state';
-import {Decoration,ViewPlugin,hoverTooltip,keymap} from '@codemirror/view';
+import {EditorView,Decoration,ViewPlugin,hoverTooltip,keymap} from '@codemirror/view';
 import {autocompletion,snippetCompletion,startCompletion,completionKeymap} from '@codemirror/autocomplete';
 import {setDiagnostics} from '@codemirror/lint';
 import {tokenizeMira} from '../syntax-highlight.js';
@@ -67,7 +67,7 @@ function analyze(view){
 }
 const editor=new EditorView({parent:$('editor'),state:EditorState.create({doc:saved,extensions:[
  basicSetup,syntax,autocompletion({override:[complete],activateOnTyping:true}),keymap.of(completionKeymap),
- hoverTooltip((view,pos)=>{const w=wordAt(view.state,pos),items=lookup(w.name);return items.length?{pos:w.from,end:w.to,above:true,create:()=>({dom:renderTooltip(items[0])})}:null}),
+ hoverTooltip((view,pos)=>{const w=wordAt(view.state,pos),items=lookup(w.name);return items.length?{pos:w.from,end:w.to,above:true,create:()=>{const dom=document.createElement('div');dom.append(...items.map(renderTooltip));return {dom}}}:null}),
  EditorView.contentAttributes.of({'aria-label':'Codice sorgente Mira','spellcheck':'false','autocapitalize':'off'}),
  EditorView.updateListener.of(update=>{if(update.docChanged){try{localStorage.setItem('mira-ide:source:v1',update.state.doc.toString())}catch{}analyze(update.view)}})
 ]})});

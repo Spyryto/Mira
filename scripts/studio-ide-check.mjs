@@ -23,7 +23,7 @@ try{
   await page.locator('.cm-tooltip-autocomplete').waitFor();
   assert.match(await page.locator('.cm-tooltip-autocomplete').textContent(),/collect:with:/);
   await page.screenshot({path:resolve(out,name+'-ide-completion.png')});
-  await editor.press('Enter');assert.match(await editor.textContent(),/collect: items/);
+  await editor.press('Enter');await page.waitForFunction(()=>document.querySelector('.cm-content').textContent.includes('collect: items'));
   await editor.press('Control+a');await editor.fill('result = @;');
   await page.locator('#status').filter({hasText:'Unexpected character'}).waitFor();
   await page.locator('.cm-lintRange-error').waitFor();
