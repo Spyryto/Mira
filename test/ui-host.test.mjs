@@ -499,7 +499,7 @@ test('0.17 dynamic theme uses the same native view and removes unused style',()=
 
 test('0.17 styled grid constructors return identical records on JS and PHP',()=>{
   const source=readFileSync(resolve(root,'lib/gui.mira'),'utf8')+
-    '\nresult = styled: (grid: 2, children: [title: "Mira"]), with: [{padding: 12}];';
+    '\nresult = {type: "styled", view: (grid: 2, children: [title: "Mira"]), styles: [{padding: 12}]};';
   const js=compiler.compile(source,'js');
   const php=compiler.compile(source,'php');
   assert.equal(js.ok,true,js.message);
@@ -1134,38 +1134,29 @@ test('GUI checked catalog forms actually mount and update using the ordinary and
 });
 
 
-test('GUI checked: independent style records in a literal layer list',()=>{
-  const header='import "lib/gui.mira";\n';
-  const source=header+`card: n = styled: (text: n), with: [{padding: 12}, {background: "#fff", radius: 4}];
-render (state: 0, view: (card: _));`;
-  const checked=compiler.check(source,manifest);
-  assert.equal(checked.ok,true,checked.message);
+test('0.109 checked styling uses one nominal type for different optional fields',()=>{
+  const header='import "lib/gui.mira"; import "lib/gui-typed-styles.mira"; ';
+  const pre=header+'px (GUI Pixels) = 12; ink (GUI Color) = "#fff"; corner (GUI Pixels) = 4; a (GUI Style) = {padding: px}; b (GUI Style) = {background: ink, radius: corner}; layers (Style Layers) = [a, b];';
+  const source=pre+'card: n = styled: (text: n), with styles: layers; render (state: 0, view: (card: _));';
   for(const target of ['js','php']){
-    const built=compiler.compile(source,target,manifest,false,undefined,true);
-    const ordinary=compiler.compile(source,target,manifest);
+    const built=compiler.compile(source,target,manifest,false,null,true);
     assert.equal(built.ok,true,built.message);
-    assert.equal(ordinary.ok,true,ordinary.message);
-    assert.equal(built.output,ordinary.output);
     for(const invalid of [
-      'render (styled: (text: "x"), with: [{padding: 12}, 42]);',
-      'render (styled: 42, with: [{padding: 12}, {radius: 4}]);'
-    ]){
-      assert.equal(compiler.compile(header+invalid,target,manifest,false,undefined,true).ok,false,invalid);
-    }
+      'render (styled: (text: "x"), with styles: [{padding: 12}, 42]);',
+      'render (styled: 42, with styles: layers);',
+      'render (styled: (text: "x"), with styles: [a]);',
+      'render (styled: (text: "x"), with: [{padding: 12}]);'
+    ])assert.equal(compiler.compile(pre+invalid,target,manifest,false,null,true).ok,false,invalid);
   }
-  assert.equal(compiler.check(header+'render (styled: (text: "x"), with: []);',manifest).ok,true);
-  assert.equal(compiler.check('result = [{padding: 12}, {radius: 4}];').ok,false);
-  assert.equal(compiler.check('styled: x, with: ys = ys; result = styled: 0, with: [{padding: 12}, {radius: 4}];').ok,false);
   const {root,host,errors}=setup();
-  const built=compiler.compile(source,'js',manifest,false,undefined,true);
-  runInNewContext(built.output,{__miraHost:host});
+  runInNewContext(compiler.compile(source,'js',manifest,false,null,true).output,{__miraHost:host});
   assert.match(root.textContent,/0/);
   assert.deepEqual(errors,[]);
 });
 
 
-test('GUI checked style vocabulary agrees with the actual host for known values',()=>{
-  const header='import "lib/gui.mira";\n';
+test('0.109 typed style vocabulary agrees with the actual host for known values',()=>{
+  const header='import "lib/gui.mira"; import "lib/gui-typed-styles.mira"; ';
   const cases=[
     ['padding',0,true],['margin',4096,true],['gap',1.5,true],['radius',4097,false],
     ['padding',-1,false],['borderWidth','12',false],['fontSize',true,false],
@@ -1181,11 +1172,21 @@ test('GUI checked style vocabulary agrees with the actual host for known values'
   ];
   for(const [key,value,valid] of cases){
     const literal=typeof value==='number' && value<0 ? '(0 - '+Math.abs(value)+')' : JSON.stringify(value);
-    const source=header+'render (styled: (text: "x"), with: [{'+key+': '+literal+'}]);';
+    const types={padding:'GUI Pixels',margin:'GUI Pixels',gap:'GUI Pixels',radius:'GUI Pixels',borderWidth:'GUI Pixels',fontSize:'GUI Pixels',fontWeight:'GUI Font Weight',flex:'GUI Flex',background:'GUI Color',color:'GUI Color',borderColor:'GUI Color',borderStyle:'GUI Border Style',justify:'GUI Justify',wrap:'GUI Wrap',textAlign:'GUI Text Align',shadow:'GUI Shadow'};
+    let declaration='',field='style value';
+    if(['width','minWidth','maxWidth'].includes(key)){
+      if(value==='fill')field='Style Fill';
+      else if(value==='auto')field='Style Auto';
+      else {declaration='style value (GUI Pixels) = '+literal+';';field='(Style Fixed: style value)';}
+    }else if(key==='align'){
+      const variants={start:'Align Start',center:'Align Center',end:'Align End',stretch:'Align Stretch',baseline:'Align Baseline'};
+      field=variants[value]??literal;
+    }else if(types[key])declaration='style value ('+types[key]+') = '+literal+';';
+    else field=literal;
+    const source=header+declaration+' panel (GUI Style) = {'+key+': '+field+'}; layers (Style Layers) = [panel]; render (styled: (text: "x"), with styles: layers);';
     for(const target of ['js','php']){
-      const checked=compiler.compile(source,target,manifest,false,undefined,true);
+      const checked=compiler.compile(source,target,manifest,false,null,true);
       assert.equal(checked.ok,valid,source+': '+checked.message);
-      if(valid) assert.equal(checked.output,compiler.compile(source,target,manifest).output);
     }
     const {host}=setup();
     const spec={type:'styled',view:{type:'text',text:'x'},styles:[{[key]:value}]};
@@ -1194,18 +1195,18 @@ test('GUI checked style vocabulary agrees with the actual host for known values'
   }
 });
 
-test('GUI checked styles infer numeric parameters but leave computed domain checks to the host',()=>{
-  const header='import "lib/gui.mira";\n';
-  const source=header+'panel: n = styled: (text: "x"), with: [{padding: n}]; render (panel: 12);';
-  assert.equal(compiler.check(source,manifest).ok,true);
-  assert.equal(compiler.check(source.replace('panel: 12','panel: "wrong"'),manifest).ok,false);
-  const unknown=source.replace('panel: 12','panel: 5000');
-  const checked=compiler.compile(unknown,'js',manifest,false,undefined,true);
-  assert.equal(checked.ok,true,checked.message);
+test('0.109 old style selector is removed and raw data cannot acquire trusted View',()=>{
+  const header='import "lib/gui.mira"; ';
+  const old='render (styled: (text: "x"), with: [{padding: 12}]);';
+  const raw='raw styled: view, with: layers = {type: "styled", view: view, styles: layers}; render (raw styled: (text: "x"), with: [{padding: 12}]);';
+  for(const target of ['js','php']){
+    assert.equal(compiler.compile(header+old,target,manifest,false,null,true).ok,false);
+    assert.equal(compiler.compile(header+raw,target,manifest,false,null,true).ok,false);
+  }
   const {host}=setup();
-  assert.throws(()=>runInNewContext(checked.output,{__miraHost:host}),/Invalid style value/);
-  assert.equal(compiler.check(header+'render (styled: (text: "x"), with: [{notAStyle: 1}]);',manifest).ok,false);
-  assert.equal(compiler.check('styled: x, with: y = y; result = styled: 0, with: [{notAStyle: 1}];').ok,true);
+  const invalid=compiler.compile(header+raw.replace('padding: 12','padding: 5000'),'js',manifest);
+  assert.equal(invalid.ok,true,invalid.message);
+  assert.throws(()=>runInNewContext(invalid.output,{__miraHost:host}),/Invalid style value/);
 });
 
 
@@ -1214,7 +1215,6 @@ test('GUI checked style catalog example compiles and applies native CSS',()=>{
   for(const target of ['js','php']){
     const compiled=compiler.compile(source,target,manifest,false,undefined,true);
     assert.equal(compiled.ok,true,compiled.message);
-    assert.equal(compiled.output,compiler.compile(source,target,manifest).output);
   }
   const {root,host,errors}=setup();
   runInNewContext(compiler.compile(source,'js',manifest,false,undefined,true).output,{__miraHost:host});
@@ -1241,8 +1241,7 @@ test('GUI checked: widget domain checks agree with the native host on known inpu
     ['keyed: 1.5, view: (text: "x")',{type:'keyed',key:1.5,view:{type:'text',text:'x'}},false],
     ['keyed: 9007199254740992, view: (text: "x")',{type:'keyed',key:9007199254740992,view:{type:'text',text:'x'}},false],
     ['state: 0, key: "", view: {n | text: n}',{type:'state',initial:0,key:'',view:n=>({type:'text',text:n})},true],
-    ['state: 0, key: 1, view: {n | text: n}',{type:'state',initial:0,key:1,view:n=>({type:'text',text:n})},false],
-    ['styled: (text: "x"), with: ['+Array(33).fill('{padding: 1}').join(',')+']',{type:'styled',view:{type:'text',text:'x'},styles:Array(33).fill({padding:1})},false]
+    ['state: 0, key: 1, view: {n | text: n}',{type:'state',initial:0,key:1,view:n=>({type:'text',text:n})},false]
   ];
   for(const [expression,spec,valid] of cases){
     const source=header+'render ('+expression+');';
@@ -1306,14 +1305,12 @@ test('GUI checked widgets catalog mounts and changes selection without recreatin
 });
 
 
-test('0.106 grammar-refined GUI colors agree with the legacy checker and renderer',()=>{
+test('0.109 grammar-refined GUI colors agree with the renderer',()=>{
   const header='import "lib/gui.mira"; import "lib/gui-typed-styles.mira"; ';
   const samples=[['#abc',true],['#aBcD',true],['#123456',true],['#12345678',true],['transparent',true],['currentColor',true],['red',false],['#12',false],['#12345',false],['#ggg',false],['Transparent',false],['',false]];
   for(const [value,valid] of samples){
     const literal=JSON.stringify(value);
     const source=header+'ink (GUI Color) = '+literal+'; panel (GUI Style) = {background: ink, color: ink, borderColor: ink}; layers (Style Layers) = [panel]; render (styled: (text: "Mira"), with styles: layers);';
-    const legacy='import "lib/gui.mira"; render (styled: (text: "Mira"), with: [{color: '+literal+'}]);';
-    assert.equal(compiler.check(legacy,manifest).ok,valid,value);
     const checked=compiler.compile(source,'js',manifest,false,null,true,true);
     assert.equal(checked.ok,valid,value+': '+checked.message);
     const {host,root}=setup();
@@ -1352,19 +1349,19 @@ test('0.108 typed style layers specialize through native literal aliases',()=>{
   assert.throws(()=>sandbox.MiraGuiSpecialize.compile(compiler,source+'computed = append: 1, to: [2];','view:'),/only literal global data/);
 });
 
-test('0.108 legacy cardinality and colors are consistent with the typed domain',()=>{
-  const base='import "lib/gui.mira"; ';
+test('0.109 typed cardinality and colors agree with the host',()=>{
+  const base='import "lib/gui.mira"; import "lib/gui-typed-styles.mira"; ';
   for(const target of ['js','php']){
     for(const count of [0,1,32,33]){
-      const source=base+'result = styled: (text: "x"), with: ['+Array(count).fill('{color: "#abc"}').join(',')+'];';
+      const source=base+'ink (GUI Color) = "#abc"; panel (GUI Style) = {color: ink}; layers (Style Layers) = ['+Array(count).fill('panel').join(',')+']; result = styled: (text: "x"), with styles: layers;';
       const built=compiler.compile(source,target,manifest,false,null,true);
       assert.equal(built.ok,count<=32,built.message);
-      if(built.ok)assert.equal(built.output,compiler.compile(source,target,manifest).output);
     }
     for(const color of ['#fff\n','#abcde','#abcDEF','transparent','currentColor','CurrentColor','é']){
-      const source=base+'result = styled: (text: "x"), with: [{color: '+JSON.stringify(color)+'}];';
+      const source=base+'ink (GUI Color) = '+JSON.stringify(color)+'; panel (GUI Style) = {color: ink}; layers (Style Layers) = [panel]; result = styled: (text: "x"), with styles: layers;';
       const built=compiler.compile(source,target,manifest,false,null,true);
       assert.equal(built.ok,['#abcDEF','transparent','currentColor'].includes(color),color+': '+built.message);
     }
   }
 });
+
