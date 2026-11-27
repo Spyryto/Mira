@@ -1,5 +1,5 @@
 {
-  "version": "0.98",
+  "version": "0.99",
   "features": [
     {
       "id": "values",
@@ -2256,6 +2256,12 @@
       "title": "Varianti con payload nativi disgiunti",
       "since": "0.98",
       "doc": "docs/type-representation.md#native-variants-098"
+    },
+    {
+      "id": "optional-record-fields",
+      "title": "Record chiusi con campi opzionali",
+      "since": "0.99",
+      "doc": "docs/type-representation.md#optional-record-fields-099"
     }
   ]
 }

@@ -2397,3 +2397,88 @@ test('0.98 public native payload encodings survive module aliases and ABI report
     assert.notEqual(report().fingerprint,before.fingerprint);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.99 closed optional record schemas preserve presence, types and nominal identity',()=>{
+  const source='Style :: {name: Text, padding?: Number, color?: Text}; empty (Style) = {name: "base"}; padded (Style) = {name: "padded", padding: 12}; colored (Style) = {name: "colored", color: "#ff0000"}; styles = [empty, padded, colored]; title: s (Style) = s ~ name; read: s ({name: Text, padding?: Number, color?: Text}) = s ~ name; a = read: {name: "a"}; b = read: padded; changed = update: empty, with: {padding: 16}; c = title: changed;';
+  const types=check(source);
+  assert.equal(types.empty,'Style');
+  assert.equal(types.styles,'[Style]');
+  assert.equal(types.changed,'Style');
+  assert.equal(types.a,'Text');
+  assert.equal(types.b,'Text');
+  assert.equal(types.c,'Text');
+  assert.equal(check('Style :: {padding?: Number}; empty (Style) = {};').empty,'Style');
+  for(const extra of [
+    'bad (Style) = {padding: 12};',
+    'bad (Style) = {name: "x", paddding: 12};',
+    'bad (Style) = {name: "x", padding: "12"};',
+    'bad = empty ~ padding;',
+    'bad: s (Style) = s ~ color;',
+    'bad = update: empty, with: {padding: "16"};',
+    'bad = update: empty, with: {extra: 1};',
+    'bad = read: {name: "a", extra: 1};',
+    'Maybe Name :: {name?: Text, padding?: Number}; other (Maybe Name) = {}; bad = read: other;',
+    'Other :: {name: Text, padding?: Number, color?: Text}; other (Other) = {name: "x"}; bad (Style) = other;',
+    'bad: s ({name: Text}) = s ~ name; bad result = bad: empty;',
+    'bad: s (~ Style) = s ~ name;'
+  ])assert.throws(()=>check(source+extra),undefined,extra);
+  for(const invalid of [
+    'Bad :: {name: Text, name?: Text};',
+    'Bad :: {name?: Text, name: Text};',
+    'x = {padding?: 12};'
+  ])assert.throws(()=>check(invalid),undefined,invalid);
+});
+
+test('0.99 optional record schemas compose with parametric records and native variants',()=>{
+  const source='Pixels :: Number where _ >= 0 AND _ <= 4096; Size :: Fixed (Pixels) = _ | Fill = "fill" | Auto = "auto"; Style :: {width?: Size, padding?: Pixels}; s (Style) = {width: Fill}; n (Pixels) = 12; changed = update: s, with: {padding: n}; Box (T) :: {value: T, hint?: T}; box (Box (Text)) = {value: "a"}; result = box ~ value;';
+  const types=check(source);
+  assert.equal(types.s,'Style');
+  assert.equal(types.changed,'Style');
+  assert.equal(types.result,'Text');
+  assert.throws(()=>check(source+'bad (Style) = {width: "fill"};'));
+  assert.throws(()=>check(source+'bad (Box (Text)) = {value: "x", hint: 2};'));
+  assert.throws(()=>check(source+'bad = box ~ hint;'));
+});
+
+test('0.99 optional records erase to existing native records and update immutably',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-optional-records-'));
+  try{
+    const input=join(dir,'program.mira');
+    const typed='Style :: {name: Text, padding?: Number, color?: Text}; original (Style) = {name: "base"}; changed = update: original, with: {padding: 12}; result = {original: original, changed: changed, title: (changed ~ name)};';
+    const bare='original = {name: "base"}; changed = update: original, with: {padding: 12}; result = {original: original, changed: changed, title: (changed ~ name)};';
+    for(const target of ['js','php']){
+      const build=(source,flags)=>{writeFileSync(input,source);return spawnSync('node',['dist/mira.cjs',input,target,...flags],{encoding:'utf8'});};
+      const checked=build(typed,['--checked']),ordinary=build(bare,[]);
+      assert.equal(checked.status,0,checked.stderr);
+      assert.equal(ordinary.status,0,ordinary.stderr);
+      assert.equal(checked.stdout,ordinary.stdout);
+      const r=target==='js'?spawnSync('node',['-e',checked.stdout+'\nconsole.log(JSON.stringify(result));'],{encoding:'utf8'}):
+        spawnSync('php',['-r',checked.stdout.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      assert.deepEqual(JSON.parse(r.stdout),{original:{name:'base'},changed:{name:'base',padding:12},title:'base'});
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('0.99 optional field presence is public ABI and required/optional signature differences fail',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-optional-abi-'));
+  try{
+    const input=join(dir,'program.mira');
+    const source='module Lib; interface Style :: {name: Text, padding?: Number}; title: :: ({name: Text, padding?: Number}) -> Text; implementation title: s ({name: Text, padding?: Number}) = s ~ name;';
+    const report=src=>{writeFileSync(input,src);return spawnSync('node',['dist/mira.cjs',input,'--interfaces'],{encoding:'utf8'});};
+    const a=report(source);
+    assert.equal(a.status,0,a.stderr);
+    const first=JSON.parse(a.stdout).interfaces[0];
+    const fields=first.surface.types.find(x=>x.name==='Style').schema.base.fields;
+    assert.deepEqual(fields,[{name:'name',type:{kind:'Text'}},{name:'padding',type:{kind:'Number'},optional:true}]);
+    const b=report(source.replace('Style :: {name: Text, padding?: Number}','Style :: {name: Text, padding: Number}'));
+    assert.equal(b.status,0,b.stderr);
+    assert.notEqual(JSON.parse(b.stdout).interfaces[0].fingerprint,first.fingerprint);
+    const c=report(source.replace('Style :: {name: Text, padding?: Number}','Style :: {padding?: Number, name: Text}'));
+    assert.equal(c.status,0,c.stderr);
+    assert.equal(JSON.parse(c.stdout).interfaces[0].fingerprint,first.fingerprint);
+    const bad=report(source.replace('title: s ({name: Text, padding?: Number})','title: s ({name: Text, padding: Number})'));
+    assert.notEqual(bad.status,0);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

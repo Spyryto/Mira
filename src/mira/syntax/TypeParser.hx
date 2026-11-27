@@ -101,6 +101,7 @@ class TypeParser {
         }
         if (take("{")) {
             final fields = new Map<String,Type>();
+            final optional = new Map<String,Type>();
             if (!take("}")) {
                 while (true) {
                     final token = current();
@@ -117,14 +118,15 @@ class TypeParser {
                         if (parts.length == 0) return fail("Expected record type field");
                     }
                     final key = parts.join(" ");
-                    if (fields.exists(key)) throw new MiraError("Duplicate type field " + key,token);
+                    if (fields.exists(key) || optional.exists(key)) throw new MiraError("Duplicate type field " + key,token);
+                    final target = take("?") ? optional : fields;
                     require(":");
-                    fields.set(key,readType(depth+1));
+                    target.set(key,readType(depth+1));
                     if (take("}")) break;
                     require(",");
                 }
             }
-            return RecordType(fields,null);
+            return optional.keys().hasNext() ? OptionalRecordType(fields,optional) : RecordType(fields,null);
         }
         final token = current();
         if (token == null || token.kind != Word) return fail("Expected a type annotation");

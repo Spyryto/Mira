@@ -104,7 +104,7 @@ class Lexer {
                 continue;
             }
 
-            if ("()[]{}:,;=+-*/%<>~!|".indexOf(character) != -1) {
+            if ("()[]{}:,;=+-*/%<>~!|?".indexOf(character) != -1) {
                 advance();
                 tokens.push(new Token(Symbol, character, tokenLine, tokenColumn, file, line, column));
                 continue;

@@ -152,3 +152,26 @@ Il costruttore sintetizzato mantiene il corpo Variant e la firma nominale, con s
 Le interfacce pubbliche mantengono kind Scalar per sole codifiche letterali e kind Native per somme con payload nativo; i casi ordinati espongono value o domain. Riutilizzo dei moduli e dei fingerprint esistenti. Le rappresentazioni opache rimangono private. Il lettore di dati costanti conserva la stessa rappresentazione emessa per i costruttori nativi. Richiede checked compilation; l'ABI rimane whole-program. Non si attribuisce un tipo nominale a valori arbitrari provenienti da host esterni. Validazione esterna e ScalarEq, migrazione GUI, proof di disgiunzione entro lo stesso dominio e somme a record restano aperte.
 
 Mira Studio: pulsante Varianti native nel Laboratorio tipi, ispezione della rappresentazione nel report checked, compilazione JS/PHP. I test includono esecuzione nativa, frazioni, integer/text/boolean, nominalità, match esaustivi, collisioni, alias di modulo, fingerprint, tree shaking e valutazione dei dati costanti. Nessuna misura prestazionale comparativa è ancora disponibile.
+
+
+## Optional record fields 0.99
+
+Stato: candidata. Un campo facoltativo può essere assente dal record; non è un valore nullable, un Option implicito, un valore predefinito o un wrapper.
+
+```mira
+Style :: {name: Text, padding?: Number, color?: Text};
+original (Style) = {name: "base"};
+changed = update: original, with: {padding: 12};
+styles = [original, changed];
+title: s (Style) = s ~ name;
+```
+
+La sintassi field?: Type appartiene soltanto alle annotazioni di tipo, non ai literal. I nomi ammessi sono chiusi. I campi richiesti devono essere sicuramente presenti; quelli opzionali eventualmente presenti devono rispettare il tipo dichiarato. I nomi sconosciuti sono rifiutati. La costruzione nominale e l'identità dei tipi restano quelle precedenti. I record strutturali anonimi con campi opzionali sono utilizzabili come annotazioni di parametri e risultati; l'assegnazione a questo schema è direzionale. Un record con campo forse presente non è prova della sua presenza obbligatoria. Non si introduce sottotipizzazione generale delle righe: gli schema con campi opzionali devono essere chiusi, i campi condivisi sono verificati con unificazione invariante. L'unificazione tra due schema opzionali richiede gli stessi insiemi di campi obbligatori e opzionali. I record e le righe ordinari mantengono la propria inferenza.
+
+Il checker distingue OptionalRecordType da RecordType e attraversa entrambe le mappe nella sostituzione dei parametri, nell'istanziazione, nell'occurs check, nelle variabili libere e nella visibilità. I report pubblici mantengono kind Record e aggiungono optional: true soltanto ai campi facoltativi. Le firme esplicite e i fingerprint distinguono i campi obbligatori da quelli opzionali. I record nominali parametrici e i campi di tipo somma nativa riusano i meccanismi esistenti.
+
+La proiezione diretta ~ è ammessa sui campi obbligatori, non sui campi opzionali, anche se un particolare valore è stato costruito con quel campo presente. Non si inferisce ancora la presenza a livello di singolo valore. Un aggiornamento immutabile update:with: di un record a schema opzionale ammette soltanto proprietà dichiarate e tipi compatibili e restituisce lo stesso tipo, anche nominale. Non promuove automaticamente un campo opzionale a obbligatorio. L'aggiornamento ordinario e i relativi emitter non sono modificati.
+
+Nessun nuovo runtime: la rappresentazione è quella dei record già esistenti (oggetti JavaScript e array associativi PHP), con sole proprietà effettivamente presenti. L'annotazione è cancellata dall'emitter. L'array PHP vuoto conserva la semantica preesistente, incluso il formato JSON di un array vuoto, che non è una nuova garanzia di serializzazione del record. L'assegnazione e gli aggiornamenti sono verificati in modalità checked; la compilazione non checked non offre tali garanzie.
+
+Limiti intenzionali: accesso fallibile o con default ai campi opzionali, test di presenza con narrowing, proiezione aperta ~ di uno schema nominale opzionale, unificazione tra schema opzionali e righe aperte e composizione ricorsiva direzionale di schema annidati restano da progettare. Anche i manifest host, i codec e i validatori esterni devono essere estesi esplicitamente prima di usarvi questo nuovo contratto. Il caso di studio GUI non viene ancora migrato: servirà un accesso sicuro e una API tipizzata degli stili. Il Laboratorio tipi di Studio contiene l'esempio Record con campi opzionali, con test di erasure, update immutabile, diagnostica, JS/PHP e report pubblici. La prossima versione è 0.100, non 1.0.

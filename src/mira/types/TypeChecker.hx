@@ -155,6 +155,8 @@ class TypeChecker {
             case ListType(item): occurs(id, item);
             case OpaqueType(_,arguments) | SumType(_,_,arguments) | SumReference(_,_,arguments) | ParametricNamedType(_,_,arguments): Lambda.exists(arguments,t -> occurs(id,t));
             case FunctionType(args, result): Lambda.exists(args, t -> occurs(id,t)) || occurs(id,result);
+            case OptionalRecordType(required,optional):
+                Lambda.exists(required,t -> occurs(id,t)) || Lambda.exists(optional,t -> occurs(id,t));
             case RecordType(fields, tail):
                 var found = false;
                 for (t in fields) if (occurs(id,t)) found = true;
@@ -202,6 +204,9 @@ class TypeChecker {
                 for (i in 0...xs.length) unify(xs[i],ys[i]);
                 unify(x,y);
             case [RecordType(_, _),RecordType(_, _)]: unifyRecords(left,right);
+            case [OptionalRecordType(ar,ao),OptionalRecordType(br,bo)]:
+                unifyRecords(RecordType(ar,null),RecordType(br,null));
+                unifyRecords(RecordType(ao,null),RecordType(bo,null));
             default: fail("expected " + show(left) + ", got " + show(right));
         }
     }
@@ -225,6 +230,7 @@ class TypeChecker {
             case [ParametricNamedType(x,_,_),ParametricNamedType(y,_,_)] if (x == y): unify(wanted,given);
             case [NumberType,IntegerType]:
             case [StructuralType(_,fields),_]: acceptShape(fields,given);
+            case [OptionalRecordType(required,optional),_]: acceptOptionalRecord(required,optional,given);
             case [RefinedType(base,range),_]:
                 prove(range,given,null);
                 accept(base,given);
@@ -242,6 +248,7 @@ class TypeChecker {
         final available = switch (representation(actual)) {
             case StructuralType(_,fields): fields;
             case RecordType(_,_): row(representation(actual)).fields;
+            case OptionalRecordType(required,_): required;
             default: fail("structural projection requires a record, got " + show(actual));
         };
         final keys = [for (key in required.keys()) key];
@@ -249,6 +256,36 @@ class TypeChecker {
         for (key in keys) {
             if (!available.exists(key)) fail("missing record field " + key);
             accept(required.get(key),available.get(key));
+        }
+    }
+
+    // Directional assignment to a closed schema. A possibly absent field
+    // is never evidence of a required field. Unknown rows cannot prove that
+    // no extra keys are present. Keep field types invariant as in records.
+    function acceptOptionalRecord(required:Map<String,Type>,optional:Map<String,Type>,actual:Type):Void {
+        final shape = representation(actual);
+        final present:Map<String,Type> = switch (shape) {
+            case RecordType(_,_):
+                final r = row(shape);
+                if (r.tail != null) fail("Optional record schema requires a known closed record");
+                r.fields;
+            case OptionalRecordType(fields,_): fields;
+            default: fail("Optional record schema requires a known closed record");
+        };
+        final maybe = switch (shape) {
+            case OptionalRecordType(_,fields): fields;
+            default: new Map<String,Type>();
+        };
+        final requiredKeys = [for (key in required.keys()) key];
+        requiredKeys.sort(Reflect.compare);
+        for (key in requiredKeys)
+            if (!present.exists(key)) fail("missing required record field " + key);
+        final keys = [for (key in present.keys()) key].concat([for (key in maybe.keys()) key]);
+        keys.sort(Reflect.compare);
+        for (key in keys) {
+            final expected = required.exists(key) ? required.get(key) : optional.get(key);
+            if (expected == null) fail("unknown record field " + key);
+            unify(expected,present.exists(key) ? present.get(key) : maybe.get(key));
         }
     }
 
@@ -472,6 +509,9 @@ class TypeChecker {
                 SumType(name,[for (tag => payload in alternatives) tag => payload == null ? null : instantiate(payload,seen,quantified)],
                     [for (argument in arguments) instantiate(argument,seen,quantified)]);
             case FunctionType(args,result): FunctionType([for (a in args) instantiate(a,seen,quantified)],instantiate(result,seen,quantified));
+            case OptionalRecordType(required,optional):
+                OptionalRecordType([for (key => value in required) key => instantiate(value,seen,quantified)],
+                    [for (key => value in optional) key => instantiate(value,seen,quantified)]);
             case RecordType(fields,tail):
                 final r = row(type);
                 recordType([for (key => value in r.fields) key => instantiate(value,seen,quantified)],
@@ -488,6 +528,9 @@ class TypeChecker {
             case FunctionType(args,result):
                 for (arg in args) free(arg,found);
                 free(result,found);
+            case OptionalRecordType(required,optional):
+                for (value in required) free(value,found);
+                for (value in optional) free(value,found);
             case RecordType(fields,tail):
                 for (value in fields) free(value,found);
                 if (tail != null) free(tail,found);
@@ -623,6 +666,10 @@ class TypeChecker {
             case StructuralType(_,fields):
                 if (!fields.exists(key)) return fail("missing record field " + key);
                 return fields.get(key);
+            case OptionalRecordType(required,optional):
+                if (optional.exists(key)) return fail("optional record field may be absent: " + key);
+                if (!required.exists(key)) return fail("missing record field " + key);
+                return required.get(key);
             default:
                 final value = fresh();
                 unify(representation(record),recordType([key => value],fresh()));
@@ -714,6 +761,21 @@ class TypeChecker {
         }
         final changes = row(patch);
         if (changes.tail != null) return fail("record update requires a known closed patch");
+        // Optional schemas permit updates only to their declared fields.
+        // Preserve the original type and nominal brand; the native operation
+        // already copies the record. No narrowing of presence is claimed.
+        switch (representation(base)) {
+            case OptionalRecordType(required,optional):
+                final keys = [for (key in changes.fields.keys()) key];
+                keys.sort(Reflect.compare);
+                for (key in keys) {
+                    final expected = required.exists(key) ? required.get(key) : optional.get(key);
+                    if (expected == null) return fail("unknown record field " + key);
+                    unify(expected,changes.fields.get(key));
+                }
+                return base;
+            default:
+        }
         switch (prune(base)) {
             case Variable(_): unify(base,recordType(new Map<String,Type>(),fresh()));
             case RecordType(_,_):
@@ -1211,6 +1273,14 @@ class TypeChecker {
             case ListType(item): {kind:"List",item:describe(item,seen)};
             case FunctionType(args,result):
                 {kind:"Function",parameters:[for (a in args) describe(a,seen)],result:describe(result,seen)};
+            case OptionalRecordType(required,optional):
+                final keys = [for (key in required.keys()) key].concat([for (key in optional.keys()) key]);
+                keys.sort(Reflect.compare);
+                {kind:"Record",fields:[for (key in keys) {
+                    final field:Dynamic = {name:key,type:describe(required.exists(key) ? required.get(key) : optional.get(key),seen)};
+                    if (optional.exists(key)) Reflect.setField(field,"optional",true);
+                    field;
+                }],tail:null};
             case RecordType(_,_):
                 final r = row(type);
                 final keys = [for (key in r.fields.keys()) key];
@@ -1251,6 +1321,10 @@ class TypeChecker {
             case ListType(item): "[" + render(item,names,order) + "]";
             case FunctionType(args,result):
                 "(" + [for (a in args) render(a,names,order)].join(", ") + ") -> " + render(result,names,order);
+            case OptionalRecordType(required,optional):
+                final keys = [for (key in required.keys()) key].concat([for (key in optional.keys()) key]);
+                keys.sort(Reflect.compare);
+                "{" + [for (key in keys) key + (optional.exists(key) ? "?" : "") + ": " + render(required.exists(key) ? required.get(key) : optional.get(key),names,order)].join(", ") + "}";
             case RecordType(_, _):
                 final r = row(type);
                 final keys = [for (key in r.fields.keys()) key];

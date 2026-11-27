@@ -19,4 +19,6 @@ enum Type {
     ListType(item:Type);
     FunctionType(parameters:Array<Type>, result:Type);
     RecordType(fields:Map<String, Type>, tail:Null<Type>);
+    // Closed structural schema: optional means possibly absent, not nullable.
+    OptionalRecordType(required:Map<String,Type>, optional:Map<String,Type>);
 }
