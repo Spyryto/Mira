@@ -439,7 +439,7 @@
     if(ast.definitions.some(d=>!['Function','Value'].includes(d.kind)))fail('no top-level statements');
     const definition=ast.definitions.find(d=>d.kind==='Function'&&d.selector===selector);
     if(!definition||definition.parameters.length!==1||!definition.labels.every(identifier))fail('unary root selector');
-    const code=compiler.compile(source,'js');
+    const code=compiler.compile(source,'js',null,false,null,ast.definitions.some(d=>d.scalarEncoding!=null));
     if(!code.ok)throw new Error(code.message);
     const name=definition.labels.map(label=>label.replaceAll(' ','_')).join('__');
     const view=new Function(code.output+'\nreturn '+name+';')();

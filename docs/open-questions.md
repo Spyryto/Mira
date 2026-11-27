@@ -317,3 +317,8 @@ Refinement su liste con (length of: _) e intervalli interi, prove statiche, vali
 ### 0.108 — Unified style domains (candidata)
 
 Unica fonte attiva dei vincoli statici: GUI Style e Style Layers. Proiezione temporanea dei domini nativi per styled:with:; contratto 0.96 solo storico. Specializzatore esteso ad alias di dati letterali e varianti native. Restano il controllo contestuale legacy, validazione host, limite del sottoinsieme specializzabile e costo del ponte (+17 righe Haxe nette). Vedi [unified style domains](type-representation.md#unified-style-domains-0108).
+
+
+### 0.109 — Remove legacy styles (candidata)
+
+Nessuna retrocompatibilità pre-1.0 richiesta. Eliminato il checker degli stili specifico e il contratto storico, unico decoratore checked con Style Layers. Restano ABI View fidato e validazione host. La specializzazione accetta il sottoinsieme di stili letterali e alias già supportato. Prossime priorità: automi compatti e deduplicazione, poi descrittori View tipizzati. Vedi [remove legacy styles](type-representation.md#remove-legacy-styles-0109).

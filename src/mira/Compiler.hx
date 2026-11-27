@@ -55,7 +55,7 @@ class Compiler {
             final token = definition.origin;
             definition.guiPrimitive = definition.isFunction() && definition.modulePath == null &&
                 ((importedGui && token.file == "lib/gui.mira") ||
-                 (gui && token.file == null && token.line <= mira.types.GuiTypes.libraryLines) ||
+                 (gui && token.file == null && token.line <= mira.types.GuiTypes.libraryLines()) ||
                  (importedTypedStyles && importedGrammar && token.file == "lib/gui-typed-styles.mira" && definition.selector() == "styled:with styles:"));
         }
         if (profile != null) profile.mark("expressions");

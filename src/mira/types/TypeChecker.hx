@@ -1136,53 +1136,6 @@ class TypeChecker {
         };
     }
 
-    // Check known fields without pretending that an open row or a computed
-    // value is a proof of the complete host style contract.
-    function checkGuiStyle(layer:Expr,scope:Map<String,LocalScheme>):Void {
-        final actual = representation(infer(layer,scope));
-        unifyAt(RecordType(new Map<String,Type>(),fresh()),actual,layer);
-        final fields = row(actual).fields;
-        final keys = [for (key in fields.keys()) key];
-        keys.sort(Reflect.compare);
-        final previous = origin;
-        for (key in keys) {
-            final value:Null<Expr> = switch (layer) {
-                case Record(names,values):
-                    final index = names.indexOf(key);
-                    index < 0 ? null : values[index];
-                default: null;
-            };
-            final anchor = origins.get(value == null ? layer : value);
-            if (anchor != null) origin = anchor;
-            final rule = GuiStyleRules.get(key);
-            if (rule == null) fail("Unsupported style property: " + key);
-            final field = fields.get(key);
-            final numeric = ScalarRules.allowsNumber(rule);
-            final textual = ScalarRules.allowsText(rule);
-            if (numeric && textual) {
-                // Size has two native representations. Do not invent a union
-                // or constrain an unresolved variable to just one of them.
-                switch (representation(field)) {
-                    case NumberType | IntegerType | TextType | Variable(_):
-                    default: fail("Invalid style type for " + key + ": expected Number or Text");
-                }
-            } else {
-                accept(numeric ? NumberType : TextType,field);
-            }
-            if (value != null) {
-                final valid = switch (value) {
-                    case Text(text): ScalarRules.textAllowed(rule,text);
-                    case Numeric(number): ScalarRules.numberAllowed(rule,Std.parseFloat(number));
-                    default:
-                        final fact = ranges.get(value);
-                        fact == null || fact.low != fact.high || ScalarRules.numberAllowed(rule,fact.low);
-                };
-                if (!valid) fail("Invalid style value for " + key);
-            }
-        }
-        origin = previous;
-    }
-
     // Reuse numeric facts already established by inference. Unknown values
     // are deliberately not treated as proofs; the host still validates them.
     function guiNumber(expr:Expr):Null<Float> {
@@ -1353,19 +1306,6 @@ class TypeChecker {
                 if (comparisons != null && (symbol == "==" || symbol == "!="))
                     comparisonInputs.push({expr:expr,type:a,owner:moduleOwner});
                 FunctionType(holes,result);
-            case Call(selector,args) if (selector == "styled:with:" && args.length == 2
-                && definitions.exists(selector) && definitions.get(selector).guiPrimitive):
-                switch (args[1]) {
-                    case Sequence(layers):
-                        // The verified GUI consumer accepts independent records.
-                        // Contextual checking here leaves ordinary list inference
-                        // homogeneous and does not change the emitted AST.
-                        final view = infer(args[0],scope);
-                        if (!GuiStyleRules.layerCountAllowed(layers.length)) guiFailure("styled.styles must be a bounded sequence (max " + GuiStyleRules.layerLimit() + ")",args[1]);
-                        for (layer in layers) checkGuiStyle(layer,scope);
-                        selectorCall(selector,[view,ListType(fresh())]);
-                    default: selectorCall(selector,[for (arg in args) infer(arg,scope)]);
-                }
             case Call(selector,args):
                 final types = [for (arg in args) infer(arg,scope)];
                 final result = selectorCall(selector,types);

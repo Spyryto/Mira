@@ -75,12 +75,11 @@
     source.value='module App;\nimport Layout {Alignment => Position; Center => Middle;};\nlabel: x (Position) = match: x {start: {| "S"}, center: {| "C"}, end: {| "E"}};\nresult = {value: Middle, label: (label: Middle)};';
     check();
   });
-  // Historical ConstantData example, not the current style contract.
   document.getElementById('style-contract-example').addEventListener('click',()=>{
     host.value='';
     modules.value='';
-    source.value=MiraStudioCompiler.styleContractSource();
-    document.getElementById('constant-root').value='style rules';
+    source.value='Rule :: Choices ([Text]) | Either ([Rule]);\nmode = Choices: ["manual", "auto"];\nconfig = {mode: mode, fallback: (Either: [mode])};';
+    document.getElementById('constant-root').value='config';
     check();
   });
   document.getElementById('constant-data').addEventListener('click',()=>{

@@ -1,6 +1,8 @@
+# Esempio a basso livello: descrittori nativi, validati dall'host.
+raw styled: view, with: layers = {type: "styled", view: view, styles: layers};
 # Cambia i colori senza rimontare il componente.
 base style = {padding: 18, radius: 14, gap: 12};
-theme view: dark = styled: (column: [
+theme view: dark = raw styled: (column: [
   title: "Tema dinamico",
   text: "Stessi nodi, colori diversi",
   button: "Cambia tema", update: {old | if (old) then false else true}

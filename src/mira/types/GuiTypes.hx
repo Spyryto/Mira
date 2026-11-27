@@ -6,13 +6,13 @@ import mira.types.Type;
 // The fingerprint pins the checked signatures to the actual descriptor bodies.
 // No runtime representation is added: View is an unforgeable phantom type.
 class GuiTypes {
-    static inline final libraryLength = 1672;
-    public static inline final libraryLines = 35;
-    static inline final digest = "71146d0a6c11c55fa3702a25c6ec0784c3515fe58da8951a539fbbc8754bfbcf";
+    // Both compiler builds pin the exact embedded standard library.
     public static function matches(source:String):Bool
-        return source.length == libraryLength && haxe.crypto.Sha256.encode(source) == digest;
+        return source == haxe.Resource.getString("lib/gui.mira");
     public static function hasPrefix(source:String):Bool
-        return source.length >= libraryLength && matches(source.substr(0,libraryLength));
+        return StringTools.startsWith(source,haxe.Resource.getString("lib/gui.mira"));
+    public static function libraryLines():Int
+        return StringTools.trim(haxe.Resource.getString("lib/gui.mira")).split("\n").length;
 
     public static function view(state:Type):Type return OpaqueType("#GUI.View",[state]);
     public static function root():Type return OpaqueType("#GUI.NoState",[]);
@@ -46,7 +46,6 @@ class GuiTypes {
             case "state:key:view:": FunctionType([s,TextType,FunctionType([s],v)],view(fresh()));
             case "grid:children:": FunctionType([NumberType,ListType(v)],v);
             case "keyed:view:": FunctionType([scalarValue(),v],v);
-            case "styled:with:": FunctionType([v,ListType(RecordType(new Map<String,Type>(),fresh()))],v);
             // The checked layer type comes from the exact trusted Mira source.
             case "styled:with styles:" if (annotations != null && annotations.length == 2 && annotations[1] != null):
                 FunctionType([v,annotations[1]],v);
