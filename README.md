@@ -154,6 +154,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Varianti scalari nominali | `0.97` | [Dettagli](docs/type-representation.md#scalar-variants-097) |
 | ✅ | Varianti scalari nei contratti modulari | `0.97.1` | [Dettagli](docs/type-representation.md#modular-scalar-variants-0971) |
 | ✅ | Varianti con payload nativi disgiunti | `0.98` | [Dettagli](docs/type-representation.md#native-variants-098) |
+| ✅ | Record chiusi con campi opzionali | `0.99` | [Dettagli](docs/type-representation.md#optional-record-fields-099) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

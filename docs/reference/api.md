@@ -2217,7 +2217,7 @@ class PublicSignature
 public function apply(d:Definition):Void
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/PublicSignature.hx#L92)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/PublicSignature.hx#L93)
 
 <a id="api-mira-syntax-publicsignature-name"></a>
 ### `mira.syntax.PublicSignature.name`
@@ -3297,6 +3297,17 @@ OpaqueType(name:String,arguments:Array<Type>)
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L6)
 
+<a id="api-mira-types-type-optionalrecordtype"></a>
+### `mira.types.Type.OptionalRecordType`
+
+**variant** · Membro pubblico di mira.types.Type.
+
+```haxe
+OptionalRecordType(required:Map<String,Type>, optional:Map<String,Type>)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Type.hx#L23)
+
 <a id="api-mira-types-type-parametricnamedtype"></a>
 ### `mira.types.Type.ParametricNamedType`
 
@@ -3427,7 +3438,7 @@ public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.
 public function publicSchema(type:Type):Dynamic return describe(visibility.view(type,null,prune)); function describe(type:Type, ?ids:Map<Int,Int>):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L1150)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L1212)
 
 <a id="api-mira-types-typechecker-specialize"></a>
 ### `mira.types.TypeChecker.specialize`
@@ -3548,7 +3559,7 @@ public function ownerOf(name:String):Null<String>
 public function requirePublic(type:Type,origin:Token,resolve:Type->Type):Void
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L77)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeVisibility.hx#L78)
 
 <a id="api-mira-types-typevisibility-reveal"></a>
 ### `mira.types.TypeVisibility.reveal`
