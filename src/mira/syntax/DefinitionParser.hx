@@ -7,7 +7,7 @@ import mira.types.Type;
 import mira.types.NativeVariants;
 
 class DefinitionParser {
-    public static function parse(tokens:Array<Token>, ?names:Map<String,Type>, ?modulePath:String, ?typeIdentities:Map<String,String>):Array<Definition> {
+    public static function parse(tokens:Array<Token>, ?names:Map<String,Type>, ?modulePath:String, ?typeIdentities:Map<String,String>,?prefix:Array<Definition>):Array<Definition> {
         if (names == null) names = new Map<String,Type>();
         final definitions:Array<Definition> = [];
         var start = 0;
@@ -44,7 +44,7 @@ class DefinitionParser {
                             declareSum(name,identity,rhs,names,definitions,header.parameters);
                         } else {
                             if (header.parameters.length == 0) {
-                                final base = new TypeParser(rhs,segment[marker+1],names,false).parse();
+                                final base = new TypeParser(rhs,segment[marker+1],names,false,modulePath == null ? name -> mira.types.ConstantData.grammarPrefix((prefix == null ? [] : prefix).concat(definitions),names,name) : null).parse();
                                 names.set(name,NamedType(identity,base));
                             } else {
                                 final local = names.copy();

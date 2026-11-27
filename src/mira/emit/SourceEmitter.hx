@@ -140,9 +140,11 @@ class SourceEmitter {
                 constraint.range = mira.types.NumericRange.ofType(required);
                 final v = target == Php ? "$__miraValidationValue" : "__miraValidationValue";
                 final choices = mira.types.TextChoices.ofType(required);
-                final predicate = choices == null ? numericTests(target,constraint,v).join(" && ")
+                final grammar = mira.grammar.GrammarMachine.ofType(required);
+                final predicate = grammar != null ? grammarValidation(target,input,v,grammar)
+                    : choices == null ? numericTests(target,constraint,v).join(" && ")
                     : textValidation(target,input,v,choices);
-                final message = choices != null ? "Invalid text value" : constraint.integer ? "Invalid Integer value" : "Invalid numeric value";
+                final message = grammar != null || choices != null ? "Invalid text value" : constraint.integer ? "Invalid Integer value" : "Invalid numeric value";
                 final yes = target == Php ? "['tag' => 'Ok', 'value' => " + v + "]"
                     : "({tag: 'Ok', value: " + v + "})";
                 final no = target == Php ? "['tag' => 'Err', 'value' => " + phpString(message) + "]"
@@ -160,9 +162,11 @@ class SourceEmitter {
                 final yes = prefix + "__miraValidationSuccess";
                 final no = prefix + "__miraValidationFailure";
                 final choices = mira.types.TextChoices.ofType(required);
-                final predicate = choices == null ? numericTests(target,constraint,v).join(" && ")
+                final grammar = mira.grammar.GrammarMachine.ofType(required);
+                final predicate = grammar != null ? grammarValidation(target,input,v,grammar)
+                    : choices == null ? numericTests(target,constraint,v).join(" && ")
                     : textValidation(target,input,v,choices);
-                final message = choices != null ? "Invalid text value" : constraint.integer ? "Invalid Integer value" : "Invalid numeric value";
+                final message = grammar != null || choices != null ? "Invalid text value" : constraint.integer ? "Invalid Integer value" : "Invalid numeric value";
                 final body = "(" + predicate + " ? " + yes + "(" + v + ") : " + no + "('" + message + "'))";
                 final params = v + ", " + yes + ", " + no;
                 final wrapper = target == Php ? "(static fn(" + params + ") => " + body + ")"
@@ -302,6 +306,14 @@ class SourceEmitter {
     // The generated parameter has its own scope; the operand is evaluated once.
     // Explicit validation is a boundary operation. A literal needs no
     // runtime membership test; unknown inputs use portable strict equality.
+    static function grammarValidation(target:Target,input:Expr,value:String,machine:mira.grammar.GrammarMachine):String {
+        return switch (input) {
+            case Text(text): machine.matches(text) ? "true" : "false";
+            case Numeric(_) | BooleanLiteral(_): "false";
+            default: machine.predicate(target == Php ? "php" : "js",value);
+        };
+    }
+
     static function textValidation(target:Target,input:Expr,value:String,choices:mira.types.TextChoices):String {
         switch (input) {
             case Text(text): return choices.values.indexOf(text) >= 0 ? "true" : "false";

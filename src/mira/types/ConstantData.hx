@@ -49,6 +49,33 @@ class ConstantData {
         return data.evaluate(Name(name),0);
     }
 
+    // Snapshot previously declared flat definitions. Parsing the copies
+    // leaves normal expression origins and subsequent inference untouched.
+    public static function grammarPrefix(program:Array<Definition>,types:Map<String,Type>,name:String):mira.grammar.GrammarMachine {
+        final copies = [];
+        for (d in program) {
+            if (d.isStatement || d.modulePath != null) throw new MiraError("Grammar refinement requires preceding flat declarations");
+            final copy = new Definition(d.name,d.labels,d.parameters,d.bodyTokens,d.origin,false,d.parameterOrigins);
+            copy.body = d.body;
+            copy.scalarValue = d.scalarValue;
+            copy.typeParameters = d.typeParameters;
+            copy.parameterAnnotations = d.parameterAnnotations;
+            copy.resultAnnotation = d.resultAnnotation;
+            copy.resultAnnotationOrigin = d.resultAnnotationOrigin;
+            copies.push(copy);
+        }
+        final origins = new ExpressionOrigins();
+        final host = HostEnvironment.empty();
+        final symbols = new mira.resolve.Symbols(copies,host);
+        for (d in copies) if (d.body == null)
+            d.body = new mira.syntax.ExpressionParser(d.bodyTokens,symbols,d.parameters,false,null,origins,types).parse();
+        final checked = new TypeChecker(origins,host).check(copies);
+        if (!Lambda.exists(checked,row -> row.name == name && row.type == "Grammar"))
+            throw new MiraError("Expected preceding constant " + name + " of type Grammar");
+        final value = new ConstantData(copies,true).evaluate(Name(name),0);
+        return new mira.grammar.GrammarCompiler().compile(value);
+    }
+
     function evaluate(expr:Expr,depth:Int,?locals:Map<String,ConstantValue>):ConstantValue {
         if (--budget < 0 || depth > 64) throw new MiraError("Constant data evaluation limit");
         return switch (expr) {

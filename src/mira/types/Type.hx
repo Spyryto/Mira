@@ -10,6 +10,7 @@ enum Type {
     SumReference(name:String,template:Map<String,Null<Type>>,arguments:Array<Type>);
     RefinedType(base:Type,range:NumericRange);
     TextRefinedType(base:Type,choices:TextChoices);
+    GrammarRefinedType(name:String,machine:mira.grammar.GrammarMachine);
     // A read-only structural requirement; additional fields are unknown.
     StructuralType(name:String,fields:Map<String,Type>);
     NumberType;

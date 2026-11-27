@@ -206,6 +206,7 @@ class TypeChecker {
                 for (i in 0...xs.length) unify(xs[i],ys[i]);
             case [RefinedType(x,r),RefinedType(y,s)] if (r.equal(s)): unify(x,y);
             case [TextRefinedType(x,r),TextRefinedType(y,s)] if (r.equal(s)): unify(x,y);
+            case [GrammarRefinedType(_,x),GrammarRefinedType(_,y)] if (x.equal(y)):
             case [StructuralType(_,x),StructuralType(_,y)]: unifyRecords(RecordType(x,null),RecordType(y,null));
             case [IntegerType,IntegerType] | [NumberType, NumberType] | [TextType,TextType] | [BooleanType,BooleanType]:
             case [ListType(x),ListType(y)]: unify(x,y);
@@ -227,6 +228,7 @@ class TypeChecker {
         final visible = visibility.reveal(prune(type),moduleOwner);
         return switch (visible) {
             case NamedType(_,base) | ParametricNamedType(_,base,_) | RefinedType(base,_) | TextRefinedType(base,_): representation(base);
+            case GrammarRefinedType(_,_): TextType;
             default: visible;
         };
     }
@@ -247,6 +249,9 @@ class TypeChecker {
             case [TextRefinedType(base,choices),_]:
                 proveText(choices,given,null);
                 accept(base,given);
+            case [GrammarRefinedType(_,machine),_]:
+                proveGrammar(machine,given,null);
+            case [_,GrammarRefinedType(_,_)]: accept(wanted,TextType);
             case [_,NamedType(_,base)] | [_,ParametricNamedType(_,base,_)] | [_,RefinedType(base,_)] | [_,TextRefinedType(base,_)]: accept(wanted,base);
             case [ListType(x),ListType(y)]: accept(x,y);
             // Records with named fields are invariant in this first increment.
@@ -328,6 +333,9 @@ class TypeChecker {
                         construct(base,given,expr);
                         prove(range,given,expr);
                 }
+            case GrammarRefinedType(_,machine):
+                accept(TextType,given);
+                proveGrammar(machine,given,expr);
             case TextRefinedType(base,choices):
                 switch (given) {
                     case Variable(_): unify(wanted,given);
@@ -404,6 +412,19 @@ class TypeChecker {
         final guard = guardFor(expr,false);
         if (guard != null) { guard.requireRange(range); return; }
         numericFailure("refinement not statically proven: " + range.predicate(),Unknown,"refinement_unproven");
+    }
+
+    function proveGrammar(machine:mira.grammar.GrammarMachine,actual:Type,expr:Null<Expr>):Void {
+        final existing = mira.grammar.GrammarMachine.ofType(visibility.reveal(prune(actual),moduleOwner));
+        if (existing != null && existing.equal(machine)) return;
+        final declared = TextChoices.ofType(visibility.reveal(prune(actual),moduleOwner));
+        final fact = expr == null ? null : textFacts.get(expr);
+        for (candidate in [declared,fact]) if (candidate != null) {
+            if (Lambda.foreach(candidate.values,machine.matches)) return;
+            if (!Lambda.exists(candidate.values,machine.matches))
+                numericFailure("grammar refinement violated",Violated,"grammar_refinement_disjoint");
+        }
+        numericFailure("grammar refinement not statically proven; use validate:as:",Unknown,"grammar_refinement_unproven");
     }
 
     function proveText(required:TextChoices,actual:Type,expr:Null<Expr>):Void {
@@ -739,6 +760,7 @@ class TypeChecker {
     function requireScalarEq(type:Type):Void {
         switch (visibility.reveal(prune(type),moduleOwner)) {
             case NamedType(_,base) | RefinedType(base,_) | TextRefinedType(base,_): requireScalarEq(base);
+            case GrammarRefinedType(_,_): requireScalarEq(TextType);
             case IntegerType | NumberType | TextType | BooleanType:
             case Variable(id):
                 if (rigid.exists(id)) fail("Explicit type parameter does not guarantee scalar equality");
@@ -1344,6 +1366,7 @@ class TypeChecker {
             case ParametricNamedType(name,base,arguments):
                 {kind:"Named",name:name,arguments:[for (arg in arguments) describe(arg,seen)],base:describe(base,seen)};
             case RefinedType(base,range): {kind:"Refined",base:describe(base,seen),range:range.schema()};
+            case GrammarRefinedType(_,machine): {kind:"GrammarRefined",base:{kind:"Text"},machine:machine.schema()};
             case TextRefinedType(base,choices): {kind:"TextRefined",base:describe(base,seen),choices:choices.values};
             case StructuralType(name,fields):
                 final keys = [for (key in fields.keys()) key];
@@ -1401,6 +1424,7 @@ class TypeChecker {
             case ParametricNamedType(name,_,arguments): name + " (" + [for (arg in arguments) render(arg,names,order)].join(", ") + ")";
             case SumType(name,_,arguments) | SumReference(name,_,arguments): name + (arguments.length == 0 ? "" : " (" + [for (arg in arguments) render(arg,names,order)].join(", ") + ")");
             case RefinedType(base,range): render(base,names,order) + " where " + range.predicate();
+            case GrammarRefinedType(name,_): "Text where matches: _, grammar: " + name;
             case TextRefinedType(base,choices): render(base,names,order) + " where " + choices.predicate();
             case StructuralType(name,_): "~ " + name;
             case NumberType: "Number";

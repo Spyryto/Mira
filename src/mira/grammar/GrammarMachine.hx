@@ -13,6 +13,36 @@ class GrammarMachine {
         this.nfaStates = nfaStates;
     }
 
+    public static function ofType(type:mira.types.Type):Null<GrammarMachine> return switch (type) {
+        case NamedType(_,base): ofType(base);
+        case GrammarRefinedType(_,machine): machine;
+        default: null;
+    };
+
+    public function matches(input:String):Bool {
+        var state = 0;
+        for (i in 0...input.length) {
+            final code:Int = input.charCodeAt(i);
+            state = code < 128 ? rows[state][code] : -1;
+            if (state < 0) return false;
+        }
+        return accepting[state];
+    }
+
+    public function schema():Dynamic return {rows:rows,accepting:accepting};
+    public function equal(other:GrammarMachine):Bool return haxe.Json.stringify(schema()) == haxe.Json.stringify(other.schema());
+
+    public function predicate(target:String,value:String):String {
+        final code = emit(target);
+        // Reuse standalone recognizer body, as a locally scoped expression.
+        if (target == "js") {
+            final start = code.indexOf("(() =>");
+            return code.substring(start,code.lastIndexOf(";")) + "(" + value + ")";
+        }
+        final start = code.indexOf("function miraGrammarMatches");
+        return "(" + StringTools.trim(StringTools.replace(code.substring(start),"function miraGrammarMatches","static function")) + ")(" + value + ")";
+    }
+
     public function trace(input:String):Dynamic {
         if (input.length > 4096) throw new MiraError("Grammar Lab input limit (4096)");
         final path = [0];

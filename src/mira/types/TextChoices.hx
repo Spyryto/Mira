@@ -31,7 +31,7 @@ class TextChoices {
     }
 
     public static function isText(type:Type):Bool return switch (type) {
-        case TextType: true;
+        case TextType | GrammarRefinedType(_,_): true;
         case NamedType(_,base) | TextRefinedType(base,_): isText(base);
         default: false;
     };

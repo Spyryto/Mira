@@ -291,3 +291,24 @@ Prima semantica portabile: ASCII (codici 0–127), uguaglianza esatta case-sensi
 Grammar Lab: pagina autonoma indicizzata e inclusa nel service worker, editor di dichiarazioni, esempi decimale/colore/alternative sovrapposte, AST grammaticale ad albero testuale, numero di stati, traccia degli stati attraversati, riconoscimento e generazione codice JS/PHP. Test di regressione confrontano la semantica attesa, l'automa del laboratorio e le funzioni generate eseguite su entrambi i target; includono input vuoto, false/zero/null non testuali, sovrapposizioni, nullable, rifiuti, limiti. Non si tratta di un parser con produzione di AST: la traccia mostra stati, non l'albero di parsing dell'input. Nessun benchmark comparativo ancora disponibile.
 
 Prossimo passo: collegare i valori grammaticali ai refinement con prove statiche e validazione esplicita, senza esporre regex. Migrazione dei tre colori GUI soltanto dopo quella integrazione. Unicode e politiche di disgiunzione richiederanno scelte esplicite.
+
+
+## Grammar refinements 0.105
+
+Stato: candidata. Sintassi: dichiarazione nominale piatta con base diretta Text, e riferimento a un valore Grammar dichiarato precedentemente.
+
+```mira
+import "lib/grammar.mira";
+digit = character in: "0123456789";
+digits = one or more of: digit;
+Digits :: Text where matches: _, grammar: digits;
+value (Digits) = "123";
+Result (T,E) :: Ok (T) | Err (E);
+parse: x (Text) = validate: (x), as: (Digits);
+```
+
+La dichiarazione elabora uno snapshot dei valori e funzioni precedenti, con il parser, type checker e valutatore ConstantData esistenti. Per ora si richiedono dichiarazioni piatte, nessun host, nessuna dipendenza in avanti nel prefisso, e valore Grammar nel sottoinsieme puro supportato dal Lab. Non viene eseguito codice emesso. Non si introduce un interprete generale. Il type node GrammarRefinedType conserva un automa, non un riferimento runtime al valore grammaticale. Nominalità e rappresentazione Text sono preservate. Il checker usa i fatti testuali finiti esistenti: tutti i valori riconosciuti = Proven, nessuno = Violated, altrimenti Unknown. La costruzione non provata richiede validazione esplicita. Un automa identico è prova sufficiente, non necessaria; non si implementa ancora inclusione o equivalenza semantica generale. Composizione di refinement grammaticali e finiti non ammessa; la base deve essere Text.
+
+validate:as: riusa Result e handler. Un literal testuale viene riconosciuto a compile time, un literal numerico o booleano fallisce; input dinamico usa lo stesso riconoscitore DFA del Lab, emesso come espressione locale. Nessun riconoscitore viene aggiunto per una semplice costruzione statica. Non si promette eliminazione di tutti i valori Grammar dichiarati: usare tree shaking se non consumati dal programma. La tabella densa del riconoscitore dinamico può essere ripetuta per più siti di validazione; deduplicazione e ottimizzazione sono aperte. ASCII e limiti automi 0.104 invariati. Il report espone lo schema dell'automa; la rappresentazione non è minimizzata e non è un fingerprint canonico del linguaggio riconosciuto.
+
+Grammar Lab offre un pulsante Prova come refinement per sottoporre il campione corrente al checker, oltre alla precedente traccia. Test di Studio verificano nominalità, prove statiche, codice nativo senza riconoscitori per costruzione e validazione letterale, Result e handler con esecuzione dinamica su JS/PHP. Caso di studio: grammatica CSS che riconosce esadecimali 3/4/6/8 e le due parole transparent/currentColor. La libreria GUI esistente non è ancora migrata: prima occorre validare il nuovo meccanismo e la composizione del prefisso con gli import GUI. Nessuna regex nella nuova sintassi.

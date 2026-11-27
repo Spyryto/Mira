@@ -1,5 +1,5 @@
 {
-  "version": "0.104",
+  "version": "0.105",
   "features": [
     {
       "id": "values",
@@ -2292,6 +2292,12 @@
       "title": "Grammatiche componibili e automi deterministici",
       "since": "0.104",
       "doc": "docs/type-representation.md#composable-grammars-0104"
+    },
+    {
+      "id": "grammar-refinements",
+      "title": "Refinement testuali mediante grammatiche Mira",
+      "since": "0.105",
+      "doc": "docs/type-representation.md#grammar-refinements-0105"
     }
   ]
 }
