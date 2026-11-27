@@ -64,6 +64,7 @@ class TypeVisibility {
             // then apply the view again to the unfolded alternatives.
             case SumReference(name,template,args): SumReference(name,template,[for (a in args) child(a)]);
             case RefinedType(base,range): RefinedType(child(base),range);
+            case TextRefinedType(base,choices): TextRefinedType(child(base),choices);
             case StructuralType(name,fields): StructuralType(name,[for (key => value in fields) key => child(value)]);
             case ListType(item): ListType(child(item));
             case FunctionType(args,result): FunctionType([for (a in args) child(a)],child(result));
@@ -108,7 +109,7 @@ class TypeVisibility {
                     if (opaqueNames.exists(name))
                         throw new MiraError("Public signature exposes opaque representation " + name,origin,"type_error");
                     for (field in fields) walk(field);
-                case RefinedType(base,_):
+                case RefinedType(base,_) | TextRefinedType(base,_):
                     switch (view(base,null,resolve)) {
                         case OpaqueType(name,_): throw new MiraError("Public signature exposes opaque refinement " + name,origin,"type_error");
                         default:
