@@ -2560,3 +2560,49 @@ test('0.100 safe access imports standard Option by nominal identity',async()=>{
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.101 presence facts preserve nominal identity and lexical shadowing',()=>{
+  const source='Option (T) :: Some (T) | None; Style :: {padding?: Number, color?: Text}; original (Style) = {}; padded (Style) = {padding: 12}; alias = padded; updated = update: original, with: {padding: 0}; again = update: updated, with: {color: "red"}; a = padded ~ padding; b = alias ~ padding; c = updated ~ padding; d = again ~ color; local = () >> {| s (Style) = {padding: 7}; copy = s; nested = {| copy ~ padding}; () >> nested}; from unknown: s (Style) = (update: s, with: {padding: 9}) ~ padding; shadow: padded (Style) = padded ~? padding;';
+  const types=check(source);
+  assert.equal(types.alias,'Style');
+  assert.equal(types.updated,'Style');
+  assert.equal(types.again,'Style');
+  for(const key of ['a','b','c','local'])assert.equal(types[key],'Number');
+  assert.equal(types.d,'Text');
+  assert.equal(types['from unknown:'],'(Style) -> Number');
+  assert.equal(types['shadow:'],'(Style) -> Option (Number)');
+  for(const extra of [
+    'bad = original ~ padding;',
+    'bad = updated ~ color;',
+    'bad: padded (Style) = padded ~ padding;',
+    'bad = () >> {| padded (Style) = {}; padded ~ padding};',
+    'bad: s (Style) = s ~ padding;',
+    'factory: n (Number) -> Style = {padding: n}; bad = (factory: 4) ~ padding;'
+  ])assert.throws(()=>check(source+extra),undefined,extra);
+  const branch=source+'choose: b (Boolean) = if (b) then padded else updated; joined = if (true) then padded else updated; result = joined ~ padding;';
+  assert.equal(check(branch).result,'Number');
+  assert.throws(()=>check(source+'joined = if (true) then padded else original; result = joined ~ padding;'));
+  assert.throws(()=>check(source+'bad = () >> {| s (Style) = {padding: 1}; f = {s (Style) | s ~ padding}; f};'));
+});
+
+test('0.101 proven optional fields remove checks without changing native JS/PHP values',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-presence-'));
+  try{
+    const input=join(dir,'program.mira');
+    const source='Option (T) :: Some (T) | None; Style :: {padding?: Number, active?: Boolean}; a (Style) = {padding: 0, active: false}; b (Style) = {}; c = update: b, with: {padding: 12}; read: s (Style) -> Number = (update: s, with: {padding: 9}) ~ padding; direct = a ~ padding; flag = a ~ active; retained = a ~? padding; matched = match: (c ~? padding) {none: {| 99}, some: {p | p}}; local = () >> {| s (Style) = {padding: 8}; f = {| s ~ padding}; () >> f}; result = {direct: direct, flag: flag, retained: retained, matched: matched, local: local, updated: (read: b), original: b};';
+    for(const target of ['js','php']){
+      const run=src=>{writeFileSync(input,src);return spawnSync('node',['dist/mira.cjs',input,target,'--checked','--tree-shake'],{encoding:'utf8'});};
+      const built=run(source);
+      assert.equal(built.status,0,built.stderr);
+      assert.doesNotMatch(built.stdout,/Object\.hasOwn|array_key_exists|Missing record field/);
+      const r=target==='js'?spawnSync('node',['-e',built.stdout+'\nconsole.log(JSON.stringify(result));'],{encoding:'utf8'}):
+        spawnSync('php',['-r',built.stdout.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      assert.deepEqual(JSON.parse(r.stdout),{direct:0,flag:false,retained:{tag:'Some',value:0},matched:12,local:8,updated:9,original:target==='js'?{}:[]});
+      const unknown=run('Option (T) :: Some (T) | None; Style :: {padding?: Number}; read: s (Style) = match: (s ~? padding) {some: {p | p}, none: {| 7}}; s (Style) = {}; result = read: s;');
+      assert.equal(unknown.status,0,unknown.stderr);
+      assert.match(unknown.stdout,target==='js'?/Object\.hasOwn/:/array_key_exists/);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
