@@ -302,3 +302,8 @@ Cinque costruttori Grammar e combinatori Mira; analisi compile-time di dichiaraz
 ### 0.105 — Grammar refinements (candidata)
 
 Nominali Text con where matches: _, grammar: nome precedente; static proof e validate:as: riusano DFA. Prima fase piatta, prefisso chiuso, niente grammatiche da host o moduli logici, niente composizione di vincoli. Riconoscitori solo per validazione dinamica, deduplicazione ancora aperta. Caso colori CSS testato in fixture; integrazione GUI rinviata alla verifica. Vedi [grammar refinements](type-representation.md#grammar-refinements-0105).
+
+
+### 0.106 — Grammar-powered GUI colors (candidata)
+
+20/20 proprietà dello stile dichiarate in Mira; tre colori condividono GUI Color e una grammatica. Verifica anche della dipendenza grammaticale della libreria fidata. Misure di emissione per uno/due siti dinamici; deduplicazione automatica rinviata, riuso manuale mediante normale funzione. Ancora aperti limite di lunghezza della lista di strati, migrazione del contratto legacy (incluso Pattern), specializzazione GUI, Unicode e moduli grammaticali. Vedi [grammar-powered GUI colors](type-representation.md#grammar-powered-gui-colors-0106).
