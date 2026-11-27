@@ -157,6 +157,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Record chiusi con campi opzionali | `0.99` | [Dettagli](docs/type-representation.md#optional-record-fields-099) |
 | ✅ | Accesso sicuro ai campi opzionali con Option | `0.100` | [Dettagli](docs/type-representation.md#safe-optional-access-0100) |
 | ✅ | Inferenza statica della presenza dei campi | `0.101` | [Dettagli](docs/type-representation.md#static-presence-inference-0101) |
+| ✅ | Refinement testuali a insieme finito | `0.102` | [Dettagli](docs/type-representation.md#text-refinements-0102) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
