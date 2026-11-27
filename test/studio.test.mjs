@@ -2550,3 +2550,32 @@ test('0.105 grammar refinement validation agrees with Grammar Lab and native JS/
     assert.doesNotMatch(folded.output,/transitions|miraGrammarMatches/);
   }
 });
+
+
+test('0.106 typed styles contain all 20 fields and colors have one grammar-backed nominal type',()=>{
+  const source='import "lib/gui.mira"; import "lib/gui-typed-styles.mira"; ink (GUI Color) = "#abc"; paper (GUI Color) = "#12345678"; stroke (GUI Color) = "currentColor"; panel (GUI Style) = {color: ink, background: paper, borderColor: stroke}; result = styled: (text: "Mira"), with styles: [panel];';
+  const checked=bridge.check(source);
+  assert.equal(checked.ok,true,checked.message);
+  const rows=JSON.parse(checked.output);
+  const fields=rows.find(x=>x.name==='panel').schema.base.fields;
+  assert.equal(fields.length,20);
+  for(const key of ['color','background','borderColor']){
+    const field=fields.find(f=>f.name===key);
+    assert.equal(field.optional,true);
+    assert.deepEqual(field.type,rows.find(x=>x.name==='ink').schema);
+  }
+  for(const target of ['js','php']){
+    const built=bridge.compile(source,target,null,false,null,true,true);assert.equal(built.ok,true,built.message);
+    assert.doesNotMatch(built.output,/transitions|miraGrammarMatches/);
+    const actual=target==='js'?JSON.stringify(runInNewContext(built.output+'\nresult',{})):spawnSync('php',['-r',built.output.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'}).stdout;
+    assert.deepEqual(JSON.parse(actual),{type:'styled',view:{type:'text',text:'Mira'},styles:[{color:'#abc',background:'#12345678',borderColor:'currentColor'}]});
+    const base='import "lib/gui-typed-styles.mira"; Result (T,E) :: Ok (T) | Err (E);';
+    const one=base+'parse: x (Text) = validate: (x), as: (GUI Color); result = [(parse: "#abc"), (parse: "red")];';
+    const twice=base+'parse: x (Text) = validate: (x), as: (GUI Color); parse again: x (Text) = validate: (x), as: (GUI Color); result = [(parse: "#abc"), (parse again: "red")];';
+    const a=bridge.compile(one,target,null,false,null,true,true),b=bridge.compile(twice,target,null,false,null,true,true);
+    assert.equal(a.ok,true,a.message);assert.equal(b.ok,true,b.message);
+    const count=code=>(code.match(/(?:const |static \$)transitions = /g)||[]).length;
+    assert.equal(count(a.output),1);assert.equal(count(b.output),2);
+    console.log('0.106 grammar emission '+target+': one site '+Buffer.byteLength(a.output)+' bytes; two sites '+Buffer.byteLength(b.output)+' bytes');
+  }
+});

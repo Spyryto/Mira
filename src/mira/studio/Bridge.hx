@@ -29,7 +29,7 @@ class Bridge {
             grammarSource: grammarSource,
             grammarAnalyze: grammarAnalyze,
             grammarEmit: grammarEmit,
-            version: "0.105"
+            version: "0.106"
         });
     }
 

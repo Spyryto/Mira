@@ -270,3 +270,8 @@ La tabella degli stili non è più una serie di switch sulle proprietà CSS in H
 ## 0.103 — Primo percorso di stili tipizzati
 
 Vedi [Typed GUI styles](type-representation.md#typed-gui-styles-0103). Il nuovo decoratore opt-in usa [GUI Style] e restituisce gli stessi descrittori del precedente. Non sostituisce il renderer, non elimina ancora il percorso legacy e non garantisce la specializzazione degli stili calcolati. I colori restano esclusi finché non esistono refinement regex. Il renderer continua a validare i dati ricevuti al confine host.
+
+
+## 0.106 — Colori tipizzati mediante grammatiche
+
+GUI Style comprende tutte le 20 proprietà nel percorso opt-in. background, color e borderColor condividono GUI Color, un refinement grammaticale su Text. Il renderer e il formato descrittore restano invariati; i controlli del percorso legacy e al confine host non vengono eliminati in questo incremento. Vedi [Grammar-powered GUI colors](type-representation.md#grammar-powered-gui-colors-0106).

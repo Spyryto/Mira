@@ -312,3 +312,25 @@ La dichiarazione elabora uno snapshot dei valori e funzioni precedenti, con il p
 validate:as: riusa Result e handler. Un literal testuale viene riconosciuto a compile time, un literal numerico o booleano fallisce; input dinamico usa lo stesso riconoscitore DFA del Lab, emesso come espressione locale. Nessun riconoscitore viene aggiunto per una semplice costruzione statica. Non si promette eliminazione di tutti i valori Grammar dichiarati: usare tree shaking se non consumati dal programma. La tabella densa del riconoscitore dinamico può essere ripetuta per più siti di validazione; deduplicazione e ottimizzazione sono aperte. ASCII e limiti automi 0.104 invariati. Il report espone lo schema dell'automa; la rappresentazione non è minimizzata e non è un fingerprint canonico del linguaggio riconosciuto.
 
 Grammar Lab offre un pulsante Prova come refinement per sottoporre il campione corrente al checker, oltre alla precedente traccia. Test di Studio verificano nominalità, prove statiche, codice nativo senza riconoscitori per costruzione e validazione letterale, Result e handler con esecuzione dinamica su JS/PHP. Caso di studio: grammatica CSS che riconosce esadecimali 3/4/6/8 e le due parole transparent/currentColor. La libreria GUI esistente non è ancora migrata: prima occorre validare il nuovo meccanismo e la composizione del prefisso con gli import GUI. Nessuna regex nella nuova sintassi.
+
+
+## Grammar-powered GUI colors 0.106
+
+Stato: candidata. La libreria opt-in lib/gui-typed-styles.mira importa lib/grammar.mira e dichiara una grammatica di colore condivisa da background, color e borderColor. Il refinement nominale GUI Color mantiene Text come rappresentazione nativa; ammette esadecimali di 3, 4, 6 o 8 caratteri dopo #, con cifre ASCII e A-F/a-f, oppure esattamente transparent e currentColor. Non accetta altri nomi CSS o corrispondenze parziali. Nessuna regex nella nuova libreria.
+
+```mira
+import "lib/gui.mira";
+import "lib/gui-typed-styles.mira";
+ink (GUI Color) = "#234";
+paper (GUI Color) = "#ffeedd";
+panel (GUI Style) = {color: ink, background: paper, borderColor: ink};
+result = styled: (text: "Mira"), with styles: [panel];
+```
+
+Il record chiuso contiene ora tutte le 20 proprietà di stile; le tre nuove sono opzionali e usano lo stesso tipo nominale. La composizione riusa gli import piatti e la risoluzione dei valori grammaticali precedenti. La firma View fidata richiede sia la sorgente esatta della libreria tipizzata sia la sorgente esatta della sua dipendenza grammaticale, incorporata anche nel build CLI. Un file grammaticale modificato non deve poter ottenere il tipo View fidato attraverso il decoratore. Nessun nome di proprietà, intervallo o formato di colore è aggiunto al checker Haxe.
+
+Misure sorgenti rispetto alla 0.105: copertura opt-in 17/20 (85%) -> 20/20 (100%); lib/gui-typed-styles.mira +14 righe nette; Compiler.hx +2 righe nette (verifica della dipendenza e condizione di fiducia aggiornata); build.hxml +1 risorsa; Bridge.hx solo versione; renderer invariato. Nessuna cancellazione dal percorso legacy. Il contratto storico lib/gui-style-contract.mira contiene ancora Pattern con regex, e il renderer conserva la validazione al confine host: non rappresentano la nuova API grammaticale. La loro migrazione/rimozione richiede un incremento separato. Il limite di 32 strati è ancora un controllo host nel nuovo percorso.
+
+Deduplicazione: un solo tipo GUI Color con un automa compile-time, usato dai tre campi. Le costruzioni provate e la validazione di literal non emettono riconoscitori. Con tree shaking, i valori grammaticali non usati a runtime sono rimossi. Per validazioni dinamiche multiple il codice 0.105 conserva un riconoscitore locale per sito di validazione. La regressione Studio misura e stampa i byte del programma checked/tree-shaken per uno e due siti e verifica la quantità di tabelle; la misura non è un benchmark temporale. Una funzione ordinaria parse color: x (Text) = validate: (x), as: (GUI Color); permette già di riutilizzare un unico sito, senza infrastruttura nuova. Deduplicazione automatica whole-program rinviata: dovrebbe preservare nomi, source mapping, tree shaking e indipendenza delle compilazioni. Non usare una cache globale del compilatore come scorciatoia.
+
+Verifiche candidate: CLI con entrambi gli ordini di import e import esplicito ripetuto della grammatica; descrittori JS/PHP nativi; schema Studio di 20 campi, triplo riutilizzo nominale; confronto con legacy e renderer per campioni validi/invalidi; dipendenza grammaticale manomessa; conteggio delle tabelle generate. L'esempio Stili GUI tipizzati in Studio include i tre colori. Il supporto Unicode, grammatiche modulari e vincoli sulla lunghezza delle collezioni restano aperti.

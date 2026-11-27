@@ -2680,11 +2680,11 @@ test('0.103 typed GUI styles use the ordinary checker and preserve the native de
   const dir=mkdtempSync(join(tmpdir(),'mira-typed-gui-'));
   try{
     mkdirSync(join(dir,'lib'));
-    for(const file of ['gui.mira','gui-typed-styles.mira'])writeFileSync(join(dir,'lib',file),readFileSync('lib/'+file,'utf8'));
+    for(const file of ['gui.mira','gui-typed-styles.mira','grammar.mira'])writeFileSync(join(dir,'lib',file),readFileSync('lib/'+file,'utf8'));
     const input=join(dir,'program.mira');
     const source="import \"lib/gui.mira\"; import \"lib/gui-typed-styles.mira\"; px (GUI Pixels) = 12; weight (GUI Font Weight) = 600; flex amount (GUI Flex) = 1; border (GUI Border Style) = \"solid\"; justify value (GUI Justify) = \"space-between\"; wrapping (GUI Wrap) = \"nowrap\"; text alignment (GUI Text Align) = \"center\"; shadow value (GUI Shadow) = \"soft\"; panel (GUI Style) = {padding: px, margin: px, gap: px, radius: px, borderWidth: px, fontSize: px, fontWeight: weight, flex: flex amount, width: Style Fill, minWidth: (Style Fixed: px), maxWidth: Style Auto, borderStyle: border, align: Align Center, justify: justify value, wrap: wrapping, textAlign: text alignment, shadow: shadow value}; extra (GUI Style) = {}; layers = [panel, extra]; result = styled: (text: \"Mira\"), with styles: layers;";
-    const run=(src,...flags)=>{writeFileSync(input,src);return spawnSync('node',['dist/mira.cjs',input,...flags],{encoding:'utf8'});};
-    const checked=run(source,'--check');assert.equal(checked.status,0,checked.stderr);
+    const run=(src,...flags)=>{writeFileSync(input,src);return spawnSync('node',['dist/mira.cjs',input,...flags],{encoding:'utf8',maxBuffer:16*1024*1024});};
+    const checked=run(source,'--check');assert.equal(checked.status,0,checked.error?.message || checked.stderr);
     const rows=JSON.parse(checked.stdout);assert.equal(rows.find(x=>x.name==='layers').type,'[GUI Style]');
     for(const bad of ['bad (GUI Pixels) = 4097;','bad (GUI Font Weight) = 600.5;','bad (GUI Style) = {padding: "12"};','bad (GUI Style) = {paddding: px};','bad (GUI Style) = {width: "fill"};','bad (GUI Style) = {color: "#fff"};','bad (GUI Wrap) = "anything";','bad = styled: (text: "x"), with styles: [{padding: 12}];'])assert.notEqual(run(source+bad,'--check').status,0,bad);
     for(const target of ['js','php']){
@@ -2697,5 +2697,33 @@ test('0.103 typed GUI styles use the ordinary checker and preserve the native de
     const typed=readFileSync(join(dir,'lib','gui-typed-styles.mira'),'utf8');
     writeFileSync(join(dir,'lib','gui-typed-styles.mira'),typed.replace('type: "styled"','type: "forged"'));
     assert.notEqual(run(source+'root = column: [result];','--check').status,0);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+
+test('0.106 CLI resolves nested grammar imports and checks all GUI color properties',async()=>{
+  const {readFileSync}=await import('node:fs');
+  const dir=mkdtempSync(join(tmpdir(),'mira-color-gui-'));
+  try{
+    mkdirSync(join(dir,'lib'));
+    for(const file of ['gui.mira','gui-typed-styles.mira','grammar.mira'])writeFileSync(join(dir,'lib',file),readFileSync('lib/'+file,'utf8'));
+    const input=join(dir,'program.mira');
+    const source='import "lib/gui.mira"; import "lib/gui-typed-styles.mira"; ink (GUI Color) = "#aBcD"; paper (GUI Color) = "transparent"; stroke (GUI Color) = "currentColor"; panel (GUI Style) = {color: ink, background: paper, borderColor: stroke}; result = styled: (text: "Mira"), with styles: [panel];';
+    const run=(src,...flags)=>{writeFileSync(input,src);return spawnSync('node',['dist/mira.cjs',input,...flags],{encoding:'utf8',maxBuffer:16*1024*1024});};
+    for(const src of [source,source.replace('import "lib/gui.mira"; import "lib/gui-typed-styles.mira";','import "lib/gui-typed-styles.mira"; import "lib/gui.mira";'), 'import "lib/grammar.mira"; '+source]){
+      const checked=run(src,'--check');assert.equal(checked.status,0,checked.error?.message || checked.stderr);
+      for(const target of ['js','php']){
+        const built=run(src,target,'--checked','--tree-shake');assert.equal(built.status,0,built.stderr);
+        assert.doesNotMatch(built.stdout,/transitions|miraGrammarMatches|gui_hex_digit|gui_color_grammar/);
+        const r=target==='js'?spawnSync('node',['-e',built.stdout+'\nconsole.log(JSON.stringify(result));'],{encoding:'utf8'}):spawnSync('php',['-r',built.stdout.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'});
+        assert.equal(r.status,0,r.stderr);
+        assert.deepEqual(JSON.parse(r.stdout),{type:'styled',view:{type:'text',text:'Mira'},styles:[{color:'#aBcD',background:'transparent',borderColor:'currentColor'}]});
+      }
+    }
+    for(const value of ['red','#12','#12345','#ggg','Transparent','currentcolor',''])assert.notEqual(run(source+'bad (GUI Color) = '+JSON.stringify(value)+';','--check').status,0,value);
+    const grammar=readFileSync(join(dir,'lib','grammar.mira'),'utf8');
+    writeFileSync(join(dir,'lib','grammar.mira'),grammar.replace('Literal: value;','Literal: "";'));
+    const forged=source.replace('ink (GUI Color) = "#aBcD"','ink (GUI Color) = ""').replace('paper (GUI Color) = "transparent"','paper (GUI Color) = ""').replace('stroke (GUI Color) = "currentColor"','stroke (GUI Color) = ""');
+    assert.notEqual(run(forged+'root = column: [result];','--check').status,0,'modified grammar cannot grant trusted View');
   }finally{rmSync(dir,{recursive:true,force:true});}
 });

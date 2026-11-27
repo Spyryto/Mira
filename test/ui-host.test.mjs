@@ -1304,3 +1304,25 @@ test('GUI checked widgets catalog mounts and changes selection without recreatin
   assert.equal(findAll(root,'select')[0],select);
   assert.deepEqual(errors,[]);
 });
+
+
+test('0.106 grammar-refined GUI colors agree with the legacy checker and renderer',()=>{
+  const header='import "lib/gui.mira"; import "lib/gui-typed-styles.mira"; ';
+  const samples=[['#abc',true],['#aBcD',true],['#123456',true],['#12345678',true],['transparent',true],['currentColor',true],['red',false],['#12',false],['#12345',false],['#ggg',false],['Transparent',false],['',false]];
+  for(const [value,valid] of samples){
+    const literal=JSON.stringify(value);
+    const source=header+'ink (GUI Color) = '+literal+'; panel (GUI Style) = {background: ink, color: ink, borderColor: ink}; render (styled: (text: "Mira"), with styles: [panel]);';
+    const legacy='import "lib/gui.mira"; render (styled: (text: "Mira"), with: [{color: '+literal+'}]);';
+    assert.equal(compiler.check(legacy,manifest).ok,valid,value);
+    const checked=compiler.compile(source,'js',manifest,false,null,true,true);
+    assert.equal(checked.ok,valid,value+': '+checked.message);
+    const {host,root}=setup();
+    if(valid){
+      runInNewContext(checked.output,{__miraHost:host});
+      const panel=findAll(root,'p').find(n=>n.style.getPropertyValue('color')===value);
+      assert.ok(panel,'rendered color '+value);
+      assert.equal(panel.style.getPropertyValue('background-color'),value);
+      assert.equal(panel.style.getPropertyValue('border-color'),value);
+    }else assert.throws(()=>host.render({type:'styled',view:{type:'text',text:'Mira'},styles:[{color:value}]}),/Invalid style value/);
+  }
+});

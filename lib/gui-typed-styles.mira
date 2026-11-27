@@ -1,3 +1,5 @@
+import "lib/grammar.mira";
+
 # Opt-in checked GUI styles. The legacy GUI remains separately importable.
 # These types describe native values, not a second renderer.
 GUI Pixels :: Number where _ >= 0 AND _ <= 4096;
@@ -19,7 +21,16 @@ GUI Wrap :: Text where _ == "wrap" OR _ == "nowrap";
 GUI Text Align :: Text where _ == "left" OR _ == "center" OR _ == "right";
 GUI Shadow :: Text where _ == "none" OR _ == "hard" OR _ == "soft";
 
-# Colors remain on the legacy path until regex refinements are available.
+# Full-text color grammar, shared by all three color properties.
+gui hex digit = character in: "0123456789abcdefABCDEF";
+gui hex color = all of: [
+  (one: "#"),
+  (one of: [(exactly: 3, of: gui hex digit), (exactly: 4, of: gui hex digit),
+            (exactly: 6, of: gui hex digit), (exactly: 8, of: gui hex digit)])
+];
+gui color grammar = one of: [gui hex color, (one: "transparent"), (one: "currentColor")];
+GUI Color :: Text where matches: _, grammar: gui color grammar;
+
 GUI Style :: {
   padding?: GUI Pixels,
   margin?: GUI Pixels,
@@ -32,6 +43,9 @@ GUI Style :: {
   width?: GUI Size,
   minWidth?: GUI Size,
   maxWidth?: GUI Size,
+  background?: GUI Color,
+  color?: GUI Color,
+  borderColor?: GUI Color,
   borderStyle?: GUI Border Style,
   align?: GUI Alignment,
   justify?: GUI Justify,
