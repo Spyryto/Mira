@@ -312,3 +312,8 @@ Nominali Text con where matches: _, grammar: nome precedente; static proof e val
 ### 0.107 — List cardinality (candidata)
 
 Refinement su liste con (length of: _) e intervalli interi, prove statiche, validazione esplicita della cardinalità, Style Layers massimo 32. Resta aperta la migrazione definitiva del percorso GUI legacy, la deduplicazione delle tabelle grammaticali, il selettore length of: nelle espressioni, i vincoli sugli elementi e le collezioni generiche. Vedi [list cardinality](type-representation.md#list-cardinality-0107).
+
+
+### 0.108 — Unified style domains (candidata)
+
+Unica fonte attiva dei vincoli statici: GUI Style e Style Layers. Proiezione temporanea dei domini nativi per styled:with:; contratto 0.96 solo storico. Specializzatore esteso ad alias di dati letterali e varianti native. Restano il controllo contestuale legacy, validazione host, limite del sottoinsieme specializzabile e costo del ponte (+17 righe Haxe nette). Vedi [unified style domains](type-representation.md#unified-style-domains-0108).
