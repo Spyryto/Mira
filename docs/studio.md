@@ -523,3 +523,7 @@ Il laboratorio JSON e Importa una lezione caricano lo stesso sorgente di Data / 
 ## Mira 0.90: progetto multifile dichiarativo
 
 Il build di Importa una lezione usa examples/lesson-import/mira.project.json e scripts/project.mjs. La stessa configurazione compila JavaScript con Storage Browser e PHP con Storage Files, includendo host e decoder derivato dal contratto. I dati e la UI del pilota non cambiano. Il test confronta byte per byte gli output di Studio con la build standalone e verifica host, schema e binding. La CLI di progetto non è ancora un editor interattivo o un deploy; Workspace Studio e packaging restano futuri. Il comando è documentato in module-design.md.
+
+## Mira 0.91: nucleo dati tipizzati indipendente
+
+Il laboratorio JSON e Importa una lezione caricano typed-data.js invece di dipendere da effects.js. Il service worker include l'asset, il worker JSON usa lo stesso runtime puro, il bundle full-stack copia TypedData.php e typed-data.js accanto ai relativi host RPC. Test di codec indipendenti con round-trip su JS/PHP, controlli negativi, test precedenti del decoder e del trasporto RPC. L'encoder è disponibile nell'API host; non è ancora un controllo UI o una nuova API Mira. Non è un formato JSON canonico.
