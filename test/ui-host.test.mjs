@@ -1207,3 +1207,19 @@ test('GUI checked styles infer numeric parameters but leave computed domain chec
   assert.equal(compiler.check(header+'render (styled: (text: "x"), with: [{notAStyle: 1}]);',manifest).ok,false);
   assert.equal(compiler.check('styled: x, with: y = y; result = styled: 0, with: [{notAStyle: 1}];').ok,true);
 });
+
+
+test('GUI checked style catalog example compiles and applies native CSS',()=>{
+  const source=demo('gui-checked-styles').source;
+  for(const target of ['js','php']){
+    const compiled=compiler.compile(source,target,manifest,false,undefined,true);
+    assert.equal(compiled.ok,true,compiled.message);
+    assert.equal(compiled.output,compiler.compile(source,target,manifest).output);
+  }
+  const {root,host,errors}=setup();
+  runInNewContext(compiler.compile(source,'js',manifest,false,undefined,true).output,{__miraHost:host});
+  const panel=findAll(root,'div').find(n=>n.className==='mira-ui-column');
+  assert.equal(panel.style.getPropertyValue('width'),'100%');
+  assert.equal(panel.style.getPropertyValue('border-style'),'solid');
+  assert.deepEqual(errors,[]);
+});
