@@ -11,7 +11,7 @@ export function mountSyntaxSettings(root=document,storage){
   html.dataset.miraSyntax=Object.hasOwn(syntaxPalettes,chosen)?chosen:'notturno';
   html.dataset.miraCodeFont=fonts.some(f=>f[0]===face)?face:'jetbrains';
   if(palette)palette.value=html.dataset.miraSyntax;
-  const labels=['Sfondo','Identificatori','Commenti','Stringhe','Numeri','Selettori','Operatori','Punteggiatura','Keyword e Boolean','Placeholder','Parametri','Campi dei record','Numeri di riga','Bordo'];
+  const labels=['Sfondo','Identificatori','Commenti','Stringhe','Numeri','Selettori','Operatori','Punteggiatura','Keyword e Boolean','Placeholder','Parametri','Campi dei record','Sfondo numeri di riga','Bordo'];
   const fields=root.getElementById('syntaxColors'),report=root.getElementById('syntaxContrast');
   const lum=c=>c.slice(1).match(/../g).map(x=>parseInt(x,16)/255).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4).reduce((s,x,i)=>s+x*[.2126,.7152,.0722][i],0);
   const ratio=(a,b)=>(Math.max(lum(a),lum(b))+.05)/(Math.min(lum(a),lum(b))+.05);
@@ -38,7 +38,7 @@ export function mountSyntaxSettings(root=document,storage){
       report.textContent='Contrasto minimo sullo sfondo: '+min.toFixed(2)+':1'+(min<4.5?' · da migliorare':'');
     }
     const output=root.getElementById('syntaxExport');
-    if(output)output.value='.mira-code {\\n'+syntaxKeys.map((key,i)=>'  --syntax-'+key+': '+colors[i]+';').join('\\n')+'\\n}';
+    if(output)output.value='.mira-code {\n'+syntaxKeys.map((key,i)=>'  --syntax-'+key+': '+colors[i]+';').join('\n')+'\n}';
   }
   if(palette)palette.addEventListener('change',()=>{
     if(Object.hasOwn(syntaxPalettes,palette.value)){html.dataset.miraSyntax=palette.value;save('mira:syntax-palette',palette.value);apply()}

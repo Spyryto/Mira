@@ -123,3 +123,26 @@ test('local font assets and licenses are copied and precached',()=>{
     assert.ok(sw.includes('./fonts/'+font));
   }
 });
+
+test('syntax settings retain custom colors independently and export valid CSS',async()=>{
+  const {mountSyntaxSettings}=await import(pathToFileURL(resolve(root,'dist/studio/syntax-theme.js')).href);
+  const node=()=>({children:[],value:'',hidden:true,handlers:{},append(...x){this.children.push(...x)},addEventListener(k,f){this.handlers[k]=f},focus(){},select(){}});
+  const ids=Object.fromEntries(['syntaxPalette','syntaxFont','syntaxColors','syntaxContrast','syntaxReset','syntaxExportButton','syntaxExport'].map(k=>[k,node()]));
+  const css=new Map(),stored=new Map();
+  const doc={documentElement:{dataset:{},style:{setProperty:(k,v)=>css.set(k,v)}},getElementById:k=>ids[k],createElement:node};
+  const storage={getItem:k=>stored.get(k),setItem:(k,v)=>stored.set(k,v)};
+  mountSyntaxSettings(doc,storage);
+  assert.equal(doc.documentElement.dataset.miraCodeFont,'jetbrains');
+  assert.equal(css.get('--syntax-bg'),'#1b293b');
+  const background=ids.syntaxColors.children[0].children[0];
+  background.value='#123456';background.handlers.input();
+  assert.equal(css.get('--syntax-bg'),'#123456');
+  assert.match(ids.syntaxExport.value,/^\.mira-code \{\n  --syntax-bg: #123456;/);
+  ids.syntaxPalette.value='prisma';ids.syntaxPalette.handlers.change();
+  assert.equal(css.get('--syntax-bg'),'#f9edf1');
+  ids.syntaxPalette.value='notturno';ids.syntaxPalette.handlers.change();
+  assert.equal(css.get('--syntax-bg'),'#123456');
+  ids.syntaxReset.handlers.click();assert.equal(css.get('--syntax-bg'),'#1b293b');
+  ids.syntaxFont.value='fira';ids.syntaxFont.handlers.change();
+  assert.equal(stored.get('mira:syntax-font'),'fira');
+});
