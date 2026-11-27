@@ -15,6 +15,8 @@ class Definition {
     public var isExported:Bool = false;
     public var hasPublicSignature:Bool = false;
     public var isAbstractContract:Bool = false;
+    // Only the verified standard GUI source may set this compile-time marker.
+    public var guiPrimitive:Bool = false;
     public var importedGlobals:Array<String> = [];
     public var typeParameters:Array<String> = [];
     public var parameterAnnotations:Array<Null<Type>> = [];

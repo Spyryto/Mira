@@ -16,7 +16,17 @@ class Compiler {
         final types = new Map<String,mira.types.Type>();
         final moduleTypes = new Map<String,Map<String,mira.types.Type>>();
         final bindings = new Map<String,Array<mira.resolve.ImportBinding>>();
-        final definitions = Modules.collect(source, readModule, entry,types,moduleTypes,interfaceData == null ? null : interfaceData.publicTypes,bindings,visibility,interfaceData == null ? null : interfaceData.reexports,interfaceData == null ? null : interfaceData.edges,providers,allowContracts,allowUnbound);
+        // Trust the typed GUI ABI only for the exact library implementation.
+        // The same AST is emitted; checking never rewrites a descriptor.
+        final gui = origins != null && mira.types.GuiTypes.hasPrefix(source);
+        var importedGui = false;
+        var trackedRead = readModule;
+        if (origins != null && readModule != null) trackedRead = function(path:String):Null<String> {
+            final text = readModule(path);
+            if (path == "lib/gui.mira") importedGui = text != null && mira.types.GuiTypes.matches(text);
+            return text;
+        };
+        final definitions = Modules.collect(source, trackedRead, entry,types,moduleTypes,interfaceData == null ? null : interfaceData.publicTypes,bindings,visibility,interfaceData == null ? null : interfaceData.reexports,interfaceData == null ? null : interfaceData.edges,providers,allowContracts,allowUnbound);
         if (interfaceData != null) interfaceData.moduleTypes = moduleTypes;
         if (profile != null) profile.mark("collect");
         final groups = new Map<String,Array<Definition>>();
@@ -37,6 +47,12 @@ class Compiler {
             definition.body = new ExpressionParser(definition.bodyTokens, scopes.get(key), locals, false, null, origins,localTypes).parse();
         }
         final result = [for (definition in definitions) definition.canonical()];
+        if (gui || importedGui) for (definition in result) {
+            final token = definition.origin;
+            definition.guiPrimitive = definition.isFunction() && definition.modulePath == null &&
+                ((importedGui && token.file == "lib/gui.mira") ||
+                 (gui && token.file == null && token.line <= mira.types.GuiTypes.libraryLines));
+        }
         if (profile != null) profile.mark("expressions");
         return result;
     }

@@ -149,7 +149,8 @@ function compile(revealOutput = false, withLocations = false) {
   }
 
   const begin = performance.now();
-  const result = compiler.compile(ui.source.value, state.target, state.hostJson, withLocations);
+  const checked = $('checkedGui')?.checked === true;
+  const result = compiler.compile(ui.source.value, state.target, state.hostJson, withLocations, undefined, checked);
   state.locations = result?.locations;
   const elapsed = performance.now() - begin;
 
@@ -165,7 +166,7 @@ function compile(revealOutput = false, withLocations = false) {
   state.valid = true;
   state.output = result.output;
   ui.output.textContent = state.output;
-  setStatus('ready', 'Compilazione riuscita', `${elapsed.toFixed(2)} ms`);
+  setStatus('ready', checked ? 'Compilazione verificata' : 'Compilazione riuscita', `${elapsed.toFixed(2)} ms`);
   if (state.view === 'structure') updateStructure();
   if (revealOutput) setView('output');
   return true;
@@ -473,6 +474,7 @@ function wireEvents() {
 
   $('compile').addEventListener('click', () => compile(true));
   ui.previewButton.addEventListener('click', runUiPreview);
+  $('checkedGui')?.addEventListener('change', () => { stopUiPreview(); compile(false); });
   $('previewRenderer').addEventListener('change', () => { if (state.uiFrame) runUiPreview(); });
   ui.runButton.addEventListener('click', runJavaScript);
   $('saveSource').addEventListener('click', saveSource);
