@@ -65,7 +65,7 @@ class ConstantData {
                     throw new MiraError("Constant data permits only sum constructors");
                 switch (d.body) {
                     case Variant(_,tag,Name(parameter)) if (d.parameters.length == 1 && d.parameters[0] == parameter):
-                        CVariant(tag,evaluate(args[0],depth+1));
+                        d.scalarValue == null ? CVariant(tag,evaluate(args[0],depth+1)) : evaluate(args[0],depth+1);
                     default: throw new MiraError("Constant data permits only sum constructors",d.origin);
                 }
             default: throw new MiraError("Unsupported constant data expression");
