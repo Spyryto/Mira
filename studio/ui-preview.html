@@ -24,6 +24,11 @@
       padding: 11px 15px; font-size: 14px; font-weight: 750; cursor: pointer; }
     .mira-ui-button:focus-visible { outline: 3px solid #2a8875; outline-offset: 2px; }
     .mira-ui-state { display: block; }
+    .mira-ui-rangebox,.mira-ui-toggle,.mira-ui-stepper,.mira-ui-tabs { display:flex; gap:8px; align-items:center; }
+    .mira-ui-slider-input { flex:1; min-width:0; }
+    .mira-ui-step-button,.mira-ui-tabs button { font:inherit; padding:8px; cursor:pointer; }
+    .mira-ui-tabs button[aria-pressed=true] { background:#ff965f; }
+    .mira-ui-led::before { content:"●"; color:#2a8875; margin-right:8px; }
     .mira-ui-dialog { border: 2px solid #1e2529; border-radius: 12px; padding: 18px;
       width: min(320px, calc(100vw - 60px)); box-shadow: 4px 4px 0 #ff965f; }
     .mira-ui-dialog::backdrop { background: #1e252990; }
