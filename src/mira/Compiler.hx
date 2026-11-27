@@ -60,6 +60,8 @@ class Compiler {
     public static function transpile(source:String, target:Target, ?host:HostEnvironment,
         ?locations:Array<GeneratedLocation>, ?readModule:String->Null<String>, ?entry:String):String {
         final definitions = parse(source, host, readModule, entry);
+        for (definition in definitions) if (definition.scalarValue != null)
+            throw new MiraError("Scalar variants require checked compilation",definition.origin);
         final symbols = new Symbols(definitions, host);
         return switch (target) {
             case JavaScript: JsEmitter.emit(definitions, symbols, locations);
@@ -77,7 +79,8 @@ class Compiler {
         var definitions = parse(source,host,readModule,entry,origins,visibility,providers,true,false,null,profile);
         final guards = new haxe.ds.ObjectMap<Dynamic,mira.types.NumericGuard>();
         final comparisons = target == Php ? new haxe.ds.ObjectMap<Dynamic,mira.types.ScalarComparison>() : null;
-        new mira.types.TypeChecker(origins,host == null ? HostEnvironment.empty() : host,guards,visibility,comparisons).check(definitions);
+        final scalarMatches = new haxe.ds.ObjectMap<Dynamic,Array<mira.syntax.Expr>>();
+        new mira.types.TypeChecker(origins,host == null ? HostEnvironment.empty() : host,guards,visibility,comparisons,scalarMatches).check(definitions);
         if (profile != null) profile.mark("checking");
         if (treeShake) {
             definitions = mira.optimize.TreeShaker.run(definitions,guards,optimization);
@@ -85,8 +88,8 @@ class Compiler {
         }
         final symbols = new Symbols(definitions,host);
         final result = switch (target) {
-            case JavaScript: JsEmitter.emit(definitions,symbols,locations,guards);
-            case Php: PhpEmitter.emit(definitions,symbols,locations,guards,comparisons);
+            case JavaScript: JsEmitter.emit(definitions,symbols,locations,guards,scalarMatches);
+            case Php: PhpEmitter.emit(definitions,symbols,locations,guards,comparisons,scalarMatches);
         };
         if (profile != null) profile.mark("emission");
         return result;
