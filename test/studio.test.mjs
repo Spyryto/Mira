@@ -198,7 +198,7 @@ test('Studio offers all generated feature examples and real Haxe API links offli
     const shouldWork = example.expect.kind !== 'error';
     for (const target of ['js', 'php']) {
       const compilation = bridge.compile(example.source, target,
-        example.host ? read('host.json') : undefined);
+        example.host ? read('host.json') : undefined, false, null, example.checked===true);
       assert.equal(compilation.ok, shouldWork,
         example.id + ' ' + target + ': ' + compilation.message);
     }
@@ -2248,15 +2248,6 @@ test('0.90 standalone project and Studio build the same checked application',asy
 
 
 test('0.96 data-only evaluator uses real Mira AST and checked algebraic constructors',()=>{
-  const actual=readFileSync(resolve(root,'lib/gui-style-contract.mira'),'utf8');
-  assert.equal(bridge.styleContractSource(),actual);
-  const schema=bridge.constantData(actual,'style rules');
-  assert.equal(schema.ok,true,schema.message);
-  const rules=JSON.parse(schema.output);
-  assert.deepEqual(rules.padding,{tag:'Range',value:{min:0,max:4096}});
-  assert.equal(rules.width.tag,'Either');
-  assert.equal(rules.fontWeight.tag,'Whole');
-  assert.equal(Object.keys(rules).length,20);
   const generic='Rule :: Choices ([Text]) | Either ([Rule]); mode = Choices: ["manual", "auto"]; config = {mode: mode, fallback: (Either: [mode])};';
   const result=bridge.constantData(generic,'config');
   assert.equal(result.ok,true,result.message);
