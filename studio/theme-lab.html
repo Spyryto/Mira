@@ -2,80 +2,7 @@
 <html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mira — Cozy Balanced</title></head><body>
 <a href="./index.html">← Mira Studio</a> · <a href="./theme-native-lab.html">Renderer nativo (sperimentale)</a>
 <div id="cozy">
-<style>
-#cozy{font-family:ui-rounded,"Nunito","Ubuntu Sans","Avenir Next",sans-serif;font-size:14px;letter-spacing:.025em;max-width:800px;margin:auto;--top:#f5dee7;--bottom:#b9bde5;--panel:#fae9e5;--accent:#969dd5;--neutral:#f3e3e3;--ink:#39334e;--pInk:#39334e;--bInk:#39334e;--aInk:#fff;--tabInk:#39334e;--edge:#bca8bb;--light:#fffd;--shadow:#71556c65;--contact:#71556c30;--aTop:#bac1f0;--aBottom:#8189c3;--nTop:#fbefea;--nBottom:#e3ccd5;--pLight:#fff3ed;--pBottom:#f1dfe4;--well:#e6d7db;--track:#d6c4df;--tabTop:#e0dffa;--tabBottom:#b5b9e8;--knob:#fff9f1;--knobEdge:#d2b8c9;--pct:65%;--spacing:.05em;--size:16px}
-#cozy *{box-sizing:border-box}
-#cozy button,#cozy input,#cozy select,#cozy output{font-family:inherit;font-size:inherit;letter-spacing:inherit}
-#cozy button{cursor:pointer}
-#cozy button:disabled{opacity:.45;cursor:default}
-#cozy [hidden]{display:none!important}
-#cozy :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
-#cozy .chooser{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-bottom:12px}
-#cozy .preset{border:1px solid #9996;border-radius:10px;background:transparent;color:inherit;font-size:11px;padding:9px 4px;font-weight:600}
-#cozy .preset[aria-pressed=true]{outline:2px solid #9990bd}
-#cozy .chips{display:flex;justify-content:center;gap:3px;margin-bottom:6px}
-#cozy .chips i{width:20px;height:20px;border-radius:6px;border:1px solid #8885}
-#cozy .stage{padding:17px 10px 25px;background:linear-gradient(145deg,var(--top),var(--bottom));border-radius:18px}
-#cozy .shell{position:relative;isolation:isolate;overflow:hidden;padding:17px 5px 5px;border-radius:22px;border:1px solid var(--edge);background:linear-gradient(140deg,var(--top),var(--bottom));box-shadow:inset 0 0 0 2px var(--light),inset 0 0 0 4px var(--contact),0 3px 4px var(--shadow),0 12px 18px var(--shadow);color:var(--ink);font-size:var(--size);letter-spacing:var(--spacing)}
-#cozy .waves{position:absolute;inset:0 0 auto;width:100%;height:180px;z-index:-1;pointer-events:none;mask-image:linear-gradient(#000 65%,transparent)}
-#cozy .head{display:flex;align-items:center;gap:13px;padding:2px 15px 19px}
-#cozy .logo{display:grid;place-items:center;width:51px;height:51px;flex:none;border:1px solid var(--edge);border-radius:13px;background:linear-gradient(var(--aTop),var(--accent),var(--aBottom));box-shadow:inset 0 1px 2px var(--light),inset 0 -2px 3px var(--shadow),0 3px 5px var(--shadow);color:var(--aInk)!important;font:bold italic 36px Georgia;text-shadow:0 2px 2px var(--contact)}
-#cozy .brand{border-left:1px solid var(--edge);padding-left:13px}
-#cozy .brand b{display:block;font-size:29px;letter-spacing:-.8px;line-height:1.1;color:var(--ink)!important}
-#cozy .brand span{font-size:12px;color:var(--ink)!important;opacity:.85}
-#cozy .toolbar{display:flex;gap:8px;padding:0 14px 15px}
-#cozy .toolbar button{flex:1;min-width:0}
-#cozy .btn{height:42px;padding:0 8px;border:1px solid var(--edge);border-radius:10px;background:linear-gradient(var(--nTop),var(--neutral) 12%,var(--neutral) 85%,var(--nBottom));color:var(--bInk)!important;font-weight:550;box-shadow:inset 0 1px 1px var(--light),inset 0 -1px 2px var(--contact),0 1.5px 2.2px var(--shadow),0 3.7px 5.2px var(--contact)}
-#cozy .btn.primary{background:linear-gradient(var(--aTop),var(--accent) 15%,var(--accent) 85%,var(--aBottom));color:var(--aInk)!important;text-shadow:var(--textShadow,0 1px 1px #0005)}
-#cozy .btn:active:not(:disabled){transform:translateY(1px);box-shadow:inset 0 2px 4px var(--shadow)}
-#cozy .tabs{display:flex;gap:3px;margin:0 10px -1px}
-#cozy .tabs button{flex:1;min-width:0;height:38px;border:1px solid var(--edge);border-bottom:0;border-radius:12px 12px 0 0;background:linear-gradient(var(--nTop),var(--neutral) 23%,var(--nBottom));box-shadow:inset 0 1px 1px var(--light),inset 1px 0 1px var(--light);color:var(--bInk)!important;font-weight:550;text-shadow:0 1px 0 var(--contact)}
-#cozy .tabs button[aria-selected=true]{background:linear-gradient(var(--tabTop),var(--tabBottom));color:var(--tabInk)!important;font-weight:650;box-shadow:inset 0 2px 2px var(--light)}
-#cozy .panel{padding:19px 15px 23px;min-height:230px;border:1px solid var(--edge);border-radius:13px;background:linear-gradient(135deg,var(--panel),var(--pLight) 45%,var(--pBottom));box-shadow:inset 0 1px 1px var(--light),0 2px 4px var(--contact);color:var(--pInk)!important}
-#cozy .panel label,#cozy .panel output,#cozy .panel strong,#cozy .panel span:not(.switch),#cozy .panel pre,#cozy .panel .group{color:var(--pInk)!important}
-#cozy .field{display:grid;grid-template-columns:minmax(115px,30%) minmax(0,1fr);gap:10px;align-items:center;margin-bottom:17px}
-#cozy .field label{font-weight:550}
-#cozy input[type=text],#cozy select{width:100%;min-width:0;height:42px;border:1px solid var(--edge);border-radius:10px;padding:0 12px}
-#cozy input[type=text]{color:var(--wellInk,var(--pInk))!important;background:linear-gradient(var(--well),var(--panel) 35%);box-shadow:inset 0 .58px 1.45px var(--shadow),0 1px 0 var(--light)}
-#cozy select{color:var(--bInk)!important;background:linear-gradient(var(--nTop),var(--neutral) 15%,var(--neutral) 85%,var(--nBottom));box-shadow:inset 0 1px 1px var(--light),inset 0 -1px 2px var(--contact)}
-#cozy select option{background:var(--neutral);color:var(--bInk)}
-#cozy .rangebox{display:flex;gap:9px;align-items:center;min-width:0}
-#cozy .range{appearance:none;-webkit-appearance:none;flex:1;width:100%;min-width:0;height:13px;border-radius:20px;border:1px solid var(--edge);background:linear-gradient(var(--light),transparent 35%,transparent 60%,#0002 85%,var(--light)),linear-gradient(90deg,var(--aTop),var(--accent) var(--pct),var(--track) var(--pct),var(--track));box-shadow:inset 0 1px 3px var(--shadow),0 1px 0 var(--light);margin:12px 0}
-#cozy .range::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:25px;height:25px;border-radius:50%;border:1px solid var(--edge);background:radial-gradient(circle at 35% 24%,var(--knob),var(--knobEdge));box-shadow:inset 0 1px 1px #fff8,0 2px 4px var(--shadow)}
-#cozy .range::-moz-range-thumb{width:25px;height:25px;border-radius:50%;border:1px solid var(--edge);background:radial-gradient(circle at 35% 24%,var(--knob),var(--knobEdge));box-shadow:0 2px 4px var(--shadow)}
-#cozy output{font-variant-numeric:tabular-nums}
-#cozy .bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:24px}
-#cozy .group{display:flex;align-items:center;gap:7px}
-#cozy .check{appearance:none;-webkit-appearance:none;width:22px;height:22px;display:inline-grid;place-items:center;margin:0;border:1px solid var(--edge);border-radius:6px;background:var(--well);box-shadow:inset 0 1px 3px var(--shadow)}
-#cozy .check:checked{background:linear-gradient(var(--aTop),var(--aBottom));box-shadow:inset 0 1px 1px var(--light)}
-#cozy .check:checked:after{content:"✓";color:var(--aInk);font-weight:750}
-#cozy .switch{display:inline-block;position:relative;width:49px;height:27px}
-#cozy .switch input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;z-index:2;cursor:pointer}
-#cozy .switch i{position:absolute;inset:0;border:1px solid var(--edge);border-radius:20px;background:var(--track);box-shadow:inset 0 1.92px 3.2px var(--shadow),inset 0 -1px 1px var(--light),0 1px 0 var(--light)}
-#cozy .switch input:checked+i{background:linear-gradient(var(--aBottom),var(--aTop) 65%,var(--accent))}
-#cozy .switch i:before{content:"";position:absolute;left:1px;top:1px;width:23px;height:23px;border-radius:50%;background:radial-gradient(circle at 32% 25%,var(--knob),var(--knobEdge));box-shadow:inset 0 1px 1px #fff8,0 1px 3px var(--shadow)}
-#cozy .switch input:checked+i:before{transform:translateX(22px)}
-#cozy .switch input:focus-visible+i{outline:2px solid var(--accent);outline-offset:3px}
-#cozy .stepper{display:flex;align-items:center;padding:1px;border:1px solid var(--edge);border-radius:10px;background:var(--well);box-shadow:inset 0 1px 3px var(--contact)}
-#cozy .stepper .btn{height:32px;min-width:34px;font-size:20px;border-radius:8px;box-shadow:inset 0 1px 1px var(--light),inset 0 -1px 2px var(--contact)}
-#cozy .stepper strong{min-width:33px;text-align:center;font-size:21px;font-weight:550;color:var(--wellInk,var(--pInk))!important}
-#cozy .status{display:flex;align-items:center;gap:8px;padding:10px 15px 9px;font-size:12px;color:var(--ink)!important}
-#cozy .status span{color:var(--ink)!important}
-#cozy .led{width:13px;height:13px;border-radius:50%;border:1px solid var(--edge);background:radial-gradient(circle at 45% 55%,var(--aTop),var(--accent),var(--aBottom));box-shadow:inset 0 .58px 1.16px var(--shadow),0 1px 0 var(--light)}
-#cozy .lab{padding:14px;margin-top:15px;border:1px solid #9996;border-radius:12px}
-#cozy .lab h3{font-size:14px;margin:0 0 12px}
-#cozy .lab label{font-size:12px}
-#cozy .lab input[type=range]{width:100%;height:32px;accent-color:#9990bd}
-#cozy .lab .row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}
-#cozy .lab select{height:38px;border:1px solid #9996;background:transparent!important;color:inherit!important}
-#cozy .colorgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
-#cozy .colorfield{display:flex;gap:7px;align-items:center}
-#cozy input[type=color]{width:34px;height:34px;padding:2px;border:1px solid #9996;background:transparent;border-radius:7px;flex:none}
-#cozy .configbtn{border:1px solid #9996;border-radius:8px;padding:10px;color:inherit;background:transparent;font-size:12px}
-#cozy .contrast{font-size:12px;line-height:1.7}
-#cozy pre{font:12px monospace;white-space:pre-wrap;overflow-wrap:anywhere}
-@media(max-width:520px){#cozy .field{grid-template-columns:1fr;gap:6px}#cozy .panel{padding:15px 12px}#cozy .bottom{justify-content:flex-start}#cozy .toolbar{padding-left:8px;padding-right:8px}}
-</style>
+<link rel="stylesheet" href="./mira-theme.css">
 <div class="chooser" id="czPresets">
 <button class="preset" data-preset="0" aria-pressed="true"><span class="chips"><i style="background:#b9bde5"></i><i style="background:#969dd5"></i><i style="background:#fae9e5"></i></span>Prisma</button>
 <button class="preset" data-preset="9"><span class="chips"><i style="background:#1b293d"></i><i style="background:#79d5c5"></i><i style="background:#34485f"></i></span>Notturno</button>
@@ -117,48 +44,21 @@
 <h3>Contrasto del testo</h3>
 <div class="contrast" id="czContrast">Calcolo del contrasto…</div>
 </div>
+<script src="./cozy-palette.js"></script>
 <script>
 (()=>{
 const r=document.getElementById("cozy"),q=id=>r.querySelector("#cz"+id);
-const presets=[
-["Prisma","#f5dee7","#b9bde5","#fae9e5","#969dd5","#f3e3e3"],
-["Acqua","#e1f3ff","#98c8eb","#f0f7fc","#4da4d7","#e1edf5"],
-["Cristallo","#d4f5fa","#c4c3ef","#edf8fc","#60bcd9","#e1ebfa"],
-["Ambra","#fae6c5","#d9b47e","#fff0d8","#cc914c","#f4dfbe"],
-["Salvia","#e4ebd6","#a9c7b2","#f4f6e9","#73a58c","#e3ebdb"],
-["Corallo","#ffe5dc","#e7b2ae","#fff1e7","#cc817d","#f6e1d8"],
-["Avorio","#fbf3e0","#d9cbb5","#fffaf0","#a99c80","#f4ecdb"],
-["Laguna","#d2f0e6","#7bbdb9","#e8f7f1","#3e9d9c","#d7ebe5"],
-["Orchidea","#f4dcef","#c4acd7","#fff0f8","#af83b9","#eddfec"],
-["Notturno","#34485f","#1b293d","#25384a","#79d5c5","#3b5065"],
-["Grafite","#525c6b","#252c38","#323a47","#f0b879","#47515e"],
-["Bosco","#455c51","#213b35","#2f493e","#b2d6a1","#4b6456"]];
-const keys=["top","bottom","panel","accent","neutral"],labels=["Superficie superiore","Superficie inferiore","Pannello","Colore attivo","Pulsanti neutri"];
-const fonts={cozy:'ui-rounded,"Nunito","Ubuntu Sans","Avenir Next",sans-serif',human:'"Ubuntu Sans",Ubuntu,"Avenir Next","Trebuchet MS",sans-serif',system:'system-ui,sans-serif'};
+const {presets,keys,labels}=globalThis.MiraCozyTheme;
 let selected=0,p=presets[0].slice(1),custom=false,count=0,saved=null;
-const rgb=c=>c.slice(1).match(/../g).map(v=>parseInt(v,16));
-const mix=(a,b,t)=>"#"+rgb(a).map((v,i)=>Math.round(v+(rgb(b)[i]-v)*t).toString(16).padStart(2,"0")).join("");
-const L=c=>rgb(c).map(v=>v/255).map(v=>v<=.04045?v/12.92:((v+.055)/1.055)**2.4).reduce((s,v,i)=>s+v*[.2126,.7152,.0722][i],0);
-const contrast=(a,b)=>(Math.max(L(a),L(b))+.05)/(Math.min(L(a),L(b))+.05);
-const best=bg=>{const choices=["#39334e","#f5f7fa","#111018","#ffffff"];return choices.map(c=>[c,Math.min(...bg.map(b=>contrast(c,b)))]).sort((a,b)=>b[1]-a[1]).find(([c,n])=>n>=7)||choices.map(c=>[c,Math.min(...bg.map(b=>contrast(c,b)))]).sort((a,b)=>b[1]-a[1])[0]};
-const lighten=(c,t)=>mix(c,"#ffffff",t),darken=(c,t)=>mix(c,"#171625",t);
-const rgba=(c,a)=>`rgba(${rgb(c).join(",")},${a})`;
 function apply(){
-const [top,bottom,panel,accent,neutral]=p,dark=L(panel)<.25;
-const v={top,bottom,panel,accent,neutral,aTop:lighten(accent,.32),aBottom:darken(accent,.16),nTop:lighten(neutral,dark?.13:.47),nBottom:darken(neutral,.095),pLight:lighten(panel,dark?.045:.45),pBottom:darken(panel,.055),well:darken(panel,dark?.30:.105),track:darken(mix(panel,accent,.25),dark?.40:.12),tabTop:mix(accent,panel,.55),tabBottom:mix(accent,panel,.25),edge:dark?lighten(panel,.25):darken(mix(panel,bottom,.35),.25),light:dark?"#ffffff40":"#ffffffd6",shadow:rgba(darken(bottom,.58),dark?.75:.42),contact:rgba(darken(bottom,.58),dark?.40:.20),knob:dark?"#eef5f7":lighten(neutral,.68)};
-v.knobEdge=darken(v.knob,.12);
-if(!custom&&selected===0)Object.assign(v,{aTop:"#bac1f0",aBottom:"#8189c3",nTop:"#fbefea",nBottom:"#e3ccd5",pLight:"#fff3ed",pBottom:"#f1dfe4",well:"#e6d7db",track:"#d6c4df",tabTop:"#e0dffa",tabBottom:"#b5b9e8",edge:"#bca8bb",shadow:"#71556c65",contact:"#71556c30",knob:"#fff9f1",knobEdge:"#d2b8c9"});
-const groups=[["ink","Intestazione e stato",[top,bottom]],["pInk","Etichette, slider e valori",[panel,v.pLight,v.pBottom]],["bInk","Pulsanti neutri",[v.nTop,neutral,v.nBottom]],["aInk","Pulsante principale",[v.aTop,accent,v.aBottom]],["tabInk","Tab selezionato",[v.tabTop,v.tabBottom]],["wellInk","Campi e contatore",[v.well,panel]]];
 q("Contrast").textContent="";
-groups.forEach(([k,label,bg])=>{const [c,n]=best(bg);v[k]=c;const line=document.createElement("div");line.textContent=label+": "+n.toFixed(2)+":1"+(n<4.5?" — da migliorare":"");q("Contrast").appendChild(line)});
-v.textShadow=L(v.aInk)>.5?"0 1px 2px #0008":"0 1px 0 #ffffff40";
-Object.entries(v).forEach(([k,val])=>r.style.setProperty("--"+k,val));
+globalThis.MiraCozyTheme.apply(r,p,selected,custom).forEach(({label,ratio:n})=>{const line=document.createElement("div");line.textContent=label+": "+n.toFixed(2)+":1"+(n<4.5?" — da migliorare":"");q("Contrast").appendChild(line)});
 r.querySelectorAll("[data-preset]").forEach(b=>b.setAttribute("aria-pressed",String(+b.dataset.preset===selected&&!custom)));
 q("Name").textContent=presets[selected][0]+(custom?" Custom":" Balanced")+" · Cozy";
 keys.forEach((k,i)=>q("Color"+i).value=p[i]);update();
 }
 function state(){return {testo:q("Text").value,target:q("Target").value,slider:+q("Range").value,anteprima:q("Preview").checked,attivo:q("Active").checked,contatore:count,tema:presets[selected][0],palette:Object.fromEntries(keys.map((k,i)=>[k,p[i]])),font:q("Font").value,dimensione:+q("Size").value,spaziatura:+q("Spacing").value,materiale:{outer:74,inner:0,inset:29,toggle:64,grain:0}}}
-function update(){const s=state();r.style.fontFamily=fonts[s.font];r.style.setProperty("--size",s.dimensione+"px");r.style.setProperty("--spacing",s.spaziatura/100+"em");q("SizeOut").textContent=s.dimensione+" px";q("SpacingOut").textContent=String(s.spaziatura).replace(".",",")+"%";r.style.setProperty("--pct",s.anteprima?s.slider+"%":"0%");q("Pct").textContent=s.slider+"%";q("Count").textContent=count;r.querySelector("[data-act=minus]").disabled=r.querySelector("[data-act=plus]").disabled=!s.attivo;q("Status").hidden=!q("Show").checked;q("Data").textContent=JSON.stringify(s,null,2);q("Saved").textContent=saved?JSON.stringify(saved,null,2):"Nessuno"}
+function update(){const s=state();globalThis.MiraCozyTheme.typography(r,s.font,s.dimensione,s.spaziatura);q("SizeOut").textContent=s.dimensione+" px";q("SpacingOut").textContent=String(s.spaziatura).replace(".",",")+"%";r.style.setProperty("--pct",s.anteprima?s.slider+"%":"0%");q("Pct").textContent=s.slider+"%";q("Count").textContent=count;r.querySelector("[data-act=minus]").disabled=r.querySelector("[data-act=plus]").disabled=!s.attivo;q("Status").hidden=!q("Show").checked;q("Data").textContent=JSON.stringify(s,null,2);q("Saved").textContent=saved?JSON.stringify(saved,null,2):"Nessuno"}
 function choose(i){selected=i;p=presets[i].slice(1);custom=false;apply();q("Message").textContent="Palette applicata"}
 function tab(t){r.querySelectorAll("[data-page]").forEach(x=>x.hidden=x.dataset.page!==t);r.querySelectorAll("[data-tab]").forEach(x=>x.setAttribute("aria-selected",String(x.dataset.tab===t)))}
 function resetFont(){q("Font").value="cozy";q("Size").value=16;q("Spacing").value=5}

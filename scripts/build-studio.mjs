@@ -1,3 +1,4 @@
+import {nativeCozyCss} from './cozy-native-css.mjs';
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { runInNewContext } from 'node:vm';
@@ -33,6 +34,7 @@ const assets = [
   'worker.js',
   'ui-preview.html',
   'mira-theme.css',
+  'cozy-palette.js',
   'theme-lab.html',
   'theme-native-lab.html',
   'theme-lab.js',
@@ -82,6 +84,8 @@ for (const filename of assets) {
 }
 
 copyFileSync(resolve(root,'runtime/js/typed-data.js'),resolve(destination,'typed-data.js'));
+
+writeFileSync(resolve(destination,'mira-native-theme.css'),nativeCozyCss(readFileSync(resolve(destination,'mira-theme.css'),'utf8')));
 
 // Bundle the actual reusable Text library, not a duplicate Studio fixture.
 const textFile = path => readFileSync(resolve(root,'lib/text',path),'utf8');

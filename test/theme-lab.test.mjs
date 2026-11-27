@@ -19,20 +19,40 @@ test('theme lab uses real Mira compiler and existing native descriptors',()=>{
   assert.equal(children[4].children[0].update(model).count,-1);
   assert.equal(children[5].update({...model,count:9}).count,0);
 });
-test('theme is scoped and all lab assets are published and cached',()=>{
-  const css=read('mira-theme.css'),html=read('theme-native-lab.html'),sw=read('sw.js');
-  for(const name of ['grafite','prisma','bosco','ambra'])assert.ok(css.includes('[data-palette="'+name+'"]'));
-  for(const axis of ['palette','surface','type','geometry','density'])assert.ok(html.includes('data-theme-axis="'+axis+'"'));
-  for(const file of ['theme-lab.html','theme-native-lab.html','theme-lab.js','mira-theme.css'])assert.ok(sw.includes("'./"+file+"'"));
+test('canonical theme and generated native adapter are published and cached',()=>{
+  const css=read('mira-theme.css'),native=read('mira-native-theme.css'),html=read('theme-native-lab.html'),sw=read('sw.js');
+  for(const file of ['theme-lab.html','theme-native-lab.html','theme-lab.js','mira-theme.css','mira-native-theme.css','cozy-palette.js'])assert.ok(sw.includes("'./"+file+"'"));
   assert.ok(read('index.html').includes('./theme-lab.html'));
-  assert.ok(css.includes('.mira-theme .mira-ui-button'));
+  assert.ok(html.includes('./mira-native-theme.css'));
+  const body=(sheet,selector)=>sheet.split('\n').find(line=>line.startsWith(selector+'{')).split('{')[1].slice(0,-1).replaceAll('!important','');
+  for(const [a,b] of [['#cozy .btn','.mira-theme .mira-ui-button'],['#cozy input[type=text]','.mira-theme input.mira-ui-input[type=text]'],['#cozy select','.mira-theme select.mira-ui-input'],['#cozy .check','.mira-theme input.mira-ui-input[type=checkbox]'],['#cozy .panel','.mira-theme .panel']])assert.equal(body(css,a),body(native,b));
 });
-
+test('shared palette derivation retains presets, contrast and independent typography',()=>{
+  const context={};runInNewContext(read('cozy-palette.js'),context);
+  const theme=context.MiraCozyTheme;
+  assert.equal(theme.presets.length,12);
+  const values={};const root={style:{setProperty:(k,v)=>values[k]=v}};
+  for(let i=0;i<12;i++){
+    const p=theme.presets[i].slice(1),result=theme.derive(p,i);
+    assert.equal(result.variables.accent,p[3]);
+    assert.equal(result.report.length,6);
+    assert.ok(result.report.every(x=>Number.isFinite(x.ratio)));
+    theme.apply(root,p,i);
+    assert.equal(values['--accent'],p[3]);
+  }
+  assert.equal(theme.derive(theme.presets[0].slice(1)).variables.aTop,'#bac1f0');
+  assert.equal(theme.derive(theme.presets[0].slice(1)).variables.knobEdge,'#d2b8c9');
+  const p=theme.presets[0].slice(1);p[3]='#123456';
+  assert.equal(theme.derive(p,0,true).variables.accent,'#123456');
+  theme.typography(root,'cozy',16,5);assert.equal(values['--size'],'16px');assert.equal(values['--spacing'],'0.05em');
+});
 test('Cozy Edition is the main Theme Lab and retains the approved defaults',()=>{
   const html=read('theme-lab.html'),sw=read('sw.js');
   assert.ok(html.includes('./theme-native-lab.html'));
   assert.ok(sw.includes("endsWith('/theme-native-lab.html') ? './theme-native-lab.html'"));
-  assert.ok(html.includes('--spacing:.05em;--size:16px'));
+  assert.ok(read('mira-theme.css').includes('--spacing:.05em;--size:16px'));
+  assert.ok(html.includes('./mira-theme.css'));
+  assert.ok(html.includes('./cozy-palette.js'));
   assert.match(html,/id="czSize"[^>]*value="16"/);
   assert.match(html,/id="czSpacing"[^>]*value="5"/);
   const script=html.split('<script>')[1].split('</script>')[0];
@@ -40,7 +60,7 @@ test('Cozy Edition is the main Theme Lab and retains the approved defaults',()=>
   assert.ok(script.includes('q("Size").value=16;q("Spacing").value=5'));
   assert.ok(script.includes('outer:74,inner:0,inset:29,toggle:64,grain:0'));
   for(const palette of ['Prisma','Acqua','Cristallo','Ambra','Salvia','Corallo','Avorio','Laguna','Orchidea','Notturno','Grafite','Bosco']){
-    assert.ok(script.includes('["'+palette+'",'));
+    assert.ok(read('cozy-palette.js').includes('["'+palette+'",'));
   }
   assert.ok(script.includes('[0,9,10,1,2,3,4,5,6,7,8,11].map'));
   assert.ok(script.includes('data-color='));
