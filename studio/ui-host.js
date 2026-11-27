@@ -59,7 +59,7 @@
         throw new Error(type + ' requires a safe integer' + (type === 'slider' ? ' from 0 to 100' : ''));
     } else if (choiceType(type)) {
       if (typeof value !== 'string' || !options.includes(value)) {
-        throw new Error('select requires unique string options and a matching string value');
+        throw new Error(type + ' requires unique string options and a matching string value');
       }
     } else if (typeof value !== 'string') throw new Error('input.value must be a string');
     return value;
@@ -230,7 +230,7 @@
           if (choiceType(type)) {
             if (!Array.isArray(spec.options) || !spec.options.every(option => typeof option === 'string') ||
                 new Set(spec.options).size !== spec.options.length) {
-              throw new Error('select requires unique string options and a matching string value');
+              throw new Error(type + ' requires unique string options and a matching string value');
             }
             budget.nodes += spec.options.length;
             if (budget.nodes > MAX_NODES) throw new Error('The view exceeds its size/depth limit');
@@ -305,7 +305,6 @@
         control.miraSync = value => {
           for (const button of control.children) {
             const selected = button.value === value;
-            if (button.getAttribute('aria-selected') !== String(selected)) button.setAttribute('aria-selected', String(selected));
             if (button.getAttribute('aria-pressed') !== String(selected)) button.setAttribute('aria-pressed', String(selected));
           }
         };
