@@ -1,11 +1,7 @@
 module Services / Date Safe;
 interface
-try date from: :: (Text) -> Result (Date, Text);
+try date from: :: (Text) -> Result (Date, Date Error);
+try add days: to: :: (Number, Date) -> Result (Date, Date Error);
 import Data / Outcome { Result; };
 import Services / Date { Date; };
-implementation
-import Data / Outcome { Ok: ; Err: ; };
-import Services / Date { valid date: ; date from: ; };
-try date from: source =
-  if (valid date: source) then (Ok: (date from: source))
-  else (Err: "invalid_date");
+import Data / Date Outcome { Date Error; };

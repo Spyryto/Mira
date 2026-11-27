@@ -2137,7 +2137,10 @@ test('0.89.4 lesson import shares nominal outcomes across services',()=>{
     const rows=JSON.parse(report.output).interfaces;
     const schema=(module,name)=>rows.find(m=>m.module===module).surface.symbols.find(s=>s.name===name).schema;
     assert.equal(schema('Services / Lesson Import','try decode imported lesson:').result.name,'Data / Outcome / Result');
-    assert.equal(schema('Services / Date Safe','try date from:').result.name,'Data / Outcome / Result');
+    const date=schema('Services / Date Safe','try date from:').result;
+    assert.equal(date.name,'Data / Outcome / Result');
+    assert.equal(date.arguments[0].name,'Services / Date / Date');
+    assert.equal(date.arguments[1].name,'Data / Date Outcome / Date Error');
     const restore=schema('Services / Storage Safe','try read text:').result;
     assert.equal(restore.name,'Data / Outcome / Result');
     assert.equal(restore.arguments[0].name,'Data / Outcome / Option');
@@ -2170,4 +2173,31 @@ test('0.89.5 checked fallible storage distinguishes absence, empty value and I/O
       assert.equal(readFileSync(outside,'utf8'),'untouched');
     }finally{rmSync(outside,{force:true});}
   }finally{rmSync(dir,{recursive:true,force:true});rmSync(dir+'-moved',{recursive:true,force:true});}
+});
+
+test('0.89.6 civil Date operations return shared Result and nominal errors in JS/PHP',()=>{
+  const ctx={};for(const asset of ['date-host.js','lesson-import-data.js'])runInNewContext(read(asset),ctx);
+  const d=ctx.MiraLessonImportData;
+  const source='module App; interface result; import Services / Date {Date; date from: ; iso of: ;}; import Services / Date Safe {try date from: ; try add days: to: ;}; import Data / Outcome {Result; Ok: ; Err: ;}; import Data / Date Outcome {Date Error;}; implementation expose: value (Result (Date, Date Error)) -> Result (Text, Date Error) = match: value {ok: {day | Ok: (iso of: day)}, err: {error | Err: error}}; result = {parse: {raw | expose: (try date from: raw)}, shift: {count, raw | expose: (try add days: count, to: (date from: raw))}};';
+  const name='__miraModule_v_417070202F20726573756C74',plain=x=>JSON.parse(JSON.stringify(x));
+  const ok=value=>({tag:'Ok',value}),err=tag=>({tag:'Err',value:{tag}});
+  const expected=[ok('0001-01-01'),ok('0099-12-31'),ok('2028-02-29'),err('InvalidDate'),err('InvalidDate'),err('InvalidDate'),err('InvalidDate'),ok('2028-02-29'),ok('2028-02-29'),ok('9999-12-31'),ok('0001-01-01'),err('DateOutOfRange'),err('DateOutOfRange'),err('InvalidDayCount'),err('InvalidDayCount'),err('InvalidDayCount'),err('InvalidDayCount')];
+  const js=bridge.compile(source,'js',d.host,false,d.modules,true,true,d.jsBindings);assert.equal(js.ok,true,js.message);
+  const p=runInNewContext('(function(__miraHost){'+js.output+'\nreturn '+name+';})',{})(ctx.MiraDateHost);
+  const actual=[p.parse('0001-01-01'),p.parse('0099-12-31'),p.parse('2028-02-29'),p.parse('2027-02-29'),p.parse('0000-01-01'),p.parse('2028-2-29'),p.parse('2028-02-29T00:00:00Z'),p.shift(1,'2028-02-28'),p.shift(-1,'2028-03-01'),p.shift(3652058,'0001-01-01'),p.shift(-3652058,'9999-12-31'),p.shift(1,'9999-12-31'),p.shift(-1,'0001-01-01'),p.shift(0.5,'2028-02-28'),p.shift(3652059,'0001-01-01'),p.shift(NaN,'2028-02-28'),p.shift(Infinity,'2028-02-28')];
+  assert.deepEqual(plain(actual),expected);
+  const php=bridge.compile(source,'php',d.host,false,d.modules,true,true,d.phpBindings);assert.equal(php.ok,true,php.message);
+  const code=php.output.replace(/^<\?php/,'').replace('declare(strict_types=1);','declare(strict_types=1);$GLOBALS["__miraHost"]=require $argv[1];')+'\n$p=$'+name+';$r=[$p["parse"]("0001-01-01"),$p["parse"]("0099-12-31"),$p["parse"]("2028-02-29"),$p["parse"]("2027-02-29"),$p["parse"]("0000-01-01"),$p["parse"]("2028-2-29"),$p["parse"]("2028-02-29T00:00:00Z"),$p["shift"](1,"2028-02-28"),$p["shift"](-1,"2028-03-01"),$p["shift"](3652058,"0001-01-01"),$p["shift"](-3652058,"9999-12-31"),$p["shift"](1,"9999-12-31"),$p["shift"](-1,"0001-01-01"),$p["shift"](0.5,"2028-02-28"),$p["shift"](3652059,"0001-01-01"),$p["shift"](NAN,"2028-02-28"),$p["shift"](INF,"2028-02-28")];echo json_encode($r,JSON_THROW_ON_ERROR);';
+  const run=spawnSync('php',['-r',code,resolve(root,'lib/date/date-host.php')],{encoding:'utf8'});
+  assert.equal(run.status,0,run.stderr);assert.deepEqual(JSON.parse(run.stdout),expected);
+  for(const bindings of [null,d.jsBindings,d.phpBindings]){
+    const report=bridge.interfaces(source,bindings?d.host:null,d.modules,bindings);assert.equal(report.ok,true,report.message);
+    const rows=JSON.parse(report.output).interfaces;
+    const signature=rows.find(x=>x.module==='Services / Date Safe').surface.symbols.find(x=>x.name==='try add days:to:').schema;
+    assert.equal(signature.parameters[1].name,'Services / Date / Date');
+    assert.equal(signature.result.arguments[0].name,'Services / Date / Date');
+  }
+  const bad=source+' forged (Date) = {iso: "2028-02-29"};';
+  assert.equal(bridge.check(bad,d.host,d.modules,d.jsBindings).ok,false);
+  assert.equal(bridge.check(source+' leak = native try checked date "2028-02-29";',d.host,d.modules,d.jsBindings).ok,false);
 });

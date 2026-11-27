@@ -30,3 +30,7 @@ JS: caricare date-host.js e passare MiraDateHost come __miraHost.
 PHP: assegnare a $GLOBALS["__miraHost"] la mappa di require date-host.php
 prima di eseguire il programma generato. Il servizio non accede
 all'orologio né ha dipendenze esterne.
+
+## 0.89.6: Date Safe
+
+Contratto indipendente in lib/common/Services/Date Safe.mira, provider in lib/date/Providers/Date Safe Native.mira, Date Error in lib/common/Data/Date Outcome.mira. try date from: e try add days:to: restituiscono Result (Date, Date Error). Errori InvalidDate, InvalidDayCount (conteggio non intero/finito o oltre 3652058), DateOutOfRange (risultato fuori 0001–9999). Number resta la firma per poter riportare esplicitamente conteggi invalidi. Nessun cambio a date from:, add days:to: o al tipo opaco originale. Adapter nativi catturano solo DateFault previsto; ricostruzione pubblica valida di nuovo la stringa ISO di successo. Il pilota usa la composizione Studio e i binding statici, non è ancora disponibile un comando multifile autonomo per Date Safe. Costi non misurati.

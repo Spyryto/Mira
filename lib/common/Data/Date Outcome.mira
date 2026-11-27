@@ -1,0 +1,11 @@
+module Data / Date Outcome;
+interface
+Date Error :: InvalidDate | InvalidDayCount | DateOutOfRange;
+date error code: :: (Date Error) -> Text;
+implementation
+date error code: error =
+  match: error {
+    invalidDate: {| "invalid_date"},
+    invalidDayCount: {| "invalid_day_count"},
+    dateOutOfRange: {| "date_out_of_range"}
+  };

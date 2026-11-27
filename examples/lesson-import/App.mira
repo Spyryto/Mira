@@ -5,6 +5,7 @@ import Services / Lesson Import { try decode imported lesson: ; };
 import Services / Text { code points: ; };
 import Services / Date { iso of: ; weekday of: ; };
 import Services / Date Safe { try date from: ; };
+import Data / Date Outcome { date error code: ; };
 import Services / Storage Safe { try read text: ; try save text: for: ; try remove text: ; };
 import Data / Storage Outcome { storage error code: ; };
 import Services / Http { get text: ; successful: ; };
@@ -28,7 +29,7 @@ inspect lesson: raw =
                 paid: (lesson ~ paid), total: (lesson ~ hours * 30), error: ""})
             )
         },
-        err: {message | failure: message}
+        err: {error | failure: (date error code: error)}
       }
     },
     err: {message | failure: message}
