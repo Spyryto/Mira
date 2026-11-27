@@ -272,3 +272,8 @@ Codifica esplicita = _ per payload con dominio primitivo dimostrabilmente disgiu
 ### 0.99 — Optional record fields (candidata)
 
 Record chiusi con field?: Type, costruzione nominale, annotazioni strutturali e aggiornamenti immutabili tipizzati. I campi opzionali non vengono materializzati. Da sviluppare: accesso fallibile, narrowing della presenza, righe opzionali aperte, interoperabilità dei codec e migrazione della GUI. Vedi [optional record fields](type-representation.md#optional-record-fields-099). La numerazione continua con 0.100.
+
+
+### 0.100 — Safe optional access (candidata)
+
+Operatore ~? per campi dichiarati opzionali, risultato Option nominale esistente. Presenza distinta da truthiness; match diretto fuso senza wrapper intermedio. Restano aperti narrowing, sezioni, righe opzionali, codec e migrazione GUI. Vedi [safe optional access](type-representation.md#safe-optional-access-0100).
