@@ -60,3 +60,37 @@ C. Somme a rappresentazione nativa disgiunta: Size = Fixed(Pixels) | Fill | Auto
 5. Migrare gradualmente API GUI e firme View, tenendo il renderer compatibile o dichiarando esplicitamente la migrazione. Verificare Studio, renderer generico e specializzato, CLI JS/PHP. Rimuovere i casi speciali Haxe solo quando sostituiti da meccanismi generici equivalenti.
 
 Non sono state scelte una sintassi definitiva, una codifica globale per tutti i tipi o una politica di eliminazione indiscriminata dei tag. Non c'è ancora una misura di costo runtime per confrontare le alternative.
+
+
+## Scalar variants 0.97
+
+Stato: candidata. Sintassi sperimentale, da consolidare dopo test e feedback.
+
+```mira
+Alignment :: Start = "start" | Center = "center" | End = "end";
+
+Direction :: North = 0 | East = 1 | South = 2 | West = 3;
+
+label: x (Alignment) -> Text =
+  match: x {
+    start: {| "Sinistra"},
+    center: {| "Centro"},
+    end: {| "Destra"}
+  };
+
+result = {alignment: Center, label: (label: Center)};
+```
+
+La dichiarazione rimane una somma nominale, con costruttori nullari. Le codifiche sono letterali Text o interi esatti portabili (da -9007199254740991 a 9007199254740991); sono ammessi valori testuali e interi nella stessa somma. Ogni alternativa deve avere una codifica esplicita, unica nell'ambito del tipo. Stringa "0" e intero 0 sono distinti. -0 è normalizzato a 0; gli zeri iniziali e le codifiche decimali non sono ammessi per evitare differenze di interpretazione dei literal JS/PHP. Costruttori con payload e tipi parametrici non sono ammessi in questa prima forma. La forma con una sola alternativa richiede il separatore iniziale |, come le somme esistenti.
+
+L'identità nominale resta invariata: Center non è Text, e una stringa "center" non è un valore Alignment. Due somme distinte possono usare la stessa rappresentazione senza diventare compatibili. Match resta esaustivo, con gli stessi handler nullari; la comparazione delle codifiche è stretta su entrambi i backend. Non si introduce una conversione implicita verso Text/Integer e non si amplia ancora ScalarEq. Le somme ordinarie (in particolare Option, Result e quelle con payload) mantengono la rappresentazione tagged.
+
+### Implementazione
+
+Il parser conserva SumType, Variant e le firme dei costruttori già esistenti. La codifica è un fatto di rappresentazione sul costruttore sintetizzato. Il checker raccoglie i mapping per identità nominale e, per ogni espressione Match, registra le codifiche dei casi nell'ordine degli handler. Gli emitter emettono il letterale del costruttore e confrontano direttamente il valore nativo quando il checker ha risolto il match. Non c'è una tabella di conversione runtime, un tag aggiuntivo o un nuovo tipo nell'algebra di inferenza. Il meccanismo del match (closure e selezione dei rami) rimane quello esistente. L'ispettore AST di Studio espone scalarEncoding e il Laboratorio tipi offre un esempio compilabile in modalità checked.
+
+### Confini intenzionali
+
+La prima implementazione richiede compilazione checked e dichiarazioni non parametriche in sorgenti senza modulo nominale. Non si può emettere correttamente un match scalare senza conoscere il tipo della scrutinee. Le dichiarazioni modulari sono rinviate: il mapping dovrà essere parte del contratto ABI pubblico e della verifica di compatibilità dei provider, non solo una proprietà di un costruttore locale. Nessuna migrazione della GUI in questo incremento. Non si promette che il codice match non allochi closure; la sola rappresentazione del valore non richiede un involucro. Non sono ancora disponibili misure comparative delle prestazioni.
+
+Test previsti: esecuzione effettiva JS/PHP e Studio, rifiuto di codici duplicati, collisione -0/0, interi fuori limite, payload e tipi incompatibili, match non esaustivi e handler errati, e preservazione delle somme ordinarie. I prossimi passi sono supporto delle codifiche nelle interfacce dei moduli e somme miste con payload nativi disgiunti, evitando di estendere prematuramente la sintassi.
