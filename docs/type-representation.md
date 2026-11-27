@@ -225,3 +225,24 @@ Il checker accetta ~ su un campo opzionale provato presente e registra un fatto 
 Confine di validità: la prova assume l'immutabilità dei record Mira. Un host fidato non deve mutare i record ricevuti per riferimento o alterare la semantica delle primitive native; non è un sistema di effetti né un isolamento da JS ostile. Non si propagano fatti da funzioni generiche, risultati host o attraverso confini modulari. Non si deduce l'assenza e non si introducono test di presenza con narrowing nei rami, righe opzionali, accesso a percorsi annidati o analisi interprocedurale. Le dichiarazioni e gli aggiornamenti si validano ancora con le regole della 0.99. Nessuna misura prestazionale specifica ancora disponibile.
 
 Mira Studio: Presenza statica dei campi nel Laboratorio tipi. Test di regressione per identità nominale, scoping e shadowing, join, aggiornamenti immutabili, catture e assenza dei controlli nel JS/PHP checked, con mantenimento dei controlli per parametri sconosciuti.
+
+
+## Text refinements 0.102
+
+Stato: candidata. La sintassi where esistente accetta, per un tipo con rappresentazione Text, una disgiunzione di uguaglianze con literal testuali:
+
+```mira
+Alignment :: Text where _ == "start" OR _ == "center" OR _ == "end";
+a (Alignment) = "center";
+Result (T, E) :: Ok (T) | Err (E);
+parse: x (Text) = validate: (x), as: (Alignment);
+result = [(parse: "start"), (parse: "bad")];
+```
+
+Nessun nuovo token. TextRefinedType contiene il tipo base e un insieme finito canonico TextChoices; il vocabolario delle prove resta Proven / Violated / Unknown (enum storico NumericProof). La rappresentazione è Text nativo. Un refinement nominale non è una somma con costruttori: la costruzione esplicita può attribuire il tipo a un testo provato appartenente al dominio, senza cambiare la rappresentazione. Tipi nominali fratelli restano distinti. Raffinare ulteriormente un tipo interseca i domini ereditati; un'intersezione vuota è un errore.
+
+Il checker conserva fatti testuali da literal, alias immutabili locali e nello stesso modulo, rami condizionali (unione dei possibili valori) e tipi già raffinati. La prova è positiva quando l'insieme noto è incluso nel dominio richiesto, negativa se disgiunto, altrimenti sconosciuta. Una costruzione testuale non provata è rifiutata anche nella compilazione checked: a differenza dei guard numerici storici non vengono introdotti guard impliciti. Le chiamate a funzioni nominali richiedono il tipo nominale. Il report pubblico TextRefined include choices ordinate e senza duplicati; firma e fingerprint riusano i meccanismi esistenti.
+
+La validazione esplicita validate:as: riutilizza entrambe le forme esistenti, con Result oppure handler then/else. Per un input sconosciuto emette confronti stretti con i literal ammessi, evitando coercizioni PHP (ad esempio "00" non è "0"). Il receiver è valutato una volta. Un literal noto usa una condizione costante. I valori rimangono stringhe; Result mantiene la rappresentazione normale. Nessuna modifica del runtime. La modalità unchecked non offre garanzie sulle costruzioni annotate.
+
+Limiti: solo insiemi finiti di literal espressi con == e OR; non sono ancora disponibili regex, lunghezza, testo non vuoto, predicati generici, AND testuale o narrowing da confronti. Non si aggiunge un sistema di conversioni implicite, né una prova interprocedurale; l'inferenza di fatti non attraversa i moduli, mentre i tipi pubblici sì. Non si estende ancora il criterio di disgiunzione delle Native variants ai sottoinsiemi del dominio Text. Codec esterni e migrazione GUI restano da verificare prima di utilizzarli. Il Laboratorio tipi offre un esempio modificabile, con schema, esecuzione JS/PHP e diagnostica; i test confrontano il codice emesso con quello non annotato. Nessun benchmark specifico ancora disponibile.
