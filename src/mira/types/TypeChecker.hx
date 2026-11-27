@@ -12,6 +12,7 @@ private typedef LocalScheme = {
     var type:Type;
     var quantified:Map<Int,Bool>;
     var narrowed:Null<NumericRange>;
+    var present:Null<Array<String>>;
 }
 
 // Experimental, target-independent inference. No code generation or evaluation.
@@ -29,6 +30,10 @@ class TypeChecker {
     var hasGui = false;
     // Proof facts belong to expressions, not the public inference algebra.
     final ranges = new haxe.ds.ObjectMap<Dynamic,NumericRange>();
+    // Positive presence facts are immutable snapshots, never type identities.
+    final presentFields = new haxe.ds.ObjectMap<Dynamic,Array<String>>();
+    final globalPresence = new Map<String,Array<String>>();
+    final provenPresence:Null<haxe.ds.ObjectMap<Dynamic,Bool>>;
     final integers = new haxe.ds.ObjectMap<Dynamic,Bool>();
     final wideObservations = new haxe.ds.ObjectMap<Dynamic,NumericRange>();
     final guards:Null<haxe.ds.ObjectMap<Dynamic,NumericGuard>>;
@@ -45,9 +50,10 @@ class TypeChecker {
     final visibility:TypeVisibility;
     var moduleOwner:Null<String> = null;
 
-    public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.ds.ObjectMap<Dynamic,NumericGuard>,?visibility:TypeVisibility,?comparisons:haxe.ds.ObjectMap<Dynamic,ScalarComparison>,?scalarMatches:haxe.ds.ObjectMap<Dynamic,Array<NativeCase>>) {
+    public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.ds.ObjectMap<Dynamic,NumericGuard>,?visibility:TypeVisibility,?comparisons:haxe.ds.ObjectMap<Dynamic,ScalarComparison>,?scalarMatches:haxe.ds.ObjectMap<Dynamic,Array<NativeCase>>,?provenPresence:haxe.ds.ObjectMap<Dynamic,Bool>) {
         this.comparisons = comparisons;
         this.scalarMatches = scalarMatches;
+        this.provenPresence = provenPresence;
         this.guards = guards;
         this.visibility = visibility == null ? new TypeVisibility() : visibility;
         this.origins = origins;
@@ -538,7 +544,7 @@ class TypeChecker {
         }
     }
 
-    function mono(type:Type):LocalScheme return {type:type, quantified:new Map<Int,Bool>(), narrowed:null};
+    function mono(type:Type,?present:Array<String>):LocalScheme return {type:type, quantified:new Map<Int,Bool>(), narrowed:null, present:present};
 
     // Value restriction: generalize only non-expansive local initializers.
     // In particular a call might eventually perform an external effect.
@@ -551,7 +557,7 @@ class TypeChecker {
     }
 
     function localScheme(expr:Expr,type:Type,scope:Map<String,LocalScheme>):LocalScheme {
-        final scheme = mono(type);
+        final scheme = mono(type,presentFields.get(expr));
         if (!isValue(expr)) return scheme;
         final excluded = new Map<Int,Bool>();
         for (binding in scope) {
@@ -641,6 +647,7 @@ class TypeChecker {
                 };
                 construct(expected,body,d.body);
             } else unify(active.get(name),type);
+            if (!d.isFunction() && presentFields.exists(d.body)) globalPresence.set(name,presentFields.get(d.body));
         }
         for (name in group) {
             inferred.set(name,active.get(name));
@@ -863,8 +870,37 @@ class TypeChecker {
         // Still check unreachable branches normally: no bottom-type rules yet.
         if (narrowed.empty()) return scope;
         final inner = scope.copy();
-        inner.set(name,{type:binding.type,quantified:binding.quantified,narrowed:narrowed});
+        inner.set(name,{type:binding.type,quantified:binding.quantified,narrowed:narrowed,present:binding.present});
         return inner;
+    }
+
+    // No speculation across calls, host results or module boundaries. A
+    // conditional retains only the facts shared by both alternatives.
+    function recordPresence(expr:Expr,scope:Map<String,LocalScheme>):Null<Array<String>> {
+        return switch (expr) {
+            case Record(keys,_): keys.copy();
+            case Name(name):
+                if (scope.exists(name)) scope.get(name).present;
+                else if (definitions.exists(name) && definitions.get(name).modulePath == moduleOwner) globalPresence.get(name);
+                else null;
+            case Call("update:with:",args) if (args.length == 2):
+                final base = presentFields.get(args[0]);
+                final patch = presentFields.get(args[1]);
+                final fields = base == null ? [] : base.copy();
+                if (patch != null) for (key in patch) if (fields.indexOf(key) < 0) fields.push(key);
+                fields;
+            case Conditional(_,yes,no):
+                final a = presentFields.get(yes);
+                final b = presentFields.get(no);
+                a == null || b == null ? null : [for (key in a) if (b.indexOf(key) >= 0) key];
+            case Steps(items) if (items.length > 0): presentFields.get(items[items.length-1]);
+            default: null;
+        };
+    }
+
+    function knownPresent(receiver:Expr,key:String):Bool {
+        final fields = presentFields.get(receiver);
+        return fields != null && fields.indexOf(key) >= 0;
     }
 
     function infer(expr:Expr,scope:Map<String,LocalScheme>):Type {
@@ -872,6 +908,8 @@ class TypeChecker {
         final anchor = origins.get(expr);
         if (anchor != null) origin = anchor;
         final type:Type = inferNode(expr,scope);
+        final presence = recordPresence(expr,scope);
+        if (presence != null && presence.length > 0) presentFields.set(expr,presence);
         final fact:Null<NumericRange> = switch (expr) {
             case Numeric(value): NumericRange.literal(value);
             case Name(name) if (scope.exists(name) && scope.get(name).narrowed != null):
@@ -1102,7 +1140,14 @@ class TypeChecker {
                 final holes:Array<Type> = [];
                 final result = call(hostType(name),[for (arg in args) operand(arg,scope,holes)]);
                 FunctionType(holes,result);
-            case FieldGet(record,key): projection(infer(record,scope),key);
+            case FieldGet(record,key):
+                final receiver = infer(record,scope);
+                switch (representation(receiver)) {
+                    case OptionalRecordType(_,optional) if (optional.exists(key) && knownPresent(record,key)):
+                        if (provenPresence != null) provenPresence.set(expr,true);
+                        optional.get(key);
+                    default: projection(receiver,key);
+                }
             case OptionalFieldGet(record,key,option):
                 final receiver = representation(infer(record,scope));
                 final field = switch (receiver) {
@@ -1110,6 +1155,7 @@ class TypeChecker {
                     default: fail("Safe field access requires a declared optional field: " + key);
                 };
                 // Reuse the lexically visible nominal Option template.
+                if (knownPresent(record,key) && provenPresence != null) provenPresence.set(expr,true);
                 final result = TypeTemplates.apply(option,[field]);
                 visibility.view(result,moduleOwner,prune);
             case FieldAccessor(key) | FieldSection(key):
@@ -1166,7 +1212,7 @@ class TypeChecker {
                             if (anchor != null) origin = anchor;
                             construct(annotations[0],type,value);
                             origin = previous;
-                            inner.set(name,mono(annotations[0]));
+                            inner.set(name,mono(annotations[0],presentFields.get(value)));
                         } else inner.set(name,localScheme(value,type,inner));
                     default: result = infer(e,inner);
                 }

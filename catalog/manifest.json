@@ -1,5 +1,5 @@
 {
-  "version": "0.100",
+  "version": "0.101",
   "features": [
     {
       "id": "values",
@@ -2268,6 +2268,12 @@
       "title": "Accesso sicuro ai campi opzionali con Option",
       "since": "0.100",
       "doc": "docs/type-representation.md#safe-optional-access-0100"
+    },
+    {
+      "id": "static-field-presence",
+      "title": "Inferenza statica della presenza dei campi",
+      "since": "0.101",
+      "doc": "docs/type-representation.md#static-presence-inference-0101"
     }
   ]
 }

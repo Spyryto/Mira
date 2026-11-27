@@ -27,6 +27,12 @@
     source.value='Alignment :: Start = "start" | Center = "center" | End = "end";\nlabel: x (Alignment) = match: x {start: {| "S"}, center: {| "C"}, end: {| "E"}};\nresult = {value: Center, label: (label: Center)};\n# Prova Compila checked JS o PHP; prova anche bad (Alignment) = "center";';
     check();
   });
+  document.getElementById('static-presence-example').addEventListener('click',()=>{
+    host.value='';
+    modules.value='';
+    source.value='Option (T) :: Some (T) | None;\nStyle :: {padding?: Number};\noriginal (Style) = {};\npadded = update: original, with: {padding: 0};\nresult = padded ~ padding;\nchosen = match: (padded ~? padding) {some: {p | p}, none: {| 12}};\n# Compila checked JS/PHP: nessun controllo di presenza. Prova original ~ padding.';
+    check();
+  });
   document.getElementById('safe-optional-example').addEventListener('click',()=>{
     host.value='';
     modules.value='';

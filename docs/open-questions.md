@@ -277,3 +277,8 @@ Record chiusi con field?: Type, costruzione nominale, annotazioni strutturali e 
 ### 0.100 — Safe optional access (candidata)
 
 Operatore ~? per campi dichiarati opzionali, risultato Option nominale esistente. Presenza distinta da truthiness; match diretto fuso senza wrapper intermedio. Restano aperti narrowing, sezioni, righe opzionali, codec e migrazione GUI. Vedi [safe optional access](type-representation.md#safe-optional-access-0100).
+
+
+### 0.101 — Static presence inference (candidata)
+
+Fatti positivi di presenza su binding immutabili, literal, alias, update e intersezione dei rami. Accessi diretti sicuri e specializzazione del match opzionale senza test quando provato. Nessuna modifica ai tipi pubblici; host fidati devono rispettare immutabilità. Restano aperti narrowing da test espliciti, inferenza interprocedurale, assenza, refinement testuali e migrazione GUI. Vedi [static presence inference](type-representation.md#static-presence-inference-0101).

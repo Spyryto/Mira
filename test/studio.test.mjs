@@ -2367,3 +2367,22 @@ test('0.100 Studio safe optional access exposes Option and emits fused native ma
     assert.deepEqual(JSON.parse(actual),[12,0]);
   }
 });
+
+
+test('0.101 Studio preserves nominal types and eliminates checks only for proven presence',()=>{
+  const source='Option (T) :: Some (T) | None; Style :: {padding?: Number}; original (Style) = {}; padded = update: original, with: {padding: 0}; result = padded ~ padding; chosen = match: (padded ~? padding) {some: {p | p}, none: {| 12}};';
+  const checked=bridge.check(source);
+  assert.equal(checked.ok,true,checked.message);
+  const rows=JSON.parse(checked.output);
+  assert.equal(rows.find(x=>x.name==='padded').type,'Style');
+  assert.equal(rows.find(x=>x.name==='result').type,'Number');
+  assert.equal(bridge.check(source+'bad = original ~ padding;').ok,false);
+  for(const target of ['js','php']){
+    const built=bridge.compile(source,target,null,false,null,true);
+    assert.equal(built.ok,true,built.message);
+    assert.doesNotMatch(built.output,/Object\.hasOwn|array_key_exists|Missing record field/);
+    const actual=target==='js'?JSON.stringify(runInNewContext(built.output+'\n[result, chosen]',{})):
+      spawnSync('php',['-r',built.output.replace(/^<\?php/,'')+'\necho json_encode([$result,$chosen]);'],{encoding:'utf8'}).stdout;
+    assert.deepEqual(JSON.parse(actual),[0,0]);
+  }
+});

@@ -80,7 +80,8 @@ class Compiler {
         final guards = new haxe.ds.ObjectMap<Dynamic,mira.types.NumericGuard>();
         final comparisons = target == Php ? new haxe.ds.ObjectMap<Dynamic,mira.types.ScalarComparison>() : null;
         final scalarMatches = new haxe.ds.ObjectMap<Dynamic,Array<mira.types.NativeVariants.NativeCase>>();
-        new mira.types.TypeChecker(origins,host == null ? HostEnvironment.empty() : host,guards,visibility,comparisons,scalarMatches).check(definitions);
+        final provenPresence = new haxe.ds.ObjectMap<Dynamic,Bool>();
+        new mira.types.TypeChecker(origins,host == null ? HostEnvironment.empty() : host,guards,visibility,comparisons,scalarMatches,provenPresence).check(definitions);
         if (profile != null) profile.mark("checking");
         if (treeShake) {
             definitions = mira.optimize.TreeShaker.run(definitions,guards,optimization);
@@ -88,8 +89,8 @@ class Compiler {
         }
         final symbols = new Symbols(definitions,host);
         final result = switch (target) {
-            case JavaScript: JsEmitter.emit(definitions,symbols,locations,guards,scalarMatches);
-            case Php: PhpEmitter.emit(definitions,symbols,locations,guards,comparisons,scalarMatches);
+            case JavaScript: JsEmitter.emit(definitions,symbols,locations,guards,scalarMatches,provenPresence);
+            case Php: PhpEmitter.emit(definitions,symbols,locations,guards,comparisons,scalarMatches,provenPresence);
         };
         if (profile != null) profile.mark("emission");
         return result;
