@@ -21,6 +21,12 @@
     }
   }
   document.getElementById('check').addEventListener('click',()=>check(true));
+  document.getElementById('scalar-variant-example').addEventListener('click',()=>{
+    host.value='';
+    modules.value='';
+    source.value='Alignment :: Start = "start" | Center = "center" | End = "end";\nlabel: x (Alignment) = match: x {start: {| "S"}, center: {| "C"}, end: {| "E"}};\nresult = {value: Center, label: (label: Center)};\n# Prova Compila checked JS o PHP; prova anche bad (Alignment) = "center";';
+    check();
+  });
   document.getElementById('style-contract-example').addEventListener('click',()=>{
     host.value='';
     modules.value='';
