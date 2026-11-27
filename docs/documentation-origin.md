@@ -7,11 +7,11 @@
 
 | Categoria | Parole | Quota | Documenti coinvolti |
 | --- | ---: | ---: | ---: |
-| Generata automaticamente dal tooling | 30.957 | 30,0% | 4 |
-| Redatta con assistenza IA (dichiarata) | 63.158 | 61,1% | 19 |
+| Generata automaticamente dal tooling | 30.957 | 29,9% | 4 |
+| Redatta con assistenza IA (dichiarata) | 63.329 | 61,2% | 19 |
 | Redazione umana dichiarata | 0 | 0,0% | 0 |
 | Provenienza non verificata | 9199 | 8,9% | 3 |
-| **Totale** | **103.314** | **100%** | **25** |
+| **Totale** | **103.485** | **100%** | **25** |
 
 I documenti coinvolti **non sono sommabili**: per esempio il README contiene
 una sezione generata dal tooling e altre sezioni editoriali. Le percentuali
@@ -35,7 +35,7 @@ arrotondamenti).
 | [`docs/module-design.md`](../docs/module-design.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 2762 | — |
 | [`docs/open-questions.md`](../docs/open-questions.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 5647 | — |
 | [`docs/performance.md`](../docs/performance.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 1285 | — |
-| [`docs/projection-editor.md`](../docs/projection-editor.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 2305 | — |
+| [`docs/projection-editor.md`](../docs/projection-editor.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 2476 | — |
 | [`docs/reference/api.md`](../docs/reference/api.md) | Intero documento | Generata automaticamente dal tooling | 14.771 | `scripts/generate-reference.mjs` |
 | [`docs/reference/examples.md`](../docs/reference/examples.md) | Intero documento | Generata automaticamente dal tooling | 10.347 | `scripts/generate-reference.mjs` |
 | [`docs/reference/language.md`](../docs/reference/language.md) | Intero documento | Generata automaticamente dal tooling | 4077 | `scripts/generate-reference.mjs` |
@@ -88,5 +88,5 @@ npm run docs
 node scripts/generate-documentation-origin.mjs --check
 ```
 
-Dimensione totale classificata: **767.833 byte UTF-8**,
+Dimensione totale classificata: **769.027 byte UTF-8**,
 in **25 documenti** e **26 sezioni attribuite**.
