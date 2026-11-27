@@ -29,7 +29,7 @@ class Bridge {
             grammarSource: grammarSource,
             grammarAnalyze: grammarAnalyze,
             grammarEmit: grammarEmit,
-            version: "0.104"
+            version: "0.105"
         });
     }
 
@@ -334,11 +334,15 @@ class Bridge {
                 {kind:"Variant", sum:switch(sum){case SumType(name,_,_):name;default:null;},tag:tag,payload:expression(payload)};
             case ValidateResult(input,required,_):
                 final choices = mira.types.TextChoices.ofType(required);
-                if (choices != null) {kind:"ValidateResult",input:expression(input),textChoices:choices.values}
+                final grammar = mira.grammar.GrammarMachine.ofType(required);
+                if (grammar != null) {kind:"ValidateResult",input:expression(input),grammar:grammar.schema()}
+                else if (choices != null) {kind:"ValidateResult",input:expression(input),textChoices:choices.values}
                 else {kind:"ValidateResult",input:expression(input),numericRange:mira.types.NumericRange.ofType(required).schema()};
             case Validate(input,required,success,failure):
                 final choices = mira.types.TextChoices.ofType(required);
-                if (choices != null) {kind:"Validate",input:expression(input),textChoices:choices.values,success:expression(success),failure:expression(failure)}
+                final grammar = mira.grammar.GrammarMachine.ofType(required);
+                if (grammar != null) {kind:"Validate",input:expression(input),grammar:grammar.schema(),success:expression(success),failure:expression(failure)}
+                else if (choices != null) {kind:"Validate",input:expression(input),textChoices:choices.values,success:expression(success),failure:expression(failure)}
                 else {kind:"Validate", input:expression(input), numericRange:mira.types.NumericRange.ofType(required).schema(),
                     integer:mira.types.NumericRange.integerType(required), success:expression(success), failure:expression(failure)};
             case Conditional(predicate, whenTrue, whenFalse):
