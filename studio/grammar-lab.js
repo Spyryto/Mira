@@ -42,6 +42,14 @@
   $('sample').addEventListener('input',analyze);
   $('js').addEventListener('click',()=>emit('js'));
   $('php').addEventListener('click',()=>emit('php'));
+  $('refinement').addEventListener('click',()=>{
+    const name=$('root').value.trim();
+    const sample=JSON.stringify($('sample').value);
+    const source='import "lib/grammar.mira";\n'+$('source').value+'\nLab Text :: Text where matches: _, grammar: '+name+';\nlab value (Lab Text) = '+sample+';';
+    const result=compiler.check(source);
+    $('refinement-output').textContent=source+'\n\n'+(result.ok?'Prova statica riuscita':result.message);
+    $('refinement-details').open=true;
+  });
   $('library').textContent=compiler.grammarSource();
   example('decimal');
 })();
