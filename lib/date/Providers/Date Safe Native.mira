@@ -1,0 +1,16 @@
+module Providers / Date Safe Native;
+implements Services / Date Safe;
+implementation
+import Data / Outcome { Ok: ; Err: ; };
+import Data / Date Outcome { InvalidDate; InvalidDayCount; DateOutOfRange; };
+import Services / Date { date from: ; iso of: ; };
+date error: code =
+  if (code == "invalid_day_count") then InvalidDayCount
+  else (if (code == "date_out_of_range") then DateOutOfRange else InvalidDate);
+date outcome: envelope =
+  if (envelope ~ error == "") then
+    (fold: (envelope ~ values), with: {acc, item | Ok: (date from: item)}, from: (Err: InvalidDate))
+  else (Err: (date error: (envelope ~ error)));
+try date from: source = date outcome: (native try checked date source);
+try add days: count, to: day =
+  date outcome: (native try add days: count, to: (iso of: day));
