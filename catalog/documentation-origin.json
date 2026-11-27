@@ -96,6 +96,10 @@
     "docs/type-representation.md": {
       "kind": "ai_assisted",
       "note": "Analisi comparativa e roadmap redatte con assistenza IA."
+    },
+    "docs/theme.md": {
+      "kind": "ai_assisted",
+      "note": "Fondazione del tema, scelte architetturali e limiti documentati con assistenza IA."
     }
   },
   "generatedSections": {
