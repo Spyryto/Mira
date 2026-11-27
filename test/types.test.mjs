@@ -2202,3 +2202,58 @@ test('0.96 CLI uses the same bundled declarative style contract without emitting
     assert.throws(()=>check(gui+'result = styled: (text: "x"), with: [{width: "huge"}];'),/Invalid style value for width/);
   } finally {rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.97 scalar variants preserve nominal identity and exhaustiveness',()=>{
+  const source='Alignment :: Start = "start" | Center = "center" | End = "end"; a (Alignment) = Center; alignment label: x (Alignment) -> Text = match: x {start: {| "S"}, center: {| "C"}, end: {| "E"}}; result = alignment label: a; list = [Start, Center, End];';
+  const t=check(source);
+  assert.equal(t.a,'Alignment');
+  assert.equal(t.Center,'Alignment');
+  assert.equal(t.list,'[Alignment]');
+  assert.equal(t.result,'Text');
+  for(const extra of [
+    'wrong (Alignment) = "center";',
+    'Other :: Other Center = "center" | Other Start = "start"; wrong (Alignment) = Other Center;',
+    'wrong = [Start, "start"];',
+    'wrong: x (Alignment) = match: x {start: {| 1}, center: {| 2}};',
+    'wrong: x (Alignment) = match: x {start: {| 1}, center: {n | 2}, end: {| 3}};'
+  ]) assert.throws(()=>check(source+extra),undefined,extra);
+  for(const invalid of [
+    'A :: First = "x" | Second = "x";',
+    'A :: First = 1 | Second = 1;',
+    'A :: First = 0 | Second = -0;',
+    'A :: First = "x" | Second;',
+    'A :: First (Number) = 1 | Second = 2;',
+    'A :: First = 1.5 | Second = 2;',
+    'A :: First = 9007199254740992 | Second = 0;',
+    'A :: First = 01 | Second = 2;',
+    'A :: First = 1 + 2 | Second = 0;',
+    'A (T) :: First = "x" | Second = "y";',
+    'module A; Choice :: First = "x" | Second = "y";'
+  ]) assert.throws(()=>check(invalid),undefined,invalid);
+});
+
+test('0.97 checked JS/PHP use native scalar values and strict matches without tags',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-scalar-variants-'));
+  try{
+    const input=join(dir,'program.mira');
+    const source='Alignment :: Start = "start" | Center = "center" | End = "end"; Code :: Zero = 0 | Negative = -1 | Text Zero = "0"; label: x (Alignment) = match: x {start: {| "S"}, center: {| "C"}, end: {| "E"}}; decode: x (Code) = match: x {zero: {| 10}, negative: {| 20}, text Zero: {| 30}}; mapper = {x (Alignment) | label: x}; result = {values: [Start, Center, End], labels: (collect: [Start, Center, End], with: mapper), codes: [Zero, Negative, Text Zero], decoded: (collect: [Zero, Negative, Text Zero], with: (decode: _))};';
+    writeFileSync(input,source);
+    const expected={values:['start','center','end'],labels:['S','C','E'],codes:[0,-1,'0'],decoded:[10,20,30]};
+    for(const target of ['js','php']){
+      const ordinary=spawnSync('node',['dist/mira.cjs',input,target],{encoding:'utf8'});
+      assert.notEqual(ordinary.status,0);
+      assert.match(ordinary.stderr,/Scalar variants require checked compilation/);
+      {
+        const built=spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
+        assert.equal(built.status,0,built.stderr);
+        assert.doesNotMatch(built.stdout,/\.tag|\['tag'\]|["']tag["']\s*[:=]/);
+        const executed=target==='js'
+          ? spawnSync('node',['-e',built.stdout+'\nconsole.log(JSON.stringify(result));'],{encoding:'utf8'})
+          : spawnSync('php',['-r',built.stdout.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'});
+        assert.equal(executed.status,0,executed.stderr);
+        assert.deepEqual(JSON.parse(executed.stdout),expected);
+      }
+    }
+  } finally {rmSync(dir,{recursive:true,force:true});}
+});

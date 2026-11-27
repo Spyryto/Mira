@@ -23,6 +23,8 @@ class Definition {
     public var resultAnnotation:Null<Type> = null;
     public var resultAnnotationOrigin:Null<Token> = null;
     public var body:Null<Expr> = null;
+    // Encoding of a nullary sum constructor; the logical body remains Variant.
+    public var scalarValue:Null<Expr> = null;
 
     public function new(
         name:String,
@@ -59,6 +61,7 @@ class Definition {
         d.resultAnnotation = resultAnnotation;
         d.resultAnnotationOrigin = resultAnnotationOrigin;
         d.body = body;
+        d.scalarValue = scalarValue;
         return d;
     }
 
