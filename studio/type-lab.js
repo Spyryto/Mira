@@ -27,6 +27,12 @@
     source.value='Alignment :: Start = "start" | Center = "center" | End = "end";\nlabel: x (Alignment) = match: x {start: {| "S"}, center: {| "C"}, end: {| "E"}};\nresult = {value: Center, label: (label: Center)};\n# Prova Compila checked JS o PHP; prova anche bad (Alignment) = "center";';
     check();
   });
+  document.getElementById('typed-style-example').addEventListener('click',()=>{
+    host.value='';
+    modules.value='';
+    source.value='import "lib/gui.mira";\nimport "lib/gui-typed-styles.mira";\npx (GUI Pixels) = 12;\npanel (GUI Style) = {padding: px, width: Style Fill, align: Align Center};\nresult = styled: (text: "Mira"), with styles: [panel];\n# Compila checked JS/PHP; prova una proprietà errata o un valore fuori intervallo.';
+    check();
+  });
   document.getElementById('text-refinement-example').addEventListener('click',()=>{
     host.value='';
     modules.value='';
