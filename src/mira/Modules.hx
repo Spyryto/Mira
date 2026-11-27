@@ -332,7 +332,7 @@ class Modules {
                 if (localTypes.exists(name)) throw new MiraError("Imported type conflicts with local type " + name,tokens[offset]);
                 localTypes.set(name,type);
             }
-            for (d in DefinitionParser.parse(implementation,localTypes,modulePath,implementationIdentities))
+            for (d in DefinitionParser.parse(implementation,localTypes,modulePath,implementationIdentities,modulePath == null ? definitions : null))
                 local.push(d);
             if (sections != null) {
                 final byName = new Map<String,Definition>();
