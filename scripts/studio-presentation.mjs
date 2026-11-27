@@ -16,17 +16,17 @@ export function decorateStudioHtml(filename,html){
   const config=sources[filename]||{};
   for(const [tag,items] of [['pre',config.code||{}],['textarea',config.edit||{}]]){
     html=html.replace(new RegExp('<'+tag+'\\b[^>]*>','gi'),opening=>{
-      const id=opening.match(/\\bid=["']([^"']+)["']/)?.[1];
+      const id=opening.match(/\bid=["']([^"']+)["']/)?.[1];
       const language=items[id];
       return language?opening.slice(0,-1)+' data-code-language="'+language+'">':opening;
     });
   }
   if(filename==='index.html'){
-    html=html.replace(/<code>(add(?::| )[^<]+)<\\/code>/g,'<code data-code-language="mira">$1</code>');
+    html=html.replace(/<code>(add(?::| )[^<]+)<\/code>/g,'<code data-code-language="mira">$1</code>');
   }
   if(!html.includes('data-code-language='))return html;
   // Theme demo pages without the Studio CSS need only its syntax rules.
-  if(!/href=["'](?:\\.\\/)?styles\\.css["']/.test(html))
+  if(!/href=["'](?:\.\/)?styles\.css["']/.test(html))
     html=html.replace('</head>','<link rel="stylesheet" href="./lab-highlight.css"></head>');
   return html.replace('</body>','<script type="module" src="./lab-highlight.js"></script></body>');
 }
