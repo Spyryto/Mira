@@ -840,3 +840,11 @@ installation, limitations and local preview.
 Mira may eventually become a frontend for Nail, a reboot, or an independent language. That choice is intentionally open.
 
 Per la direzione applicativa, le scelte adottate e quelle rinviate: [decisioni fino alla 0.34](docs/decisions.md#stato-e-direzione-034).
+
+## Build di progetto (0.90)
+
+```sh
+npm run build:project -- examples/lesson-import/mira.project.json dist/lesson-import
+```
+
+Il manifest descrive i moduli, host, binding e target di un progetto checked; la CLI di progetto e Studio condividono l'assemblatore. Vedi [configurazione dei progetti](docs/module-design.md#090--configurazione-dichiarativa-dei-progetti). La build non include il runtime host o il deploy.

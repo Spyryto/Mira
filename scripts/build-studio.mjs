@@ -182,7 +182,6 @@ httpData.js=httpJS.output;httpData.php=httpPHP.output;
 writeFileSync(resolve(destination,'http-module-data.js'),'globalThis.MiraHttpModuleData = '+JSON.stringify(httpData)+';\n');
 writeFileSync(resolve(destination,'http-module-program.js'),'globalThis.MiraHttpProgram = function(){\n'+httpJS.output+'\nreturn __miraModule_v_417070202F20726573756C74;\n};\n');
 copyFileSync(resolve(root,'lib/http/http-host.js'),resolve(destination,'http-host.js'));
-const lessonFile=path=>readFileSync(resolve(root,'examples/lesson-import',path),'utf8');
 const lessonData=buildProject(context.MiraStudioCompiler,loadProject(resolve(root,'examples/lesson-import/mira.project.json')));
 writeFileSync(resolve(destination,'lesson-import-data.js'),'globalThis.MiraLessonImportData = '+JSON.stringify(lessonData)+';\n');
 writeFileSync(resolve(destination,'lesson-import-program.js'),'globalThis.MiraLessonImportProgram = function(__miraHost){\n'+lessonData.js+'\nreturn __miraModule_v_417070202F20726573756C74;\n};\n');

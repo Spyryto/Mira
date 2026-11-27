@@ -519,3 +519,7 @@ Il pilota Importa una lezione usa try date from: dal contratto Date Safe con pro
 ## Mira 0.89.7: decoder JSON consolidati
 
 Il laboratorio JSON e Importa una lezione caricano lo stesso sorgente di Data / Outcome e Data / Decoder Outcome. Il helper generico converte l'envelope dei decoder in Result, evitando codice duplicato nei provider. Test checked con più tipi di payload e JS/PHP; test generator rifiuta identità errata. Nessun cambio ai dati salvati o al comportamento JSON. Il comando build:json e i test CLI usano --module-root lib/common, primo incremento del tooling multifile. Restano da estrarre il validatore puro e da progettare encoder/codec più ricchi; nessuna misurazione prestazionale nuova.
+
+## Mira 0.90: progetto multifile dichiarativo
+
+Il build di Importa una lezione usa examples/lesson-import/mira.project.json e scripts/project.mjs. La stessa configurazione compila JavaScript con Storage Browser e PHP con Storage Files, includendo host e decoder derivato dal contratto. I dati e la UI del pilota non cambiano. Il test confronta byte per byte gli output di Studio con la build standalone e verifica host, schema e binding. La CLI di progetto non è ancora un editor interattivo o un deploy; Workspace Studio e packaging restano futuri. Il comando è documentato in module-design.md.
