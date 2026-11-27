@@ -1368,3 +1368,36 @@ test('0.108 legacy cardinality and colors are consistent with the typed domain',
     }
   }
 });
+
+test('Widget Kit switch and slider preserve state and identity in generic and specialized renderers',()=>{
+  const lib=readFileSync(resolve(root,'lib/gui.mira'),'utf8');
+  const source=lib+'\nwidget view: model = column: [(switch: "Attivo", checked: (model ~ active), update: {old, checked | {active: checked, level: (old ~ level)}}), (slider: "Volume", value: (model ~ level), update: {old, value | {active: (old ~ active), level: value}}), (text: (model ~ level)), (button: "Reset", update: {old | {active: false, level: 10}}), (button: "Invalid", update: {old | {active: true, level: 101}})];';
+  const sandbox={};
+  runInNewContext(read('ui-host.js'),sandbox);
+  runInNewContext(read('gui-specialize.js'),sandbox);
+  const compiled=sandbox.MiraGuiSpecialize.compile(compiler,source,'widget view:');
+  for(const mode of ['generic','specialized']){
+    const {root,host,document,errors}=setup();
+    const initial={active:false,level:10};
+    const app=mode==='generic'?host.renderState(compiled.program.view,initial):sandbox.MiraGuiSpecialize.mount(compiled,root,initial,msg=>errors.push(msg));
+    const [toggle,slider]=findAll(root,'input');
+    assert.equal(toggle.type,'checkbox');
+    assert.equal(toggle.getAttribute('role'),'switch');
+    assert.equal(slider.type,'range');
+    assert.equal(slider.value,'10');
+    const created=document.created;
+    toggle.checked=true;toggle.dispatch('change');
+    slider.value='65';slider.dispatch('input');
+    assert.equal(app.getState().active,true);
+    assert.equal(app.getState().level,65);
+    assert.equal(findAll(root,'p')[0].textContent,'65');
+    findButtons(root)[1].click();
+    assert.equal(app.getState().level,65);
+    assert.match(errors[0],/slider.value/);
+    findButtons(root)[0].click();
+    assert.equal(toggle.checked,false);
+    assert.equal(slider.value,'10');
+    assert.equal(findAll(root,'input')[1],slider);
+    assert.equal(document.created,created);
+  }
+});

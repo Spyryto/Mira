@@ -212,8 +212,8 @@
           if(f.get('label').kind!=='Text'||!transition(action,1))fail('static unary transition');
           buttons.push(path);break;
         }
-        case 'input':case 'checkbox':case 'select':{
-          const property=type.value==='checkbox'?'checked':'value';
+        case 'input':case 'checkbox':case 'switch':case 'slider':case 'select':{
+          const property=['checkbox','switch'].includes(type.value)?'checked':'value';
           const f=fields(node,['type','label',property,'update',...(type.value==='select'?['options']:[])]);
           if(f.get('label').kind!=='Text'||!transition(f.get('update'),2))fail('static label and closed binary transition');
           let options;
