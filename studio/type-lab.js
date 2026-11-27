@@ -30,7 +30,7 @@
   document.getElementById('typed-style-example').addEventListener('click',()=>{
     host.value='';
     modules.value='';
-    source.value='import "lib/gui.mira";\nimport "lib/gui-typed-styles.mira";\npx (GUI Pixels) = 12;\nink (GUI Color) = "#234";\npaper (GUI Color) = "#ffeedd";\npanel (GUI Style) = {padding: px, width: Style Fill, align: Align Center, color: ink, background: paper, borderColor: ink};\nresult = styled: (text: "Mira"), with styles: [panel];\n# Compila checked JS/PHP; prova una proprietà errata o un valore fuori intervallo.';
+    source.value='import "lib/gui.mira";\nimport "lib/gui-typed-styles.mira";\npx (GUI Pixels) = 12;\nink (GUI Color) = "#234";\npaper (GUI Color) = "#ffeedd";\npanel (GUI Style) = {padding: px, width: Style Fill, align: Align Center, color: ink, background: paper, borderColor: ink};\nlayers (Style Layers) = [panel];\nresult = styled: (text: "Mira"), with styles: layers;\n# Compila checked JS/PHP; prova una proprietà errata o un valore fuori intervallo.';
     check();
   });
   document.getElementById('text-refinement-example').addEventListener('click',()=>{
