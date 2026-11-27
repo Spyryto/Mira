@@ -53,3 +53,7 @@ In Mira Studio → Laboratorio tipi, **Contratto stili Mira** apre il sorgente e
 - Passi successivi: associare esplicitamente un contratto ai parametri di una funzione; generalizzare regole di record/liste e vincoli relazionali; eliminare progressivamente le firme speciali, evitando nuovi meccanismi se i tipi esistenti bastano. Valutare un'unica fonte anche per la validazione host, senza imporre runtime generico al codice generato.
 
 La scelta di un piccolo lettore di dati anziché della valutazione arbitraria a compile time limita la complessità e rende verificabile il confine fra compile time e runtime.
+
+## Approfondimento: enumerazioni e rappresentazione
+
+Vedi [Tipi semantici, enumerazioni e rappresentazione nativa](type-representation.md) per i limiti effettivi del checker, la distinzione fra somme e codifica ABI, il confronto con Dart/Flutter, F#, Elm e ReScript/Reason, e le proposte di evoluzione.
