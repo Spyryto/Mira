@@ -1434,6 +1434,21 @@ each: items, identified by: identity, view: factory = collect: items, with: {ite
   keyed: (item >> identity), view: (item >> factory)
 };
 
+# Cozy controls are ordinary descriptors, independent of any theme.
+slider: caption, value: current, update: transition = {
+  type: "slider", label: caption, value: current, update: transition
+};
+toggle: caption, checked: current, update: transition = {
+  type: "toggle", label: caption, checked: current, update: transition
+};
+tabs: caption, value: current, options: choices, update: transition = {
+  type: "tabs", label: caption, value: current, options: choices, update: transition
+};
+led: caption = {type: "led", text: caption};
+stepper: caption, value: current, update: transition = {
+  type: "stepper", label: caption, value: current, update: transition
+};
+
 # Un input con binding e un pulsante che cattura lo stato.
 greeting: name = column: [
   title: "Salutami",
@@ -1491,6 +1506,21 @@ grid: count, children: items = {type: "grid", columns: count, children: items};
 keyed: identity, view: content = {type: "keyed", key: identity, view: content};
 each: items, identified by: identity, view: factory = collect: items, with: {item |
   keyed: (item >> identity), view: (item >> factory)
+};
+
+# Cozy controls are ordinary descriptors, independent of any theme.
+slider: caption, value: current, update: transition = {
+  type: "slider", label: caption, value: current, update: transition
+};
+toggle: caption, checked: current, update: transition = {
+  type: "toggle", label: caption, checked: current, update: transition
+};
+tabs: caption, value: current, options: choices, update: transition = {
+  type: "tabs", label: caption, value: current, options: choices, update: transition
+};
+led: caption = {type: "led", text: caption};
+stepper: caption, value: current, update: transition = {
+  type: "stepper", label: caption, value: current, update: transition
 };
 
 # Una piccola scheda lezione, con stato immutabile e componenti.
@@ -1581,6 +1611,21 @@ each: items, identified by: identity, view: factory = collect: items, with: {ite
   keyed: (item >> identity), view: (item >> factory)
 };
 
+# Cozy controls are ordinary descriptors, independent of any theme.
+slider: caption, value: current, update: transition = {
+  type: "slider", label: caption, value: current, update: transition
+};
+toggle: caption, checked: current, update: transition = {
+  type: "toggle", label: caption, checked: current, update: transition
+};
+tabs: caption, value: current, options: choices, update: transition = {
+  type: "tabs", label: caption, value: current, options: choices, update: transition
+};
+led: caption = {type: "led", text: caption};
+stepper: caption, value: current, update: transition = {
+  type: "stepper", label: caption, value: current, update: transition
+};
+
 # Il genitore cambia il passo, non lo stato dei contatori figli.
 counter: caption, step: amount = state: 0, view: {n | row: [
   button: caption, update: {old | old + amount},
@@ -1644,6 +1689,21 @@ each: items, identified by: identity, view: factory = collect: items, with: {ite
   keyed: (item >> identity), view: (item >> factory)
 };
 
+# Cozy controls are ordinary descriptors, independent of any theme.
+slider: caption, value: current, update: transition = {
+  type: "slider", label: caption, value: current, update: transition
+};
+toggle: caption, checked: current, update: transition = {
+  type: "toggle", label: caption, checked: current, update: transition
+};
+tabs: caption, value: current, options: choices, update: transition = {
+  type: "tabs", label: caption, value: current, options: choices, update: transition
+};
+led: caption = {type: "led", text: caption};
+stepper: caption, value: current, update: transition = {
+  type: "stepper", label: caption, value: current, update: transition
+};
+
 # La chiave identifica la sessione: cambiare chiave azzera il figlio.
 counter view: n = row: [
   text: n,
@@ -1704,6 +1764,21 @@ grid: count, children: items = {type: "grid", columns: count, children: items};
 keyed: identity, view: content = {type: "keyed", key: identity, view: content};
 each: items, identified by: identity, view: factory = collect: items, with: {item |
   keyed: (item >> identity), view: (item >> factory)
+};
+
+# Cozy controls are ordinary descriptors, independent of any theme.
+slider: caption, value: current, update: transition = {
+  type: "slider", label: caption, value: current, update: transition
+};
+toggle: caption, checked: current, update: transition = {
+  type: "toggle", label: caption, checked: current, update: transition
+};
+tabs: caption, value: current, options: choices, update: transition = {
+  type: "tabs", label: caption, value: current, options: choices, update: transition
+};
+led: caption = {type: "led", text: caption};
+stepper: caption, value: current, update: transition = {
+  type: "stepper", label: caption, value: current, update: transition
 };
 
 # Stili riutilizzabili, layout e componenti in Mira.
@@ -1774,6 +1849,21 @@ grid: count, children: items = {type: "grid", columns: count, children: items};
 keyed: identity, view: content = {type: "keyed", key: identity, view: content};
 each: items, identified by: identity, view: factory = collect: items, with: {item |
   keyed: (item >> identity), view: (item >> factory)
+};
+
+# Cozy controls are ordinary descriptors, independent of any theme.
+slider: caption, value: current, update: transition = {
+  type: "slider", label: caption, value: current, update: transition
+};
+toggle: caption, checked: current, update: transition = {
+  type: "toggle", label: caption, checked: current, update: transition
+};
+tabs: caption, value: current, options: choices, update: transition = {
+  type: "tabs", label: caption, value: current, options: choices, update: transition
+};
+led: caption = {type: "led", text: caption};
+stepper: caption, value: current, update: transition = {
+  type: "stepper", label: caption, value: current, update: transition
 };
 
 # Cambia i colori senza rimontare il componente.
@@ -1869,6 +1959,21 @@ grid: count, children: items = {type: "grid", columns: count, children: items};
 keyed: identity, view: content = {type: "keyed", key: identity, view: content};
 each: items, identified by: identity, view: factory = collect: items, with: {item |
   keyed: (item >> identity), view: (item >> factory)
+};
+
+# Cozy controls are ordinary descriptors, independent of any theme.
+slider: caption, value: current, update: transition = {
+  type: "slider", label: caption, value: current, update: transition
+};
+toggle: caption, checked: current, update: transition = {
+  type: "toggle", label: caption, checked: current, update: transition
+};
+tabs: caption, value: current, options: choices, update: transition = {
+  type: "tabs", label: caption, value: current, options: choices, update: transition
+};
+led: caption = {type: "led", text: caption};
+stepper: caption, value: current, update: transition = {
+  type: "stepper", label: caption, value: current, update: transition
 };
 
 view: model = column: [
@@ -1968,6 +2073,21 @@ each: items, identified by: identity, view: factory = collect: items, with: {ite
   keyed: (item >> identity), view: (item >> factory)
 };
 
+# Cozy controls are ordinary descriptors, independent of any theme.
+slider: caption, value: current, update: transition = {
+  type: "slider", label: caption, value: current, update: transition
+};
+toggle: caption, checked: current, update: transition = {
+  type: "toggle", label: caption, checked: current, update: transition
+};
+tabs: caption, value: current, options: choices, update: transition = {
+  type: "tabs", label: caption, value: current, options: choices, update: transition
+};
+led: caption = {type: "led", text: caption};
+stepper: caption, value: current, update: transition = {
+  type: "stepper", label: caption, value: current, update: transition
+};
+
 lesson row: item = text: (item ~ name);
 view: model = column: [
   title: "Registro lezioni",
@@ -2034,6 +2154,21 @@ each: items, identified by: identity, view: factory = collect: items, with: {ite
   keyed: (item >> identity), view: (item >> factory)
 };
 
+# Cozy controls are ordinary descriptors, independent of any theme.
+slider: caption, value: current, update: transition = {
+  type: "slider", label: caption, value: current, update: transition
+};
+toggle: caption, checked: current, update: transition = {
+  type: "toggle", label: caption, checked: current, update: transition
+};
+tabs: caption, value: current, options: choices, update: transition = {
+  type: "tabs", label: caption, value: current, options: choices, update: transition
+};
+led: caption = {type: "led", text: caption};
+stepper: caption, value: current, update: transition = {
+  type: "stepper", label: caption, value: current, update: transition
+};
+
 students = [{id: 7, name: "Ada"}, {id: 9, name: "Lia"}];
 student row: item = text: (item ~ name);
 result = each: students, identified by: (_ ~ id), view: (student row: _);
@@ -2085,6 +2220,21 @@ grid: count, children: items = {type: "grid", columns: count, children: items};
 keyed: identity, view: content = {type: "keyed", key: identity, view: content};
 each: items, identified by: identity, view: factory = collect: items, with: {item |
   keyed: (item >> identity), view: (item >> factory)
+};
+
+# Cozy controls are ordinary descriptors, independent of any theme.
+slider: caption, value: current, update: transition = {
+  type: "slider", label: caption, value: current, update: transition
+};
+toggle: caption, checked: current, update: transition = {
+  type: "toggle", label: caption, checked: current, update: transition
+};
+tabs: caption, value: current, options: choices, update: transition = {
+  type: "tabs", label: caption, value: current, options: choices, update: transition
+};
+led: caption = {type: "led", text: caption};
+stepper: caption, value: current, update: transition = {
+  type: "stepper", label: caption, value: current, update: transition
 };
 
 ada = {id: 1, name: "Ada"};
@@ -2169,6 +2319,21 @@ each: items, identified by: identity, view: factory = collect: items, with: {ite
   keyed: (item >> identity), view: (item >> factory)
 };
 
+# Cozy controls are ordinary descriptors, independent of any theme.
+slider: caption, value: current, update: transition = {
+  type: "slider", label: caption, value: current, update: transition
+};
+toggle: caption, checked: current, update: transition = {
+  type: "toggle", label: caption, checked: current, update: transition
+};
+tabs: caption, value: current, options: choices, update: transition = {
+  type: "tabs", label: caption, value: current, options: choices, update: transition
+};
+led: caption = {type: "led", text: caption};
+stepper: caption, value: current, update: transition = {
+  type: "stepper", label: caption, value: current, update: transition
+};
+
 # Attiva GUI checked in Mira Studio.
 counter: n = column: [
   title: "Contatore verificato",
@@ -2224,6 +2389,21 @@ grid: count, children: items = {type: "grid", columns: count, children: items};
 keyed: identity, view: content = {type: "keyed", key: identity, view: content};
 each: items, identified by: identity, view: factory = collect: items, with: {item |
   keyed: (item >> identity), view: (item >> factory)
+};
+
+# Cozy controls are ordinary descriptors, independent of any theme.
+slider: caption, value: current, update: transition = {
+  type: "slider", label: caption, value: current, update: transition
+};
+toggle: caption, checked: current, update: transition = {
+  type: "toggle", label: caption, checked: current, update: transition
+};
+tabs: caption, value: current, options: choices, update: transition = {
+  type: "tabs", label: caption, value: current, options: choices, update: transition
+};
+led: caption = {type: "led", text: caption};
+stepper: caption, value: current, update: transition = {
+  type: "stepper", label: caption, value: current, update: transition
 };
 
 # Attiva GUI checked in Mira Studio.
@@ -2284,6 +2464,21 @@ each: items, identified by: identity, view: factory = collect: items, with: {ite
   keyed: (item >> identity), view: (item >> factory)
 };
 
+# Cozy controls are ordinary descriptors, independent of any theme.
+slider: caption, value: current, update: transition = {
+  type: "slider", label: caption, value: current, update: transition
+};
+toggle: caption, checked: current, update: transition = {
+  type: "toggle", label: caption, checked: current, update: transition
+};
+tabs: caption, value: current, options: choices, update: transition = {
+  type: "tabs", label: caption, value: current, options: choices, update: transition
+};
+led: caption = {type: "led", text: caption};
+stepper: caption, value: current, update: transition = {
+  type: "stepper", label: caption, value: current, update: transition
+};
+
 # Attiva GUI checked in Mira Studio.
 render (styled: (column: [
   title: "Stili verificati",
@@ -2337,6 +2532,21 @@ grid: count, children: items = {type: "grid", columns: count, children: items};
 keyed: identity, view: content = {type: "keyed", key: identity, view: content};
 each: items, identified by: identity, view: factory = collect: items, with: {item |
   keyed: (item >> identity), view: (item >> factory)
+};
+
+# Cozy controls are ordinary descriptors, independent of any theme.
+slider: caption, value: current, update: transition = {
+  type: "slider", label: caption, value: current, update: transition
+};
+toggle: caption, checked: current, update: transition = {
+  type: "toggle", label: caption, checked: current, update: transition
+};
+tabs: caption, value: current, options: choices, update: transition = {
+  type: "tabs", label: caption, value: current, options: choices, update: transition
+};
+led: caption = {type: "led", text: caption};
+stepper: caption, value: current, update: transition = {
+  type: "stepper", label: caption, value: current, update: transition
 };
 
 # Attiva GUI checked in Mira Studio.
