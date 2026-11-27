@@ -34,6 +34,7 @@ const assets = [
   'ui-preview.html',
   'mira-theme.css',
   'theme-lab.html',
+  'cozy-edition.html',
   'theme-lab.js',
   'ui-host.js',
   'persistent-state.js',
