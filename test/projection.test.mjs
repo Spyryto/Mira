@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {execFileSync} from 'node:child_process';
-import {seedSource,fromAst,source,references,history,getNode,order} from '../dist/studio/projection-core.js';
+import {seedSource,matchPrefix,matchSeed,fromAst,source,references,history,getNode,order,semanticContext,completions} from '../dist/studio/projection-core.js';
 import * as mira from '../dist/studio/projection-program.js';
 const read=p=>readFileSync(new URL(p,import.meta.url),'utf8');
 const context={};runInNewContext(read('../dist/studio/compiler.js'),context);
@@ -46,4 +46,30 @@ test('Projection lab is discoverable and offline-ready, with no global textarea'
   const sw=read('../dist/studio/sw.js');
   for(const asset of ['projection-lab.html','projection-lab.css','projection-lab.js','projection-core.js','projection-model.mira','projection-program.js'])assert.ok(sw.includes("'./"+asset+"'"),asset);
   assert.match(sw,/endsWith\('\/projection-lab.html'\)/);
+});
+
+test('Match cases come from compiler sum schema and numeric holes stay incomplete until filled',()=>{
+  const parsed=compiler.ast(matchSeed);assert.equal(parsed.ok,true,parsed.message);
+  const h=history(fromAst(JSON.parse(parsed.output),matchPrefix),mira,compiler);
+  const context=semanticContext(h.state,compiler);
+  assert.equal(context.expected,'Number');assert.deepEqual(context.numeric,['hours']);
+  const options=completions(h.state,compiler,'mat');
+  const payment=options.find(option=>option.label==='match: payment');assert.ok(payment);
+  h.apply(payment.action);
+  const root=h.state.defs.at(-1).root,match=getNode(h.state,root);
+  assert.deepEqual(match.cases.map(c=>c.tag),context.sums.find(row=>row.name==='payment').schema.alternatives.map(c=>c.tag));
+  assert.equal(match.cases.length,3);assert.throws(()=>source(h.state),/buchi/);
+  for(const c of match.cases){h.select(c.root);const numeric=semanticContext(h.state,compiler).numeric;
+    if(c.type==='Number'){assert.ok(numeric.includes(c.param));h.apply({kind:'reference',value:c.param});}
+    else {assert.ok(!numeric.includes(c.param));h.apply({kind:'literal',value:'0'});}
+  }
+  const text=source(h.state),checked=compiler.check(text);assert.equal(checked.ok,true,checked.message);
+  for(const target of ['js','php']){const compiled=compiler.compile(text,target,null,false,null,true);assert.equal(compiled.ok,true,compiled.message);}
+  h.undo();assert.throws(()=>source(h.state),/buchi/);
+});
+test('Inline editing replaces the selected expression; no detached textbox in markup',()=>{
+  const html=read('../dist/studio/projection-lab.html'),js=read('../dist/studio/projection-lab.js');
+  assert.doesNotMatch(html,/id="projection-input"/);
+  assert.match(js,/original\.replaceWith\(anchor\)/);assert.match(js,/old\.anchor\.replaceWith\(old\.original\)/);
+  assert.match(js,/input\.addEventListener\('input',refresh\)/);
 });
