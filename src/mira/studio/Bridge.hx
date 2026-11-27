@@ -26,7 +26,10 @@ class Bridge {
             constantData: constantData,
             styleContractSource: styleContractSource,
             typedStylesSource: typedStylesSource,
-            version: "0.103"
+            grammarSource: grammarSource,
+            grammarAnalyze: grammarAnalyze,
+            grammarEmit: grammarEmit,
+            version: "0.104"
         });
     }
 
@@ -38,6 +41,7 @@ class Bridge {
         if (gui != null) files.set("lib/gui.mira", gui);
         final typedStyles = typedStylesSource();
         if (typedStyles != null) files.set("lib/gui-typed-styles.mira",typedStyles);
+        files.set("lib/grammar.mira",grammarSource());
         if (modulesJson != null) {
             final supplied:Dynamic = haxe.Json.parse(modulesJson);
             if (supplied == null || !Reflect.isObject(supplied) || Std.isOfType(supplied, Array)
@@ -101,6 +105,22 @@ class Bridge {
 
     public static function constantData(source:String,name:String):Dynamic {
         return safely(function() return mira.types.ConstantData.json(mira.types.ConstantData.read(source,name)));
+    }
+
+    public static function grammarSource():String return haxe.Resource.getString("lib/grammar.mira");
+
+    public static function grammarAnalyze(source:String,name:String,input:String):Dynamic {
+        return safely(function() {
+            final value = mira.types.ConstantData.read(grammarSource() + "\n" + source,name,true,"Grammar");
+            final machine = new mira.grammar.GrammarCompiler().compile(value);
+            final result = machine.trace(input);
+            Reflect.setField(result,"grammar",haxe.Json.parse(mira.types.ConstantData.json(value)));
+            return haxe.Json.stringify(result,null,"  ");
+        });
+    }
+
+    public static function grammarEmit(source:String,name:String,target:String):Dynamic {
+        return safely(function() return mira.grammar.GrammarCompiler.fromSource(grammarSource(),source,name).emit(target));
     }
 
     public static function typedStylesSource():Null<String> return haxe.Resource.getString("lib/gui-typed-styles.mira");

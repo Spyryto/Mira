@@ -1,0 +1,22 @@
+# Finite regular grammars are ordinary immutable Mira values.
+Grammar ::
+    Literal (Text)
+  | Character Set (Text)
+  | Sequence ([Grammar])
+  | Choice ([Grammar])
+  | Repeat ({pattern: Grammar, min: Number, max: Number, unbounded: Boolean});
+
+one: value (Text) -> Grammar = Literal: value;
+character in: characters (Text) -> Grammar = Character Set: characters;
+all of: patterns ([Grammar]) -> Grammar = Sequence: patterns;
+one of: patterns ([Grammar]) -> Grammar = Choice: patterns;
+exactly: count (Number), of: pattern (Grammar) -> Grammar =
+  Repeat: {pattern: pattern, min: count, max: count, unbounded: false};
+between: lower (Number), and: upper (Number), of: pattern (Grammar) -> Grammar =
+  Repeat: {pattern: pattern, min: lower, max: upper, unbounded: false};
+zero or one of: pattern (Grammar) -> Grammar =
+  Repeat: {pattern: pattern, min: 0, max: 1, unbounded: false};
+zero or more of: pattern (Grammar) -> Grammar =
+  Repeat: {pattern: pattern, min: 0, max: 0, unbounded: true};
+one or more of: pattern (Grammar) -> Grammar =
+  Repeat: {pattern: pattern, min: 1, max: 0, unbounded: true};

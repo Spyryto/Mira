@@ -1,5 +1,5 @@
 {
-  "version": "0.103",
+  "version": "0.104",
   "features": [
     {
       "id": "values",
@@ -2286,6 +2286,12 @@
       "title": "Stili GUI dichiarati mediante tipi Mira",
       "since": "0.103",
       "doc": "docs/type-representation.md#typed-gui-styles-0103"
+    },
+    {
+      "id": "composable-grammars",
+      "title": "Grammatiche componibili e automi deterministici",
+      "since": "0.104",
+      "doc": "docs/type-representation.md#composable-grammars-0104"
     }
   ]
 }

@@ -40,6 +40,8 @@ const assets = [
   'persistent-ledger.mira',
   'effects.js',
   'type-lab.html',
+  'grammar-lab.html',
+  'grammar-lab.js',
   'type-lab.js',
   'host-module-lab.html',
   'host-module-fixtures.js',
