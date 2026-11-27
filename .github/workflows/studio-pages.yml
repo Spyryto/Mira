@@ -40,8 +40,12 @@ jobs:
           node --test test/catalog.test.mjs test/dogfood.test.mjs
       - name: Install browser test runner
         run: |
-          npm install --no-save --package-lock=false playwright@1.56.1
+          npm install --no-save --package-lock=false playwright@1.56.1 codemirror@6.0.2 @codemirror/state@6.5.2 @codemirror/view@6.38.6 @codemirror/autocomplete@6.18.7 @codemirror/lint@6.8.5 esbuild@0.25.12
           npx playwright install --with-deps chromium
+      - name: Bundle CodeMirror and checked Mira editor services
+        run: npm run build:ide
+      - name: Verify CodeMirror editing and diagnostics
+        run: node scripts/studio-ide-check.mjs
       - name: Build pinned historical Studio editions
         run: node scripts/studio-archives.mjs
       - name: Verify historical editions

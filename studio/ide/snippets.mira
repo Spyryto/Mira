@@ -1,0 +1,7 @@
+# Editorial syntax templates, deliberately not inferred library signatures.
+editor templates = [
+  {label: "collect:with:", signature: "", summary: "Trasforma gli elementi di una lista.", snippet: "collect: ${items}, with: {${item} | ${expression}}", origin: "Template sintattico", first: "collect", kind: "function"},
+  {label: "select:with:", signature: "", summary: "Seleziona gli elementi per cui il predicato è vero.", snippet: "select: ${items}, with: {${item} | ${predicate}}", origin: "Template sintattico", first: "select", kind: "function"},
+  {label: "fold:with:from:", signature: "", summary: "Riduce una lista a partire da un valore iniziale.", snippet: "fold: ${items}, with: {${acc}, ${item} | ${expression}}, from: ${initial}", origin: "Template sintattico", first: "fold", kind: "function"},
+  {label: "if:then:else:", signature: "", summary: "Espressione condizionale.", snippet: "if: (${condition}), then: (${value}), else: (${alternative})", origin: "Template sintattico", first: "if", kind: "keyword"}
+];

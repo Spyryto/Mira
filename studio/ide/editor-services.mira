@@ -1,0 +1,8 @@
+# The editor owns policy; the host only supplies a native text operation.
+Suggestion :: {label: Text, signature: Text, summary: Text, snippet: Text, origin: Text, first: Text, kind: Text};
+editor complete: prefix (Text), from: items ([Suggestion]) -> [Suggestion] =
+  select: items, with: {item (Suggestion) | starts with: prefix, in: (item ~ first)};
+editor lookup: name (Text), from: items ([Suggestion]) -> [Suggestion] =
+  select: items, with: {item (Suggestion) | (item ~ label == name) OR (item ~ first == name)};
+editor tooltip: item (Suggestion) -> {title: Text, detail: Text, description: Text, provenance: Text} =
+  {title: item ~ label, detail: item ~ signature, description: item ~ summary, provenance: item ~ origin};
