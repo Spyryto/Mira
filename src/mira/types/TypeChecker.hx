@@ -1006,14 +1006,11 @@ class TypeChecker {
             case Call("append:to:",args) if (args.length == 2):
                 final prior = lengthFacts.get(args[1]);
                 prior == null ? null : new NumericRange(prior.low+1,prior.high+1,true,true);
-            case Call("collect:with:",args) | Call("map:with:",args) if (args.length == 2 && host.selectors.indexOf(switch(expr){case Call(s,_):s;default:"";}) < 0):
+            case Call(selector,args) if (args.length == 2 && ["collect:with:","map:with:"].indexOf(selector) >= 0 && host.selectors.indexOf(selector) < 0):
                 lengthFacts.get(args[0]);
-            case Call("select:with:",args) | Call("select:if:",args) | Call("filter:with:",args) if (args.length == 2 && host.selectors.indexOf(switch(expr){case Call(s,_):s;default:"";}) < 0):
+            case Call(selector,args) if (args.length == 2 && ["select:with:","select:if:","filter:with:"].indexOf(selector) >= 0 && host.selectors.indexOf(selector) < 0):
                 final prior = lengthFacts.get(args[0]);
                 prior == null ? null : new NumericRange(0,prior.high,true,true);
-            case Call("remove:if:",args) if (args.length == 2 && host.selectors.indexOf("remove:if:") < 0):
-                // The receiver position is defined by the native selector.
-                null;
             default: null;
         };
         final declaredLength = ListLengths.ofType(visibility.reveal(prune(type),moduleOwner));
