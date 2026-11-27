@@ -32,3 +32,9 @@
   .projection-code .match-case{padding-inline-start:.55rem}
   .projection-code .inline-editor input{font-size:16px}
 }
+
+/* The visible editor overlays its reserved slot; its native input stays connected. */
+.projection-code{position:relative}
+.projection-code .inline-slot{display:inline-block;width:min(100%,24rem);height:50px;vertical-align:middle;box-sizing:border-box}
+.projection-code .inline-editor{position:absolute;z-index:2;margin:0}
+.projection-code .inline-editor[hidden]{display:none}

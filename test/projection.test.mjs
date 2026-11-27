@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {execFileSync} from 'node:child_process';
-import {seedSource,matchPrefix,matchSeed,fromAst,source,references,history,getNode,order,semanticContext,completions,revealDelta} from '../dist/studio/projection-core.js';
+import {seedSource,matchPrefix,matchSeed,fromAst,source,references,history,getNode,order,semanticContext,completions,revealDelta,nextHole} from '../dist/studio/projection-core.js';
 import * as mira from '../dist/studio/projection-program.js';
 const read=p=>readFileSync(new URL(p,import.meta.url),'utf8');
 const context={};runInNewContext(read('../dist/studio/compiler.js'),context);
@@ -70,7 +70,7 @@ test('Match cases come from compiler sum schema and numeric holes stay incomplet
 test('Inline editing replaces the selected expression; no detached textbox in markup',()=>{
   const html=read('../dist/studio/projection-lab.html'),js=read('../dist/studio/projection-lab.js');
   assert.doesNotMatch(html,/id="projection-input"/);
-  assert.match(js,/original\.replaceWith\(anchor\)/);assert.match(js,/old\.anchor\.replaceWith\(old\.original\)/);
+  assert.match(js,/original\.replaceWith\(slot\)/);assert.match(js,/editing\.slot\.replaceWith\(editing\.original\)/);
   assert.match(js,/input\.addEventListener\('input',refresh\)/);
 });
 
@@ -83,4 +83,19 @@ test('Visual viewport reveal prioritizes the complete editor, then the input',()
   assert.equal(delta({top:250,bottom:650},{top:250,bottom:294}),0);
   assert.equal(delta({top:300,bottom:700},{top:300,bottom:344}),36);
   assert.equal(revealDelta({top:450,bottom:560},{top:450,bottom:494},{offsetTop:0,height:300}),272);
+});
+
+test('Hole advancement is one reversible transaction and stops at completion',()=>{
+  const parsed=compiler.ast(matchSeed);assert.equal(parsed.ok,true,parsed.message);
+  const h=history(fromAst(JSON.parse(parsed.output),matchPrefix),mira,compiler);
+  h.apply({kind:'match',value:'payment'});
+  const roots=getNode(h.state,h.state.defs.at(-1).root).cases.map(c=>c.root);
+  assert.equal(h.state.selected,roots[0]);assert.equal(nextHole(h.state),roots[1]);
+  assert.equal(nextHole(h.state,roots[0],-1),roots[2]);
+  h.apply({kind:'literal',value:'1'},true);assert.equal(h.state.selected,roots[1]);
+  h.undo();assert.equal(h.state.selected,roots[0]);assert.equal(getNode(h.state).kind,'Hole');
+  h.redo();assert.equal(h.state.selected,roots[1]);
+  h.apply({kind:'literal',value:'2'},true);assert.equal(h.state.selected,roots[2]);
+  h.apply({kind:'literal',value:'3'},true);assert.equal(h.state.selected,roots[2]);
+  assert.equal(nextHole(h.state),undefined);assert.equal(compiler.check(source(h.state)).ok,true);
 });
