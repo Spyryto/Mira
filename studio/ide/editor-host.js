@@ -5,7 +5,7 @@ import {autocompletion,snippetCompletion,startCompletion,completionKeymap} from 
 import {setDiagnostics} from '@codemirror/lint';
 import {tokenizeMira} from '../syntax-highlight.js';
 import {fieldContext,fieldRows,formatSchema} from './field-context.js';
-import {editor_complete__from,editor_lookup__from,editor_tooltip,editor_templates,editor_fields__prefix__from,editor_field_lookup__name__from,editor_field_tooltip} from '../../dist/ide/editor-services.js';
+import {editor_complete__from,editor_lookup__from,editor_tooltip,editor_templates,editor_fields__prefix__from,editor_field_lookup__name__from,editor_field_tooltip,editor_signature__returning} from '../../dist/ide/editor-services.js';
 
 const $=id=>document.getElementById(id);
 if(matchMedia('(max-width:850px)').matches)$('workspace-tree').open=false;
@@ -16,13 +16,34 @@ let revision=0,lastValid=[],validRevision=-1,timer,api=[],inspected=[];
 const first=label=>label.split(':')[0];
 const make=(label,signature,summary,snippet,origin,kind)=>({label,signature,summary,snippet,origin,first:first(label),kind});
 const signature=formatSchema;
+// Join real AST parameter names with the compiler's structured type report.
+function namedSignature(item,def,schema){
+ const labels=def?.labels||item.label.slice(0,-1).split(':');
+ if(!item.label.endsWith(':')||(!def?.parameters&&schema?.kind!=='Function'))return item;
+ const types=schema?.kind==='Function'?schema.parameters:[];
+ const names=def?.parameters||[];
+ if(labels.length!==(types.length||names.length))return item;
+ const parameters=labels.map((selector,i)=>({selector,name:names[i]||'',type:formatSchema(types[i])}));
+ const rich=editor_signature__returning(parameters,formatSchema(schema?.result));
+ return {...item,rich};
+}
+function appendSignature(parent,rich,compact=false){
+ rich.parameters.forEach((parts,i)=>{
+  if(i)parent.append(document.createTextNode(', '));
+  for(const part of parts){
+   if(!part.text||(compact&&part.role==='selector'))continue;
+   const node=document.createElement(part.role==='parameter'?'em':'span');node.className='mira-signature-'+part.role;node.textContent=part.text;parent.append(node);
+  }
+ });
+ if(rich.result){const span=document.createElement('span');span.className='mira-signature-type';span.textContent=' → '+rich.result;parent.append(span)}
+}
 const snippet=(label,params=[])=>label.endsWith(':')?label.slice(0,-1).split(':').map((part,i)=>part+': \x24{'+(params[i]||'arg'+(i+1))+'}').join(', '):'';
 const candidates=()=>[...lastValid,...editor_templates.filter(t=>!lastValid.some(s=>s.label===t.label))];
 const provenance=()=>validRevision===revision?'Documento verificato':'Ultima analisi valida (non aggiornata)';
 function renderTooltip(item){
  const info=editor_tooltip(item),el=document.createElement('div');el.className='mira-tooltip';
  const title=document.createElement('strong');title.textContent=info.title;el.append(title);
- if(info.detail){const pre=document.createElement('pre');pre.textContent=info.detail;el.append(pre)}
+ if(item.rich||info.detail){const pre=document.createElement('pre');pre.className='mira-signature';if(item.rich)appendSignature(pre,item.rich);else pre.textContent=info.detail;el.append(pre)}
  const p=document.createElement('div');p.textContent=info.description;el.append(p);
  const source=document.createElement('small');source.textContent=info.provenance;el.append(source);return el;
 }
@@ -71,7 +92,7 @@ async function complete(context){
  const items=editor_complete__from(match,candidates());
  const options=items.map(item=>{
    const data=lastValid.includes(item)?{...item,origin:provenance()}:item;
-   const option={label:item.label,type:item.kind,detail:item.signature||item.origin,info:()=>renderTooltip(data)};
+   const option={label:item.label,type:item.kind,detail:item.rich?'':item.signature||item.origin,rich:item.rich,info:()=>renderTooltip(data)};
    return item.snippet?snippetCompletion(item.snippet,option):option;
  });
  return {from,options,filter:false};
@@ -95,7 +116,7 @@ function analyze(view){
  timer=setTimeout(()=>worker.postMessage({revision:rev,source}),220);
 }
 const editor=new EditorView({parent:$('editor'),state:EditorState.create({doc:saved,extensions:[
- basicSetup,syntax,autocompletion({override:[complete],activateOnTyping:true}),keymap.of(completionKeymap),
+ basicSetup,syntax,autocompletion({override:[complete],activateOnTyping:true,addToOptions:[{position:50,render:option=>{if(!option.rich)return null;const span=document.createElement('span');span.className='mira-completion-signature';appendSignature(span,option.rich,true);return span}}]}),keymap.of(completionKeymap),
  hoverTooltip(async(view,pos)=>{const state=view.state,w=wordAt(state,pos),items=await lookupAt(state,pos);return view.state.doc===state.doc&&items.length?{pos:w.from,end:w.to,above:true,create:()=>{const dom=document.createElement('div');dom.append(...items.map(renderTooltip));return {dom}}}:null}),
  EditorView.contentAttributes.of({'aria-label':'Codice sorgente Mira','spellcheck':'false','autocapitalize':'off'}),
  EditorView.updateListener.of(update=>{if(update.docChanged){try{localStorage.setItem('mira-ide:source:v1',update.state.doc.toString())}catch{}analyze(update.view)}})
@@ -112,8 +133,8 @@ worker.onmessage=({data})=>{
  if(checked.ok){
   const defs=data.ast.ok?JSON.parse(data.ast.output).definitions:[];
   lastValid=JSON.parse(checked.output).filter(x=>!x.file).map(x=>{
-   const def=defs.find(d=>d.name===x.name);
-   return make(x.name,x.type,'Tipo verificato dal compilatore.',snippet(x.name,def?.parameters),'Documento verificato',x.name.endsWith(':')?'function':'variable');
+   const def=defs.find(d=>d.name===x.name&&d.line===x.line&&d.column===x.column);
+   return namedSignature(make(x.name,x.type,'Tipo verificato dal compilatore.',snippet(x.name,def?.parameters),'Documento verificato',x.name.endsWith(':')?'function':'variable'),def,x.schema);
   });
   validRevision=revision;
   $('symbols').replaceChildren(...lastValid.map(item=>{
@@ -135,7 +156,7 @@ function renderApi(){
 }
 $('api-search').addEventListener('input',renderApi);
 fetch('./reference.json').then(r=>r.json()).then(data=>{
- api=data.nativeApi.flatMap(group=>[...group.symbols,...group.types].map(x=>make(x.name,signature(x.schema),group.description,'',group.name,x.kind==='type'?'type':'function')));
+ api=data.nativeApi.flatMap(group=>[...group.symbols,...group.types].map(x=>namedSignature(make(x.name,signature(x.schema),group.description,'',group.name,x.kind==='type'?'type':'function'),x.kind==='selector'?x:undefined,x.schema)));
  renderApi();
 }).catch(()=>{$('api-results').textContent='Catalogo non disponibile.'});
 analyze(editor);

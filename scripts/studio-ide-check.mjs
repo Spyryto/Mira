@@ -20,6 +20,8 @@ try{
   if(name==='phone')await page.locator('#workspace-tree summary').click();
   await page.locator('#symbols button',{hasText:'double:'}).click();
   assert.match(await page.locator('#inspect').textContent(),/Number/);
+  const parameter=page.locator('#inspect .mira-signature em');assert.equal(await parameter.textContent(),'x');assert.equal(await parameter.evaluate(e=>getComputedStyle(e).fontStyle),'italic');
+  assert.equal(await page.locator('#inspect .mira-signature-type').first().evaluate(e=>getComputedStyle(e).fontStyle),'normal');
   if(name==='phone')await page.locator('#workspace-tree summary').click();
   await page.evaluate(()=>scrollTo(0,0));
   await page.screenshot({path:resolve(out,name+'-ide.png'),fullPage:true});
@@ -62,6 +64,18 @@ try{
   await list.waitFor();await page.waitForFunction(()=>document.querySelector('.cm-tooltip-autocomplete')?.textContent.includes('name'));
   assert.match(await list.textContent(),/Text/);
   await page.screenshot({path:resolve(out,name+'-ide-nested-fields.png'),fullPage:false});
+  await editor.press('Escape');
+  await editor.fill('add: a number (Number), and: b (Number) -> Number = a number + b;\nresult = add: 1, and: 2;');
+  await page.locator('#status').filter({hasText:'Verificato'}).waitFor();
+  if(name==='phone')await page.locator('#workspace-tree summary').click();
+  await page.locator('#symbols button',{hasText:'add:and:'}).click();
+  assert.deepEqual(await page.locator('#inspect .mira-signature em').allTextContents(),['a number','b']);
+  assert.match(await page.locator('#inspect .mira-signature').textContent(),/add: a number \(Number\), and: b \(Number\) → Number/);
+  await page.screenshot({path:resolve(out,name+'-ide-named-signature.png'),fullPage:true});
+  await editor.click();await editor.press('Control+End');await editor.press('Enter');await editor.pressSequentially('ad');
+  await page.locator('.cm-tooltip-autocomplete .mira-completion-signature em').first().waitFor();
+  assert.deepEqual(await page.locator('.cm-tooltip-autocomplete .mira-completion-signature em').allTextContents(),['a number','b']);
+  await page.screenshot({path:resolve(out,name+'-ide-named-completion.png'),fullPage:false});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
   await page.close();
  }
