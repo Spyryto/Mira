@@ -52,7 +52,7 @@ class DefinitionParser {
                                 for (i in 0...arguments.length) local.set(header.parameters[i],arguments[i]);
                                 final base = new TypeParser(rhs,segment[marker+1],local,false).parse();
                                 switch (base) {
-                                    case RecordType(_,null) | ListType(_):
+                                    case RecordType(_,null) | OptionalRecordType(_,_) | ListType(_):
                                         names.set(name,ParametricNamedType(identity,base,arguments));
                                     default:
                                         throw new MiraError("Parametric nominal types currently require a record or list base",segment[0]);
