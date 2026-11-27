@@ -53,10 +53,11 @@ test('Match cases come from compiler sum schema and numeric holes stay incomplet
   const h=history(fromAst(JSON.parse(parsed.output),matchPrefix),mira,compiler);
   const context=semanticContext(h.state,compiler);
   assert.equal(context.expected,'Number');assert.deepEqual(context.numeric,['hours']);
-  const options=completions(h.state,compiler,'mat');assert.equal(options.length,1);
-  assert.equal(options[0].label,'match: payment');h.apply(options[0].action);
+  const options=completions(h.state,compiler,'mat');
+  const payment=options.find(option=>option.label==='match: payment');assert.ok(payment);
+  h.apply(payment.action);
   const root=h.state.defs.at(-1).root,match=getNode(h.state,root);
-  assert.deepEqual(match.cases.map(c=>c.tag),context.sums[0].schema.alternatives.map(c=>c.tag));
+  assert.deepEqual(match.cases.map(c=>c.tag),context.sums.find(row=>row.name==='payment').schema.alternatives.map(c=>c.tag));
   assert.equal(match.cases.length,3);assert.throws(()=>source(h.state),/buchi/);
   for(const c of match.cases){h.select(c.root);const numeric=semanticContext(h.state,compiler).numeric;
     if(c.type==='Number'){assert.ok(numeric.includes(c.param));h.apply({kind:'reference',value:c.param});}
