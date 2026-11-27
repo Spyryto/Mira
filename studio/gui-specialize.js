@@ -374,7 +374,7 @@
       if(!def||def.parameters.length!==1||!def.labels.every(identifier))fail('unary region selector');
       return def.labels.map(label=>label.replaceAll(' ','_')).join('__');
     });
-    const code=compiler.compile(source,'js');
+    const code=compiler.compile(source,'js',null,false,null,ast.definitions.some(d=>d.scalarEncoding!=null));
     if(!code.ok)throw new Error(code.message);
     const views=new Function(code.output+'\nreturn ['+names.join(',')+'];')();
     const cache=new Map();
