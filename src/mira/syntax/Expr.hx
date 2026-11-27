@@ -9,6 +9,7 @@ enum Expr {
     BooleanLiteral(value:Bool);
     FieldAccessor(key:String);
     FieldGet(record:Expr, key:String);
+    OptionalFieldGet(record:Expr,key:String,option:mira.types.Type);
     FieldSection(key:String);
     Conditional(condition:Expr, whenTrue:Expr, whenFalse:Expr);
     Validate(value:Expr, required:mira.types.Type, success:Expr, failure:Expr);
