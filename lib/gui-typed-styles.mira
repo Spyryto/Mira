@@ -1,6 +1,6 @@
 import "lib/grammar.mira";
 
-# Opt-in checked GUI styles. The legacy GUI remains separately importable.
+# Standard checked GUI styles, using ordinary Mira types.
 # These types describe native values, not a second renderer.
 GUI Pixels :: Number where _ >= 0 AND _ <= 4096;
 GUI Font Weight :: Integer where _ >= 100 AND _ <= 900;
@@ -56,7 +56,7 @@ GUI Style :: {
 
 Style Layers :: [GUI Style] where (length of: _) <= 32;
 
-# Same descriptor ABI as styled:with:. No new runtime validation.
+# Native descriptor ABI; no new runtime validation.
 styled: content, with styles: layers (Style Layers) = {
   type: "styled", view: content, styles: layers
 };
