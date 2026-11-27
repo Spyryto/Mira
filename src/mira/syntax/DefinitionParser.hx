@@ -147,7 +147,7 @@ class DefinitionParser {
                 var encoded:Expr;
                 var key:String;
                 if (literal.length == 1 && literal[0].kind == TokenKind.Text) {
-                    encoded = Text(literal[0].value);
+                    encoded = Expr.Text(literal[0].value);
                     key = "text:" + literal[0].value;
                 } else {
                     final signed = literal.length == 2 && literal[0].isSymbol("-") && literal[1].kind == TokenKind.Number;
@@ -155,7 +155,7 @@ class DefinitionParser {
                     if (!~/^-?(0|[1-9][0-9]*)$/.match(raw) || Math.abs(Std.parseFloat(raw)) > 9007199254740991.0)
                         throw new MiraError("Scalar variant encoding must be a Text literal or safe integer",part[equals]);
                     final normalized = raw == "-0" ? "0" : raw;
-                    encoded = Numeric(normalized);
+                    encoded = Expr.Numeric(normalized);
                     key = "integer:" + normalized;
                 }
                 if (codes.exists(key)) throw new MiraError("Duplicate scalar variant encoding",part[equals]);
