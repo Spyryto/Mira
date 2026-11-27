@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {execFileSync} from 'node:child_process';
-import {seedSource,matchPrefix,matchSeed,fromAst,source,references,history,getNode,order,semanticContext,completions,revealDelta,nextHole} from '../dist/studio/projection-core.js';
+import {seedSource,matchPrefix,matchSeed,compositionSeed,compositionPrefix,compositionHost,checkSource,fromAst,source,references,history,getNode,order,semanticContext,completions,revealDelta,nextHole,pathsTo} from '../dist/studio/projection-core.js';
 import * as mira from '../dist/studio/projection-program.js';
 const read=p=>readFileSync(new URL(p,import.meta.url),'utf8');
 const context={};runInNewContext(read('../dist/studio/compiler.js'),context);
@@ -98,4 +98,31 @@ test('Hole advancement is one reversible transaction and stops at completion',()
   h.apply({kind:'literal',value:'2'},true);assert.equal(h.state.selected,roots[2]);
   h.apply({kind:'literal',value:'3'},true);assert.equal(h.state.selected,roots[2]);
   assert.equal(nextHole(h.state),undefined);assert.equal(compiler.check(source(h.state)).ok,true);
+});
+
+test('Non-restrictive completion supports top-down, bottom-up and checked export',()=>{
+  const parsed=compiler.ast(compositionSeed);assert.equal(parsed.ok,true,parsed.message);
+  const initial=fromAst(JSON.parse(parsed.output),compositionPrefix,'Integer',compositionHost);
+  const h=history(initial,mira,compiler);
+  const c=semanticContext(h.state,compiler);
+  assert.equal(c.expected,'Integer');assert.equal(c.verified,true,checkSource(initial,compiler,compositionPrefix).message);
+  assert.ok(c.functions.some(fn=>fn.name==='length of:'&&fn.input==='Text'&&fn.output==='Integer'));
+  const options=completions(h.state,compiler,'',mira);
+  assert.ok(options.find(x=>x.label==='count').rank<options.find(x=>x.label==='name').rank);
+  const direct=options.find(x=>x.label==='length of: name');assert.ok(direct);
+  h.apply({kind:'reference',value:'name'});
+  assert.equal(checkSource(h.state,compiler).ok,false);
+  const adapt=completions(h.state,compiler,'avvolgi',mira).find(x=>x.action.kind==='adapt');assert.ok(adapt);
+  h.apply(adapt.action);assert.equal(checkSource(h.state,compiler).ok,true,checkSource(h.state,compiler).message);
+  assert.match(source(h.state),/result \(Integer\) = \(length of: name\)/);
+  h.undo();assert.equal(checkSource(h.state,compiler).ok,false);
+  h.undo();h.apply(direct.action);assert.equal(checkSource(h.state,compiler).ok,true);
+  h.undo();const top=completions(h.state,compiler,'length of:',mira).find(x=>x.action.kind==='call');assert.ok(top);
+  h.apply(top.action);assert.equal(getNode(h.state).kind,'Hole');assert.equal(semanticContext(h.state,compiler).expected,'Text');
+  assert.throws(()=>source(h.state),/buchi/);
+  h.apply({kind:'reference',value:'name'},true);const text=source(h.state);
+  assert.equal(checkSource(h.state,compiler).ok,true,checkSource(h.state,compiler).message);
+  for(const target of ['js','php']){const r=compiler.compile(text,target,compositionHost,false,null,true);assert.equal(r.ok,true,r.message);}
+  const graph=[{name:'a:',input:'Text',output:'Boolean'},{name:'b:',input:'Boolean',output:'Integer'},{name:'loop:',input:'Boolean',output:'Text'}];
+  assert.deepEqual(pathsTo(graph,'Text','Integer').map(p=>p.map(x=>x.name)),[['a:','b:']]);
 });

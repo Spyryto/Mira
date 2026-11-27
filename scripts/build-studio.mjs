@@ -173,7 +173,7 @@ const projectionSource=readFileSync(resolve(root,'studio/projection-model.mira')
 const projectionJS=context.MiraStudioCompiler.compile(projectionSource,'js',null,false,null,true);
 const projectionPHP=context.MiraStudioCompiler.compile(projectionSource,'php',null,false,null,true);
 if(!projectionJS.ok||!projectionPHP.ok)throw Error('Projection model: '+(projectionJS.message||projectionPHP.message));
-writeFileSync(resolve(destination,'projection-program.js'),projectionJS.output+'\nexport {projection_replace__in, projection_wrap__left__right__in};\n');
+writeFileSync(resolve(destination,'projection-program.js'),projectionJS.output+'\nexport {projection_replace__in, projection_wrap__left__right__in, projection_enclose__child__in, projection_rank__expected};\n');
 writeFileSync(resolve(root,'dist/projection-program.php'),projectionPHP.output);
 // Generate the decoder schema and host signature from the unbound Mira contract.
 const jsonFile=path=>readFileSync(resolve(root,'lib/json',path),'utf8');
