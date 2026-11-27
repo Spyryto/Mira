@@ -2673,3 +2673,29 @@ test('0.102 public text refinement fingerprints canonicalize choice order and re
     assert.notEqual(report(source.replace('_ == "center"','_ == "end"')).fingerprint,first.fingerprint);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.103 typed GUI styles use the ordinary checker and preserve the native descriptor',async()=>{
+  const {readFileSync}=await import('node:fs');
+  const dir=mkdtempSync(join(tmpdir(),'mira-typed-gui-'));
+  try{
+    mkdirSync(join(dir,'lib'));
+    for(const file of ['gui.mira','gui-typed-styles.mira'])writeFileSync(join(dir,'lib',file),readFileSync('lib/'+file,'utf8'));
+    const input=join(dir,'program.mira');
+    const source="import \"lib/gui.mira\"; import \"lib/gui-typed-styles.mira\"; px (GUI Pixels) = 12; weight (GUI Font Weight) = 600; flex amount (GUI Flex) = 1; border (GUI Border Style) = \"solid\"; justify value (GUI Justify) = \"space-between\"; wrapping (GUI Wrap) = \"nowrap\"; text alignment (GUI Text Align) = \"center\"; shadow value (GUI Shadow) = \"soft\"; panel (GUI Style) = {padding: px, margin: px, gap: px, radius: px, borderWidth: px, fontSize: px, fontWeight: weight, flex: flex amount, width: Style Fill, minWidth: (Style Fixed: px), maxWidth: Style Auto, borderStyle: border, align: Align Center, justify: justify value, wrap: wrapping, textAlign: text alignment, shadow: shadow value}; extra (GUI Style) = {}; layers = [panel, extra]; result = styled: (text: \"Mira\"), with styles: layers;";
+    const run=(src,...flags)=>{writeFileSync(input,src);return spawnSync('node',['dist/mira.cjs',input,...flags],{encoding:'utf8'});};
+    const checked=run(source,'--check');assert.equal(checked.status,0,checked.stderr);
+    const rows=JSON.parse(checked.stdout);assert.equal(rows.find(x=>x.name==='layers').type,'[GUI Style]');
+    for(const bad of ['bad (GUI Pixels) = 4097;','bad (GUI Font Weight) = 600.5;','bad (GUI Style) = {padding: "12"};','bad (GUI Style) = {paddding: px};','bad (GUI Style) = {width: "fill"};','bad (GUI Style) = {color: "#fff"};','bad (GUI Wrap) = "anything";','bad = styled: (text: "x"), with styles: [{padding: 12}];'])assert.notEqual(run(source+bad,'--check').status,0,bad);
+    for(const target of ['js','php']){
+      const built=run(source,target,'--checked','--tree-shake');assert.equal(built.status,0,built.stderr);
+      const executed=target==='js'?spawnSync('node',['-e',built.stdout+'\nconsole.log(JSON.stringify(result));'],{encoding:'utf8'}):spawnSync('php',['-r',built.stdout.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'});
+      assert.equal(executed.status,0,executed.stderr);
+      const descriptor=JSON.parse(executed.stdout);
+      assert.deepEqual(descriptor,{type:'styled',view:{type:'text',text:'Mira'},styles:[{padding:12,margin:12,gap:12,radius:12,borderWidth:12,fontSize:12,fontWeight:600,flex:1,width:'fill',minWidth:12,maxWidth:'auto',borderStyle:'solid',align:'center',justify:'space-between',wrap:'nowrap',textAlign:'center',shadow:'soft'},target==='js'?{}:[]]});
+    }
+    const typed=readFileSync(join(dir,'lib','gui-typed-styles.mira'),'utf8');
+    writeFileSync(join(dir,'lib','gui-typed-styles.mira'),typed.replace('type: "styled"','type: "forged"'));
+    assert.notEqual(run(source+'root = column: [result];','--check').status,0);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

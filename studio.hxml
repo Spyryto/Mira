@@ -6,3 +6,4 @@
 -resource lib/gui.mira@lib/gui.mira
 
 -resource lib/gui-style-contract.mira@lib/gui-style-contract.mira
+-resource lib/gui-typed-styles.mira@lib/gui-typed-styles.mira

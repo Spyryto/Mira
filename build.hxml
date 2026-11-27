@@ -4,3 +4,4 @@
 -D js-es=6
 
 -resource lib/gui-style-contract.mira@lib/gui-style-contract.mira
+-resource lib/gui-typed-styles.mira@lib/gui-typed-styles.mira

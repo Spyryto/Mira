@@ -25,7 +25,8 @@ class Bridge {
             verifyContract: verifyContract,
             constantData: constantData,
             styleContractSource: styleContractSource,
-            version: "0.102"
+            typedStylesSource: typedStylesSource,
+            version: "0.103"
         });
     }
 
@@ -35,6 +36,8 @@ class Bridge {
         final files = new Map<String, String>();
         final gui = haxe.Resource.getString("lib/gui.mira");
         if (gui != null) files.set("lib/gui.mira", gui);
+        final typedStyles = typedStylesSource();
+        if (typedStyles != null) files.set("lib/gui-typed-styles.mira",typedStyles);
         if (modulesJson != null) {
             final supplied:Dynamic = haxe.Json.parse(modulesJson);
             if (supplied == null || !Reflect.isObject(supplied) || Std.isOfType(supplied, Array)
@@ -99,6 +102,8 @@ class Bridge {
     public static function constantData(source:String,name:String):Dynamic {
         return safely(function() return mira.types.ConstantData.json(mira.types.ConstantData.read(source,name)));
     }
+
+    public static function typedStylesSource():Null<String> return haxe.Resource.getString("lib/gui-typed-styles.mira");
 
     public static function styleContractSource():Null<String> {
         return haxe.Resource.getString("lib/gui-style-contract.mira");

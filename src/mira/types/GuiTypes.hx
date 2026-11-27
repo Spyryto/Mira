@@ -22,7 +22,7 @@ class GuiTypes {
     }
 
     public static function signature(selector:String, fresh:Void->Type,
-        scalar:Type->Void, needsState:Type->Void):Null<Type> {
+        scalar:Type->Void, needsState:Type->Void, ?annotations:Array<Null<Type>>):Null<Type> {
         final s = fresh();
         final v = view(s);
         function scalarValue():Type {
@@ -47,6 +47,9 @@ class GuiTypes {
             case "grid:children:": FunctionType([NumberType,ListType(v)],v);
             case "keyed:view:": FunctionType([scalarValue(),v],v);
             case "styled:with:": FunctionType([v,ListType(RecordType(new Map<String,Type>(),fresh()))],v);
+            // The checked layer type comes from the exact trusted Mira source.
+            case "styled:with styles:" if (annotations != null && annotations.length == 2 && annotations[1] != null):
+                FunctionType([v,annotations[1]],v);
             case "each:identified by:view:":
                 final item = fresh();
                 FunctionType([ListType(item),FunctionType([item],scalarValue()),FunctionType([item],v)],ListType(v));

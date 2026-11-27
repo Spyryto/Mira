@@ -604,7 +604,7 @@ class TypeChecker {
             moduleOwner = d.modulePath;
             if (recursive && !d.isFunction()) fail("recursive value dependency not supported: " + name);
             if (d.guiPrimitive) {
-                final signature = GuiTypes.signature(name,fresh,requireScalarEq,requireGuiState);
+                final signature = GuiTypes.signature(name,fresh,requireScalarEq,requireGuiState,d.parameterAnnotations);
                 if (signature == null) fail("Unknown checked GUI primitive " + name);
                 active.set(name,signature);
                 continue;

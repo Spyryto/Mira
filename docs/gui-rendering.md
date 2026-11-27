@@ -265,3 +265,8 @@ I valori sconosciuti non sono prove. Le chiavi dinamiche, le liste costruite a r
 ## Mira 0.96 — Declarative contracts (candidata)
 
 La tabella degli stili non è più una serie di switch sulle proprietà CSS in Haxe. La fonte compile-time è `lib/gui-style-contract.mira`, un normale programma Mira di dati costanti, con somme ricorsive, liste e record. Il parser e il checker reali verificano le dichiarazioni; un valutatore limitato estrae il record di vincoli. ScalarRules interpreta regole generiche di intervallo, intero, scelte, pattern e alternative. La risorsa è incorporata nel compilatore CLI e Studio, non nei programmi JS/PHP generati. Il renderer rimane invariato e i test di concordanza della 0.94 restano applicabili. Le firme View, l'aggancio del contratto alla primitiva e i controlli specifici dei widget sono ancora Haxe; non è ancora un sistema di contratti utente. Vedi [progettazione](declarative-contracts.md).
+
+
+## 0.103 — Primo percorso di stili tipizzati
+
+Vedi [Typed GUI styles](type-representation.md#typed-gui-styles-0103). Il nuovo decoratore opt-in usa [GUI Style] e restituisce gli stessi descrittori del precedente. Non sostituisce il renderer, non elimina ancora il percorso legacy e non garantisce la specializzazione degli stili calcolati. I colori restano esclusi finché non esistono refinement regex. Il renderer continua a validare i dati ricevuti al confine host.
