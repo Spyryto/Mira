@@ -147,6 +147,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Storage fallibile con Option, Result ed errori nominali | `0.89.5` | [Dettagli](docs/studio.md#mira-0895-persistenza-fallibile) |
 | ✅ | Date fallibili con identità opaca ed errori nominali | `0.89.6` | [Dettagli](docs/studio.md#mira-0896-costruzione-e-aritmetica-date-fallibili) |
 | ✅ | Decoder JSON condivisi e radici logiche CLI esplicite | `0.89.7` | [Dettagli](docs/studio.md#mira-0897-decoder-json-consolidati) |
+| ✅ | Configurazione multifile e build di progetto condivisa | `0.90` | [Dettagli](docs/studio.md#mira-090-progetto-multifile-dichiarativo) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
