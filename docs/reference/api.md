@@ -1225,7 +1225,7 @@ class ContractModule
 public static function classify(sections:ModuleSections):{ headers:Array<{name:String,arity:Int,origin:Token}>, signatures:Array<Array<Token>> } { final known = new Map<String,Type>(); final headers:Array<{name:String,arity:Int,origin:Token}> = []; for (reference in sections.references)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ContractModule.hx#L43)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ContractModule.hx#L52)
 
 <a id="api-mira-syntax-contractmodule-elaborate"></a>
 ### `mira.syntax.ContractModule.elaborate`
@@ -1236,7 +1236,7 @@ public static function classify(sections:ModuleSections):{ headers:Array<{name:S
 public static function elaborate(sections:ModuleSections,path:String,names:Map<String,Type>,visibility:TypeVisibility):Array<Definition>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ContractModule.hx#L100)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/ContractModule.hx#L109)
 
 <a id="api-mira-syntax-contractmodule-read"></a>
 ### `mira.syntax.ContractModule.read`
