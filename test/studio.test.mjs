@@ -2084,3 +2084,16 @@ test('0.89 integrated lesson import composes checked modules and preserves the v
   node('remove').listeners.click();node('restore').listeners.click();assert.match(node('status').textContent,/Nessuna/);
   for(const asset of ['lesson-import.html','lesson-import.css','lesson-import.js','lesson-import-data.js','lesson-import-program.js','lesson-import-sample.json'])assert.ok(read('sw.js').includes('./'+asset));
 });
+
+test('0.89.2 Studio checked PHP specializes known equality without a runtime wrapper',()=>{
+  const source='n: x (Number) -> Boolean = x == 1.0; s: x (Text) -> Boolean = x == "01"; result = [(n: 1), (s: "1")];';
+  const php=bridge.compile(source,'php',null,false,null,true);assert.equal(php.ok,true,php.message);
+  assert.ok(!php.output.includes('__miraEqA'));
+  assert.match(php.output,/\$x == 1\.0/);assert.match(php.output,/\$x === '01'/);
+  const js=bridge.compile(source,'js',null,false,null,true);assert.equal(js.ok,true,js.message);
+  assert.deepEqual(Array.from(runInNewContext(js.output+'\nresult',{})),[true,false]);
+  const generic=bridge.compile('same: x, as: y = x == y; result = same: 1, as: 1.0;','php',null,false,null,true);
+  assert.equal(generic.ok,true,generic.message);assert.match(generic.output,/__miraEqA/);
+  const run=spawnSync('php',['-r',generic.output.replace(/^<\?php/,'')+'echo json_encode($result);'],{encoding:'utf8'});
+  assert.equal(run.status,0,run.stderr);assert.equal(run.stdout,'true');
+});

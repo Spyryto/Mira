@@ -1986,3 +1986,41 @@ test('0.87 Storage CLI providers and private filesystem persist across PHP proce
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('0.89.2 scalar equality is portable for numeric representations, sections and polymorphic bodies',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-equality-'));
+  try{
+    const input=join(dir,'program.mira');
+    const source=[
+      'same: a, as: b = a == b;',
+      'different: a, from: b = a != b;',
+      'numeric: x (Number) -> Boolean = x == 1.0;',
+      'textual: x (Text) -> Boolean = x == "01";',
+      'number section = (_ == 1.0);',
+      'text section = (_ != "01");',
+      'generic section = (_ == _);',
+      'later: x = () >> {| equal = x == x; (x + 1) > 0 AND equal};',
+      'result = [(1 == 1.0), (1 != 1.0), (same: 1, as: 1.0), (different: 1, from: 1.0), (numeric: 1), (textual: "1"), (1 >> number section), ("1" >> text section), (same: "01", as: "1"), (same: true, as: false), (later: 1), (1 == (2 / 2)), (same: 9007199254740991, as: 9007199254740991.0)];'
+    ].join('\n');
+    writeFileSync(input,source);
+    const expected=[true,false,true,false,true,false,true,true,false,false,true,true,true];
+    for(const target of ['js','php']){
+      for(const flags of [[],['--checked'],['--checked','--tree-shake']]){
+        const out=spawnSync('node',['dist/mira.cjs',input,target,...flags],{encoding:'utf8'});assert.equal(out.status,0,out.stderr);
+        const file=join(dir,target==='js'?'program.mjs':'program.php');
+        writeFileSync(file,out.stdout+(target==='js'?'\nconsole.log(JSON.stringify(result));':'\necho json_encode($result);'));
+        const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});assert.equal(run.status,0,run.stderr);assert.deepEqual(JSON.parse(run.stdout),expected);
+        if(target==='php'&&flags.includes('--checked')){
+          assert.match(out.stdout,/return \(\$x == 1\.0\);/);
+          assert.match(out.stdout,/return \(\$x === '01'\);/);
+          assert.match(out.stdout,/__miraEqA/);
+        }
+      }
+    }
+    // Unchecked mixed scalar types are not coerced; checked ones are rejected.
+    writeFileSync(input,'result = [(1 == "1"), (false == 0), ("01" == "1"), (1 != "1")];');
+    const out=spawnSync('node',['dist/mira.cjs',input,'php'],{encoding:'utf8'});assert.equal(out.status,0,out.stderr);
+    const run=spawnSync('php',['-r',out.stdout.replace(/^<\?php/,'')+'echo json_encode($result);'],{encoding:'utf8'});assert.equal(run.status,0,run.stderr);assert.deepEqual(JSON.parse(run.stdout),[false,false,false,true]);
+    assert.notEqual(spawnSync('node',['dist/mira.cjs',input,'--check'],{encoding:'utf8'}).status,0);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

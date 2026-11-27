@@ -29,6 +29,8 @@ class TypeChecker {
     final integers = new haxe.ds.ObjectMap<Dynamic,Bool>();
     final wideObservations = new haxe.ds.ObjectMap<Dynamic,NumericRange>();
     final guards:Null<haxe.ds.ObjectMap<Dynamic,NumericGuard>>;
+    final comparisons:Null<haxe.ds.ObjectMap<Dynamic,ScalarComparison>>;
+    final comparisonInputs:Array<{expr:Expr,type:Type,owner:Null<String>}> = [];
     var nextId = 0;
     var origin:Token;
 
@@ -38,7 +40,8 @@ class TypeChecker {
     final visibility:TypeVisibility;
     var moduleOwner:Null<String> = null;
 
-    public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.ds.ObjectMap<Dynamic,NumericGuard>,?visibility:TypeVisibility) {
+    public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.ds.ObjectMap<Dynamic,NumericGuard>,?visibility:TypeVisibility,?comparisons:haxe.ds.ObjectMap<Dynamic,ScalarComparison>) {
+        this.comparisons = comparisons;
         this.guards = guards;
         this.visibility = visibility == null ? new TypeVisibility() : visibility;
         this.origins = origins;
@@ -74,6 +77,18 @@ class TypeChecker {
                 if (d.isAbstractContract) Reflect.setField(item,"abstractContract",true);
             }
             result.push(item);
+        }
+        // Resolve after inference, not at the operator: a later constraint
+        // in a body or recursive group may determine the representation.
+        if (comparisons != null) {
+            for (item in comparisonInputs) {
+                moduleOwner = item.owner;
+                switch (representation(item.type)) {
+                    case NumberType | IntegerType: comparisons.set(item.expr,ScalarComparison.Numeric);
+                    case TextType | BooleanType: comparisons.set(item.expr,ScalarComparison.Strict);
+                    default: // a polymorphic body is emitted once
+                }
+            }
         }
         return result;
     }
@@ -932,10 +947,20 @@ class TypeChecker {
                 }
                 result;
             case Local(_,_) | Placeholder: fail("unexpected expression");
-            case Binary(symbol,left,right): binary(symbol,infer(left,scope),infer(right,scope));
+            case Binary(symbol,left,right):
+                final a = infer(left,scope);
+                final b = infer(right,scope);
+                final result = binary(symbol,a,b);
+                if (comparisons != null && (symbol == "==" || symbol == "!="))
+                    comparisonInputs.push({expr:expr,type:a,owner:moduleOwner});
+                result;
             case OperatorSection(symbol,left,right):
                 final holes:Array<Type> = [];
-                final result = binary(symbol,operand(left,scope,holes),operand(right,scope,holes));
+                final a = operand(left,scope,holes);
+                final b = operand(right,scope,holes);
+                final result = binary(symbol,a,b);
+                if (comparisons != null && (symbol == "==" || symbol == "!="))
+                    comparisonInputs.push({expr:expr,type:a,owner:moduleOwner});
                 FunctionType(holes,result);
             case Call(selector,args): selectorCall(selector,[for (arg in args) infer(arg,scope)]);
             case Section(selector,args):
