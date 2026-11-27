@@ -1,8 +1,28 @@
-import {seedSource,matchPrefix,matchSeed,fromAst,getNode,source,history,operators,completions,semanticContext} from './projection-core.js';
+import {seedSource,matchPrefix,matchSeed,fromAst,getNode,source,history,operators,completions,semanticContext,revealDelta} from './projection-core.js';
 import * as mira from './projection-program.js';
 const q=id=>document.getElementById('projection-'+id);
 const compiler=globalThis.MiraStudioCompiler,code=q('code'),message=q('message');
-let session,editing=null,exported='';
+let session,editing=null,exported='',revealFrame=0;
+// iOS shrinks/pans the visual viewport, not necessarily the layout viewport.
+// Resize plus bounded post-focus checks cover the keyboard animation. Do not
+// react to ordinary page scrolling, which the user must remain free to do.
+function queueReveal(){
+  if(!editing||revealFrame)return;
+  revealFrame=requestAnimationFrame(()=>{
+    revealFrame=0;
+    if(!editing||document.activeElement!==editing.input)return;
+    const vv=window.visualViewport;
+    const viewport={offsetTop:vv?.offsetTop??0,height:vv?.height??window.innerHeight};
+    const delta=revealDelta(editing.anchor.getBoundingClientRect(),editing.input.getBoundingClientRect(),viewport);
+    if(delta)window.scrollBy({top:delta,behavior:'instant'});
+  });
+}
+function revealAfterFocus(current){
+  queueReveal();
+  for(const delay of [80,220,450,700])setTimeout(()=>{if(editing===current)queueReveal();},delay);
+}
+window.visualViewport?.addEventListener('resize',queueReveal);
+window.addEventListener('resize',queueReveal);
 function span(cls,text){const e=document.createElement('span');e.className=cls;e.textContent=text;return e;}
 function button(text,action){const b=document.createElement('button');b.type='button';b.textContent=text;b.addEventListener('click',action);return b;}
 function token(n) {
@@ -44,10 +64,10 @@ function changed(focus=true){editing=null;draw();selection(focus);check();}
 function cancel(focus=true){if(!editing)return;const old=editing;editing=null;old.anchor.replaceWith(old.original);selection(focus);message.textContent='Modifica annullata.';}
 function apply(action,open=false){
   try{session.apply(action);message.textContent='';changed(!open);if(open)beginEdit('');return true;}
-  catch(e){message.textContent=e.message;if(editing)editing.error.textContent=e.message;return false;}
+  catch(e){message.textContent=e.message;if(editing){editing.error.textContent=e.message;queueReveal();}return false;}
 }
 function beginEdit(initial){
-  if(editing){editing.input.focus();return;}
+  if(editing){editing.input.focus({preventScroll:true});revealAfterFocus(editing);return;}
   const s=session.state,n=getNode(s);
   const original=code.querySelector('[data-expression="'+n.id+'"]');
   if(!original)return;
@@ -62,13 +82,18 @@ function beginEdit(initial){
   editing={anchor,original,input,error};
   let candidates=[],active=0;
   const context=semanticContext(s,compiler);
+  const all=completions(s,compiler);
   function refresh(){
-    candidates=completions(s,compiler,input.value);active=0;paint();
-    error.textContent=context.verified?'':'Contesto precedente incompleto: suggerimenti parziali.';
+    const query=input.value.trim().toLowerCase();
+    candidates=all.filter(c=>c.label.toLowerCase().includes(query));active=0;paint();
+    error.textContent=context.verified?'':'Contesto precedente incompleto: suggerimenti parziali.';queueReveal();
   }
   function paint(){
     choices.replaceChildren(...candidates.map((c,i)=>{const b=button(c.label+' · '+c.detail,()=>apply(c.action,c.action.kind==='match'));b.className='inline-option';b.setAttribute('aria-pressed',String(i===active));return b;}));
     choices.hidden=!candidates.length;
+    const selected=choices.children[active];
+    if(selected){const a=choices.getBoundingClientRect(),b=selected.getBoundingClientRect();if(b.right>a.right)choices.scrollLeft+=b.right-a.right;else if(b.left<a.left)choices.scrollLeft-=a.left-b.left;}
+    queueReveal();
   }
   function commit(){
     const value=input.value.trim(),exact=candidates.find(c=>c.label===value);
@@ -83,7 +108,7 @@ function beginEdit(initial){
     else if(e.key==='Enter'){e.preventDefault();commit();}
     else if((e.key==='ArrowDown'||e.key==='ArrowUp')&&candidates.length){e.preventDefault();active=(active+(e.key==='ArrowDown'?1:-1)+candidates.length)%candidates.length;paint();}
   });
-  refresh();input.focus({preventScroll:true});if(initial===undefined)input.select();
+  refresh();input.focus({preventScroll:true});if(initial===undefined)input.select();revealAfterFocus(editing);
 }
 function load(){
   const match=q('sample').value==='match',parsed=compiler.ast(match?matchSeed:seedSource);

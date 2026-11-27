@@ -126,3 +126,16 @@ export function history(initial,mira,compiler){
     redo(){if(future.length){past.push(state);state=future.pop();}}
   };
 }
+
+// Rectangles are in layout-viewport coordinates, as is VisualViewport.offsetTop.
+// Keep the whole compact editor visible when possible; prioritize the input
+// when an exceptionally small viewport cannot contain the editor.
+export function revealDelta(editor,input,viewport,margin=12){
+  const top=viewport.offsetTop+margin,bottom=viewport.offsetTop+viewport.height-margin;
+  if(bottom<=top)return 0;
+  const rect=editor.bottom-editor.top<=bottom-top?editor:input;
+  if(rect.bottom-rect.top>bottom-top)return rect.top-top;
+  if(rect.bottom>bottom)return Math.ceil(rect.bottom-bottom);
+  if(rect.top<top)return Math.floor(rect.top-top);
+  return 0;
+}

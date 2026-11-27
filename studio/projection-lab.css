@@ -18,3 +18,17 @@
 .projection-code .inline-editor{display:inline-flex;flex-wrap:wrap;align-items:center;vertical-align:middle;gap:.2rem;max-width:100%;padding:.15rem;border:1px solid #93c5fd;border-radius:.5rem;background:#273950;line-height:1.5;box-sizing:border-box}
 .projection-code .inline-editor input{background:#101b2c;color:#f1f5f9;border:1px solid #60a5fa;border-radius:.35rem;width:9ch;min-width:5ch;flex:1 1 9ch;max-width:100%;box-sizing:border-box;padding:.35rem;font:inherit;font-size:16px}
 .projection-code .inline-editor button{color:#e2e8f0;min-width:2rem}.projection-code .inline-choices{flex:1 0 100%;display:grid;gap:.2rem}.projection-code .inline-choices[hidden]{display:none}.projection-code .inline-option{text-align:left;font-size:.8rem;line-height:1.35;background:#334869;overflow-wrap:anywhere;white-space:normal}.projection-code .inline-option[aria-pressed="true"]{border-color:#93c5fd}.projection-code .inline-error{flex-basis:100%;color:#fde68a;font-size:.8rem}.projection-code .inline-error:empty{display:none}
+
+/* A single compact, horizontally scrollable completion strip, not a tall list. */
+.projection-code .inline-editor{width:min(100%,24rem);min-width:0;gap:.15rem}
+.projection-code .inline-editor input{min-width:0;flex:1 1 5ch}
+.projection-code .inline-choices{display:flex;flex:1 0 100%;min-width:0;max-width:100%;overflow-x:auto;overflow-y:hidden;gap:.25rem;overscroll-behavior-x:contain;scrollbar-width:thin}
+.projection-code .inline-option{flex:0 0 auto;max-width:100%;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;padding-inline:.55rem}
+.projection-code .inline-choices[hidden]{display:none}
+@media(max-width:480px){
+  .projection-shell{padding:.5rem;gap:.7rem}
+  .projection-panel{padding:.65rem}
+  .projection-code{padding:.65rem;line-height:2.15;font-size:.9rem}
+  .projection-code .match-case{padding-inline-start:.55rem}
+  .projection-code .inline-editor input{font-size:16px}
+}

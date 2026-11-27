@@ -226,6 +226,22 @@ test('full-stack ledger: actual Chromium, compiled Mira JS/PHP and SQLite', {tim
     assert.equal(await clickId('restore'),true);await waitStatus('Recuperata');
     const lessonScreenshot=await cdp.call('Page.captureScreenshot',{format:'png'});
     writeFileSync(join(report,'lesson-import.png'),Buffer.from(lessonScreenshot.data,'base64'));
+
+    // Actual Chromium layout at a narrow viewport. Reducing its height
+    // simulates the lost visual space, not an actual iOS software keyboard.
+    await cdp.call('Emulation.setDeviceMetricsOverride',{width:390,height:780,deviceScaleFactor:1,mobile:true});
+    await cdp.call('Page.navigate',{url:studioOrigin+'/projection-lab.html'});
+    await until(()=>js('!!document.querySelector("#projection-code [data-node]")'),'Projection Lab');
+    await js('(()=>{const s=document.getElementById("projection-sample");s.value="match";s.dispatchEvent(new Event("change",{bubbles:true}));document.querySelector("#projection-code [aria-pressed=true]").click();const i=document.querySelector(".inline-editor input");i.value="mat";i.dispatchEvent(new Event("input",{bubbles:true}));[...document.querySelectorAll(".inline-option")].find(b=>b.textContent.startsWith("match: payment")).click();})()');
+    await until(()=>js('document.activeElement===document.querySelector(".inline-editor input")'),'First match hole focused');
+    await cdp.call('Emulation.setDeviceMetricsOverride',{width:390,height:300,deviceScaleFactor:1,mobile:true});
+    await until(()=>js('(()=>{const a=document.querySelector(".inline-editor").getBoundingClientRect(),v=visualViewport;return a.top>=v.offsetTop-1&&a.bottom<=v.offsetTop+v.height+1&&document.activeElement===document.querySelector(".inline-editor input")})()'),'Inline editor and suggestions above reduced viewport');
+    assert.equal(await js('document.querySelectorAll(".inline-editor").length'),1);
+    assert.equal(await js('document.querySelector(".inline-choices").scrollHeight<=document.querySelector(".inline-choices").clientHeight+1'),true);
+    assert.equal(await js('document.querySelector(".inline-editor").closest(".match-case")!==null'),true);
+    const projectionScreenshot=await cdp.call('Page.captureScreenshot',{format:'png'});
+    writeFileSync(join(report,'projection-mobile-viewport.png'),Buffer.from(projectionScreenshot.data,'base64'));
+    await cdp.call('Emulation.clearDeviceMetricsOverride');
   } finally {
     if(cdp){try{await cdp.call('Browser.close');}catch{} cdp.close();}
     await stop(chrome);await stop(php);
