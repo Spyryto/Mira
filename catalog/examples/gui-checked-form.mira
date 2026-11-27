@@ -1,0 +1,8 @@
+# Attiva GUI checked in Mira Studio.
+profile: model = column: [
+  title: "Profilo",
+  text input: "Nome", value: (model ~ name), update: {old, entered | {name: entered, active: (old ~ active)}},
+  checkbox: "Attivo", checked: (model ~ active), update: {old, checked | {name: (old ~ name), active: checked}},
+  text: (model ~ name)
+];
+render (state: {name: "Mira", active: true}, view: (profile: _));
