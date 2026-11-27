@@ -1,3 +1,4 @@
+import {highlightCode} from './syntax-highlight.js';
 // Searchable, offline documentation viewer. All content comes from the
 // generated reference.json catalog; nothing here parses Mira source.
 export function mountReference(root, dataset, onOpenExample) {
@@ -44,7 +45,7 @@ export function mountReference(root, dataset, onOpenExample) {
     card.append(
       link(example.title, 'example/' + example.id, 'reference-item-link'),
       element('p', '', example.description),
-      element('div', 'reference-expected', expected(example))
+      meta(example), element('div', 'reference-expected', expected(example))
     );
 
     const actions = element('div', 'reference-actions');
@@ -56,12 +57,20 @@ export function mountReference(root, dataset, onOpenExample) {
     return card;
   }
 
+  function meta(example) {
+    const box=element('div','reference-meta');
+    const info=example.index || {};
+    for(const value of [info.category, info.since && 'Feature da '+info.since, example.expect.kind, ...(info.selectors || []).slice(0,8)].filter(Boolean))
+      box.append(element('span','',value));
+    return box;
+  }
+
   function overview() {
     root.append(heading('Guida a Mira', dataset.features.length +
       ' feature · ' + dataset.examples.length + ' esempi verificati su JS e PHP'));
     const controls = element('div', 'reference-controls');
     controls.append(link('Linguaggio', 'guide', 'reference-active'),
-      link('API Haxe', 'api'));
+      link('Esempi', 'guide/examples'), link('API Haxe', 'api'), link('Funzionalità', 'guide/capabilities'));
     root.append(controls);
 
     const search = element('input', 'reference-search');
@@ -70,50 +79,65 @@ export function mountReference(root, dataset, onOpenExample) {
     search.setAttribute('aria-label', 'Cerca nella documentazione');
     const results = element('div', 'reference-list');
 
+    const mode = location.hash.endsWith('/examples') ? 'examples' : location.hash.endsWith('/capabilities') ? 'capabilities' : 'all';
+    const filters=element('div','reference-filters');
+    const addFilter=(label,values)=>{
+      const wrapper=element('label','',label);const select=element('select');
+      const all=element('option','','Tutti');all.value='';select.append(all);
+      for(const value of values){const option=element('option','',value);option.value=value;select.append(option);}
+      wrapper.append(select);filters.append(wrapper);return select;
+    };
+    const unique=items=>[...new Set(items.filter(Boolean))].sort((a,b)=>a.localeCompare(b,'it',{numeric:true}));
+    const category=addFilter('Categoria',unique(dataset.examples.map(x=>x.index?.category)));
+    const version=addFilter('Feature introdotta in',unique(dataset.examples.map(x=>x.index?.since)));
+    const featureFilter=addFilter('Feature',unique(dataset.features.map(x=>x.title)));
+    const selector=addFilter('Selettore esplicito nel codice',unique(dataset.examples.flatMap(x=>x.index?.selectors||[])));
+    const count=element('p','reference-count');count.setAttribute('role','status');
+    const more=element('button','reference-try','Mostra altri');more.type='button';
+    let limit=40;
+    const normalize=value=>String(value??'').normalize('NFD').replace(/\\p{M}/gu,'').toLocaleLowerCase('it');
     const update = () => {
       results.replaceChildren();
-      const query = search.value.trim().toLocaleLowerCase('it');
-      const filteredFeatures = dataset.features.filter(item =>
-        [item.title, item.summary, item.details].join(' ')
-          .toLocaleLowerCase('it').includes(query));
-      const filteredExamples = query ? dataset.examples.filter(item =>
-        [item.title, item.description, item.source].join(' ')
-          .toLocaleLowerCase('it').includes(query)) : [];
-      const filteredApi = query ? dataset.api.filter(item =>
-        [item.id, item.description, item.signature].join(' ')
-          .toLocaleLowerCase('it').includes(query)) : [];
-
-      if (!filteredFeatures.length && !filteredExamples.length && !filteredApi.length) {
-        results.append(element('p', '', 'Nessun risultato.'));
+      const terms=normalize(search.value).trim().split(/\\s+/).filter(Boolean);
+      const matches=values=>{const hay=normalize(values.join(' '));return terms.every(t=>hay.includes(t));};
+      const narrowed=!!(category.value||version.value||featureFilter.value||selector.value);
+      const entries=[];
+      if(mode==='all'&&!narrowed) for(const feature of dataset.features) {
+        if(matches([feature.title,feature.id,feature.since,feature.summary,feature.details])) entries.push(()=> {
+          const card=element('section','reference-list-item');
+          card.append(link(feature.title,'feature/'+feature.id,'reference-item-link'),element('p','',feature.summary),element('small','',feature.examples.length+' esempi · da '+feature.since));return card;
+        });
       }
-
-      for (const feature of filteredFeatures) {
-        const card = element('section', 'reference-list-item');
-        card.append(
-          link(feature.title, 'feature/' + feature.id, 'reference-item-link'),
-          element('p', '', feature.summary),
-          element('small', '', feature.examples.length + ' esempi')
-        );
-        results.append(card);
+      if(mode!=='capabilities'&&(mode==='examples'||terms.length||narrowed)) for(const example of dataset.examples) {
+        const f=features.get(example.feature);const info=example.index||{};
+        if(category.value&&info.category!==category.value||version.value&&info.since!==version.value||featureFilter.value&&f?.title!==featureFilter.value||selector.value&&!info.selectors?.includes(selector.value))continue;
+        if(matches([example.id,example.title,example.description,example.source,f?.title,f?.id,info.category,info.since,...(info.selectors||[])])) entries.push(()=>exampleCard(example));
       }
-      for (const example of filteredExamples) {
-        const card = element('section', 'reference-list-item');
-        card.append(link('Esempio: ' + example.title,
-          'example/' + example.id, 'reference-item-link'),
-          element('p', '', example.description));
-        results.append(card);
+      if(mode==='all'&&terms.length&&!narrowed) for(const item of dataset.api) {
+        if(matches([item.id,item.description,item.signature])) entries.push(()=>{
+          const card=element('section','reference-list-item');card.append(link('API: '+item.id,'api/'+encodeURIComponent(item.id),'reference-item-link'),element('p','',item.description));return card;
+        });
       }
-      for (const item of filteredApi) {
-        const card = element('section', 'reference-list-item');
-        card.append(link('API: ' + item.id,
-          'api/' + encodeURIComponent(item.id), 'reference-item-link'),
-          element('p', '', item.description));
-        results.append(card);
+      if(!narrowed&&(mode==='capabilities'||(mode==='all'&&terms.length))) for(const item of dataset.capabilities||[]) {
+        if(matches([item.id,item.title,item.since,item.doc])) entries.push(()=>{
+          const card=element('section','reference-list-item');
+          const anchor=element('a','reference-item-link',item.title);
+          anchor.href='https://github.com/Spyryto/Mira/blob/main/'+item.doc;anchor.target='_blank';anchor.rel='noopener noreferrer';
+          card.append(anchor,element('small','','Disponibile da '+item.since+' · documentazione sorgente'));return card;
+        });
       }
+      count.textContent=entries.length+' risultati · '+Math.min(limit,entries.length)+' mostrati';
+      for(const create of entries.slice(0,limit))results.append(create());
+      if(!entries.length)results.append(element('p','','Nessun risultato. Prova a rimuovere un filtro.'));
+      more.hidden=entries.length<=limit;
     };
-
-    search.addEventListener('input', update);
-    root.append(search, results);
+    const reset=()=>{limit=40;update();};
+    search.addEventListener('input',reset);
+    for(const control of [category,version,featureFilter,selector])control.addEventListener('change',reset);
+    more.addEventListener('click',()=>{limit+=40;update();});
+    root.append(search);
+    if(mode!=='capabilities')root.append(filters);
+    root.append(count,results,more);
     update();
   }
 
@@ -146,12 +170,11 @@ export function mountReference(root, dataset, onOpenExample) {
     code.setAttribute('tabindex', '0');
     const result = element('p', 'reference-expected', expected(example.expect ?
       example : { expect: { kind: 'error', contains: 'Nessun risultato' } }));
-    root.append(code, result);
+    highlightCode(code, example.source);
+    root.append(meta(example), code, result);
 
     if (example.expect.kind === 'invoke') {
       root.append(element('p', 'reference-note',
-        'Nota: Mira 0.2 può creare funzioni con più segnaposto, ma non le ' +
-        'può ancora richiamare direttamente con una sintassi generale. ' +
         'La CI invoca la funzione generata in JS e PHP e controlla il risultato.'));
     }
     if (example.expect.kind === 'error') {
@@ -209,6 +232,7 @@ export function mountReference(root, dataset, onOpenExample) {
       heading(item.id, item.description));
     root.append(element('div', 'reference-expected', 'Haxe · ' + item.kind),
       element('pre', 'reference-code', item.signature));
+    highlightCode(root.lastElementChild, item.signature, 'haxe');
     const source = element('a', 'reference-source', 'Apri il sorgente Haxe');
     source.href = item.sourceUrl;
     source.target = '_blank';

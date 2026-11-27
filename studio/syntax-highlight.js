@@ -3,7 +3,7 @@
 const wordStart = c => /[A-Za-z_]/.test(c ?? '') && !!c;
 const wordPart = c => /[A-Za-z0-9_]/.test(c ?? '') && !!c;
 const digit = c => /[0-9]/.test(c ?? '') && !!c;
-const twoCharOperators = new Set(['>>', '==', '!=', '<=', '>=', '&&', '||']);
+const twoCharOperators = new Set(['>>', '==', '!=', '<=', '>=', '&&', '||', '::', '->', '=>', '**']);
 const singleOperators = new Set(['=', '+', '-', '*', '/', '%', '~', '<', '>', '!','|']);
 
 export function tokenizeMira(source) {
@@ -43,7 +43,7 @@ export function tokenizeMira(source) {
       } else {
         add(text === 'true' || text === 'false' ? 'boolean'
           : text === '_' ? 'placeholder'
-          : ['field','if','then','else','import'].includes(text) ? 'keyword' : 'plain', text);
+          : ['field','if','then','else','import','use','where','AND','OR','NOT','module','export','extern','type','view','component','match','case'].includes(text) ? 'keyword' : 'plain', text);
       }
     } else if (twoCharOperators.has(source.slice(i, i+2))) {
       i += 2;
@@ -102,4 +102,28 @@ export function mountMiraHighlight(textarea, mirror, doc = document) {
       doc.body.classList.remove('mira-highlight-ready');
     }
   };
+}
+
+/* Render as text nodes, never HTML. The scanner is visual, not semantic. */
+export function highlightCode(node, source, language='mira') {
+  const doc=node.ownerDocument;
+  const fragment=doc.createDocumentFragment();
+  const tokens=language==='mira'?tokenizeMira(source):tokenizeCode(source,language);
+  for(const token of tokens) {
+    if(token.kind==='plain') fragment.append(doc.createTextNode(token.text));
+    else {const span=doc.createElement('span');span.className='mira-syntax-'+token.kind;span.textContent=token.text;fragment.append(span);}
+  }
+  node.replaceChildren(fragment);
+}
+export function tokenizeCode(source, language) {
+  if(source.length>50000)return [{kind:'plain',text:source}];
+  const pattern=/\/\*[\s\S]*?\*\/|\/\/[^\n]*|#[^\n]*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|\x60(?:\\.|[^\x60\\])*\x60|\b\d+(?:\.\d+)?\b|\b(?:const|let|var|function|return|class|public|private|static|new|if|else|while|for|import|export|package|enum|typedef|abstract|interface|true|false|null|echo|namespace|use|switch|case|throw|try|catch|final|extends|implements|async|await)\b|[=+*/<>!~%&|:-]+|[{}()[\],;]/g;
+  const parts=[];let last=0;
+  for(const match of source.matchAll(pattern)){
+    const t=match[0];if(match.index>last)parts.push({kind:'plain',text:source.slice(last,match.index)});
+    const kind=/^(\/\/|\/\*|#)/.test(t)?'comment':/^["'\x60]/.test(t)?'string':/^\d/.test(t)?'number':/^[a-z]/i.test(t)?'keyword':/^[{}()[\],;]$/.test(t)?'punctuation':'operator';
+    parts.push({kind,text:t});last=match.index+t.length;
+  }
+  if(last<source.length)parts.push({kind:'plain',text:source.slice(last)});
+  return parts;
 }

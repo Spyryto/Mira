@@ -35,6 +35,19 @@ jobs:
         run: |
           npm run build
           node --test test/catalog.test.mjs test/dogfood.test.mjs
+      - name: Install browser test runner
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Responsive Studio screenshots and UX checks
+        run: node scripts/studio-visual.mjs
+      - name: Upload responsive Studio screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mira-studio-screenshots
+          path: dist/studio-screenshots/
+          if-no-files-found: warn
       - name: Upload generated reference and provenance
         uses: actions/upload-artifact@v4
         with:

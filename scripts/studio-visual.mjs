@@ -1,0 +1,43 @@
+// Real browser smoke checks and reviewable screenshots, not approved pixel baselines.
+import {chromium} from 'playwright';
+import {createServer} from 'node:http';
+import {readFile,mkdir} from 'node:fs/promises';
+import {resolve,extname,sep} from 'node:path';
+import assert from 'node:assert/strict';
+const base=resolve('dist/studio'), out=resolve('dist/studio-screenshots');
+await mkdir(out,{recursive:true});
+const mime={'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json','.svg':'image/svg+xml','.png':'image/png','.webmanifest':'application/manifest+json'};
+const server=createServer(async(req,res)=>{
+  try {
+    const path=resolve(base,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname.replace(/\/$/,'/index.html')));
+    if(!path.startsWith(base+sep))throw Error('outside root');
+    const data=await readFile(path);res.writeHead(200,{'Content-Type':mime[extname(path)]||'text/plain'});res.end(data);
+  }catch{res.writeHead(404);res.end('Not found');}
+});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));
+const url='http://127.0.0.1:'+server.address().port+'/';
+const browser=await chromium.launch();
+const failures=[];
+try{
+ for(const [name,width,height] of [['small-phone',320,720],['phone',390,844],['tablet',768,1024],['desktop',1440,900],['tv',1920,1080]]){
+  const page=await browser.newPage({viewport:{width,height},deviceScaleFactor:1,serviceWorkers:'block'});
+  try{
+   await page.goto(url);
+   await page.locator('#source').waitFor();
+   await page.screenshot({path:resolve(out,name+'-editor.png'),fullPage:true});
+   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);
+   assert.equal(overflow,false,name+' home horizontal overflow');
+   await page.locator('#tab-reference').click();
+   await page.locator('.reference-search').waitFor();
+   await page.locator('.reference-controls a',{hasText:'Esempi'}).click();
+   await page.locator('.reference-count').waitFor();
+   await page.locator('.reference-search').fill('gui');
+   await page.screenshot({path:resolve(out,name+'-examples.png'),fullPage:false});
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,name+' guide horizontal overflow');
+   await page.goto(url+'theme-native-lab.html');
+   await page.locator('#theme-preview').waitFor();
+   await page.screenshot({path:resolve(out,name+'-widgets.png'),fullPage:true});
+  }catch(error){failures.push(name+': '+error.message);}finally{await page.close();}
+ }
+}finally{await browser.close();await new Promise(r=>server.close(r));}
+assert.deepEqual(failures,[]);

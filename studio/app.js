@@ -4,7 +4,7 @@ import { createAstInspector } from './ast-inspector.js';
 import { mountAtlas } from './atlas-ui.js';
 import { mountBenchmark } from './benchmark-ui.js';
 import { mountWorkbenchFullscreen } from './workbench-fullscreen.js';
-import { mountMiraHighlight } from './syntax-highlight.js';
+import { mountMiraHighlight, highlightCode } from './syntax-highlight.js';
 
 // Mira Studio's controller concerns browser UX only.
 // All language semantics are delegated to the Haxe compiler bridge.
@@ -165,7 +165,7 @@ function compile(revealOutput = false, withLocations = false) {
 
   state.valid = true;
   state.output = result.output;
-  ui.output.textContent = state.output;
+  highlightCode(ui.output, state.output, state.target);
   setStatus('ready', checked ? 'Compilazione verificata' : 'Compilazione riuscita', `${elapsed.toFixed(2)} ms`);
   if (state.view === 'structure') updateStructure();
   if (revealOutput) setView('output');

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Anteprima Mira</title>
   <style>
-    :root { font-family: system-ui, sans-serif; color: #1e2529; background: #fffdf7; }
+    :root { font-family: system-ui, sans-serif; color: #39334e; background: #fff8f4; }
     body { margin: 0; padding: 15px; }
     #mira-root, #mira-root * { box-sizing: border-box; }
     .mira-ui-column, .mira-ui-grid { display: grid; gap: 12px; }
@@ -37,12 +37,15 @@
     #renderer-inspector { margin-bottom: 12px; border: 1px solid #b9b8ad; border-radius: 8px; padding: 8px; }
     #renderer-inspector summary { cursor: pointer; font-size: 13px; font-weight: 700; }
     #errors { color: #8f382d; font-size: 12px; white-space: pre-wrap; }
+    body.mira-theme {margin:0;max-width:none;padding:15px;color:#39334e;background:#fff8f4}
   </style>
+<link rel="stylesheet" href="./mira-native-theme.css">
 </head>
-<body>
+<body class="mira-theme">
   <details id="renderer-inspector"><summary id="renderer-status">Renderer</summary><pre id="renderer-plan"></pre></details>
   <div id="mira-root" aria-label="View prodotta da Mira"></div>
   <div id="errors" role="alert" aria-live="assertive"></div>
+  <script src="./cozy-palette.js"></script>
   <script src="./compiler.js"></script>
   <script src="./ui-host.js"></script>
   <script src="./gui-specialize.js"></script>
