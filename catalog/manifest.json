@@ -1,5 +1,5 @@
 {
-  "version": "0.89.3",
+  "version": "0.89.4",
   "features": [
     {
       "id": "values",
@@ -2130,6 +2130,12 @@
       "title": "Resto frazionario portabile e matrice aritmetica differenziale",
       "since": "0.89.3",
       "doc": "docs/type-checker.md#mira-0893-resto-numerico-e-matrice-differenziale"
+    },
+    {
+      "id": "shared-outcome-types",
+      "title": "Option e Result nominali condivisi e import di tipi nei contratti",
+      "since": "0.89.4",
+      "doc": "docs/grammar.md#mira-0894-import-selettivi-di-tipi-nei-contratti-indipendenti"
     }
   ]
 }

@@ -362,3 +362,7 @@ Superficie pubblica, testo sorgente effettivamente letto e collegamento dei prov
 ### 0.81 — adattatori host tipizzati
 
 Uno scope esplicito nel manifest restringe la risoluzione delle capability al modulo concreto del provider, prima del checker. Il contratto pubblico rimane un normale modulo Mira indipendente. Il provider alternativo può essere scritto in Mira e selezionato staticamente. La registrazione runtime __miraHost resta a carico dell'host; non aggiungiamo dispatch o wrapper automatici, né dichiariamo sicurezza contro codice host arbitrario. Vedi grammar.md.
+
+## 0.89.4 — dipendenze di tipo nei contratti indipendenti
+
+Primo sottoinsieme concreto di MOD-02: import logico selettivo di tipi, risolto prima di elaborare le firme astratte e riusato quando il provider eredita l'interfaccia. Token e coordinate originali, stesso controllo cicli e alias; niente wildcard, import file, re-export o valori. I tipi importati non diventano esportazioni locali. Test confronto fingerprint con e senza binding, identità comune in due servizi indipendenti, casi negativi e codice JS/PHP. Composizione generale dei contratti, re-export e import di valori rimangono aperti. Nessuna cache o link runtime nuovo.

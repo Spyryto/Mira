@@ -882,3 +882,7 @@ Il modulo concreto Providers / Native può usare native magnitude; il consumator
 ## Mira 0.89.3: resto numerico
 
 % è il resto con quoziente troncato verso zero, anche per Number frazionari; 5.5 % 2 vale 1.5, non 1. Il target PHP usa fmod anziché il proprio operatore intero %, anche nelle sezioni. Nessuna nuova sintassi o precedenza. Con divisore zero il resto produce NaN; divisione / e overflow fuori dominio non sono normalizzati in questa versione. Vedi la matrice in docs/type-checker.md.
+
+## Mira 0.89.4: import selettivi di tipi nei contratti indipendenti
+
+Un contratto interface-only può importare tipi pubblici esplicitamente nominati, dopo le dichiarazioni delle firme. Esempio: import Data / Outcome { Result; };. Riusa ModuleImport e il resolver ordinario; le firme usano l'identità nominale originale. Il provider eredita i tipi nello scope dell'interfaccia; importa esplicitamente i costruttori nella propria implementazione. Non si esportano automaticamente i tipi importati. Wildcard, import a file, valori/selettori e re-export restano esclusi da questa forma. Nessuna nuova sintassi, AST o ABI. Il grafo registra la dipendenza d'interfaccia; test di stabilità delle impronte con/senza provider.
