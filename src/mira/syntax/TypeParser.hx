@@ -123,8 +123,10 @@ class TypeParser {
         while (true) {
             if (cardinality) {
                 require("(");
-                if (current() == null || current().kind != Word || current().value != "length of")
+                if (current() == null || current().kind != Word || current().value != "length")
                     return fail("Expected length of: _ in cardinality refinement");
+                position++;
+                if (current() == null || current().kind != Word || current().value != "of") return fail("Expected length of: _ in cardinality refinement");
                 position++;
                 require(":");
             }
