@@ -152,6 +152,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | GUI checked | `0.92` | [Dettagli](docs/reference/language.md#feature-gui-checked) |
 | ✅ | Dati dichiarativi a compile time | `0.96` | [Dettagli](docs/declarative-contracts.md) |
 | ✅ | Varianti scalari nominali | `0.97` | [Dettagli](docs/type-representation.md#scalar-variants-097) |
+| ✅ | Varianti scalari nei contratti modulari | `0.97.1` | [Dettagli](docs/type-representation.md#modular-scalar-variants-0971) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
