@@ -4,11 +4,11 @@
 
 Mira is an evolving, standalone **discursive programming language** with a compiler written in Haxe, JavaScript/PHP targets, an opt-in static type checker, modules and contracts, and a browser GUI library. Its goal is a rich language with a small runtime. It is pre-1.0 and not a replacement for NailLang; implemented capabilities and remaining limitations are distinguished below.
 
-[Mira Studio](https://spyryto.github.io/Mira/) · [Module Explorer](https://spyryto.github.io/Mira/module-explorer.html) · [Type checker](docs/type-checker.md) · [Roadmap](docs/design-notes.md#direzione-dopo-la-077).
+[Mira Studio](https://spyryto.github.io/Mira/) · [Module Explorer](https://spyryto.github.io/Mira/module-explorer.html) · [Type checker](docs/type-checker.md) · [Roadmap](docs/design-notes.md#direzione-dopo-la-0893).
 
 ## Quaderno di progettazione
 
-[Decisioni, motivazioni e proposte in evoluzione](docs/design-notes.md) · [Leggi in Mira Studio](https://spyryto.github.io/Mira/design-notes.html).
+[Decisioni, motivazioni e proposte in evoluzione](docs/design-notes.md) · [Consolidamento 0.83–0.89.3](docs/consolidation-089.md) · [Registro delle questioni aperte](docs/open-questions.md) · [Leggi in Mira Studio](https://spyryto.github.io/Mira/design-notes.html).
 
 ## Funzionalità e versioni
 

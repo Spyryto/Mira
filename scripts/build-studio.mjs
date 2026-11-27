@@ -89,9 +89,9 @@ const dateData={source:dateFile('App.mira'),modules:JSON.stringify({'Services / 
 writeFileSync(resolve(destination,'date-module-data.js'),'globalThis.MiraDateModuleData = '+JSON.stringify(dateData)+';\n');
 copyFileSync(resolve(root,'lib/date/date-host.js'),resolve(destination,'date-host.js'));
 
-// Publish the design notebook from its single Markdown source. It uses a
+// Publish the design notebook from the canonical Markdown documents. It uses a
 // deliberately small, escaped subset: headings, paragraphs and fenced code.
-const notebook = ['docs/design-notes.md', 'docs/module-design.md']
+const notebook = ['docs/design-notes.md', 'docs/module-design.md', 'docs/consolidation-089.md', 'docs/open-questions.md']
   .map(path => readFileSync(resolve(root, path), 'utf8')).join('\n\n');
 const escape = text => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 const sections = [];

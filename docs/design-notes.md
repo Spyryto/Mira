@@ -747,3 +747,11 @@ Correggere il limite già documentato in 0.42. Non usare == PHP indiscriminatame
 ## 0.89.3 — audit aritmetico e resto portabile
 
 Scegliere la semantica Number di % già espressa da JS e riusare PHP fmod. Correzione in binarySource condiviso, nessuna nuova AST, guardia, libreria o modifica al solver. Il costo della funzione nativa PHP non è zero-cost dimostrato; non specializzare il resto intero senza una prova e una misura concrete. Conservare le precedenti regole statiche sui raffinamenti. La matrice differenziale copre casi finiti portabili, non dimostra l'equivalenza numerica generale. Divisione per zero, overflow e politica dei non finiti restano una decisione separata: non imporre fdiv o cast generalizzati per nascondere divergenze. Prima della 0.90 rimane la coerenza delle API/Result/Option (0.89.4 proposta).
+
+## Direzione dopo la 0.89.3
+
+La revisione complessiva è in [Consolidamento Mira 0.83–0.89.3](consolidation-089.md), incluso nel quaderno Studio. La 0.89.1–0.89.3 sono integrate con CI verde. Prossima proposta: 0.89.4, coerenza Option/Result senza nuove keyword; decisione separata per divisione per zero, non finiti e overflow. Poi 0.90 tooling multifile, 0.91 codec, 0.92 GUI checked, 0.93 effetti tipizzati, 0.94 workspace. Numerazione indicativa e priorità rivedibili: la 1.0 deve essere uno strumento di lavoro, non una conta di feature.
+
+## Registro storico delle questioni aperte
+
+[Registro delle questioni aperte 0.1–0.89.3](open-questions.md): indice permanente con ID, stato, riferimenti e distinzione tra questioni irrisolte, limiti parziali, rinvii, verifiche e risoluzioni. Incluso nel quaderno Studio; aggiornare le voci ad ogni incremento pertinente.
