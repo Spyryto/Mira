@@ -17,11 +17,27 @@
   try {
     mount(global.MiraStudioCompiler, root, report);
     doc.getElementById('theme-source').textContent=source;
-    for(const control of doc.querySelectorAll('[data-theme-axis]')) {
-      const axis=control.dataset.themeAxis;
-      const apply=()=>{root.dataset[axis]=control.value;};
-      control.addEventListener('change',apply); apply();
+    const theme=global.MiraCozyTheme, scope=doc.getElementById('native-theme');
+    const palette=doc.getElementById('native-palette'), font=doc.getElementById('native-font'),
+      size=doc.getElementById('native-size'), spacing=doc.getElementById('native-spacing');
+    const colors=doc.getElementById('native-colors');
+    let selected=0, custom=false, p=theme.presets[0].slice(1);
+    theme.presets.forEach((preset,i)=>{
+      const option=doc.createElement('option');option.value=String(i);option.textContent=preset[0];palette.append(option);
+    });
+    const inputs=theme.labels.map((name,i)=>{
+      const label=doc.createElement('label'), input=doc.createElement('input');
+      input.type='color';input.value=p[i];label.append(input,name);colors.append(label);
+      input.addEventListener('input',()=>{p[i]=input.value;custom=true;apply();});
+      return input;
+    });
+    function apply(){
+      theme.apply(scope,p,selected,custom);
+      theme.typography(scope,font.value,+size.value,+spacing.value);
+      status.textContent='View compilata e montata · '+theme.presets[selected][0]+(custom?' Custom':' Balanced')+' · '+size.value+' px / '+spacing.value+'%';
     }
-    status.textContent='View compilata e montata. Il tema cambia solo tramite CSS.';
+    palette.addEventListener('change',()=>{selected=+palette.value;p=theme.presets[selected].slice(1);custom=false;inputs.forEach((input,i)=>input.value=p[i]);apply();});
+    for(const control of [font,size,spacing])control.addEventListener('input',apply);
+    apply();
   } catch(error) {report(error.message);}
 })(globalThis);

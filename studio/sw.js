@@ -35,6 +35,8 @@ const ASSETS = [
   './theme-native-lab.html',
   './theme-lab.js',
   './mira-theme.css',
+  './mira-native-theme.css',
+  './cozy-palette.js',
   './ui-host.js',
   './persistent-state.js',
   './persistent-ledger.html',
