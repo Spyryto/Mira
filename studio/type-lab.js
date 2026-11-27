@@ -75,6 +75,7 @@
     source.value='module App;\nimport Layout {Alignment => Position; Center => Middle;};\nlabel: x (Position) = match: x {start: {| "S"}, center: {| "C"}, end: {| "E"}};\nresult = {value: Middle, label: (label: Middle)};';
     check();
   });
+  // Historical ConstantData example, not the current style contract.
   document.getElementById('style-contract-example').addEventListener('click',()=>{
     host.value='';
     modules.value='';
