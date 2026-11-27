@@ -989,6 +989,19 @@ class TypeChecker {
                 if (comparisons != null && (symbol == "==" || symbol == "!="))
                     comparisonInputs.push({expr:expr,type:a,owner:moduleOwner});
                 FunctionType(holes,result);
+            case Call(selector,args) if (selector == "styled:with:" && args.length == 2
+                && definitions.exists(selector) && definitions.get(selector).guiPrimitive):
+                switch (args[1]) {
+                    case Sequence(layers):
+                        // The verified GUI consumer accepts independent records.
+                        // Contextual checking here leaves ordinary list inference
+                        // homogeneous and does not change the emitted AST.
+                        final view = infer(args[0],scope);
+                        for (layer in layers)
+                            unifyAt(RecordType(new Map<String,Type>(),fresh()),representation(infer(layer,scope)),layer);
+                        selectorCall(selector,[view,ListType(fresh())]);
+                    default: selectorCall(selector,[for (arg in args) infer(arg,scope)]);
+                }
             case Call(selector,args): selectorCall(selector,[for (arg in args) infer(arg,scope)]);
             case Section(selector,args):
                 final holes:Array<Type> = [];

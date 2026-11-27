@@ -1,5 +1,5 @@
 {
-  "version": "0.92",
+  "version": "0.93",
   "features": [
     {
       "id": "values",
@@ -464,11 +464,12 @@
       "id": "gui-checked",
       "title": "GUI checked",
       "summary": "View, componenti e binding verificati staticamente.",
-      "details": "Il type checker assegna View (State) ai costruttori della libreria GUI verificata. Layout e componenti condividono il tipo di stato; state isola uno stato figlio. Input e select ricevono Text, checkbox Boolean; gli updater restituiscono lo stesso tipo di stato. GUI checked è opt-in in Studio e usa il checker Haxe. Nessun wrapper a runtime. Stili eterogenei e vincoli di dominio dinamici restano fuori dal primo incremento.",
+      "details": "Il type checker assegna View (State) ai costruttori della libreria GUI verificata. Layout e componenti condividono il tipo di stato; state isola uno stato figlio. Input e select ricevono Text, checkbox Boolean; gli updater restituiscono lo stesso tipo di stato. GUI checked è opt-in in Studio e usa il checker Haxe. Nessun wrapper a runtime. Dalla 0.93, le liste letterali di stili nel costruttore verificato possono contenere record di forme diverse. Valori CSS e vincoli dinamici restano verificati dall'host.",
       "api": "mira.HostEnvironment",
       "examples": [
         "gui-checked-counter",
-        "gui-checked-form"
+        "gui-checked-form",
+        "gui-checked-styles"
       ],
       "since": "0.92"
     }
@@ -1685,6 +1686,19 @@
       "expect": {
         "kind": "ui",
         "description": "Anteprima interattiva nel browser"
+      }
+    },
+    {
+      "id": "gui-checked-styles",
+      "feature": "gui-checked",
+      "title": "Stili verificati",
+      "description": "Strati di stile con campi differenti, verificati nella stessa view.",
+      "path": "catalog/examples/gui-checked-styles.mira",
+      "library": "lib/gui.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "ui",
+        "description": "Anteprima nel browser"
       }
     }
   ],

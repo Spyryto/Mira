@@ -226,3 +226,15 @@ verificata; una firma host esplicita resta responsabilità dell'host.
 Il codice PHP dei descrittori si può generare, ma non esegue il DOM.
 Il rendering non viene modificato da questa fase; le prestazioni
 devono essere misurate separatamente se si modificano gli updater.
+
+
+## Mira 0.93 — Checked style layers (candidata)
+
+Nel costruttore standard verificato `styled: view, with: layers`, una lista letterale di stili viene controllata contestualmente: ciascun elemento deve avere una rappresentazione record, ma le righe non devono essere identiche.
+
+```mira
+import "lib/gui.mira";
+render (styled: (text: "Mira"), with: [{padding: 12}, {background: "#fff", radius: 4}]);
+```
+
+Non cambia l'inferenza delle liste ordinarie, la libreria GUI, il renderer o gli emitter. Il controllo contestuale è limitato alle chiamate dirette alla primitiva verificata: liste memorizzate, sezioni e liste generate seguono ancora l'inferenza omogenea. Nomi di proprietà CSS e vincoli dei valori rimangono responsabilità dell'host. I test verificano anche che JS e PHP emessi siano identici alla compilazione non checked.

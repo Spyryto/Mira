@@ -1132,3 +1132,33 @@ test('GUI checked catalog forms actually mount and update using the ordinary and
     assert.equal(JSON.stringify(app.getState()),JSON.stringify(id==='gui-checked-counter'?1:{name:'Ada',active:false}));
   }
 });
+
+
+test('GUI checked: independent style records in a literal layer list',()=>{
+  const header='import "lib/gui.mira";\n';
+  const source=header+`card: n = styled: (text: n), with: [{padding: 12}, {background: "#fff", radius: 4}];
+render (state: 0, view: (card: _));`;
+  const checked=compiler.check(source,manifest);
+  assert.equal(checked.ok,true,checked.message);
+  for(const target of ['js','php']){
+    const built=compiler.compile(source,target,manifest,false,undefined,true);
+    const ordinary=compiler.compile(source,target,manifest);
+    assert.equal(built.ok,true,built.message);
+    assert.equal(ordinary.ok,true,ordinary.message);
+    assert.equal(built.output,ordinary.output);
+    for(const invalid of [
+      'render (styled: (text: "x"), with: [{padding: 12}, 42]);',
+      'render (styled: 42, with: [{padding: 12}, {radius: 4}]);'
+    ]){
+      assert.equal(compiler.compile(header+invalid,target,manifest,false,undefined,true).ok,false,invalid);
+    }
+  }
+  assert.equal(compiler.check(header+'render (styled: (text: "x"), with: []);',manifest).ok,true);
+  assert.equal(compiler.check('result = [{padding: 12}, {radius: 4}];').ok,false);
+  assert.equal(compiler.check('styled: x, with: ys = ys; result = styled: 0, with: [{padding: 12}, {radius: 4}];').ok,false);
+  const {root,host,errors}=setup();
+  const built=compiler.compile(source,'js',manifest,false,undefined,true);
+  runInNewContext(built.output,{__miraHost:host});
+  assert.match(root.textContent,/0/);
+  assert.deepEqual(errors,[]);
+});
