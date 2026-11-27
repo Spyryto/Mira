@@ -16,6 +16,7 @@ class Bridge {
         Reflect.setField(global, "MiraStudioCompiler", {
             compile: compile,
             check: check,
+            scopeAt: scopeAt,
             specialize: specialize,
             tokens: tokens,
             ast: ast,
@@ -89,6 +90,13 @@ class Bridge {
             final host = hostJson == null ? HostEnvironment.empty() : HostEnvironment.fromJson(hostJson);
             final providers = bindingsJson == null ? null : mira.resolve.ProviderBindings.fromJson(bindingsJson);
             return haxe.Json.stringify(Compiler.check(source,host,resolver(modulesJson),null,providers), null, "  ");
+        });
+    }
+
+    public static function scopeAt(source:String,line:Int,column:Int,?hostJson:String,?modulesJson:String):Dynamic {
+        return safely(function() {
+            final host = hostJson == null ? HostEnvironment.empty() : HostEnvironment.fromJson(hostJson);
+            return haxe.Json.stringify(Compiler.scopeAt(source,line,column,host,resolver(modulesJson)));
         });
     }
 

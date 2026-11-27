@@ -109,6 +109,13 @@ class Compiler {
         return new mira.types.TypeChecker(origins,host == null ? HostEnvironment.empty() : host,null,visibility).check(parse(source,host,readModule,entry,origins,visibility,providers,true,true));
     }
 
+    public static function scopeAt(source:String,line:Int,column:Int,?host:HostEnvironment,?readModule:String->Null<String>):Dynamic {
+        final origins = new ExpressionOrigins();
+        final visibility = new mira.types.TypeVisibility();
+        return new mira.types.TypeChecker(origins,host == null ? HostEnvironment.empty() : host,null,visibility)
+            .scopeAt(parse(source,host,readModule,null,origins,visibility,null,true,true),line,column);
+    }
+
     public static function interfaces(source:String,?host:HostEnvironment,?readModule:String->Null<String>,?entry:String,?providers:mira.resolve.ProviderBindings):Dynamic {
         final origins = new ExpressionOrigins();
         final visibility = new mira.types.TypeVisibility();

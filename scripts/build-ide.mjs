@@ -12,7 +12,7 @@ const php=context.MiraStudioCompiler.compile(code,'php',host,false,null,true);
 if(!js.ok||!php.ok)throw Error(js.message||php.message);
 mkdirSync('dist/ide',{recursive:true});
 writeFileSync('dist/ide/editor-services.php',php.output);
-writeFileSync('dist/ide/editor-services.js', 'const __miraHost=Object.freeze({"starts with:in:":(a,b)=>b.startsWith(a)});\n'+js.output+'\nexport {editor_complete__from,editor_lookup__from,editor_tooltip,editor_fields__prefix__from,editor_field_lookup__name__from,editor_field_tooltip,editor_signature__returning,editorTemplates as editor_templates};\n');
+writeFileSync('dist/ide/editor-services.js', 'const __miraHost=Object.freeze({"starts with:in:":(a,b)=>b.startsWith(a)});\n'+js.output+'\nexport {editor_complete__from,editor_lookup__from,editor_tooltip,editor_fields__prefix__from,editor_field_lookup__name__from,editor_field_tooltip,editor_signature__returning,editor_visible__globals,editorTemplates as editor_templates};\n');
 await build({entryPoints:[resolve(source,'editor-host.js')],outfile:resolve(site,'ide-bundle.js'),bundle:true,minify:true,format:'esm',target:'es2020',legalComments:'linked'});
 for(const name of ['ide.html','ide.css','ide-analysis-worker.js'])copyFileSync(resolve(source,name),resolve(site,name));
 let index=readFileSync(resolve(site,'index.html'),'utf8');

@@ -77,6 +77,19 @@ try{
   assert.deepEqual(await page.locator('.cm-tooltip-autocomplete .mira-completion-signature em').allTextContents(),['a number','b']);
   assert.equal(await page.locator('.cm-tooltip-autocomplete li').first().evaluate(li=>Boolean(li.querySelector('.cm-completionLabel').compareDocumentPosition(li.querySelector('.mira-completion-signature')) & Node.DOCUMENT_POSITION_FOLLOWING)),true);
   await page.screenshot({path:resolve(out,name+'-ide-named-completion.png'),fullPage:false});
+  await editor.press('Escape');
+  await editor.fill('double: amount (Number) -> Number = amount * 2;');
+  await page.locator('#status').filter({hasText:'Verificato'}).waitFor();
+  await editor.press('Control+End');await editor.press('Home');
+  // Navigate to the final occurrence of the parameter, not its declaration.
+  await editor.press('End');for(let i=0;i<7;i++)await editor.press('ArrowLeft');
+  await page.locator('#signature').click();
+  await page.waitForFunction(()=>document.querySelector('#inspect')?.textContent.includes('Scope lessicale verificato'));
+  assert.match(await page.locator('#inspect').textContent(),/Number/);
+  await editor.fill('double: amount (Number) -> Number = am');
+  await editor.press('Control+End');await editor.press('Control+Space');
+  await list.waitFor();await page.waitForFunction(()=>document.querySelector('.cm-tooltip-autocomplete')?.textContent.includes('amount'));
+  await page.screenshot({path:resolve(out,name+'-ide-lexical-completion.png'),fullPage:false});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
   await page.close();
  }
