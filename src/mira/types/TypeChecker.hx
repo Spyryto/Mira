@@ -944,6 +944,67 @@ class TypeChecker {
         origin = previous;
     }
 
+    // Reuse numeric facts already established by inference. Unknown values
+    // are deliberately not treated as proofs; the host still validates them.
+    function guiNumber(expr:Expr):Null<Float> {
+        return switch (expr) {
+            case Numeric(value): Std.parseFloat(value);
+            default:
+                final fact = ranges.get(expr);
+                fact != null && fact.low == fact.high && fact.lowClosed && fact.highClosed ? fact.low : null;
+        };
+    }
+
+    function guiFailure(message:String,expr:Expr):Void {
+        final anchor = origins.get(expr);
+        if (anchor != null) origin = anchor;
+        fail(message);
+    }
+
+    function checkGuiWidget(selector:String,args:Array<Expr>,types:Array<Type>):Void {
+        final previous = origin;
+        switch (selector) {
+            case "grid:children:":
+                final count = guiNumber(args[0]);
+                if (count != null && (!Math.isFinite(count) || count < 1 || count > 6 || Math.floor(count) != count))
+                    guiFailure("grid.columns must be an integer from 1 to 6",args[0]);
+            case "keyed:view:":
+                switch (representation(types[0])) {
+                    case NumberType | IntegerType | TextType | Variable(_):
+                    default: guiFailure("Identity key must be a nonempty string or safe integer",args[0]);
+                }
+                switch (args[0]) {
+                    case Text(value):
+                        if (value.length == 0) guiFailure("Identity key must be a nonempty string or safe integer",args[0]);
+                    default:
+                        final number = guiNumber(args[0]);
+                        if (number != null && (!Math.isFinite(number) || Math.abs(number) > 9007199254740991.0 || Math.ffloor(number) != number))
+                            guiFailure("Identity key must be a nonempty string or safe integer",args[0]);
+                }
+            case "choose:value:options:update:":
+                switch (args[2]) {
+                    case Sequence(options):
+                        final known = new Map<String,Bool>();
+                        var complete = true;
+                        for (option in options) switch (option) {
+                            case Text(value):
+                                if (known.exists(value)) guiFailure("Duplicate select option: " + value,option);
+                                known.set(value,true);
+                            default: complete = false;
+                        }
+                        if (options.length == 0) guiFailure("Select requires at least one option",args[2]);
+                        if (complete) switch (args[1]) {
+                            case Text(value):
+                                if (!known.exists(value)) guiFailure("Select value is not in options: " + value,args[1]);
+                            default:
+                        }
+                    default:
+                }
+            default:
+        }
+        origin = previous;
+    }
+
     function inferNode(expr:Expr,scope:Map<String,LocalScheme>):Type {
         return switch (expr) {
             case Numeric(_): NumberType;
@@ -1044,11 +1105,17 @@ class TypeChecker {
                         // Contextual checking here leaves ordinary list inference
                         // homogeneous and does not change the emitted AST.
                         final view = infer(args[0],scope);
+                        if (layers.length > 32) guiFailure("styled.styles must be a bounded sequence (max 32)",args[1]);
                         for (layer in layers) checkGuiStyle(layer,scope);
                         selectorCall(selector,[view,ListType(fresh())]);
                     default: selectorCall(selector,[for (arg in args) infer(arg,scope)]);
                 }
-            case Call(selector,args): selectorCall(selector,[for (arg in args) infer(arg,scope)]);
+            case Call(selector,args):
+                final types = [for (arg in args) infer(arg,scope)];
+                final result = selectorCall(selector,types);
+                if (definitions.exists(selector) && definitions.get(selector).guiPrimitive)
+                    checkGuiWidget(selector,args,types);
+                result;
             case Section(selector,args):
                 final holes:Array<Type> = [];
                 final result = selectorCall(selector,[for (arg in args) operand(arg,scope,holes)]);
