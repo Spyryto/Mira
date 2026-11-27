@@ -23,13 +23,12 @@ editor field tooltip: field (Record Field) -> Suggestion =
 
 # Parameter names are semantic data from the AST, never parsed from type text.
 Signature Parameter :: {selector: Text, name: Text, type: Text};
-Signature Part :: {text: Text, role: Text};
-editor parameter parts: parameter (Signature Parameter) -> [Signature Part] =
+editor parameter parts: parameter (Signature Parameter) -> [{text: Text, role: Text}] =
   [{text: parameter ~ selector, role: "selector"},
    {text: ": ", role: "selector"},
    {text: parameter ~ name, role: "parameter"},
    {text: (if: (parameter ~ type == ""), then: (""), else: (if: (parameter ~ name == ""), then: ("("), else: (" ("))), role: "type"},
    {text: parameter ~ type, role: "type"},
    {text: (if: (parameter ~ type == ""), then: (""), else: (")")), role: "type"}];
-editor signature: parameters ([Signature Parameter]), returning: result (Text) -> {parameters: [[Signature Part]], result: Text} =
+editor signature: parameters ([Signature Parameter]), returning: result (Text) -> {parameters: [[{text: Text, role: Text}]], result: Text} =
   {parameters: (collect: parameters, with: {parameter (Signature Parameter) | editor parameter parts: parameter}), result: result};
