@@ -75,6 +75,7 @@ try{
   await editor.click();await editor.press('Control+End');await editor.press('Enter');await editor.pressSequentially('ad');
   await page.locator('.cm-tooltip-autocomplete .mira-completion-signature em').first().waitFor();
   assert.deepEqual(await page.locator('.cm-tooltip-autocomplete .mira-completion-signature em').allTextContents(),['a number','b']);
+  assert.equal(await page.locator('.cm-tooltip-autocomplete li').first().evaluate(li=>Boolean(li.querySelector('.cm-completionLabel').compareDocumentPosition(li.querySelector('.mira-completion-signature')) & Node.DOCUMENT_POSITION_FOLLOWING)),true);
   await page.screenshot({path:resolve(out,name+'-ide-named-completion.png'),fullPage:false});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
   await page.close();

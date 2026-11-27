@@ -116,7 +116,7 @@ function analyze(view){
  timer=setTimeout(()=>worker.postMessage({revision:rev,source}),220);
 }
 const editor=new EditorView({parent:$('editor'),state:EditorState.create({doc:saved,extensions:[
- basicSetup,syntax,autocompletion({override:[complete],activateOnTyping:true,addToOptions:[{position:50,render:option=>{if(!option.rich)return null;const span=document.createElement('span');span.className='mira-completion-signature';appendSignature(span,option.rich,true);return span}}]}),keymap.of(completionKeymap),
+ basicSetup,syntax,autocompletion({override:[complete],activateOnTyping:true,addToOptions:[{position:90,render:option=>{if(!option.rich)return null;const span=document.createElement('span');span.className='mira-completion-signature';appendSignature(span,option.rich,true);return span}}]}),keymap.of(completionKeymap),
  hoverTooltip(async(view,pos)=>{const state=view.state,w=wordAt(state,pos),items=await lookupAt(state,pos);return view.state.doc===state.doc&&items.length?{pos:w.from,end:w.to,above:true,create:()=>{const dom=document.createElement('div');dom.append(...items.map(renderTooltip));return {dom}}}:null}),
  EditorView.contentAttributes.of({'aria-label':'Codice sorgente Mira','spellcheck':'false','autocapitalize':'off'}),
  EditorView.updateListener.of(update=>{if(update.docChanged){try{localStorage.setItem('mira-ide:source:v1',update.state.doc.toString())}catch{}analyze(update.view)}})
