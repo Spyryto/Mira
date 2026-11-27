@@ -86,3 +86,8 @@ Roadmap indicativa: 0.96 dati dichiarativi; 0.97 somme con rappresentazione scal
 ## Grammatiche invece di regex esposte (27 novembre 2026)
 
 Decisione esplicita: in Mira le grammatiche sono valori dichiarativi, componibili e riutilizzabili. Le regex non sono un costrutto della sintassi pubblica né l'astrazione del linguaggio; possono essere un dettaglio di emissione dove conveniente, come automi o parser. I selettori discorsivi sono normali funzioni della libreria, non nuove keyword. Separare AST grammaticale, semantica di riconoscimento e strategia di esecuzione. Iniziare con un nucleo regolare non ricorsivo e con il Grammar Lab in Mira Studio. Vedi [grammatiche 0.104](type-representation.md#composable-grammars-0104). Refinement grammaticali e catture/produzione di AST sono incrementi successivi.
+
+
+## Retrocompatibilità prima della 1.0 (27 novembre 2026)
+
+Indicazione esplicita dell'autore: la retrocompatibilità non è necessaria. Preferire una sola API coerente e l'eliminazione del codice provvisorio a mantenere adattatori per forme precedenti. Migrare gli esempi correnti e documentare le modifiche; preservare correttezza, diagnostica, sicurezza al confine host e validazione CI. Questo non impone di eliminare funzionalità utili o i test storici indipendenti dal percorso rimosso.
