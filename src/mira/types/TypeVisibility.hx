@@ -68,6 +68,7 @@ class TypeVisibility {
             case ListType(item): ListType(child(item));
             case FunctionType(args,result): FunctionType([for (a in args) child(a)],child(result));
             case RecordType(fields,tail): RecordType([for (key => value in fields) key => child(value)],tail == null ? null : child(tail));
+            case OptionalRecordType(required,optional): OptionalRecordType([for (key => value in required) key => child(value)],[for (key => value in optional) key => child(value)]);
             default: t;
         };
     }
@@ -115,6 +116,9 @@ class TypeVisibility {
                     walk(base);
                 case ListType(item): walk(item);
                 case FunctionType(args,result): for (a in args) walk(a); walk(result);
+                case OptionalRecordType(required,optional):
+                    for (field in required) walk(field);
+                    for (field in optional) walk(field);
                 case RecordType(fields,tail):
                     for (field in fields) walk(field);
                     if (tail != null) walk(tail);
