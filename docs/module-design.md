@@ -370,3 +370,15 @@ Primo sottoinsieme concreto di MOD-02: import logico selettivo di tipi, risolto 
 ## 0.89.7 — radici di libreria esplicite nella CLI
 
 --module-root directory è ripetibile; le directory esplicite sono relative al cwd, devono esistere, vengono risolte a percorsi reali e deduplicate. Un import logico cerca la convenzione path.mira nella directory dell'entry e in tutte le radici aggiuntive; due file candidati sono un errore, non una precedenza implicita. I symlink dei file e sottopercorsi restano rifiutati. Gli import a file tra virgolette continuano a usare soltanto la directory dell'entry. Vale per analisi, report e compilazione; nessun accesso al filesystem nel core. Il primo utilizzatore è lib/json con --module-root lib/common. I test includono conflitti, radici mancanti, deduplicazione, symlink e comportamento legacy. Configurazione di progetto, composizione dei manifest, build per target e cache sono ancora aperti.
+
+## 0.90 — configurazione dichiarativa dei progetti
+
+Il formato JSON 1 descrive entry, moduleRoots (root e include), hosts, bindings comuni, targets js/php con bindings specifici, treeShake opzionale (default true) e decoder opzionale. Tutti i percorsi sono relativi al manifest, non al cwd. Le directory include sono sottopercorsi della root esplicita; i file .mira vengono enumerati deterministamente e tradotti in nomi logici, senza includere automaticamente gli App.mira dimostrativi delle librerie. Moduli duplicati, include fuori root e symlink nei sottoalberi sono rifiutati; root e entry sono canonicalizzati. Il formato è per progetti fidati locali, non sandbox. Il loader non supporta ancora import legacy tra virgolette o un resolver lazy per il progetto, e non esegue codice della configurazione. Host e binding vengono composti da file JSON o oggetti inline, senza override impliciti, preservando firme e scope; entry orfane, duplicati e campi di configurazione ignoti sono errori. Il compilatore continua a verificare tipi, import e provider. Il generatore JSON esistente è una fase opzionale esplicita, per ora un solo decoder e contratti analizzabili senza provider; nessuna infrastruttura generica di plugin.
+
+Esempio reale: examples/lesson-import/mira.project.json. Comando dal repository:
+
+```sh
+npm run build:project -- examples/lesson-import/mira.project.json dist/lesson-import
+```
+
+Il comando compila il bridge Haxe di Studio in una directory temporanea, poi riusa scripts/project.mjs, senza costruire l'intera PWA. Scrive program.js, program.php, host.json, bindings-js.json, bindings-php.json e, se previsto, decoder.json soltanto dopo che tutti i target hanno compilato. Non avvia il programma e non impacchetta gli adapter host, non produce un'app autonoma. Non è una scrittura transazionale degli artefatti e non rimuove vecchi file di output; usare una directory dedicata. Le configurazioni CLI precedenti restano valide. La risoluzione dei moduli tramite mappa virtuale riusa il bridge esistente, non introduce un secondo type checker o emitter. Workspace interattivo, packaging, cache, dipendenze versionate e build incrementale restano aperti.

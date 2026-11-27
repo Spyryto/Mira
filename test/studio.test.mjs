@@ -2220,3 +2220,28 @@ test('0.89.7 both JSON decoders share a generic checked outcome converter',()=>{
     }
   }
 });
+
+test('0.90 standalone project and Studio build the same checked application',async()=>{
+  const {loadProject,buildProject}=await import('../scripts/project.mjs');
+  const {mkdtempSync,rmSync}=await import('node:fs');
+  const {tmpdir}=await import('node:os');
+  const filename=resolve(root,'examples/lesson-import/mira.project.json');
+  const project=loadProject(filename),built=buildProject(bridge,project);
+  const ctx={};runInNewContext(read('lesson-import-data.js'),ctx);const data=ctx.MiraLessonImportData;
+  assert.equal(built.js,data.js);assert.equal(built.php,data.php);
+  assert.equal(built.host,data.host);assert.equal(built.modules,data.modules);
+  assert.deepEqual(JSON.parse(JSON.stringify(data.decoder)),built.decoder);
+  const collision={...project,shared:[...project.shared,{'Services / Lesson Import':{provider:'Providers / Lesson Import Native'}}]};
+  assert.throws(()=>buildProject(bridge,collision),/Duplicate provider binding/);
+  const dir=mkdtempSync(resolve(tmpdir(),'mira-project-build-'));
+  try{
+    const run=spawnSync('node',[resolve(root,'scripts/build-project.mjs'),filename,dir],{cwd:root,encoding:'utf8'});
+    assert.equal(run.status,0,run.stderr);
+    for(const target of ['js','php']){
+      assert.equal(readFileSync(resolve(dir,'program.'+target),'utf8'),built[target]);
+      assert.deepEqual(JSON.parse(readFileSync(resolve(dir,'bindings-'+target+'.json'),'utf8')),JSON.parse(built[target+'Bindings']));
+    }
+    assert.deepEqual(JSON.parse(readFileSync(resolve(dir,'host.json'),'utf8')),JSON.parse(built.host));
+    assert.deepEqual(JSON.parse(readFileSync(resolve(dir,'decoder.json'),'utf8')),built.decoder);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

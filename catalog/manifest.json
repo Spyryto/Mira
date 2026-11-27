@@ -1,5 +1,5 @@
 {
-  "version": "0.89.7",
+  "version": "0.90",
   "features": [
     {
       "id": "values",
@@ -2154,6 +2154,12 @@
       "title": "Decoder JSON condivisi e radici logiche CLI esplicite",
       "since": "0.89.7",
       "doc": "docs/studio.md#mira-0897-decoder-json-consolidati"
+    },
+    {
+      "id": "declarative-project-build",
+      "title": "Configurazione multifile e build di progetto condivisa",
+      "since": "0.90",
+      "doc": "docs/studio.md#mira-090-progetto-multifile-dichiarativo"
     }
   ]
 }

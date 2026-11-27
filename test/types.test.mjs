@@ -2153,3 +2153,30 @@ test('0.89.7 logical module roots are explicit, unique and do not alter legacy i
     out=run('--check','--module-root',other);assert.notEqual(out.status,0);assert.match(out.stderr,/symlinks are not supported/);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('0.90 project configuration rejects conflicts and composes manifests without silent overrides',async()=>{
+  const {loadProject,mergeHosts,mergeBindings}=await import('../scripts/project.mjs');
+  const project=loadProject('examples/lesson-import/mira.project.json');
+  assert.ok(project.modules['Data / Outcome']);
+  assert.ok(project.modules['Providers / Storage Safe Files']);
+  assert.equal(Object.hasOwn(project.modules,'App'),false);
+  const host=mergeHosts(project.hosts);
+  assert.ok(host.types['native checked date']);
+  assert.ok(host.scopes['files try read text']);
+  assert.throws(()=>mergeHosts([project.hosts[0],project.hosts[0]]),/Duplicate host capability/);
+  assert.throws(()=>mergeHosts([{callables:['a'],types:{b:'Text'}}]),/Orphan host types/);
+  assert.throws(()=>mergeBindings([{A:{provider:'B'}},{A:{provider:'C'}}]),/Duplicate provider binding/);
+  const dir=mkdtempSync(join(tmpdir(),'mira-project-config-'));
+  try{
+    for(const name of ['a','b']){mkdirSync(join(dir,name));writeFileSync(join(dir,name,'Shared.mira'),'module Shared; x = 1;');}
+    writeFileSync(join(dir,'App.mira'),'module App; x = 1;');
+    const file=join(dir,'mira.project.json');
+    const base={format:1,entry:'App.mira',moduleRoots:[{root:'a',include:['.']}],targets:{js:{}}};
+    const load=config=>{writeFileSync(file,JSON.stringify(config));return loadProject(file);};
+    assert.ok(load(base).modules.Shared);
+    assert.throws(()=>load({...base,moduleRoots:[...base.moduleRoots,{root:'b',include:['.']}]}),/Duplicate logical module/);
+    assert.throws(()=>load({...base,moduleRoots:[{root:'a',include:['../b']}]}),/outside module root/);
+    assert.throws(()=>load({...base,targets:{go:{}}}),/Unknown targets field/);
+    assert.throws(()=>load({...base,typo:true}),/Unknown project field/);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
