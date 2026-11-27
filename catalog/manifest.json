@@ -1,5 +1,5 @@
 {
-  "version": "0.89.4",
+  "version": "0.89.5",
   "features": [
     {
       "id": "values",
@@ -2136,6 +2136,12 @@
       "title": "Option e Result nominali condivisi e import di tipi nei contratti",
       "since": "0.89.4",
       "doc": "docs/grammar.md#mira-0894-import-selettivi-di-tipi-nei-contratti-indipendenti"
+    },
+    {
+      "id": "fallible-storage",
+      "title": "Storage fallibile con Option, Result ed errori nominali",
+      "since": "0.89.5",
+      "doc": "docs/studio.md#mira-0895-persistenza-fallibile"
     }
   ]
 }
