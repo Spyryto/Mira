@@ -2407,10 +2407,10 @@ test('0.102 Studio text refinements expose canonical choices and validate native
 
 
 test('0.103 Studio bundles typed styles and emits the native GUI descriptor on both targets',()=>{
-  const source="import \"lib/gui.mira\"; import \"lib/gui-typed-styles.mira\"; px (GUI Pixels) = 12; weight (GUI Font Weight) = 600; flex amount (GUI Flex) = 1; border (GUI Border Style) = \"solid\"; justify value (GUI Justify) = \"space-between\"; wrapping (GUI Wrap) = \"nowrap\"; text alignment (GUI Text Align) = \"center\"; shadow value (GUI Shadow) = \"soft\"; panel (GUI Style) = {padding: px, margin: px, gap: px, radius: px, borderWidth: px, fontSize: px, fontWeight: weight, flex: flex amount, width: Style Fill, minWidth: (Style Fixed: px), maxWidth: Style Auto, borderStyle: border, align: Align Center, justify: justify value, wrap: wrapping, textAlign: text alignment, shadow: shadow value}; extra (GUI Style) = {}; layers = [panel]; result = styled: (text: \"Mira\"), with styles: layers;";
+  const source="import \"lib/gui.mira\"; import \"lib/gui-typed-styles.mira\"; px (GUI Pixels) = 12; weight (GUI Font Weight) = 600; flex amount (GUI Flex) = 1; border (GUI Border Style) = \"solid\"; justify value (GUI Justify) = \"space-between\"; wrapping (GUI Wrap) = \"nowrap\"; text alignment (GUI Text Align) = \"center\"; shadow value (GUI Shadow) = \"soft\"; panel (GUI Style) = {padding: px, margin: px, gap: px, radius: px, borderWidth: px, fontSize: px, fontWeight: weight, flex: flex amount, width: Style Fill, minWidth: (Style Fixed: px), maxWidth: Style Auto, borderStyle: border, align: Align Center, justify: justify value, wrap: wrapping, textAlign: text alignment, shadow: shadow value}; extra (GUI Style) = {}; layers (Style Layers) = [panel]; result = styled: (text: \"Mira\"), with styles: layers;";
   assert.equal(bridge.typedStylesSource(),readFileSync(resolve(root,'lib/gui-typed-styles.mira'),'utf8'));
   const checked=bridge.check(source);assert.equal(checked.ok,true,checked.message);
-  assert.equal(JSON.parse(checked.output).find(x=>x.name==='layers').type,'[GUI Style]');
+  assert.equal(JSON.parse(checked.output).find(x=>x.name==='layers').type,'Style Layers');
   for(const target of ['js','php']){
     const built=bridge.compile(source,target,null,false,null,true);assert.equal(built.ok,true,built.message);
     const actual=target==='js'?JSON.stringify(runInNewContext(built.output+'\nresult',{})):spawnSync('php',['-r',built.output.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'}).stdout;
@@ -2553,7 +2553,7 @@ test('0.105 grammar refinement validation agrees with Grammar Lab and native JS/
 
 
 test('0.106 typed styles contain all 20 fields and colors have one grammar-backed nominal type',()=>{
-  const source='import "lib/gui.mira"; import "lib/gui-typed-styles.mira"; ink (GUI Color) = "#abc"; paper (GUI Color) = "#12345678"; stroke (GUI Color) = "currentColor"; panel (GUI Style) = {color: ink, background: paper, borderColor: stroke}; result = styled: (text: "Mira"), with styles: [panel];';
+  const source='import "lib/gui.mira"; import "lib/gui-typed-styles.mira"; ink (GUI Color) = "#abc"; paper (GUI Color) = "#12345678"; stroke (GUI Color) = "currentColor"; panel (GUI Style) = {color: ink, background: paper, borderColor: stroke}; layers (Style Layers) = [panel]; result = styled: (text: "Mira"), with styles: layers;';
   const checked=bridge.check(source);
   assert.equal(checked.ok,true,checked.message);
   const rows=JSON.parse(checked.output);
