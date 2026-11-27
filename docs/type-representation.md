@@ -373,3 +373,24 @@ Il vecchio lib/gui-style-contract.mira è conservato come fixture storica 0.96 d
 Specializzatore GUI: esteso il sottoinsieme di dati globali a riferimenti immutabili risolvibili a literal, record e liste, più gli encoding nativi già esposti dall'AST. Limiti su profondità e lavoro, rilevazione cicli. Le definizioni grammaticali calcolate del modulo standard non vengono espanse, e se effettivamente richieste nell'albero specializzato causano fallback/errore come prima; l'inizializzazione del programma originale non è soppressa. Altre espressioni globali calcolate rimangono escluse. L'analisi non sostituisce la compilazione checked e la validazione host. Test di integrazione per view con stili nominali costanti, alias, varianti native e aggiornamento del testo senza ricreazione dei nodi. Non si promette specializzazione di liste dinamiche arbitrarie.
 
 Misura della modifica: ScalarRules.hx -7 righe nette, GuiStyleRules.hx +24, TypeChecker.hx invariato nel numero di righe; saldo +17 righe Haxe nel ponte transitorio. Rimossa una risorsa CLI e il decoder delle regole legacy. I 20 domini e il limite 32 hanno ora una sola dichiarazione statica operativa. Non è ancora una riduzione netta delle righe: la vera eliminazione dell'adattatore richiede la dismissione o migrazione della sintassi legacy. Nessun benchmark temporale specifico. Il passaggio successivo dovrebbe ridurre il ponte e mantenere i test di compatibilità e sicurezza host.
+
+
+## Remove legacy styles 0.109
+
+Stato: candidata. Decisione esplicita: la retrocompatibilità pre-1.0 non è un requisito. Eliminato il percorso contestuale specifico per styled:with: e il relativo decoratore da lib/gui.mira. Eliminati ScalarRules.hx, GuiStyleRules.hx, checkGuiStyle e la relativa specializzazione delle liste eterogenee nel checker. Nessuna proiezione duplicata dei domini. Eliminato anche lib/gui-style-contract.mira e la relativa risorsa Studio, che conteneva la vecchia regex. Il laboratorio ConstantData conserva un esempio generico indipendente dalla GUI.
+
+```mira
+import "lib/gui.mira";
+import "lib/gui-typed-styles.mira";
+px (GUI Pixels) = 12;
+ink (GUI Color) = "#234";
+panel (GUI Style) = {padding: px, color: ink};
+layers (Style Layers) = [panel];
+result = styled: (text: "Mira"), with styles: layers;
+```
+
+Il decoratore standard tipizzato è l'unica API checked per gli stili; un record costruito manualmente non ottiene il tipo View fidato. Restano i controlli host (compresi i controlli sul formato colore nativi dell'host, non sintassi regex Mira) per i descrittori ricevuti. Il riconoscimento del tipo View e i controlli delle altre primitive GUI non sono rimossi. Per evitare aggiornamenti manuali del digest e della lunghezza, la fiducia nel file gui.mira si basa sulla sorgente esatta incorporata nei due build, con il limite delle righe derivato da essa. Non si estende la fiducia ai selettori omonimi.
+
+Il catalogo Stili verificati importa le librerie e usa GUI Style / Style Layers. L'attributo checked del catalogo abilita la compilazione verificata in CLI, test browser e Studio quando viene caricato l'esempio. Due esempi storici dashboard e cambio tema usano un costruttore grezzo locale esplicito, raw styled:with:, soltanto per mostrare l'ABI nativo e testare il renderer non checked; non appartiene alla libreria standard e non è un secondo percorso del type checker. La specializzazione continua a leggere le forme dei descrittori e non conosce i tipi di stile. Il test specializzato tipizzato della 0.108 rimane, e compileAuto usa la modalità checked in presenza di encoding scalari come compile e compileHybrid.
+
+Misura delle modifiche al sorgente Haxe: eliminati due moduli di 72 e 43 righe, -60 righe in TypeChecker.hx, -1 in GuiTypes.hx, 0 in Compiler.hx; netto -176 righe nel compilatore rispetto a 0.108, oltre a -5 righe circa nel Bridge (rimozione API storica). Rimosse 38 righe del contratto storico Mira e due righe della libreria GUI base. Nessun benchmark temporale rivendicato. Le misure non includono test, documentazione o migrazione esempi. Le regole CSS al confine host non sono state ridotte. Verifiche candidate: rifiuto selettore rimosso e View forgiati, tipi nominali e tutti i domini confrontati con l'host, limiti delle liste, JS/PHP, demo e identità DOM specializzata.
