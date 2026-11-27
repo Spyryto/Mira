@@ -43,7 +43,7 @@ persist lesson: raw =
     inspected = inspect lesson: raw;
     if (inspected ~ accepted) then (
       match: (try save text: raw, for: "lesson") {
-        ok: {saved | if saved then inspected else (failure: "storage_failure")},
+        ok: {saved | if (saved) then inspected else (failure: "storage_failure")},
         err: {error | failure: (storage error code: error)}
       }
     ) else inspected
