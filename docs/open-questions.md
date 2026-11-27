@@ -287,3 +287,8 @@ Fatti positivi di presenza su binding immutabili, literal, alias, update e inter
 ### 0.102 — Text refinements (candidata)
 
 Refinement finiti via where _ == "..." OR _ == "...", con prove statiche, nominalità, validazione esplicita Result/handler e rappresentazione nativa. Nessun guard testuale implicito. Regex, lunghezze, narrowing, codec, disgiunzione di sottoinsiemi Text e migrazione GUI restano aperti. Vedi [text refinements](type-representation.md#text-refinements-0102).
+
+
+### 0.103 — Typed GUI styles (candidata)
+
+17/20 proprietà attraverso tipi Mira, lista omogenea di record opzionali, decoratore opt-in con firma verificata. Controllo legacy conservato. Restano da migrare regex per i colori, lunghezza massima delle liste, specializzatore GUI e firma generica di View. Vedi [typed GUI styles](type-representation.md#typed-gui-styles-0103).
