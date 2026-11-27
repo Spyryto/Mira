@@ -25,5 +25,5 @@ assert.equal(run.status,0,run.stderr);assert.deepEqual(JSON.parse(run.stdout),fi
 console.log('Verified real compiler schemas, nested fields, optional fields, context limits and JS/PHP parity.');
 
 const named=namedSignature([{selector:'add',name:'a number',type:'Number'},{selector:'and',name:'b',type:'Number'}],'Number');
-assert.deepEqual(named.parameters[0],[{text:'add: ',role:'selector'},{text:'a number',role:'parameter'},{text:' (Number)',role:'type'}]);
+assert.deepEqual(named.parameters[0],[{text:'add',role:'selector'},{text:': ',role:'selector'},{text:'a number',role:'parameter'},{text:' (',role:'type'},{text:'Number',role:'type'},{text:')',role:'type'}]);
 assert.equal(named.result,'Number');

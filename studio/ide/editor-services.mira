@@ -25,8 +25,11 @@ editor field tooltip: field (Record Field) -> Suggestion =
 Signature Parameter :: {selector: Text, name: Text, type: Text};
 Signature Part :: {text: Text, role: Text};
 editor parameter parts: parameter (Signature Parameter) -> [Signature Part] =
-  [{text: (parameter ~ selector) + ": ", role: "selector"},
+  [{text: parameter ~ selector, role: "selector"},
+   {text: ": ", role: "selector"},
    {text: parameter ~ name, role: "parameter"},
-   {text: (if: (parameter ~ type == ""), then: (""), else: (" (" + (parameter ~ type) + ")")), role: "type"}];
+   {text: (if: (parameter ~ type == ""), then: (""), else: (if: (parameter ~ name == ""), then: ("("), else: (" ("))), role: "type"},
+   {text: parameter ~ type, role: "type"},
+   {text: (if: (parameter ~ type == ""), then: (""), else: (")")), role: "type"}];
 editor signature: parameters ([Signature Parameter]), returning: result (Text) -> {parameters: [[Signature Part]], result: Text} =
   {parameters: (collect: parameters, with: {parameter (Signature Parameter) | editor parameter parts: parameter}), result: result};
