@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mira · Grammar Lab</title>
+<link rel="stylesheet" href="styles.css"><style>
+.grammar-lab{max-width:800px;margin:auto;padding:1rem}.grammar-lab textarea,.grammar-lab input{box-sizing:border-box;width:100%;padding:.75rem;border:1px solid #718096;border-radius:.6rem;font:1rem monospace}.grammar-lab textarea{min-height:15rem}.grammar-lab pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:1rem;border:1px solid #718096;border-radius:.6rem;max-height:30rem;overflow:auto}.grammar-lab button{margin:.4rem .4rem .4rem 0}.grammar-path{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}.grammar-step{padding:.4rem .65rem;border:1px solid #718096;border-radius:.5rem}.grammar-step:last-child{border-width:2px}.grammar-lab [data-accepted="true"]{color:#16804a}.grammar-lab [data-accepted="false"]{color:#b45309}
+</style></head><body><main class="grammar-lab"><a href="./index.html">← Mira Studio</a><h1>Grammar Lab</h1><p>Componi una grammatica in Mira, riconosci un testo intero e osserva gli stati dell'automa. Il codice inserito non viene eseguito: il laboratorio valuta soltanto dati e chiamate pure supportate.</p>
+<div><button id="decimal">Numero decimale</button><button id="color">Colore CSS</button><button id="overlap">Alternative sovrapposte</button></div>
+<label for="source">Dichiarazioni Mira (libreria inclusa dal laboratorio)</label><textarea id="source" spellcheck="false"></textarea>
+<label for="root">Nome del valore Grammar</label><input id="root" value="grammar" spellcheck="false">
+<label for="sample">Testo da riconoscere</label><input id="sample" value="-3.14" spellcheck="false">
+<div><button id="analyze">Analizza</button><button id="js">Genera JS</button><button id="php">Genera PHP</button></div>
+<h2>Riconoscimento</h2><p id="status" role="status" aria-live="polite"></p><p id="metrics"></p><div id="path" class="grammar-path"></div>
+<h2>Albero grammaticale</h2><pre id="tree"></pre>
+<details><summary>Codice nativo generato</summary><pre id="output"></pre></details>
+<details><summary>Sorgente della libreria Grammar</summary><pre id="library"></pre></details>
+<p>0.104: ASCII, riconoscimento completo, automi finiti; nessun albero di parsing o cattura. Un limite di risorse non equivale a un testo rifiutato.</p>
+</main><script src="compiler.js"></script><script src="grammar-lab.js"></script></body></html>
