@@ -515,3 +515,7 @@ Importa una lezione usa il contratto Storage Safe con provider Browser/Files, Re
 ## Mira 0.89.6: costruzione e aritmetica Date fallibili
 
 Il pilota Importa una lezione usa try date from: dal contratto Date Safe con provider selezionato staticamente. Il tipo Date è quello opaco di Services / Date, non una copia. I fallimenti previsti sono Date Error e vengono convertiti in messaggi al confine UI. Test differenziali del compilato JS/PHP: anni iniziali, anni bisestili, date invalide e non canoniche, giorni negativi, limiti 0001–9999, frazioni, NaN, Infinity, verifica di identità del tipo e rifiuto di costruzione arbitraria/capability fuori scope. Le API originali e il formato persistito restano invariati. L'aritmetica fallibile è esercitata dai test, non è un nuovo controllo interattivo della pagina. Il doppio parsing di successo è conservativo e non misurato.
+
+## Mira 0.89.7: decoder JSON consolidati
+
+Il laboratorio JSON e Importa una lezione caricano lo stesso sorgente di Data / Outcome e Data / Decoder Outcome. Il helper generico converte l'envelope dei decoder in Result, evitando codice duplicato nei provider. Test checked con più tipi di payload e JS/PHP; test generator rifiuta identità errata. Nessun cambio ai dati salvati o al comportamento JSON. Il comando build:json e i test CLI usano --module-root lib/common, primo incremento del tooling multifile. Restano da estrarre il validatore puro e da progettare encoder/codec più ricchi; nessuna misurazione prestazionale nuova.

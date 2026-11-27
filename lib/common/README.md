@@ -7,3 +7,7 @@ try date from: returns Result (Date, Text) and uses valid date: before date from
 ## 0.89.6
 
 Services / Date Safe is now an independent contract with a selected native provider and nominal Date Error. It replaces the earlier Text error signature (pre-1.0); callers must match Date Error or use date error code:. Both try date from: and try add days:to: preserve the existing opaque Services / Date / Date identity. The host returns only a private structural envelope. The safe provider reconstructs through date from:, so successful results are parsed again; avoiding that requires a better typed boundary or a change to the original Date contract. No new calendar implementation. The original Services / Date API remains unchanged.
+
+## 0.89.7
+
+Data / Decoder Outcome provides decoded result:, a generic converter from the trusted decoder envelope {values: [T], error: Text} to Result (T, Text). Both JSON providers reuse it. The zero/one list invariant belongs to the adapter; this helper is not a general wire validator. No new runtime primitive. CLI library consumers can use --module-root lib/common; additional logical roots must not contain competing modules of the same identity.

@@ -886,3 +886,7 @@ Il modulo concreto Providers / Native può usare native magnitude; il consumator
 ## Mira 0.89.4: import selettivi di tipi nei contratti indipendenti
 
 Un contratto interface-only può importare tipi pubblici esplicitamente nominati, dopo le dichiarazioni delle firme. Esempio: import Data / Outcome { Result; };. Riusa ModuleImport e il resolver ordinario; le firme usano l'identità nominale originale. Il provider eredita i tipi nello scope dell'interfaccia; importa esplicitamente i costruttori nella propria implementazione. Non si esportano automaticamente i tipi importati. Wildcard, import a file, valori/selettori e re-export restano esclusi da questa forma. Nessuna nuova sintassi, AST o ABI. Il grafo registra la dipendenza d'interfaccia; test di stabilità delle impronte con/senza provider.
+
+## Mira 0.89.7: librerie logiche condivise
+
+Nessuna nuova sintassi Mira. Il comando CLI può includere --module-root lib/common (ripetibile) per risolvere moduli logici in directory aggiuntive; i nomi ambigui sono rifiutati e gli import legacy tra virgolette restano relativi all'entry. I decoder JSON condividono ora il normale Result del modulo Data / Outcome e il helper parametrico decoded result: di Data / Decoder Outcome. Vedi module-design.md e lib/json/README.md.

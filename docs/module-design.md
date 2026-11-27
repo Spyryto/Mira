@@ -366,3 +366,7 @@ Uno scope esplicito nel manifest restringe la risoluzione delle capability al mo
 ## 0.89.4 — dipendenze di tipo nei contratti indipendenti
 
 Primo sottoinsieme concreto di MOD-02: import logico selettivo di tipi, risolto prima di elaborare le firme astratte e riusato quando il provider eredita l'interfaccia. Token e coordinate originali, stesso controllo cicli e alias; niente wildcard, import file, re-export o valori. I tipi importati non diventano esportazioni locali. Test confronto fingerprint con e senza binding, identità comune in due servizi indipendenti, casi negativi e codice JS/PHP. Composizione generale dei contratti, re-export e import di valori rimangono aperti. Nessuna cache o link runtime nuovo.
+
+## 0.89.7 — radici di libreria esplicite nella CLI
+
+--module-root directory è ripetibile; le directory esplicite sono relative al cwd, devono esistere, vengono risolte a percorsi reali e deduplicate. Un import logico cerca la convenzione path.mira nella directory dell'entry e in tutte le radici aggiuntive; due file candidati sono un errore, non una precedenza implicita. I symlink dei file e sottopercorsi restano rifiutati. Gli import a file tra virgolette continuano a usare soltanto la directory dell'entry. Vale per analisi, report e compilazione; nessun accesso al filesystem nel core. Il primo utilizzatore è lib/json con --module-root lib/common. I test includono conflitti, radici mancanti, deduplicazione, symlink e comportamento legacy. Configurazione di progetto, composizione dei manifest, build per target e cache sono ancora aperti.

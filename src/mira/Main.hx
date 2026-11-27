@@ -43,6 +43,17 @@ class Main {
                 providers = mira.resolve.ProviderBindings.fromJson(fs.readFileSync(args[bindingFlag+1],"utf8"));
                 args.splice(bindingFlag,2);
             }
+            // Explicit additional logical module roots, relative to cwd.
+            // Quoted legacy file imports stay relative to the entry.
+            final extraRoots:Array<String> = [];
+            var rootFlag = args.indexOf("--module-root");
+            while (rootFlag >= 0) {
+                if (rootFlag + 1 >= args.length || StringTools.startsWith(args[rootFlag+1],"--"))
+                    throw new MiraError("--module-root requires a directory");
+                extraRoots.push(args[rootFlag+1]);
+                args.splice(rootFlag,2);
+                rootFlag = args.indexOf("--module-root");
+            }
             final checkedFlag = args.indexOf("--checked");
             if (checkedFlag >= 0) args.splice(checkedFlag,1);
 
@@ -66,16 +77,29 @@ class Main {
             // Imports are relative to the entry directory, not to the process cwd.
             final path:Dynamic = Syntax.code("require('node:path')");
             final root:String = fs.realpathSync(path.dirname(path.resolve(args[0])));
+            final roots:Array<String> = [root];
+            for (directory in extraRoots) {
+                if (!fs.existsSync(directory) || !fs.statSync(directory).isDirectory())
+                    throw new MiraError("Module root is not a directory: " + directory);
+                final resolved:String = fs.realpathSync(directory);
+                if (roots.indexOf(resolved) < 0) roots.push(resolved);
+            }
             final entry:String = path.basename(args[0]);
             final readModule = function(name:String):Null<String> {
                 // Logical paths are resolved by this host convention, not by the core.
-                final relative = StringTools.endsWith(name,".mira") ? name : name.split(" / ").join("/") + ".mira";
-                final requested:String = path.resolve(root, relative);
-                if (!fs.existsSync(requested)) return null;
-                final actual:String = fs.realpathSync(requested);
-                if (actual != requested) throw new MiraError("Module symlinks are not supported");
-                if (!fs.statSync(actual).isFile()) return null;
-                return fs.readFileSync(actual, "utf8");
+                final legacy = StringTools.endsWith(name,".mira");
+                final relative = legacy ? name : name.split(" / ").join("/") + ".mira";
+                var found:Null<String> = null;
+                for (directory in (legacy ? [root] : roots)) {
+                    final requested:String = path.resolve(directory,relative);
+                    if (!fs.existsSync(requested)) continue;
+                    final actual:String = fs.realpathSync(requested);
+                    if (actual != requested) throw new MiraError("Module symlinks are not supported");
+                    if (!fs.statSync(actual).isFile()) continue;
+                    if (found != null) throw new MiraError("Ambiguous module " + name + ": " + found + " and " + actual);
+                    found = actual;
+                }
+                return found == null ? null : fs.readFileSync(found,"utf8");
             };
             if (checkedFlag >= 0 && args[1] != "js" && args[1] != "php")
                 throw new MiraError("--checked requires a js or php target");
@@ -133,7 +157,7 @@ class Main {
 
     static function usage(nodeProcess:Dynamic):Void {
         nodeProcess.stderr.write(
-            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens|--check|--check-json|--interfaces> [output] [--host manifest.json] [--locations] [--checked] [--tree-shake] [--profile] [--bindings bindings.json]\n"
+            "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens|--check|--check-json|--interfaces> [output] [--host manifest.json] [--locations] [--checked] [--tree-shake] [--profile] [--bindings bindings.json] [--module-root directory]...\n"
         );
         nodeProcess.exitCode = 2;
     }

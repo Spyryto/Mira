@@ -1,0 +1,10 @@
+module Data / Decoder Outcome;
+interface
+decoded result (T): :: ({values: [T], error: Text}) -> Result (T, Text);
+import Data / Outcome { Result; };
+implementation
+import Data / Outcome { Ok: ; Err: ; };
+decoded result: envelope =
+  fold: (envelope ~ values),
+    with: {acc, item | Ok: item},
+    from: (Err: (envelope ~ error));

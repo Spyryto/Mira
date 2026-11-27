@@ -4,5 +4,6 @@
   "provider": "Providers / Json Native",
   "capability": "native decode lesson",
   "fallibleSelector": "try decode lesson:",
-  "fallibleCapability": "native try decode lesson"
+  "fallibleCapability": "native try decode lesson",
+  "resultType": "Data / Outcome / Result"
 }

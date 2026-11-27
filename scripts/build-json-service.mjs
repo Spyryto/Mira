@@ -4,7 +4,7 @@ import {resolve} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {generateJsonDecoder} from './json-contract.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
-const run=spawnSync('node',['dist/mira.cjs','lib/json/App.mira','--interfaces'],{cwd:root,encoding:'utf8'});
+const run=spawnSync('node',['dist/mira.cjs','lib/json/App.mira','--interfaces','--module-root','lib/common'],{cwd:root,encoding:'utf8'});
 if(run.status!==0)throw Error(run.stderr||String(run.error));
 const config=JSON.parse(readFileSync(resolve(root,'lib/json/decoder.json'),'utf8'));
 const generated=generateJsonDecoder(JSON.parse(run.stdout),config);
