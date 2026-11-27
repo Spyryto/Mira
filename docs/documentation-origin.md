@@ -8,10 +8,10 @@
 | Categoria | Parole | Quota | Documenti coinvolti |
 | --- | ---: | ---: | ---: |
 | Generata automaticamente dal tooling | 29.907 | 30,1% | 4 |
-| Redatta con assistenza IA (dichiarata) | 60.196 | 60,6% | 17 |
+| Redatta con assistenza IA (dichiarata) | 60.411 | 60,7% | 18 |
 | Redazione umana dichiarata | 0 | 0,0% | 0 |
-| Provenienza non verificata | 9199 | 9,3% | 3 |
-| **Totale** | **99.302** | **100%** | **23** |
+| Provenienza non verificata | 9199 | 9,2% | 3 |
+| **Totale** | **99.517** | **100%** | **24** |
 
 I documenti coinvolti **non sono sommabili**: per esempio il README contiene
 una sezione generata dal tooling e altre sezioni editoriali. Le percentuali
@@ -42,6 +42,7 @@ arrotondamenti).
 | [`docs/structured-data.md`](../docs/structured-data.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 1617 | — |
 | [`docs/studio.md`](../docs/studio.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 6288 | — |
 | [`docs/syntax.md`](../docs/syntax.md) | Intero documento | Provenienza non verificata | 1838 | — |
+| [`docs/theme.md`](../docs/theme.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 215 | — |
 | [`docs/type-checker.md`](../docs/type-checker.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 8554 | — |
 | [`docs/type-representation.md`](../docs/type-representation.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 7120 | — |
 | [`README.md`](../README.md) | Resto del documento | Redatta con assistenza IA (dichiarata) | 4523 | — |
@@ -86,5 +87,5 @@ npm run docs
 node scripts/generate-documentation-origin.mjs --check
 ```
 
-Dimensione totale classificata: **736.842 byte UTF-8**,
-in **23 documenti** e **24 sezioni attribuite**.
+Dimensione totale classificata: **738.316 byte UTF-8**,
+in **24 documenti** e **25 sezioni attribuite**.
