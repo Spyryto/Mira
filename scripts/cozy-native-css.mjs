@@ -19,7 +19,7 @@ export function nativeCozyCss(source) {
     ['#cozy .shell','.mira-theme .shell'],
     ['#cozy .panel','.mira-theme .panel'],
     ['#cozy .panel label,#cozy .panel output,#cozy .panel strong,#cozy .panel span:not(.switch),#cozy .panel pre,#cozy .panel .group','.mira-theme .panel .mira-ui-label,.mira-theme .panel .mira-ui-text,.mira-theme .panel .mira-ui-title'],
-    ['#cozy .field label','.mira-theme .mira-ui-label'],
+    ['#cozy .field label','.mira-theme .mira-ui-control:not(.mira-ui-check) .mira-ui-label'],
     ['#cozy .btn','.mira-theme .mira-ui-button'],
     ['#cozy .btn.primary','.mira-theme .mira-ui-button.mira-primary'],
     ['#cozy .btn:active:not(:disabled)','.mira-theme .mira-ui-button:active:not(:disabled)'],
@@ -34,6 +34,7 @@ export function nativeCozyCss(source) {
   const internal=rule('#cozy .stepper .btn','.unused').match(/box-shadow:[^;}]+/)[0];
   return '/* Generated from mira-theme.css; do not edit. */\n'+pairs.map(([a,b])=>rule(a,b)).join('\n')+
     '\n.mira-theme .panel .mira-ui-button:not(:active){'+internal+'}'+
+    '\n.mira-theme{font-size:var(--size);letter-spacing:var(--spacing);color:var(--pInk)}'+
     '\n.mira-theme .mira-ui-state{display:block}'+
     '\n.mira-theme .mira-ui-column,.mira-theme .mira-ui-grid{display:grid;gap:17px}'+
     '\n.mira-theme .mira-ui-row{display:flex;flex-wrap:wrap;align-items:center;gap:7px}'+
