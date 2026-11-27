@@ -1,0 +1,46 @@
+# Opt-in checked GUI styles. The legacy GUI remains separately importable.
+# These types describe native values, not a second renderer.
+GUI Pixels :: Number where _ >= 0 AND _ <= 4096;
+GUI Font Weight :: Integer where _ >= 100 AND _ <= 900;
+GUI Flex :: Number where _ >= 0 AND _ <= 100;
+
+GUI Size :: Style Fixed (GUI Pixels) = _ | Style Fill = "fill" | Style Auto = "auto";
+
+GUI Alignment ::
+    Align Start = "start"
+  | Align Center = "center"
+  | Align End = "end"
+  | Align Stretch = "stretch"
+  | Align Baseline = "baseline";
+
+GUI Border Style :: Text where _ == "solid" OR _ == "none" OR _ == "dashed";
+GUI Justify :: Text where _ == "start" OR _ == "center" OR _ == "end" OR _ == "space-between" OR _ == "space-around";
+GUI Wrap :: Text where _ == "wrap" OR _ == "nowrap";
+GUI Text Align :: Text where _ == "left" OR _ == "center" OR _ == "right";
+GUI Shadow :: Text where _ == "none" OR _ == "hard" OR _ == "soft";
+
+# Colors remain on the legacy path until regex refinements are available.
+GUI Style :: {
+  padding?: GUI Pixels,
+  margin?: GUI Pixels,
+  gap?: GUI Pixels,
+  radius?: GUI Pixels,
+  borderWidth?: GUI Pixels,
+  fontSize?: GUI Pixels,
+  fontWeight?: GUI Font Weight,
+  flex?: GUI Flex,
+  width?: GUI Size,
+  minWidth?: GUI Size,
+  maxWidth?: GUI Size,
+  borderStyle?: GUI Border Style,
+  align?: GUI Alignment,
+  justify?: GUI Justify,
+  wrap?: GUI Wrap,
+  textAlign?: GUI Text Align,
+  shadow?: GUI Shadow
+};
+
+# Same descriptor ABI as styled:with:. No new runtime validation.
+styled: content, with styles: layers ([GUI Style]) = {
+  type: "styled", view: content, styles: layers
+};
