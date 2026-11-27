@@ -2329,3 +2329,25 @@ test('0.98 Studio checks native payloads and executes the same native values on 
   assert.equal(constant.ok,true,constant.message);
   assert.equal(JSON.parse(constant.output),12.5);
 });
+
+
+test('0.99 Studio optional record schemas retain native output and reject unsafe projections',()=>{
+  const source='Style :: {name: Text, padding?: Number, color?: Text}; original (Style) = {name: "base"}; changed = update: original, with: {padding: 12}; result = {original: original, changed: changed, title: (changed ~ name)};';
+  const checked=bridge.check(source);
+  assert.equal(checked.ok,true,checked.message);
+  const row=JSON.parse(checked.output).find(x=>x.name==='original');
+  assert.equal(row.type,'Style');
+  assert.deepEqual(row.schema.base.fields.find(x=>x.name==='padding'),{name:'padding',type:{kind:'Number'},optional:true});
+  assert.equal(bridge.check(source+'bad = original ~ padding;').ok,false);
+  assert.equal(bridge.check(source+'bad (Style) = {name: "x", typo: 12};').ok,false);
+  for(const target of ['js','php']){
+    const compiled=bridge.compile(source,target,null,false,null,true);
+    const ordinary=bridge.compile(source,target);
+    assert.equal(compiled.ok,true,compiled.message);
+    assert.equal(ordinary.ok,true,ordinary.message);
+    assert.equal(compiled.output,ordinary.output);
+    const actual=target==='js'?JSON.stringify(runInNewContext(compiled.output+'\nresult',{})):
+      spawnSync('php',['-r',compiled.output.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'}).stdout;
+    assert.deepEqual(JSON.parse(actual),{original:{name:'base'},changed:{name:'base',padding:12},title:'base'});
+  }
+});
