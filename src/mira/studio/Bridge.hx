@@ -25,7 +25,7 @@ class Bridge {
             verifyContract: verifyContract,
             constantData: constantData,
             styleContractSource: styleContractSource,
-            version: "0.96"
+            version: "0.97"
         });
     }
 
@@ -122,6 +122,7 @@ class Bridge {
                     column: definition.origin.column,
                     body: expression(definition.body)
                 };
+                if (definition.scalarValue != null) Reflect.setField(node,"scalarEncoding",expression(definition.scalarValue));
                 if (definition.origin.file != null) Reflect.setField(node, "file", definition.origin.file);
                 if (definition.modulePath != null) {
                     Reflect.setField(node, "module",definition.modulePath);
