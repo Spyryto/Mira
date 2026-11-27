@@ -200,3 +200,28 @@ x ha tipo Option (Number) e result contiene 12 e 0. La modalità checked richied
 Il nuovo nodo OptionalFieldGet conserva il receiver, la chiave e il template Option lessicale. Il checker applica il template al tipo del campo, preservando l'identità nominale e la visibilità. L'emitter usa la rappresentazione tagged già esistente di Some/None solo quando serve un valore Option. Un match diretto ed esaustivo con handler corretti viene invece specializzato nel punto di emissione: un solo test di presenza, receiver valutato una volta, payload originale al ramo Some e nessuna allocazione intermedia di Option. Restano le closure del match. Il tree shaker e la raccolta delle catture visitano il receiver. Nessun nuovo runtime o tabella. La modalità non checked non garantisce validità del receiver o tipo del campo.
 
 Limiti intenzionali: la dichiarazione Option deve essere visibile col nome Option e avere esattamente i due casi standard, non un tipo opaco o un alias con nome differente. Non sono ancora supportate sezioni/accessor ~?, flow narrowing della presenza, ottimizzazione di accessi dopo update, varianti opzionali generiche unboxed o fusione attraverso binding intermedi. Non si promette un miglioramento misurato delle prestazioni. Il Laboratorio tipi mostra esempio e AST; i test esercitano nominalità, import, false/0/testo vuoto, entrambi gli ordini dei rami, catture, tree shaking e JS/PHP. La prossima versione proposta è 0.101 per la presenza statica.
+
+
+## Static presence inference 0.101
+
+Stato: candidata. Nessuna sintassi aggiuntiva. Le prove positive di presenza appartengono alle espressioni e ai binding immutabili, non al tipo nominale o alla rappresentazione del record.
+
+```mira
+Option (T) :: Some (T) | None;
+Style :: {padding?: Number};
+original (Style) = {};
+padded = update: original, with: {padding: 0};
+result = padded ~ padding;
+chosen = match: (padded ~? padding) {
+  some: {p | p},
+  none: {| 12}
+};
+```
+
+Il checker conserva le chiavi dei literal, le propaga per alias locali e globali nello stesso modulo, catture lessicali e update:with: (unione delle chiavi provate della base e della patch). Nei condizionali mantiene solo l'intersezione dei fatti dei rami. Un parametro o una chiamata ordinaria non eredita fatti arbitrari; un binding che oscura il precedente non eredita la sua presenza. I fatti non entrano nelle firme, nello schema pubblico o nei fingerprint. I campi continuano a essere opzionali nel tipo Style. I valori originali non vengono modificati.
+
+Il checker accetta ~ su un campo opzionale provato presente e registra un fatto di emissione per quel nodo. JS/PHP emettono accesso diretto; ~? conserva il tipo Option ma può costruire Some senza controllare la presenza. Nel match diretto fuso viene emesso il solo ramo Some senza test di presenza, mantenendo la valutazione del receiver. Per la presenza sconosciuta si conserva il comportamento 0.100. Non si promette l'eliminazione di tutte le closure o allocazioni.
+
+Confine di validità: la prova assume l'immutabilità dei record Mira. Un host fidato non deve mutare i record ricevuti per riferimento o alterare la semantica delle primitive native; non è un sistema di effetti né un isolamento da JS ostile. Non si propagano fatti da funzioni generiche, risultati host o attraverso confini modulari. Non si deduce l'assenza e non si introducono test di presenza con narrowing nei rami, righe opzionali, accesso a percorsi annidati o analisi interprocedurale. Le dichiarazioni e gli aggiornamenti si validano ancora con le regole della 0.99. Nessuna misura prestazionale specifica ancora disponibile.
+
+Mira Studio: Presenza statica dei campi nel Laboratorio tipi. Test di regressione per identità nominale, scoping e shadowing, join, aggiornamenti immutabili, catture e assenza dei controlli nel JS/PHP checked, con mantenimento dei controlli per parametri sconosciuti.
