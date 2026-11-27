@@ -18,7 +18,8 @@ class SourceEmitter {
         reservedHostNames:Array<String>,
         ?guards:ObjectMap<Dynamic,NumericGuard>,
         ?comparisons:ObjectMap<Dynamic,ScalarComparison>,
-        ?scalarMatches:ObjectMap<Dynamic,Array<NativeCase>>
+        ?scalarMatches:ObjectMap<Dynamic,Array<NativeCase>>,
+        ?provenPresence:ObjectMap<Dynamic,Bool>
     ):String {
         final emitted = switch (expr) {
             case Name(name):
@@ -44,8 +45,11 @@ class SourceEmitter {
             case FieldGet(record, key):
                 // Evaluate the receiver once and preserve the same missing-key
                 // error semantics as the first-class field accessor.
-                "(" + expression(FieldAccessor(key), target, scope, reservedHostNames, guards, comparisons, scalarMatches)
-                    + ")(" + expression(record, target, scope, reservedHostNames, guards, comparisons, scalarMatches) + ")";
+                if (provenPresence != null && provenPresence.exists(expr))
+                    "(" + expression(record,target,scope,reservedHostNames,guards,comparisons,scalarMatches,provenPresence) + ")["
+                    + (target == Php ? phpString(key) : haxe.Json.stringify(key)) + "]";
+                else "(" + expression(FieldAccessor(key), target, scope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence)
+                    + ")(" + expression(record, target, scope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence) + ")";
 
             case OptionalFieldGet(record,key,_):
                 final value = target == Php ? "$__miraOptionalRecord" : "__miraOptionalRecord";
@@ -54,13 +58,13 @@ class SourceEmitter {
                 final some = target == Php ? "['tag' => 'Some', 'value' => " + value + "[" + quoted + "]]"
                     : "({tag: 'Some', value: " + value + "[" + quoted + "]})";
                 final none = target == Php ? "['tag' => 'None']" : "({tag: 'None'})";
-                final body = present + " ? " + some + " : " + none;
+                final body = provenPresence != null && provenPresence.exists(expr) ? some : present + " ? " + some + " : " + none;
                 final wrapper = target == Php ? "(static fn(" + value + ") => " + body + ")"
                     : "((" + value + ") => " + body + ")";
-                wrapper + "(" + expression(record,target,scope,reservedHostNames,guards,comparisons,scalarMatches) + ")";
+                wrapper + "(" + expression(record,target,scope,reservedHostNames,guards,comparisons,scalarMatches,provenPresence) + ")";
 
             case FieldSection(key):
-                expression(FieldAccessor(key), target, scope, reservedHostNames, guards, comparisons, scalarMatches);
+                expression(FieldAccessor(key), target, scope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence);
 
             case FieldAccessor(key):
                 final accessor = switch (target) {
@@ -93,7 +97,8 @@ class SourceEmitter {
                         {receiver:receiver,key:key};
                     default: null;
                 };
-                final args = [expression(fused == null ? input : fused.receiver,target,scope,reservedHostNames,guards, comparisons, scalarMatches)];
+                final args = [expression(fused == null ? input : fused.receiver,target,scope,reservedHostNames,guards, comparisons, scalarMatches, provenPresence)];
+                final knownSome = fused != null && provenPresence != null && provenPresence.exists(input);
                 final codes = scalarMatches == null ? null : scalarMatches.get(expr);
                 final tag = codes != null ? v : target == Php ? v + "['tag']" : v + ".tag";
                 final payload = target == Php ? v + "['value']" : v + ".value";
@@ -101,7 +106,7 @@ class SourceEmitter {
                 for (i in 0...tags.length) {
                     final handler = prefix + "__miraMatchHandler" + i;
                     formals.push(handler);
-                    args.push(expression(handlers[i],target,scope,reservedHostNames,guards, comparisons, scalarMatches));
+                    args.push(expression(handlers[i],target,scope,reservedHostNames,guards, comparisons, scalarMatches, provenPresence));
                     final arity = switch (handlers[i]) { case Block(parameters,_): parameters.length; default: 0; };
                     final predicate = fused != null
                         ? (tags[i] == "Some" ? "" : "!") + optionalPresence(target,v,target == Php ? phpString(fused.key) : haxe.Json.stringify(fused.key))
@@ -115,7 +120,9 @@ class SourceEmitter {
                     final argument = arity == 0 ? "" : fused != null
                         ? v + "[" + (target == Php ? phpString(fused.key) : haxe.Json.stringify(fused.key)) + "]"
                         : codes == null ? payload : v;
-                    branches.push((fused != null && i == 1 ? "" : "if (" + predicate + ") ") + "return " + handler + "(" + argument + ");");
+                    if (knownSome) {
+                        if (tags[i] == "Some") branches.push("return " + handler + "(" + argument + ");");
+                    } else branches.push((fused != null && i == 1 ? "" : "if (" + predicate + ") ") + "return " + handler + "(" + argument + ");");
                 }
                 branches.push("throw new " + (target == Php ? "\\RuntimeException" : "Error") + "('Mira unmatched sum alternative');");
                 final body = branches.join(" ");
@@ -126,7 +133,7 @@ class SourceEmitter {
             case Variant(_,tag,payload):
                 final fields = payload == null ? ["tag"] : ["tag","value"];
                 final values:Array<Expr> = payload == null ? [Text(tag)] : [Text(tag),payload];
-                expression(Record(fields,values),target,scope,reservedHostNames,guards, comparisons, scalarMatches);
+                expression(Record(fields,values),target,scope,reservedHostNames,guards, comparisons, scalarMatches, provenPresence);
             case ValidateResult(input,required,_):
                 final constraint = new NumericGuard();
                 constraint.integer = mira.types.NumericRange.integerType(required);
@@ -141,7 +148,7 @@ class SourceEmitter {
                 final body = "(" + predicate + " ? " + yes + " : " + no + ")";
                 final wrapper = target == Php ? "(static fn(" + v + ") => " + body + ")"
                     : "((" + v + ") => " + body + ")";
-                wrapper + "(" + expression(input,target,scope,reservedHostNames,guards, comparisons, scalarMatches) + ")";
+                wrapper + "(" + expression(input,target,scope,reservedHostNames,guards, comparisons, scalarMatches, provenPresence) + ")";
             case Validate(input,required,success,failure):
                 final constraint = new NumericGuard();
                 constraint.integer = mira.types.NumericRange.integerType(required);
@@ -156,18 +163,18 @@ class SourceEmitter {
                 final params = v + ", " + yes + ", " + no;
                 final wrapper = target == Php ? "(static fn(" + params + ") => " + body + ")"
                     : "((" + params + ") => " + body + ")";
-                wrapper + "(" + expression(input,target,scope,reservedHostNames,guards, comparisons, scalarMatches) + ", "
-                    + expression(success,target,scope,reservedHostNames,guards, comparisons, scalarMatches) + ", "
-                    + expression(failure,target,scope,reservedHostNames,guards, comparisons, scalarMatches) + ")";
+                wrapper + "(" + expression(input,target,scope,reservedHostNames,guards, comparisons, scalarMatches, provenPresence) + ", "
+                    + expression(success,target,scope,reservedHostNames,guards, comparisons, scalarMatches, provenPresence) + ", "
+                    + expression(failure,target,scope,reservedHostNames,guards, comparisons, scalarMatches, provenPresence) + ")";
 
             case Conditional(predicate, whenTrue, whenFalse):
-                "(" + expression(predicate, target, scope, reservedHostNames, guards, comparisons, scalarMatches)
-                    + " ? " + expression(whenTrue, target, scope, reservedHostNames, guards, comparisons, scalarMatches)
-                    + " : " + expression(whenFalse, target, scope, reservedHostNames, guards, comparisons, scalarMatches) + ")";
+                "(" + expression(predicate, target, scope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence)
+                    + " ? " + expression(whenTrue, target, scope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence)
+                    + " : " + expression(whenFalse, target, scope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence) + ")";
 
             case Sequence(items):
                 "[" + [for (item in items)
-                    expression(item, target, scope, reservedHostNames, guards, comparisons, scalarMatches)].join(", ") + "]";
+                    expression(item, target, scope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence)].join(", ") + "]";
 
             case Block(parameters, body):
                 final names = [for (parameter in parameters) Mangle.name(parameter)];
@@ -181,18 +188,18 @@ class SourceEmitter {
                             switch (items[index]) {
                                 case Local(name, value):
                                     final rhs = expression(value, target,
-                                        innerScope, reservedHostNames, guards, comparisons, scalarMatches);
+                                        innerScope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence);
                                     final symbol = Mangle.name(name);
                                     statements.push((target == Php ? "$" : "const ")
                                         + symbol + " = " + rhs + ";");
                                     innerScope.unshift(name);
                                 default:
                                     statements.push(expression(items[index], target,
-                                        innerScope, reservedHostNames, guards, comparisons, scalarMatches) + ";");
+                                        innerScope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence) + ";");
                             }
                         }
                         final last = expression(items[items.length - 1], target,
-                            innerScope, reservedHostNames, guards, comparisons, scalarMatches);
+                            innerScope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence);
                         final contents = statements.join(" ") + " return " + last + ";";
                         switch (target) {
                             case JavaScript:
@@ -221,7 +228,7 @@ class SourceEmitter {
                     default:
                         // Preserve compact native arrows for single-expression blocks.
                         final value = expression(body, target, innerScope,
-                            reservedHostNames, guards, comparisons, scalarMatches);
+                            reservedHostNames, guards, comparisons, scalarMatches, provenPresence);
                         switch (target) {
                             case JavaScript: "((" + formals.join(", ") + ") => " + value + ")";
                             case Php: "(fn(" + formals.join(", ") + ") => " + value + ")";
@@ -240,7 +247,7 @@ class SourceEmitter {
                         case JavaScript: haxe.Json.stringify(keys[index]);
                         case Php: phpString(keys[index]);
                     };
-                    final value = expression(values[index], target, scope, reservedHostNames, guards, comparisons, scalarMatches);
+                    final value = expression(values[index], target, scope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence);
                     entries.push(switch (target) {
                         case JavaScript: (keys[index] == "__proto__" ? "[" + key + "]" : key) + ": " + value;
                         case Php: key + " => " + value;
@@ -255,32 +262,32 @@ class SourceEmitter {
                 if (["+", "-", "*", "/", "%", "==", "!=", "<", ">", "<=", ">=", "AND", "OR"].indexOf(symbol) < 0) {
                     throw new MiraError("Unsupported operator " + symbol);
                 }
-                binarySource(symbol,expression(left,target,scope,reservedHostNames,guards, comparisons, scalarMatches),
-                    expression(right,target,scope,reservedHostNames,guards, comparisons, scalarMatches),target,
+                binarySource(symbol,expression(left,target,scope,reservedHostNames,guards, comparisons, scalarMatches, provenPresence),
+                    expression(right,target,scope,reservedHostNames,guards, comparisons, scalarMatches, provenPresence),target,
                     comparisons == null ? null : comparisons.get(expr));
 
             case OperatorSection(symbol, left, right):
-                operatorSection(symbol, left, right, target, scope, reservedHostNames, guards, comparisons, scalarMatches, comparisons == null ? null : comparisons.get(expr));
+                operatorSection(symbol, left, right, target, scope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence, comparisons == null ? null : comparisons.get(expr));
 
             case Call(selector, arguments):
                 selectorCall(selector, [
-                    for (arg in arguments) expression(arg, target, scope, reservedHostNames, guards, comparisons, scalarMatches)
+                    for (arg in arguments) expression(arg, target, scope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence)
                 ], target, false);
 
             case HostCall(selector, arguments):
                 selectorCall(selector, [
-                    for (arg in arguments) expression(arg, target, scope, reservedHostNames, guards, comparisons, scalarMatches)
+                    for (arg in arguments) expression(arg, target, scope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence)
                 ], target, true);
 
             case Section(selector, arguments):
-                section(selector, arguments, target, scope, reservedHostNames, false, guards, comparisons, scalarMatches);
+                section(selector, arguments, target, scope, reservedHostNames, false, guards, comparisons, scalarMatches, provenPresence);
 
             case HostSection(selector, arguments):
-                section(selector, arguments, target, scope, reservedHostNames, true, guards, comparisons, scalarMatches);
+                section(selector, arguments, target, scope, reservedHostNames, true, guards, comparisons, scalarMatches, provenPresence);
 
             case Apply(callee, arg):
-                "(" + expression(callee, target, scope, reservedHostNames, guards, comparisons, scalarMatches)
-                    + ")(" + (arg == null ? "" : expression(arg, target, scope, reservedHostNames, guards, comparisons, scalarMatches)) + ")";
+                "(" + expression(callee, target, scope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence)
+                    + ")(" + (arg == null ? "" : expression(arg, target, scope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence)) + ")";
 
             case Placeholder:
                 throw new MiraError("A placeholder cannot be emitted outside a selector section");
@@ -425,6 +432,7 @@ class SourceEmitter {
         ?guards:ObjectMap<Dynamic,NumericGuard>,
         ?comparisons:ObjectMap<Dynamic,ScalarComparison>,
         ?scalarMatches:ObjectMap<Dynamic,Array<NativeCase>>,
+        ?provenPresence:ObjectMap<Dynamic,Bool>,
         ?comparison:ScalarComparison
     ):String {
         if (["+", "-", "*", "/", "%", "==", "!=", "<", ">", "<=", ">=", "AND", "OR"].indexOf(symbol) < 0) {
@@ -439,7 +447,7 @@ class SourceEmitter {
                     parameters.push(parameter);
                     operands.push(target == Php ? "$" + parameter : parameter);
                 default:
-                    operands.push(expression(operand, target, scope, reservedHostNames, guards, comparisons, scalarMatches));
+                    operands.push(expression(operand, target, scope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence));
             }
         }
         if (parameters.length == 0) throw new MiraError("Operator section needs a placeholder");
@@ -461,7 +469,8 @@ class SourceEmitter {
         fromHost:Bool,
         ?guards:ObjectMap<Dynamic,NumericGuard>,
         ?comparisons:ObjectMap<Dynamic,ScalarComparison>,
-        ?scalarMatches:ObjectMap<Dynamic,Array<NativeCase>>
+        ?scalarMatches:ObjectMap<Dynamic,Array<NativeCase>>,
+        ?provenPresence:ObjectMap<Dynamic,Bool>
     ):String {
         final params:Array<String> = [];
         final emittedArgs:Array<String> = [];
@@ -472,7 +481,7 @@ class SourceEmitter {
                     params.push(param);
                     emittedArgs.push(target == Php ? "$" + param : param);
                 default:
-                    emittedArgs.push(expression(argument, target, scope, reservedHostNames, guards, comparisons, scalarMatches));
+                    emittedArgs.push(expression(argument, target, scope, reservedHostNames, guards, comparisons, scalarMatches, provenPresence));
             }
         }
         if (params.length == 0) throw new MiraError("A section needs a placeholder");
