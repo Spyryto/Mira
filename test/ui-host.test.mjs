@@ -1285,3 +1285,22 @@ test('GUI checked: select options reject duplicate literals and missing literal 
   assert.throws(()=>runInNewContext(compiled.output,{__miraHost:host}),/grid.columns/);
   assert.equal(compiler.check('grid: n, children: xs = n; result = grid: 7, children: [];').ok,true);
 });
+
+
+test('GUI checked widgets catalog mounts and changes selection without recreating the select',()=>{
+  const source=demo('gui-checked-widgets').source;
+  for(const target of ['js','php']){
+    const compiled=compiler.compile(source,target,manifest,false,undefined,true);
+    assert.equal(compiled.ok,true,compiled.message);
+    assert.equal(compiled.output,compiler.compile(source,target,manifest).output);
+  }
+  const {root,host,errors}=setup();
+  runInNewContext(compiler.compile(source,'js',manifest,false,undefined,true).output,{__miraHost:host});
+  const select=findAll(root,'select')[0];
+  assert.equal(select.value,'Chitarra');
+  select.value='Basso';
+  select.dispatch('change');
+  assert.match(root.textContent,/Basso/);
+  assert.equal(findAll(root,'select')[0],select);
+  assert.deepEqual(errors,[]);
+});
