@@ -13,6 +13,8 @@ const ASSETS = [
   './app.js',
   './workbench-fullscreen.js',
   './syntax-highlight.js',
+  './lab-highlight.js',
+  './lab-highlight.css',
   './reference-ui.js',
   './atlas-ui.js',
   './benchmark-ui.js',

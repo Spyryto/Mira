@@ -35,8 +35,14 @@ try{
    await page.screenshot({path:resolve(out,name+'-examples.png'),fullPage:false});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,name+' guide horizontal overflow');
    await page.goto(url+'theme-native-lab.html');
-   await page.locator('#theme-preview').waitFor();
+   await page.locator('#theme-preview .mira-ui-button').first().waitFor();
    await page.screenshot({path:resolve(out,name+'-widgets.png'),fullPage:true});
+   if(name==='phone'||name==='desktop'){
+    for(const route of ['type-lab','grammar-lab','host-module-lab','module-explorer','projection-lab','lesson-import','persistent-ledger','effects-demo','gui-benchmark','theme-lab','laboratory','design-notes']){
+     await page.goto(url+route+'.html');
+     await page.screenshot({path:resolve(out,name+'-'+route+'.png'),fullPage:false});
+    }
+   }
   }catch(error){failures.push(name+': '+error.message);}finally{await page.close();}
  }
 }finally{await browser.close();await new Promise(r=>server.close(r));}

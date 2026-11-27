@@ -80,6 +80,7 @@ export function mountReference(root, dataset, onOpenExample) {
     const results = element('div', 'reference-list');
 
     const mode = location.hash.endsWith('/examples') ? 'examples' : location.hash.endsWith('/capabilities') ? 'capabilities' : 'all';
+    for(const anchor of controls.children){const active=anchor.getAttribute('href')===(mode==='examples'?'#/guide/examples':mode==='capabilities'?'#/guide/capabilities':'#/guide');anchor.classList.toggle('reference-active',active);if(active)anchor.setAttribute('aria-current','page');}
     const filters=element('div','reference-filters');
     const addFilter=(label,values)=>{
       const wrapper=element('label','',label);const select=element('select');
@@ -95,10 +96,10 @@ export function mountReference(root, dataset, onOpenExample) {
     const count=element('p','reference-count');count.setAttribute('role','status');
     const more=element('button','reference-try','Mostra altri');more.type='button';
     let limit=40;
-    const normalize=value=>String(value??'').normalize('NFD').replace(/\\p{M}/gu,'').toLocaleLowerCase('it');
+    const normalize=value=>String(value??'').normalize('NFD').replace(/\p{M}/gu,'').toLocaleLowerCase('it');
     const update = () => {
       results.replaceChildren();
-      const terms=normalize(search.value).trim().split(/\\s+/).filter(Boolean);
+      const terms=normalize(search.value).trim().split(/\s+/).filter(Boolean);
       const matches=values=>{const hay=normalize(values.join(' '));return terms.every(t=>hay.includes(t));};
       const narrowed=!!(category.value||version.value||featureFilter.value||selector.value);
       const entries=[];
@@ -198,7 +199,7 @@ export function mountReference(root, dataset, onOpenExample) {
       ' simboli pubblici estratti dal codice Haxe'));
     const controls = element('div', 'reference-controls');
     controls.append(link('Linguaggio', 'guide'),
-      link('API Haxe', 'api', 'reference-active'));
+      link('Esempi', 'guide/examples'), link('API Haxe', 'api', 'reference-active'), link('Funzionalità', 'guide/capabilities'));
     root.append(controls, element('p', 'reference-note',
       'Firme e coordinate vengono lette automaticamente dai sorgenti Haxe. ' +
       'Le descrizioni sono mantenute nel catalogo, con link al codice reale.'));
@@ -208,13 +209,18 @@ export function mountReference(root, dataset, onOpenExample) {
     search.placeholder = 'Cerca per modulo, metodo o tipo…';
     search.setAttribute('aria-label', 'Cerca API');
     const list = element('div', 'reference-list');
+    const count=element('p','reference-count');count.setAttribute('role','status');
+    const more=element('button','reference-try','Mostra altre API');more.type='button';
+    let limit=40;
     const update = () => {
       list.replaceChildren();
       const needle = search.value.toLocaleLowerCase('it').trim();
       const items = dataset.api.filter(item =>
         [item.id, item.signature, item.description].join(' ')
           .toLocaleLowerCase('it').includes(needle));
-      for (const item of items) {
+      count.textContent=items.length+' simboli · '+Math.min(items.length,limit)+' mostrati';
+      more.hidden=items.length<=limit;
+      for (const item of items.slice(0,limit)) {
         const card = element('section', 'reference-list-item');
         card.append(link(item.id, 'api/' + encodeURIComponent(item.id),
           'reference-item-link'), element('p', '', item.description));
@@ -222,8 +228,9 @@ export function mountReference(root, dataset, onOpenExample) {
       }
       if (!items.length) list.append(element('p', '', 'Nessun simbolo trovato.'));
     };
-    search.addEventListener('input', update);
-    root.append(search, list);
+    search.addEventListener('input',()=>{limit=40;update();});
+    more.addEventListener('click',()=>{limit+=40;update();});
+    root.append(search,count,list,more);
     update();
   }
 

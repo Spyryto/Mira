@@ -1,5 +1,6 @@
+import {decorateStudioHtml} from './studio-presentation.mjs';
 import {nativeCozyCss} from './cozy-native-css.mjs';
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { runInNewContext } from 'node:vm';
 import { resolve } from 'node:path';
@@ -22,6 +23,8 @@ const assets = [
   'app.js',
   'workbench-fullscreen.js',
   'syntax-highlight.js',
+  'lab-highlight.js',
+  'lab-highlight.css',
   'reference-ui.js',
   'atlas-ui.js',
   'benchmark-ui.js',
@@ -114,14 +117,15 @@ const escape = text => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').rep
 const sections = [];
 let paragraph = [];
 let code = null;
+let codeLanguage='text';
 function flushParagraph() {
   if (paragraph.length) sections.push('<p>' + escape(paragraph.join(' ')) + '</p>');
   paragraph = [];
 }
 for (const line of notebook.split('\n')) {
   if (line.startsWith('```')) {
-    if (code === null) { flushParagraph(); code = []; }
-    else { sections.push('<pre><code>' + escape(code.join('\n')) + '</code></pre>'); code = null; }
+    if (code === null) { flushParagraph(); code = []; codeLanguage=line.slice(3).trim().toLowerCase(); }
+    else { const lang=/^(mira|js|javascript|php|haxe|json|html|css)$/.test(codeLanguage)?codeLanguage:'text'; sections.push('<pre><code data-code-language="'+lang+'">' + escape(code.join('\n')) + '</code></pre>'); code = null; }
   } else if (code !== null) code.push(line);
   else if (line.startsWith('# ') || line.startsWith('## ')) {
     flushParagraph();
@@ -243,5 +247,9 @@ const lab = spawnSync('node', ['scripts/generate-laboratory.mjs'], { cwd: root, 
 if (lab.error || lab.status !== 0) {
   console.error(lab.error?.message ?? 'Laboratory generation failed');
   process.exit(lab.status ?? 1);
+}
+for(const filename of readdirSync(destination).filter(name=>name.endsWith('.html'))){
+  const path=resolve(destination,filename);
+  writeFileSync(path,decorateStudioHtml(filename,readFileSync(path,'utf8')));
 }
 console.log('Mira Studio static assets ready in dist/studio (cache ' + buildId + ')');

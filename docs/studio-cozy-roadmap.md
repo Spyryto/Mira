@@ -21,8 +21,7 @@ found via full-text search. The canonical example fixtures are still tested by C
 - Document all standard library/host contracts with typed signatures, target
   availability, error cases and runnable fixtures. Additional capabilities link
   to source docs until those entries are migrated to the structured guide.
-- Extend shared highlighting to every editable and static snippet in every lab
-  and the generated notebook, preserving language labels and source text.
+- The shared highlighter now covers explicitly tagged source editors, lab code blocks and fenced notebook snippets. Audit mixed-language reports, untagged snippets and editor alignment across browsers.
 - Migrate lab-specific layouts and preview chrome to the same design tokens;
   add keyboard, screen-reader, contrast and offline navigation checks.
 - Review CI screenshots of all routes, add WebKit and Firefox, and approve
