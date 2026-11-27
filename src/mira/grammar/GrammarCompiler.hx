@@ -46,24 +46,24 @@ class GrammarCompiler {
         final b = state();
         switch (value) {
             case CVariant("Literal",CText(text)):
-                var from = a;
+                var cursor = a;
                 for (code in codes(text)) {
                     final next = state();
-                    states[from].edges.push({codes:[code],to:next});
-                    from = next;
+                    states[cursor].edges.push({codes:[code],to:next});
+                    cursor = next;
                 }
-                link(from,b);
+                link(cursor,b);
             case CVariant("Character Set",CText(text)):
                 final chars = codes(text);
                 if (chars.length > 0) states[a].edges.push({codes:chars,to:b});
             case CVariant("Sequence",CList(items)):
-                var from = a;
+                var cursor = a;
                 for (item in items) {
                     final part = build(item,depth+1);
-                    link(from,part.start);
-                    from = part.end;
+                    link(cursor,part.start);
+                    cursor = part.end;
                 }
-                link(from,b);
+                link(cursor,b);
             case CVariant("Choice",CList(items)):
                 for (item in items) {
                     final part = build(item,depth+1);
@@ -79,22 +79,22 @@ class GrammarCompiler {
                 };
                 if (unbounded ? max != 0 : min > max) throw new MiraError("Invalid grammar repetition bounds");
                 final pattern = fields.get("pattern");
-                var from = a;
+                var cursor = a;
                 for (_ in 0...min) {
                     final part = build(pattern,depth+1);
-                    link(from,part.start);
-                    from = part.end;
+                    link(cursor,part.start);
+                    cursor = part.end;
                 }
-                link(from,b);
+                link(cursor,b);
                 if (unbounded) {
                     final part = build(pattern,depth+1);
-                    link(from,part.start);
-                    link(part.end,from);
+                    link(cursor,part.start);
+                    link(part.end,cursor);
                 } else for (_ in min...max) {
                     final part = build(pattern,depth+1);
-                    link(from,part.start);
-                    from = part.end;
-                    link(from,b);
+                    link(cursor,part.start);
+                    cursor = part.end;
+                    link(cursor,b);
                 }
             default: throw new MiraError("Invalid Grammar value");
         }
@@ -117,6 +117,7 @@ class GrammarCompiler {
     }
 
     public function compile(value:ConstantValue):GrammarMachine {
+        states.resize(0);
         final fragment = build(value,0);
         final subsets = [closure([fragment.start])];
         final ids = new Map<String,Int>();
