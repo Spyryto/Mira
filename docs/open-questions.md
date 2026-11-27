@@ -252,3 +252,8 @@ Controlli locali su griglia, identità, opzioni letterali dei select e numero di
 ### 0.96 — Declarative contracts (candidata)
 
 Estratta la tabella degli stili in Mira e introdotto un valutatore limitato ai dati costanti. Da sviluppare: collegamento esplicito di contratti di libreria definiti dall'utente, vincoli relazionali e sulle liste, firme View opache e regole comuni tra checker e renderer. Prima di estendere il valutatore a funzioni arbitrarie occorre definire purezza, terminazione, diagnostica e risorse. Nessuna nuova sintassi.
+
+
+### 0.97 — Scalar variants (candidata)
+
+Somme nominali nullarie con codifica esplicita a literal Text o intero sicuro, riconosciute dal checker e emesse come valori nativi. Nessuna nuova categoria di tipo; compile checked obbligatorio per questi programmi. Prima implementazione in sorgenti piatti: mapping nell'ABI modulare, interop esterna, ScalarEq delle somme scalari, payload disgiunti e migrazione GUI restano aperti. Vedi [Scalar variants](type-representation.md#scalar-variants-097).
