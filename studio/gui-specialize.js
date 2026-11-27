@@ -242,7 +242,8 @@
     // subset as Mira source, and ask the ordinary compiler to emit it.
     const generated=source+'\ngui specialization values: '+plan.parameter+' = ['+
       plan.slots.map(slot=>slot.source).join(', ')+'];\n';
-    const compiled=compiler.compile(generated,'js');
+    const checked=JSON.parse(ast.output).definitions.some(d=>d.scalarEncoding!=null);
+    const compiled=compiler.compile(generated,'js',null,false,null,checked);
     if(!compiled.ok)throw new Error(compiled.message);
     const program=new Function(compiled.output+'\nreturn {view:'+plan.viewName+
       ', values:gui_specialization_values};')();
