@@ -346,6 +346,11 @@ class SourceEmitter {
     // int/float pair. Never use PHP's loose string/boolean comparison.
     // The wrapper evaluates each operand once and has no global helper.
     static function binarySource(symbol:String,left:String,right:String,target:Target,?comparison:ScalarComparison):String {
+        // PHP % truncates both operands to integers; Mira Number remainder
+        // follows JS % (truncating quotient, not Euclidean modulo).
+        // The same path serves ordinary expressions and operator sections.
+        if (target == Php && symbol == "%")
+            return "\\fmod(" + left + ", " + right + ")";
         if (symbol == "==" || symbol == "!=") {
             if (target == Php && comparison == ScalarComparison.Numeric)
                 return "(" + left + " " + symbol + " " + right + ")";

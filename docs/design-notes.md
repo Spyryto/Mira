@@ -743,3 +743,7 @@ Audit dei servizi 0.83–0.89: mantenere Text Unicode scalare, Date civile opaco
 ## 0.89.2 — uguaglianza Number indipendente da int/float PHP
 
 Correggere il limite già documentato in 0.42. Non usare == PHP indiscriminatamente. Il checker produce un fatto locale di emissione per le rappresentazioni scalari risolte; PHP numerico checked usa confronto nativo, Text/Boolean stretto, fallback solo per polimorfismo eraso o unchecked. JS invariato. Nessuna nuova sintassi, AST, typeclass, helper globale o cambio dei contratti. Il fallback ha un costo runtime non misurato; il percorso specializzato non ha chiamate aggiuntive. La correttezza numerica generale resta separata.
+
+## 0.89.3 — audit aritmetico e resto portabile
+
+Scegliere la semantica Number di % già espressa da JS e riusare PHP fmod. Correzione in binarySource condiviso, nessuna nuova AST, guardia, libreria o modifica al solver. Il costo della funzione nativa PHP non è zero-cost dimostrato; non specializzare il resto intero senza una prova e una misura concrete. Conservare le precedenti regole statiche sui raffinamenti. La matrice differenziale copre casi finiti portabili, non dimostra l'equivalenza numerica generale. Divisione per zero, overflow e politica dei non finiti restano una decisione separata: non imporre fdiv o cast generalizzati per nascondere divergenze. Prima della 0.90 rimane la coerenza delle API/Result/Option (0.89.4 proposta).

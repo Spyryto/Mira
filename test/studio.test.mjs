@@ -2097,3 +2097,17 @@ test('0.89.2 Studio checked PHP specializes known equality without a runtime wra
   const run=spawnSync('php',['-r',generic.output.replace(/^<\?php/,'')+'echo json_encode($result);'],{encoding:'utf8'});
   assert.equal(run.status,0,run.stderr);assert.equal(run.stdout,'true');
 });
+
+test('0.89.3 Studio uses the same fractional remainder lowering for sections and expressions',()=>{
+  const source='remainder = (_ % 0.5); result = [(0.75 % 0.5), (0.75 >> remainder), ((0 - 5.5) % 2)];';
+  for(const checked of [false,true]){
+    const js=bridge.compile(source,'js',null,false,null,checked);
+    const php=bridge.compile(source,'php',null,false,null,checked);
+    assert.equal(js.ok,true,js.message);assert.equal(php.ok,true,php.message);
+    assert.match(php.output,/\\fmod\(/);
+    const expected=[0.25,0.25,-1.5];
+    assert.deepEqual(Array.from(runInNewContext(js.output+'\nresult',{})),expected);
+    const run=spawnSync('php',['-r',php.output.replace(/^<\?php/,'')+'echo json_encode($result);'],{encoding:'utf8'});
+    assert.equal(run.status,0,run.stderr);assert.deepEqual(JSON.parse(run.stdout),expected);
+  }
+});

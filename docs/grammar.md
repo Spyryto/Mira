@@ -878,3 +878,7 @@ Il manifest host accetta il campo facoltativo scopes, una mappa dal nome esatto 
 ```
 
 Il modulo concreto Providers / Native può usare native magnitude; il consumatore importa soltanto il contratto Services / Math. Il resolver restringe l'ambiente per ogni modulo durante la risoluzione dei corpi, anche unchecked. I tipi completi restano disponibili al checker per i riferimenti host già risolti. Le capability scoped non sono visibili ai sorgenti legacy senza module; il percorso è quello concreto dichiarato, non l'identità del contratto. Gli override storici dei selettori nativi non possono essere scoped. Non si tratta di una sandbox o di un meccanismo di autorizzazione runtime. Il manifest dichiara il tipo ma non prova il comportamento della funzione esterna. I target continuano a usare __miraHost, fornito dall'applicazione; nessun registro dinamico aggiunto.
+
+## Mira 0.89.3: resto numerico
+
+% è il resto con quoziente troncato verso zero, anche per Number frazionari; 5.5 % 2 vale 1.5, non 1. Il target PHP usa fmod anziché il proprio operatore intero %, anche nelle sezioni. Nessuna nuova sintassi o precedenza. Con divisore zero il resto produce NaN; divisione / e overflow fuori dominio non sono normalizzati in questa versione. Vedi la matrice in docs/type-checker.md.
