@@ -4,6 +4,7 @@ import mira.MiraError;
 import mira.lex.Token;
 import mira.lex.Token.TokenKind;
 import mira.types.Type;
+import mira.types.NativeVariants;
 
 class DefinitionParser {
     public static function parse(tokens:Array<Token>, ?names:Map<String,Type>, ?modulePath:String, ?typeIdentities:Map<String,String>):Array<Definition> {
@@ -132,6 +133,8 @@ class DefinitionParser {
         final origins:Array<Token> = [];
         final encodings = new Map<String,Expr>();
         final codes = new Map<String,Bool>();
+        final payloadDomains = new Map<String,Bool>();
+        final literalDomains = new Map<String,Bool>();
         var rest = tokens[0].isSymbol("|") ? tokens.slice(1) : tokens;
         while (true) {
             final separator = topLevel(rest,"|");
@@ -142,11 +145,21 @@ class DefinitionParser {
             if (equals >= 0) {
                 if (parameters.length != 0)
                     throw new MiraError("Scalar variants currently require a nonparametric type",part[0]);
-                if (variant.type != null) throw new MiraError("Scalar variants cannot carry payloads",part[0]);
                 final literal = part.slice(equals+1);
                 var encoded:Expr;
                 var key:String;
-                if (literal.length == 1 && literal[0].kind == TokenKind.Text) {
+                if (literal.length == 1 && literal[0].kind == TokenKind.Word && literal[0].value == "_") {
+                    if (variant.type == null) throw new MiraError("Native payload encoding requires a payload",part[0]);
+                    final domain = NativeVariants.domain(variant.type);
+                    if (domain == null) throw new MiraError("Native payload requires a known primitive representation",part[0]);
+                    if (payloadDomains.exists(domain)) throw new MiraError("Overlapping native payload domain " + domain,part[0]);
+                    payloadDomains.set(domain,true);
+                    encoded = Expr.Name("payload");
+                    key = "payload:" + domain;
+                } else if (variant.type != null) {
+                    throw new MiraError("Payload variants require native encoding = _",part[0]);
+                } else if (literal.length == 1 && literal[0].kind == TokenKind.Text) {
+                    literalDomains.set("string",true);
                     encoded = Expr.Text(literal[0].value);
                     key = "text:" + literal[0].value;
                 } else {
@@ -157,6 +170,7 @@ class DefinitionParser {
                     final normalized = raw == "-0" ? "0" : raw;
                     encoded = Expr.Numeric(normalized);
                     key = "integer:" + normalized;
+                    literalDomains.set("number",true);
                 }
                 if (codes.exists(key)) throw new MiraError("Duplicate scalar variant encoding",part[equals]);
                 codes.set(key,true);
@@ -173,7 +187,9 @@ class DefinitionParser {
             rest = rest.slice(separator+1);
         }
         if (Lambda.count(encodings) != 0 && Lambda.count(encodings) != tags.length)
-            throw new MiraError("Every scalar variant must have an explicit encoding",tokens[0]);
+            throw new MiraError("Every native variant must have an explicit encoding",tokens[0]);
+        for (domain in payloadDomains.keys()) if (literalDomains.exists(domain))
+            throw new MiraError("Overlapping native literal and payload domain " + domain,tokens[0]);
         final sum = SumType(identity,alternatives,arguments);
         names.set(name,sum);
         for (i in 0...tags.length) {
