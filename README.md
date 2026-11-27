@@ -150,6 +150,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Configurazione multifile e build di progetto condivisa | `0.90` | [Dettagli](docs/studio.md#mira-090-progetto-multifile-dichiarativo) |
 | ✅ | Nucleo indipendente di validazione e codec JSON tipizzati | `0.91` | [Dettagli](docs/studio.md#mira-091-nucleo-dati-tipizzati-indipendente) |
 | ✅ | GUI checked | `0.92` | [Dettagli](docs/reference/language.md#feature-gui-checked) |
+| ✅ | Dati dichiarativi a compile time | `0.96` | [Dettagli](docs/declarative-contracts.md) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

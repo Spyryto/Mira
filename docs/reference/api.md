@@ -1104,7 +1104,7 @@ class Bridge
 public static function ast(source:String, ?hostJson:String, ?modulesJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L101)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L111)
 
 <a id="api-mira-studio-bridge-check"></a>
 ### `mira.studio.Bridge.check`
@@ -1115,7 +1115,7 @@ public static function ast(source:String, ?hostJson:String, ?modulesJson:String)
 public static function check(source:String, ?hostJson:String, ?modulesJson:String, ?bindingsJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L78)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L80)
 
 <a id="api-mira-studio-bridge-compile"></a>
 ### `mira.studio.Bridge.compile`
@@ -1126,7 +1126,18 @@ public static function check(source:String, ?hostJson:String, ?modulesJson:Strin
 public static function compile(source:String, targetName:String, ?hostJson:String, ?withLocations:Bool = false, ?modulesJson:String, ?checked:Bool = false, ?treeShake:Bool = false, ?bindingsJson:String, ?withProfile:Bool = false):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L52)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L54)
+
+<a id="api-mira-studio-bridge-constantdata"></a>
+### `mira.studio.Bridge.constantData`
+
+**method** · Interfaccia JavaScript esposta dal compilatore Haxe nel browser.
+
+```haxe
+public static function constantData(source:String,name:String):Dynamic
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L99)
 
 <a id="api-mira-studio-bridge-exploremodules"></a>
 ### `mira.studio.Bridge.exploreModules`
@@ -1137,7 +1148,7 @@ public static function compile(source:String, targetName:String, ?hostJson:Strin
 public static function exploreModules(source:String,?hostJson:String,?modulesJson:String,?bindingsJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L152)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L162)
 
 <a id="api-mira-studio-bridge-interfaces"></a>
 ### `mira.studio.Bridge.interfaces`
@@ -1148,7 +1159,7 @@ public static function exploreModules(source:String,?hostJson:String,?modulesJso
 public static function interfaces(source:String,?hostJson:String,?modulesJson:String,?bindingsJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L136)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L146)
 
 <a id="api-mira-studio-bridge-main"></a>
 ### `mira.studio.Bridge.main`
@@ -1170,7 +1181,18 @@ public static function main():Void
 public static function specialize(source:String,name:String,argsJson:String,?hostJson:String,?modulesJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L86)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L88)
+
+<a id="api-mira-studio-bridge-stylecontractsource"></a>
+### `mira.studio.Bridge.styleContractSource`
+
+**method** · Interfaccia JavaScript esposta dal compilatore Haxe nel browser.
+
+```haxe
+public static function styleContractSource():Null<String>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L103)
 
 <a id="api-mira-studio-bridge-tokens"></a>
 ### `mira.studio.Bridge.tokens`
@@ -1181,7 +1203,7 @@ public static function specialize(source:String,name:String,argsJson:String,?hos
 public static function tokens(source:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L97)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L107)
 
 <a id="api-mira-studio-bridge-trace"></a>
 ### `mira.studio.Bridge.trace`
@@ -1192,7 +1214,7 @@ public static function tokens(source:String):Dynamic
 public static function trace(source:String, ?hostJson:String, ?modulesJson:String, ?bindingsJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L185)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L195)
 
 <a id="api-mira-studio-bridge-verifycontract"></a>
 ### `mira.studio.Bridge.verifyContract`
@@ -1203,7 +1225,7 @@ public static function trace(source:String, ?hostJson:String, ?modulesJson:Strin
 public static function verifyContract(source:String,provider:String,contract:String,?hostJson:String,?modulesJson:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L144)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/studio/Bridge.hx#L154)
 
 <a id="api-mira-syntax-contractmodule"></a>
 ### `mira.syntax.ContractModule`
@@ -2329,6 +2351,116 @@ Php
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Target.hx#L6)
 
+<a id="api-mira-types-constantdata"></a>
+### `mira.types.ConstantData`
+
+**class** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+class ConstantData
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ConstantData.hx#L19)
+
+<a id="api-mira-types-constantdata-constantvalue"></a>
+### `mira.types.ConstantData.ConstantValue`
+
+**enum** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+enum ConstantValue
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ConstantData.hx#L11)
+
+<a id="api-mira-types-constantdata-constantvalue-cboolean"></a>
+### `mira.types.ConstantData.ConstantValue.CBoolean`
+
+**variant** · Membro pubblico di mira.types.ConstantData.ConstantValue.
+
+```haxe
+CBoolean(value:Bool)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ConstantData.hx#L15)
+
+<a id="api-mira-types-constantdata-constantvalue-clist"></a>
+### `mira.types.ConstantData.ConstantValue.CList`
+
+**variant** · Membro pubblico di mira.types.ConstantData.ConstantValue.
+
+```haxe
+CList(values:Array<ConstantValue>)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ConstantData.hx#L16)
+
+<a id="api-mira-types-constantdata-constantvalue-cnumber"></a>
+### `mira.types.ConstantData.ConstantValue.CNumber`
+
+**variant** · Membro pubblico di mira.types.ConstantData.ConstantValue.
+
+```haxe
+CNumber(value:Float)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ConstantData.hx#L13)
+
+<a id="api-mira-types-constantdata-constantvalue-crecord"></a>
+### `mira.types.ConstantData.ConstantValue.CRecord`
+
+**variant** · Membro pubblico di mira.types.ConstantData.ConstantValue.
+
+```haxe
+CRecord(fields:Map<String,ConstantValue>)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ConstantData.hx#L17)
+
+<a id="api-mira-types-constantdata-constantvalue-ctext"></a>
+### `mira.types.ConstantData.ConstantValue.CText`
+
+**variant** · Membro pubblico di mira.types.ConstantData.ConstantValue.
+
+```haxe
+CText(value:String)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ConstantData.hx#L14)
+
+<a id="api-mira-types-constantdata-constantvalue-cvariant"></a>
+### `mira.types.ConstantData.ConstantValue.CVariant`
+
+**variant** · Membro pubblico di mira.types.ConstantData.ConstantValue.
+
+```haxe
+CVariant(tag:String,payload:Null<ConstantValue>)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ConstantData.hx#L18)
+
+<a id="api-mira-types-constantdata-json"></a>
+### `mira.types.ConstantData.json`
+
+**method** · Membro pubblico di mira.types.ConstantData.
+
+```haxe
+public static function json(value:ConstantValue):String
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ConstantData.hx#L75)
+
+<a id="api-mira-types-constantdata-read"></a>
+### `mira.types.ConstantData.read`
+
+**method** · Membro pubblico di mira.types.ConstantData.
+
+```haxe
+public static function read(source:String,name:String):ConstantValue
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ConstantData.hx#L37)
+
 <a id="api-mira-types-contractverifier"></a>
 ### `mira.types.ContractVerifier`
 
@@ -2415,40 +2547,18 @@ public function reachable(roots:Array<String>,statements:Array<Definition>):Map<
 class GuiStyleRules
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiStyleRules.hx#L5)
-
-<a id="api-mira-types-guistylerules-allowsnumber"></a>
-### `mira.types.GuiStyleRules.allowsNumber`
-
-**method** · Membro pubblico di mira.types.GuiStyleRules.
-
-```haxe
-public static function allowsNumber(kind:String):Bool return kind == "length" || kind == "weight" || kind == "flex" || kind == "size"; public static function allowsText(kind:String):Bool return kind == "color" || kind == "choice" || kind == "size"; public static function numberAllowed(kind:String,n:Float):Bool
-```
-
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiStyleRules.hx#L17)
-
-<a id="api-mira-types-guistylerules-kind"></a>
-### `mira.types.GuiStyleRules.kind`
-
-**method** · Membro pubblico di mira.types.GuiStyleRules.
-
-```haxe
-public static function kind(key:String):Null<String> return switch (key)
-```
-
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiStyleRules.hx#L7)
 
-<a id="api-mira-types-guistylerules-textallowed"></a>
-### `mira.types.GuiStyleRules.textAllowed`
+<a id="api-mira-types-guistylerules-get"></a>
+### `mira.types.GuiStyleRules.get`
 
 **method** · Membro pubblico di mira.types.GuiStyleRules.
 
 ```haxe
-public static function textAllowed(key:String,kind:String,value:String):Bool
+public static function get(key:String):Null<ScalarRule>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiStyleRules.hx#L33)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiStyleRules.hx#L11)
 
 <a id="api-mira-types-guitypes"></a>
 ### `mira.types.GuiTypes`
@@ -2911,6 +3021,127 @@ Strict
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarComparison.hx#L7)
+
+<a id="api-mira-types-scalarrules"></a>
+### `mira.types.ScalarRules`
+
+**class** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+class ScalarRules
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L13)
+
+<a id="api-mira-types-scalarrules-allowsnumber"></a>
+### `mira.types.ScalarRules.allowsNumber`
+
+**method** · Membro pubblico di mira.types.ScalarRules.
+
+```haxe
+public static function allowsNumber(rule:ScalarRule):Bool
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L45)
+
+<a id="api-mira-types-scalarrules-allowstext"></a>
+### `mira.types.ScalarRules.allowsText`
+
+**method** · Membro pubblico di mira.types.ScalarRules.
+
+```haxe
+public static function allowsText(rule:ScalarRule):Bool
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L53)
+
+<a id="api-mira-types-scalarrules-numberallowed"></a>
+### `mira.types.ScalarRules.numberAllowed`
+
+**method** · Membro pubblico di mira.types.ScalarRules.
+
+```haxe
+public static function numberAllowed(rule:ScalarRule,n:Float):Bool
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L61)
+
+<a id="api-mira-types-scalarrules-readrecord"></a>
+### `mira.types.ScalarRules.readRecord`
+
+**method** · Membro pubblico di mira.types.ScalarRules.
+
+```haxe
+public static function readRecord(source:String,name:String):Map<String,ScalarRule>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L16)
+
+<a id="api-mira-types-scalarrules-scalarrule"></a>
+### `mira.types.ScalarRules.ScalarRule`
+
+**enum** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+enum ScalarRule
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L7)
+
+<a id="api-mira-types-scalarrules-scalarrule-alternatives"></a>
+### `mira.types.ScalarRules.ScalarRule.Alternatives`
+
+**variant** · Membro pubblico di mira.types.ScalarRules.ScalarRule.
+
+```haxe
+Alternatives(rules:Array<ScalarRule>)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L12)
+
+<a id="api-mira-types-scalarrules-scalarrule-bounds"></a>
+### `mira.types.ScalarRules.ScalarRule.Bounds`
+
+**variant** · Membro pubblico di mira.types.ScalarRules.ScalarRule.
+
+```haxe
+Bounds(min:Float,max:Float,whole:Bool)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L9)
+
+<a id="api-mira-types-scalarrules-scalarrule-textchoices"></a>
+### `mira.types.ScalarRules.ScalarRule.TextChoices`
+
+**variant** · Membro pubblico di mira.types.ScalarRules.ScalarRule.
+
+```haxe
+TextChoices(values:Array<String>)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L10)
+
+<a id="api-mira-types-scalarrules-scalarrule-textpattern"></a>
+### `mira.types.ScalarRules.ScalarRule.TextPattern`
+
+**variant** · Membro pubblico di mira.types.ScalarRules.ScalarRule.
+
+```haxe
+TextPattern(pattern:EReg)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L11)
+
+<a id="api-mira-types-scalarrules-textallowed"></a>
+### `mira.types.ScalarRules.textAllowed`
+
+**method** · Membro pubblico di mira.types.ScalarRules.
+
+```haxe
+public static function textAllowed(rule:ScalarRule,value:String):Bool
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L70)
 
 <a id="api-mira-types-type"></a>
 ### `mira.types.Type`

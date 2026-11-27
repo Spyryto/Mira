@@ -1,4 +1,4 @@
-# Guida a Mira 0.95
+# Guida a Mira 0.96
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -545,7 +545,7 @@ API collegata: [`mira.HostEnvironment`](api.md#api-mira-hostenvironment)
 
 View, componenti e binding verificati staticamente.
 
-Il type checker assegna View (State) ai costruttori della libreria GUI verificata. Layout e componenti condividono il tipo di stato; state isola uno stato figlio. Input e select ricevono Text, checkbox Boolean; gli updater restituiscono lo stesso tipo di stato. GUI checked è opt-in in Studio e usa il checker Haxe. Nessun wrapper a runtime. Dalla 0.93, le liste letterali di stili nel costruttore verificato possono contenere record di forme diverse. Dalla 0.94 il checker verifica anche le proprietà di stile note, i tipi dei campi e i valori letterali o numerici puntuali conosciuti. I valori dinamici non dimostrati restano verificati dall'host. Dalla 0.95, le chiamate dirette verificano inoltre conteggi noti delle colonne, chiavi di identità note e opzioni letterali dei select. La chiave di reset dello stato è Text.
+Il type checker assegna View (State) ai costruttori della libreria GUI verificata. Layout e componenti condividono il tipo di stato; state isola uno stato figlio. Input e select ricevono Text, checkbox Boolean; gli updater restituiscono lo stesso tipo di stato. GUI checked è opt-in in Studio e usa il checker Haxe. Nessun wrapper a runtime. Dalla 0.93, le liste letterali di stili nel costruttore verificato possono contenere record di forme diverse. Dalla 0.94 il checker verifica anche le proprietà di stile note, i tipi dei campi e i valori letterali o numerici puntuali conosciuti. I valori dinamici non dimostrati restano verificati dall'host. Dalla 0.95, le chiamate dirette verificano inoltre conteggi noti delle colonne, chiavi di identità note e opzioni letterali dei select. La chiave di reset dello stato è Text. Dalla 0.96 il vocabolario di stili proviene da lib/gui-style-contract.mira, valutato a compile time con l'AST e il checker reali. Il laboratorio tipi permette di ispezionare la struttura risultante.
 
 API collegata: [`mira.HostEnvironment`](api.md#api-mira-hostenvironment)
 
