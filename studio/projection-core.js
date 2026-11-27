@@ -71,6 +71,15 @@ export function order(s) {
   function walk(id){const n=getNode(s,id);if(n.kind==='Binary')walk(n.left);ids.push(id);if(n.kind==='Binary')walk(n.right);else if(n.kind==='Match')n.cases.forEach(c=>walk(c.root));}
   s.defs.forEach(d=>walk(d.root));return ids;
 }
+// Next unfilled slot in visual order, wrapping once to earlier holes.
+export function nextHole(s,from=s.selected,direction=1){
+  const ids=order(s),at=ids.indexOf(from);
+  if(at<0)return undefined;
+  for(let step=1;step<=ids.length;step++){
+    const id=ids[(at+direction*step+ids.length)%ids.length];
+    if(getNode(s,id).kind==='Hole')return id;
+  }
+}
 export function navigate(s,dir) {
   const ids=order(s), i=ids.indexOf(s.selected), n=getNode(s);
   const parent=s.nodes.find(x=>children(x).includes(n.id));
@@ -121,7 +130,14 @@ export function history(initial,mira,compiler){
     get state(){return state},get canUndo(){return past.length>0},get canRedo(){return future.length>0},
     select(id){if(getNode(state,id))state={...state,selected:id};},
     navigate(dir){state=navigate(state,dir);},
-    apply(action){const next=edit(state,action,mira,compiler);past.push(state);future.length=0;state=next;},
+    apply(action,advance=false){
+      let next=edit(state,action,mira,compiler);
+      if(advance&&getNode(state).kind==='Hole'&&['literal','reference'].includes(action.kind)){
+        const id=nextHole(next,state.selected);
+        if(id!==undefined)next={...next,selected:id};
+      }
+      past.push(state);future.length=0;state=next;
+    },
     undo(){if(past.length){future.push(state);state=past.pop();}},
     redo(){if(future.length){past.push(state);state=future.pop();}}
   };

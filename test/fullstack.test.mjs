@@ -238,9 +238,19 @@ test('full-stack ledger: actual Chromium, compiled Mira JS/PHP and SQLite', {tim
     await until(()=>js('(()=>{const a=document.querySelector(".inline-editor").getBoundingClientRect(),v=visualViewport;return a.top>=v.offsetTop-1&&a.bottom<=v.offsetTop+v.height+1&&document.activeElement===document.querySelector(".inline-editor input")})()'),'Inline editor and suggestions above reduced viewport');
     assert.equal(await js('document.querySelectorAll(".inline-editor").length'),1);
     assert.equal(await js('document.querySelector(".inline-choices").scrollHeight<=document.querySelector(".inline-choices").clientHeight+1'),true);
-    assert.equal(await js('document.querySelector(".inline-editor").closest(".match-case")!==null'),true);
+    assert.equal(await js('document.querySelector(".inline-slot").closest(".match-case")!==null'),true);
     const projectionScreenshot=await cdp.call('Page.captureScreenshot',{format:'png'});
     writeFileSync(join(report,'projection-mobile-viewport.png'),Buffer.from(projectionScreenshot.data,'base64'));
+    // Same native input and unchanged sibling survive each confirmation.
+    assert.equal(await js('(()=>{window.savedInput=document.querySelector(".inline-editor input");window.savedDefinition=document.querySelector(".projection-surface .definition:not(.prefix)");window.blurs=0;savedInput.addEventListener("blur",()=>blurs++);window.firstSlot=document.querySelector(".inline-slot").dataset.slot;return document.activeElement===savedInput})()'),true);
+    const confirmNumber=value=>js('(()=>{const i=document.querySelector(".inline-editor input");i.value='+JSON.stringify(value)+';i.dispatchEvent(new Event("input",{bubbles:true}));i.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true,cancelable:true}));})()');
+    await confirmNumber("1");
+    assert.equal(await js('savedInput===document.activeElement && savedInput.isConnected && blurs===0 && document.querySelector(".inline-slot").dataset.slot!==firstSlot && savedDefinition===document.querySelector(".projection-surface .definition:not(.prefix)")'),true);
+    await until(()=>js('(()=>{const a=document.querySelector(".inline-editor").getBoundingClientRect(),v=visualViewport;return a.top>=v.offsetTop-1&&a.bottom<=v.offsetTop+v.height+1})()'),'Next hole above reduced viewport');
+    await confirmNumber("2");
+    assert.equal(await js('savedInput===document.activeElement && blurs===0 && document.querySelectorAll(".inline-slot").length===1'),true);
+    await confirmNumber("3");
+    assert.equal(await js('document.querySelector(".inline-editor").hidden && !document.querySelector(".inline-slot") && document.getElementById("projection-check").textContent.includes("superata")'),true);
     await cdp.call('Emulation.clearDeviceMetricsOverride');
   } finally {
     if(cdp){try{await cdp.call('Browser.close');}catch{} cdp.close();}
