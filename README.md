@@ -144,6 +144,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Uguaglianza scalare portabile con specializzazione checked | `0.89.2` | [Dettagli](docs/type-checker.md#mira-0892-uguaglianza-scalare-portabile) |
 | ✅ | Resto frazionario portabile e matrice aritmetica differenziale | `0.89.3` | [Dettagli](docs/type-checker.md#mira-0893-resto-numerico-e-matrice-differenziale) |
 | ✅ | Option e Result nominali condivisi e import di tipi nei contratti | `0.89.4` | [Dettagli](docs/grammar.md#mira-0894-import-selettivi-di-tipi-nei-contratti-indipendenti) |
+| ✅ | Storage fallibile con Option, Result ed errori nominali | `0.89.5` | [Dettagli](docs/studio.md#mira-0895-persistenza-fallibile) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

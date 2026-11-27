@@ -1,4 +1,4 @@
-# Guida a Mira 0.89.4
+# Guida a Mira 0.89.5
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
