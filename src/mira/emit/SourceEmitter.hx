@@ -47,6 +47,18 @@ class SourceEmitter {
                 "(" + expression(FieldAccessor(key), target, scope, reservedHostNames, guards, comparisons, scalarMatches)
                     + ")(" + expression(record, target, scope, reservedHostNames, guards, comparisons, scalarMatches) + ")";
 
+            case OptionalFieldGet(record,key,_):
+                final value = target == Php ? "$__miraOptionalRecord" : "__miraOptionalRecord";
+                final quoted = target == Php ? phpString(key) : haxe.Json.stringify(key);
+                final present = optionalPresence(target,value,quoted);
+                final some = target == Php ? "['tag' => 'Some', 'value' => " + value + "[" + quoted + "]]"
+                    : "({tag: 'Some', value: " + value + "[" + quoted + "]})";
+                final none = target == Php ? "['tag' => 'None']" : "({tag: 'None'})";
+                final body = present + " ? " + some + " : " + none;
+                final wrapper = target == Php ? "(static fn(" + value + ") => " + body + ")"
+                    : "((" + value + ") => " + body + ")";
+                wrapper + "(" + expression(record,target,scope,reservedHostNames,guards,comparisons,scalarMatches) + ")";
+
             case FieldSection(key):
                 expression(FieldAccessor(key), target, scope, reservedHostNames, guards, comparisons, scalarMatches);
 
@@ -71,7 +83,17 @@ class SourceEmitter {
                 final prefix = target == Php ? "$" : "";
                 final v = prefix + "__miraMatchValue";
                 final formals = [v];
-                final args = [expression(input,target,scope,reservedHostNames,guards, comparisons, scalarMatches)];
+                // A directly matched optional projection need not allocate an Option.
+                final fused = switch (input) {
+                    case OptionalFieldGet(receiver,key,_) if (tags.length == 2 && tags.indexOf("Some") >= 0 && tags.indexOf("None") >= 0
+                        && switch [handlers[tags.indexOf("Some")],handlers[tags.indexOf("None")]] {
+                            case [Block(a,_),Block(b,_)]: a.length == 1 && b.length == 0;
+                            default: false;
+                        }):
+                        {receiver:receiver,key:key};
+                    default: null;
+                };
+                final args = [expression(fused == null ? input : fused.receiver,target,scope,reservedHostNames,guards, comparisons, scalarMatches)];
                 final codes = scalarMatches == null ? null : scalarMatches.get(expr);
                 final tag = codes != null ? v : target == Php ? v + "['tag']" : v + ".tag";
                 final payload = target == Php ? v + "['value']" : v + ".value";
@@ -81,15 +103,19 @@ class SourceEmitter {
                     formals.push(handler);
                     args.push(expression(handlers[i],target,scope,reservedHostNames,guards, comparisons, scalarMatches));
                     final arity = switch (handlers[i]) { case Block(parameters,_): parameters.length; default: 0; };
-                    final predicate = codes == null
+                    final predicate = fused != null
+                        ? (tags[i] == "Some" ? "" : "!") + optionalPresence(target,v,target == Php ? phpString(fused.key) : haxe.Json.stringify(fused.key))
+                        : codes == null
                         ? tag + " === " + (target == Php ? phpString(tags[i]) : haxe.Json.stringify(tags[i]))
                         : switch (codes[i]) {
                             case Literal(value): v + " === " + expression(value,target,scope,reservedHostNames);
                             case Payload(domain): nativeDomainTest(target,domain,v);
                         };
                     // Native payloads already are the original match value.
-                    final argument = arity == 0 ? "" : codes == null ? payload : v;
-                    branches.push("if (" + predicate + ") return " + handler + "(" + argument + ");");
+                    final argument = arity == 0 ? "" : fused != null
+                        ? v + "[" + (target == Php ? phpString(fused.key) : haxe.Json.stringify(fused.key)) + "]"
+                        : codes == null ? payload : v;
+                    branches.push((fused != null && i == 1 ? "" : "if (" + predicate + ") ") + "return " + handler + "(" + argument + ");");
                 }
                 branches.push("throw new " + (target == Php ? "\\RuntimeException" : "Error") + "('Mira unmatched sum alternative');");
                 final body = branches.join(" ");
@@ -263,6 +289,10 @@ class SourceEmitter {
     }
 
     // The generated parameter has its own scope; the operand is evaluated once.
+    static function optionalPresence(target:Target,value:String,key:String):String
+        return target == Php ? "array_key_exists(" + key + ", " + value + ")"
+            : "Object.hasOwn(" + value + ", " + key + ")";
+
     static function nativeDomainTest(target:Target,domain:String,value:String):String {
         if (target == JavaScript) return "typeof " + value + " === " + haxe.Json.stringify(domain);
         return switch (domain) {
@@ -309,7 +339,7 @@ class SourceEmitter {
             case Name(name):
                 if (bound.indexOf(name) == -1 && names.indexOf(name) == -1)
                     names.push(name);
-            case FieldGet(receiver, _):
+            case FieldGet(receiver, _) | OptionalFieldGet(receiver,_,_):
                 referencedNames(receiver, bound, names);
             case Match(input,_,handlers):
                 referencedNames(input,bound,names); for (handler in handlers) referencedNames(handler,bound,names);
