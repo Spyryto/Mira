@@ -1245,3 +1245,5 @@ Misurazione locale degli operatori host prima della modifica (non benchmark di M
 | 5 % 0 | NaN | DivisionByZeroError | NaN |
 
 Altre divergenze osservate, NON corrette in questo incremento: 1 / 0 produce Infinity JS e DivisionByZeroError PHP; fdiv PHP 8 sarebbe una possibilità ma cambierebbe esplicitamente la politica di divisione. 9007199254740991 + 2 produce 9007199254740992 JS e 9007199254740993 PHP (int64). Il risultato è fuori dal dominio degli interi sicuri. Non normalizzare indiscriminatamente tutti i Number né trasformare ogni operazione in un wrapper. Occorre decidere politica dei risultati non finiti e della precisione fuori dominio, distinta dalle prove Integer già disponibili. La matrice non è una dimostrazione formale di equivalenza.
+
+Stato: 0.89.2 e 0.89.3 integrate con CI verde. Per la distinzione tra semantica implementata, prove, limiti e proposte di politica numerica, vedere [rapporto di consolidamento](consolidation-089.md).

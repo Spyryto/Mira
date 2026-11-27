@@ -126,3 +126,7 @@ Log [Studio PWA, run 45903729632](https://github.com/Spyryto/Mira/actions/runs/4
 | PHP | 62.52 | 19.69 | 49 | 4 | 81372 → 17100 |
 
 La risoluzione del timer Haxe in quel contesto è circa 1 ms: zeri non significano costo nullo. Risultato esplorativo, con potenziali effetti di JIT e ordine delle prove. Non inferire complessità asintotica o speedup generalizzabile. L'emissione merita un'indagine prima di progettare cache del checker.
+
+## Consolidamento 0.89.1–0.89.3: correttezza prima della misura
+
+La matrice aritmetica è un test di correttezza, non un benchmark. L'uguaglianza checked PHP risolta staticamente non introduce un wrapper; il fallback polimorfico/unchecked e fmod hanno costi non ancora misurati. Anche l'envelope Result dei decoder e le nuove validazioni hanno costo non quantificato. Non si dichiara zero-cost o un miglioramento di latenza. Misure future: compilazione, byte emessi, esecuzione con warmup e mediane, scenari applicativi e confronto a semantica equivalente. Vedi [rapporto di consolidamento](consolidation-089.md).
