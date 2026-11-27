@@ -30,7 +30,8 @@ test('canonical theme and generated native adapter are published and cached',()=
   const css=read('mira-theme.css'),native=read('mira-native-theme.css'),html=read('theme-native-lab.html'),sw=read('sw.js');
   for(const file of ['theme-lab.html','theme-native-lab.html','theme-lab.js','mira-theme.css','mira-native-theme.css','cozy-palette.js'])assert.ok(sw.includes("'./"+file+"'"));
   assert.ok(read('index.html').includes('./theme-lab.html'));
-  assert.ok(html.includes('./mira-native-theme.css'));
+  assert.equal(html.split('<style data-cozy-source="mira-native-theme.css">')[1].split('</style>')[0],native);
+  assert.ok(!html.includes('href="./mira-native-theme.css"'));
   const body=(sheet,selector)=>sheet.split('\n').find(line=>line.startsWith(selector+'{')).split('{')[1].slice(0,-1).replaceAll('!important','');
   for(const [a,b] of [['#cozy .btn','.mira-theme .mira-ui-button'],['#cozy input[type=text]','.mira-theme input.mira-ui-input[type=text]'],['#cozy select','.mira-theme select.mira-ui-input'],['#cozy .check','.mira-theme input.mira-ui-input[type=checkbox]'],['#cozy .panel','.mira-theme .panel']])assert.equal(body(css,a),body(native,b));
 });
@@ -58,8 +59,9 @@ test('Cozy Edition is the main Theme Lab and retains the approved defaults',()=>
   assert.ok(html.includes('./theme-native-lab.html'));
   assert.ok(sw.includes("endsWith('/theme-native-lab.html') ? './theme-native-lab.html'"));
   assert.ok(read('mira-theme.css').includes('--spacing:.05em;--size:16px'));
-  assert.ok(html.includes('./mira-theme.css'));
-  assert.ok(html.includes('./cozy-palette.js'));
+  assert.equal(html.split('<style data-cozy-source="mira-theme.css">')[1].split('</style>')[0],read('mira-theme.css'));
+  assert.equal(html.split('<script data-cozy-palette>')[1].split('</script>')[0],read('cozy-palette.js'));
+  assert.doesNotMatch(html,/<(?:link[^>]*rel="stylesheet"|script[^>]*src=)/);
   assert.match(html,/id="czSize"[^>]*value="16"/);
   assert.match(html,/id="czSpacing"[^>]*value="5"/);
   const script=html.split('<script>')[1].split('</script>')[0];
@@ -80,7 +82,11 @@ test('browser: native widget styles agree with Cozy and palette changes keep rea
   if(!chrome){if(process.env.CI)assert.fail('Chromium required for theme regression in CI');t.skip('Chromium not available locally');return;}
   const folder=mkdtempSync(join(tmpdir(),'mira-cozy-'));
   try{
-    const reference=new URL('../dist/studio/theme-lab.html',import.meta.url).href;
+    // Isolated copy: no CSS or JS assets exist beside this HTML, as in a
+    // failed/stale stylesheet request on a deployed client.
+    const standalone=join(folder,'standalone.html');
+    writeFileSync(standalone,read('theme-lab.html'));
+    const reference=pathToFileURL(standalone).href;
     const native=new URL('../dist/studio/theme-native-lab.html',import.meta.url).href;
     const page=join(folder,'test.html');
     writeFileSync(page,`<!doctype html><meta charset="utf-8"><body><pre id="result">PENDING</pre><script>
@@ -90,6 +96,9 @@ test('browser: native widget styles agree with Cozy and palette changes keep rea
     (async()=>{
       const [ref,native]=await Promise.all([load(${JSON.stringify(reference)}),load(${JSON.stringify(native)})]);
       const r=ref.contentDocument,n=native.contentDocument, q=s=>n.querySelector(s);
+      equal(ref.contentWindow.getComputedStyle(r.querySelector('#cozy .chooser')).display,'grid','reference layout');
+      equal(ref.contentWindow.getComputedStyle(r.querySelector('#czText')).height,'42px','reference text box CSS applied');
+      equal(ref.contentWindow.getComputedStyle(r.querySelector('#cozy .shell')).borderRadius,'22px','reference surface CSS applied');
       const root=q('#theme-preview'), field=q('input.mira-ui-input[type=text]'), select=q('select.mira-ui-input'), checkbox=q('input.mira-ui-input[type=checkbox]');
       if(!field||!select||!checkbox)throw Error('Compiled Mira view did not mount: '+q('#theme-status').textContent);
       const selection=q('#native-palette');
@@ -144,4 +153,21 @@ test('browser: native widget styles agree with Cozy and palette changes keep rea
     assert.equal(run.status,0,run.error?.message||run.stderr);
     assert.match(run.stdout,/<pre id="result">MIRA_COZY_PASS<\/pre>/,run.stdout.match(/<pre id="result">[^<]*/)?.[0]||run.stdout.slice(0,500));
   }finally{rmSync(folder,{recursive:true,force:true});}
+});
+
+test('theme navigation uses the active build cache, never an older or waiting generation',async()=>{
+  const listeners={},reads=[],fetches=[];
+  const context={URL,self:{registration:{scope:'https://example.test/Mira/'},addEventListener:(kind,fn)=>listeners[kind]=fn},
+    caches:{open:async name=>({match:async key=>{reads.push([name,typeof key==='string'?key:key.url]);return 'active-build';}}),
+      match:async()=>{throw Error('cross-generation cache lookup');}},
+    fetch:async request=>{fetches.push(request);return 'network';}};
+  runInNewContext(read('sw.js'),context);
+  for(const [path,mode,key] of [['theme-lab.html','navigate','./theme-lab.html'],['theme-native-lab.html','navigate','./theme-native-lab.html'],['mira-theme.css','cors','https://example.test/Mira/mira-theme.css'],['ui-host.js','cors','https://example.test/Mira/ui-host.js']]){
+    let response;
+    listeners.fetch({request:{url:'https://example.test/Mira/'+path,method:'GET',mode},respondWith:p=>response=p});
+    assert.equal(await response,'active-build');
+    assert.equal(reads.at(-1)[1],key);
+  }
+  assert.equal(new Set(reads.map(row=>row[0])).size,1);
+  assert.equal(fetches.length,0);
 });
