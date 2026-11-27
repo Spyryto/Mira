@@ -2579,3 +2579,28 @@ test('0.106 typed styles contain all 20 fields and colors have one grammar-backe
     console.log('0.106 grammar emission '+target+': one site '+Buffer.byteLength(a.output)+' bytes; two sites '+Buffer.byteLength(b.output)+' bytes');
   }
 });
+
+
+test('0.107 Studio cardinality and Style Layers enforce 32 without a runtime guard',()=>{
+  const pre='import "lib/gui.mira"; import "lib/gui-typed-styles.mira"; p (GUI Style) = {};';
+  for(const n of [0,1,32,33]){
+    const source=pre+' layers (Style Layers) = ['+Array(n).fill('p').join(', ')+']; result = styled: (text: "Mira"), with styles: layers;';
+    const checked=bridge.check(source);assert.equal(checked.ok,n<=32,checked.message);
+    if(n>32)continue;
+    const schema=JSON.parse(checked.output).find(x=>x.name==='layers').schema.base;
+    assert.equal(schema.kind,'ListRefined');
+    assert.equal(schema.length.upper,32);
+    for(const target of ['js','php']){
+      const built=bridge.compile(source,target,null,false,null,true,true);assert.equal(built.ok,true,built.message);
+      assert.doesNotMatch(built.output,/\.length|\\count\(|array_is_list|Array.isArray|transitions/);
+      const actual=target==='js'?JSON.stringify(runInNewContext(built.output+'\nresult',{})):spawnSync('php',['-r',built.output.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'}).stdout;
+      assert.equal(JSON.parse(actual).styles.length,n);
+    }
+  }
+  const source='Result (T,E) :: Ok (T) | Err (E); Small :: [Number] where (length of: _) <= 2; parse: xs ([Number]) = validate: (xs), as: (Small); result = [(parse: [1]), (parse: [1, 2, 3])];';
+  for(const target of ['js','php']){
+    const built=bridge.compile(source,target,null,false,null,true,true);assert.equal(built.ok,true,built.message);
+    const actual=target==='js'?JSON.stringify(runInNewContext(built.output+'\nresult',{})):spawnSync('php',['-r',built.output.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'}).stdout;
+    assert.deepEqual(JSON.parse(actual),[{tag:'Ok',value:[1]},{tag:'Err',value:'Invalid list cardinality'}]);
+  }
+});
