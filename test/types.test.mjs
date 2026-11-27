@@ -2180,3 +2180,25 @@ test('0.90 project configuration rejects conflicts and composes manifests withou
     assert.throws(()=>load({...base,typo:true}),/Unknown project field/);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.96 CLI uses the same bundled declarative style contract without emitting it',async()=>{
+  const {readFileSync}=await import('node:fs');
+  const gui=readFileSync('lib/gui.mira','utf8')+'\n';
+  const dir=mkdtempSync(join(tmpdir(),'mira-style-contract-'));
+  try {
+    const input=join(dir,'program.mira');
+    const source=gui+'result = styled: (text: "x"), with: [{padding: 12}, {width: "fill"}];';
+    writeFileSync(input,source);
+    for(const target of ['js','php']){
+      const ordinary=spawnSync('node',['dist/mira.cjs',input,target],{encoding:'utf8'});
+      const checked=spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
+      assert.equal(ordinary.status,0,ordinary.stderr);
+      assert.equal(checked.status,0,checked.stderr);
+      assert.equal(checked.stdout,ordinary.stdout);
+      assert.doesNotMatch(checked.stdout,/Scalar Rule|style rules|currentColor/);
+    }
+    assert.throws(()=>check(gui+'result = styled: (text: "x"), with: [{padding: 5000}];'),/Invalid style value for padding/);
+    assert.throws(()=>check(gui+'result = styled: (text: "x"), with: [{width: "huge"}];'),/Invalid style value for width/);
+  } finally {rmSync(dir,{recursive:true,force:true});}
+});
