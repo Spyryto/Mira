@@ -68,6 +68,7 @@ class PublicSignature {
                 | [SumType(x,_,xs),SumReference(y,_,ys)] | [SumReference(x,_,xs),SumType(y,_,ys)]:
                 x == y && sameArray(xs,ys);
             case [RefinedType(x,r),RefinedType(y,s)]: r.equal(s) && same(x,y);
+            case [TextRefinedType(x,r),TextRefinedType(y,s)]: r.equal(s) && same(x,y);
             case [ListType(x),ListType(y)]: same(x,y);
             case [FunctionType(xs,x),FunctionType(ys,y)]: sameArray(xs,ys) && same(x,y);
             case [RecordType(xs,x),RecordType(ys,y)]:
