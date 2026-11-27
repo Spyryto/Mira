@@ -74,3 +74,10 @@ Per lo stato corrente e le prossime priorità vedere [Direzione dopo la 0.77](de
 [Rapporto di consolidamento](consolidation-089.md): stato verificato, decisioni, limiti, alternative e roadmap aggiornata. Le correzioni 0.89.1–0.89.3 sono integrate; Option/Result comuni e politica dei non finiti restano proposte. La direzione applicativa storica non è cancellata ma le priorità attuali sono quelle di questo rapporto.
 
 Il [registro storico delle questioni aperte](open-questions.md) è il backlog trasversale corrente; non confondere le vecchie liste Open questions con lo stato attuale.
+
+
+## Numerazione delle versioni (decisione del 27 novembre 2026)
+
+La numerazione prosegue per incrementi interi del secondo componente: 0.98, 0.99, 0.100, 0.101 e così via. Non avviene alcun passaggio automatico alla 1.0. La 1.0 richiederà una decisione esplicita sulla maturità del linguaggio. Le versioni non sono numeri decimali; ordinarle per componenti numeriche, preservando il terzo componente per le patch.
+
+Roadmap indicativa: 0.96 dati dichiarativi; 0.97 somme con rappresentazione scalare; 0.98 somme con rappresentazioni native disgiunte; 0.99 record e contratti; 0.100 e successive migrazione progressiva della GUI ai meccanismi generici di Mira. Vedi [analisi della rappresentazione dei tipi](type-representation.md). I numeri associati alle funzionalità restano indicativi, mentre la progressione delle versioni è una decisione esplicita.
