@@ -267,3 +267,8 @@ Estensione delle varianti scalari ai moduli, ai contratti indipendenti e ai prov
 ### 0.98 — Native variants (candidata)
 
 Codifica esplicita = _ per payload con dominio primitivo dimostrabilmente disgiunto dalle altre alternative. Conservati nominalità, match esaustivi, moduli e fingerprint. Rifiutate conservativamente sovrapposizioni nel medesimo dominio anche se refinement potrebbero renderle disgiunte. Restano aperti record discriminati, tipi generici, decodifica host, ScalarEq e migrazione della GUI. Vedi [native variants](type-representation.md#native-variants-098).
+
+
+### 0.99 — Optional record fields (candidata)
+
+Record chiusi con field?: Type, costruzione nominale, annotazioni strutturali e aggiornamenti immutabili tipizzati. I campi opzionali non vengono materializzati. Da sviluppare: accesso fallibile, narrowing della presenza, righe opzionali aperte, interoperabilità dei codec e migrazione della GUI. Vedi [optional record fields](type-representation.md#optional-record-fields-099). La numerazione continua con 0.100.
