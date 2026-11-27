@@ -57,7 +57,7 @@ class ConstantData {
             case Name(name):
                 final d = definitions.get(name);
                 if (d == null || d.isFunction()) throw new MiraError("Unknown constant " + name);
-                evaluate(d.body,depth+1);
+                evaluate(d.scalarValue == null ? d.body : d.scalarValue,depth+1);
             case Variant(_,tag,null): CVariant(tag,null);
             case Call(selector,args):
                 final d = definitions.get(selector);
