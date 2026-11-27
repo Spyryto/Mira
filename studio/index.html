@@ -10,6 +10,7 @@
   <link rel="apple-touch-icon" href="./icon-192.png">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./syntax-theme.css">
 </head>
 <body>
   <div class="app">
@@ -79,6 +80,7 @@
               <textarea id="source" aria-label="Codice sorgente Mira" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" wrap="off"></textarea>
             </div>
           </div>
+          <details class="syntax-settings"><summary>Stile del codice</summary><label>Palette <select id="syntaxPalette"><option value="notturno">Notturno</option><option value="prisma">Prisma</option><option value="grafite">Grafite</option><option value="ambra">Ambra</option><option value="bosco">Bosco</option></select></label> <label>Font <select id="syntaxFont"><option value="jetbrains">JetBrains Mono</option><option value="fira">Fira Mono</option><option value="dejavu">DejaVu Sans Mono</option><option value="cascadia">Cascadia Code</option></select></label><details><summary>Personalizza i colori</summary><div id="syntaxColors"></div><p id="syntaxContrast" role="status"></p><button id="syntaxReset" type="button">Ripristina palette</button> <button id="syntaxExportButton" type="button">Esporta CSS</button><textarea id="syntaxExport" aria-label="Palette CSS" readonly hidden></textarea></details></details>
           <div class="editor-footer">
             <span id="position">Riga 1 · Col 1</span>
             <span>*.mira</span>

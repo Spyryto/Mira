@@ -100,6 +100,10 @@
     "docs/theme.md": {
       "kind": "ai_assisted",
       "note": "Fondazione del tema, scelte architetturali e limiti documentati con assistenza IA."
+    },
+    "docs/syntax-theme.md": {
+      "kind": "ai_assisted",
+      "note": "Descrizione tecnica dell'implementazione Professional Cozy redatta con assistenza IA."
     }
   },
   "generatedSections": {

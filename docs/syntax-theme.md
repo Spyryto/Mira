@@ -1,0 +1,7 @@
+# Professional Cozy
+
+Notturno is the default code palette, independent of the GUI. Prisma, Grafite, Ambra and Bosco are selectable. JetBrains Mono regular/italic, 16 px, line-height 1.6, ligatures off; Fira Mono, DejaVu Sans Mono and Cascadia Code are alternatives. Fira uses synthetic italic. Fonts and licenses are local, precached by the PWA; no CDN. Font preferences and palette are saved locally.
+
+The compiler's optional highlight bridge returns ranges for resolved multiword selectors (including calls with optional separators), formal parameter declarations/references and record fields. The editor retains the original lexical scanner as fallback and overlays only confirmed ranges. This is presentation metadata, not a change to language semantics or emitted code. Invalid or incomplete programs may have partial semantic spans; unconfirmed text remains lexically classified. Imports and host declarations are resolved only with the provided project context. Static Mira fences in the design notebook are highlighted at build time; reference examples and the textarea overlay share the renderer. Non-Mira fences are not classified as Mira. CodeMirror is not a dependency.
+
+Each palette can be customized per token, reset, exported as CSS and saved locally; contrast feedback is based on the selected code background. Export is a CSS variable declaration, not a complete stylesheet. Browser glyph alignment, especially synthetic italics, should be checked on Safari.

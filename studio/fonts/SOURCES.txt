@@ -1,0 +1,9 @@
+Original, unmodified font files and licenses.
+JetBrains and Fira: google/fonts ofl/jetbrainsmono and ofl/firamono (original Git blob hashes preserved).
+dejavu-regular.ttf: matplotlib/matplotlib/lib/matplotlib/mpl-data/fonts/ttf/DejaVuSansMono.ttf (Git blob 278cd7813974104fdcc1a873afbbd01a49d1e567)
+dejavu-italic.ttf: matplotlib/matplotlib/lib/matplotlib/mpl-data/fonts/ttf/DejaVuSansMono-Oblique.ttf (Git blob 0185ce95a51d7cd86ada7c90709f34f10d6336f8)
+dejavu-LICENSE.txt: matplotlib/matplotlib/lib/matplotlib/mpl-data/fonts/ttf/LICENSE_DEJAVU (Git blob 254e2cc42a6d0135cccf2047768b9e44f25e666f)
+cascadia-regular.ttf: google/fonts/ofl/cascadiacode/CascadiaCode[wght].ttf (Git blob b222dbdcbbd81baaeef2b40d6ddb4181ddbc535f)
+cascadia-italic.ttf: google/fonts/ofl/cascadiacode/CascadiaCode-Italic[wght].ttf (Git blob 998bbf4395e353959e80744789eb79b9105e1a7f)
+cascadia-LICENSE.txt: google/fonts/ofl/cascadiacode/OFL.txt (Git blob 40f856f6ecc6de260b4065368ad2f5c4f8cbdcbc)
+Fira Mono uses synthetic italic.

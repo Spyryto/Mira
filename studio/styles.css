@@ -391,15 +391,6 @@ body.mira-highlight-ready #source {
 body.mira-highlight-ready #source::selection {
   background:rgba(248,187,87,.5); color:transparent;
 }
-.mira-syntax-comment { color:#65816b; font-style:italic; }
-.mira-syntax-string { color:#a44534; }
-.mira-syntax-number { color:#356b9b; }
-.mira-syntax-selector { color:#644bb0; font-weight:650; }
-.mira-syntax-operator { color:#ad5d18; font-weight:750; }
-.mira-syntax-punctuation { color:#65716e; }
-.mira-syntax-boolean, .mira-syntax-keyword { color:#7856aa; font-weight:650; }
-.mira-syntax-placeholder { color:#a64d82; font-weight:750; }
-
 /* Laboratory: precomputed HTML/SVG, no JavaScript renderer. */
 .lab-entry { display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--teal); border:2px solid var(--line); border-radius:12px; box-shadow:var(--shadow); padding:14px; margin-bottom:20px; text-decoration:none; }
 .lab-entry strong { display:block; font-size:18px; }

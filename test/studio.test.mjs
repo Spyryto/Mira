@@ -1013,7 +1013,11 @@ test('Studio proves bounded arithmetic without introducing code generation overh
 });
 
 test('design notebook is generated from project documentation and available offline',()=>{
-  const notebook=read('design-notes.html');
+  const html=read('design-notes.html');
+  assert.match(html,/<pre class="mira-code"><code>/);
+  assert.match(html,/class="mira-syntax-operator"/);
+  // Highlight spans are presentation only: keep checking the original visible text.
+  const notebook=html.replace(/<span class="mira-syntax-[a-z]+">|<\/span>/g,'');
   assert.match(read('index.html'),/href="\.\/design-notes\.html"/);
   assert.match(read('type-lab.html'),/href="\.\/design-notes\.html"/);
   assert.ok(read('sw.js').includes("'./design-notes.html'"));
