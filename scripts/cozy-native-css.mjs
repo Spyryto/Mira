@@ -57,6 +57,10 @@ export function nativeCozyCss(source) {
   return '/* Generated from mira-theme.css; do not edit. */\n'+pairs.map(([a,b])=>rule(a,b)).join('\n')+
     '\n.mira-theme .panel .mira-ui-button:not(:active){'+internal+'}'+
     '\n.mira-theme{font-size:var(--size);letter-spacing:var(--spacing);color:var(--pInk)}'+
+    '\n.mira-theme .mira-ui-led::before{content:"";flex:none}'+
+    '\n.mira-theme .mira-ui-toggle{display:flex;align-items:center;gap:7px}'+
+    '\n.mira-theme .mira-ui-rangebox output{color:var(--pInk)}'+
+    '\n.mira-theme .mira-ui-stepper{width:max-content;max-width:100%}'+
     '\n.mira-theme .mira-ui-state{display:block}'+
     '\n.mira-theme .mira-ui-column,.mira-theme .mira-ui-grid{display:grid;gap:17px}'+
     '\n.mira-theme .mira-ui-row{display:flex;flex-wrap:wrap;align-items:center;gap:7px}'+
