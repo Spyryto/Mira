@@ -262,3 +262,8 @@ Somme nominali nullarie con codifica esplicita a literal Text o intero sicuro, r
 ### 0.97.1 — Modular scalar variants (candidata)
 
 Estensione delle varianti scalari ai moduli, ai contratti indipendenti e ai provider ereditati. Codifica pubblica nel report canonico delle somme; opacità invariata. Nessuna nuova semantica di linking separato. Ancora da progettare payload nativi disgiunti, interop esterna e uguaglianza tipizzata delle somme. Vedi [modular scalar variants](type-representation.md#modular-scalar-variants-0971).
+
+
+### 0.98 — Native variants (candidata)
+
+Codifica esplicita = _ per payload con dominio primitivo dimostrabilmente disgiunto dalle altre alternative. Conservati nominalità, match esaustivi, moduli e fingerprint. Rifiutate conservativamente sovrapposizioni nel medesimo dominio anche se refinement potrebbero renderle disgiunte. Restano aperti record discriminati, tipi generici, decodifica host, ScalarEq e migrazione della GUI. Vedi [native variants](type-representation.md#native-variants-098).
