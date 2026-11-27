@@ -40,3 +40,11 @@ body.mira-highlight-ready #source::selection{background:#8a92b36b}
 .mira-syntax-parameter{color:var(--syntax-parameter)}
 .mira-syntax-field{color:var(--syntax-field)}
 .mira-syntax-boolean{color:var(--syntax-keyword)}
+
+.syntax-settings{padding:8px 12px;font-size:13px;border-top:1px solid var(--syntax-edge)}
+.syntax-settings summary{cursor:pointer;font-weight:600;padding:5px 0}
+.syntax-settings label{display:inline-flex;align-items:center;gap:5px;margin:4px 6px 4px 0}
+#syntaxColors{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:3px}
+#syntaxColors input{width:33px;height:33px;padding:2px}
+#syntaxExport{display:block;width:100%;height:160px;margin-top:8px;font:12px/1.5 var(--syntax-font)}
+#syntaxExport[hidden]{display:none}

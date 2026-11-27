@@ -115,3 +115,11 @@ test('all five palettes meet contrast 4.5:1 for all semantic text categories',as
     const a=L(colors[0]),b=L(colors[i]);assert.ok((Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5,name+' '+syntaxKeys[i]);
   }
 });
+
+test('local font assets and licenses are copied and precached',()=>{
+  const sw=readFileSync(resolve(root,'dist/studio/sw.js'),'utf8');
+  for(const font of ['jetbrains-regular.ttf','jetbrains-italic.ttf','fira-regular.ttf','dejavu-regular.ttf','dejavu-italic.ttf','cascadia-regular.ttf','cascadia-italic.ttf','jetbrains-LICENSE.txt','fira-LICENSE.txt','dejavu-LICENSE.txt','cascadia-LICENSE.txt']){
+    assert.ok(readFileSync(resolve(root,'dist/studio/fonts',font)).length>1000);
+    assert.ok(sw.includes('./fonts/'+font));
+  }
+});

@@ -143,7 +143,7 @@ const context={};
 runInNewContext(readFileSync(resolve(destination,'compiler.js'),'utf8'),context);
 // Publish the design notebook from the canonical Markdown documents. It uses a
 // deliberately small, escaped subset: headings, paragraphs and fenced code.
-const notebook = ['docs/design-notes.md', 'docs/module-design.md', 'docs/consolidation-089.md', 'docs/open-questions.md', 'docs/theme.md']
+const notebook = ['docs/design-notes.md', 'docs/module-design.md', 'docs/consolidation-089.md', 'docs/open-questions.md', 'docs/theme.md', 'docs/syntax-theme.md']
   .map(path => readFileSync(resolve(root, path), 'utf8')).join('\n\n');
 const escape = text => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 const sections = [];
