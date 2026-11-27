@@ -1,0 +1,28 @@
+module Data / Storage Outcome;
+interface
+Storage Error :: InvalidKey | InvalidText | ValueTooLarge | StorageFailure;
+storage error code: :: (Storage Error) -> Text;
+read outcome: :: ({values: [Text], error: Text}) -> Result (Option (Text), Storage Error);
+write outcome: :: ({values: [Boolean], error: Text}) -> Result (Boolean, Storage Error);
+import Data / Outcome { Result; Option; };
+implementation
+import Data / Outcome { Some: ; None; Ok: ; Err: ; };
+storage error: code =
+  if (code == "invalid_key") then InvalidKey
+  else (if (code == "invalid_text") then InvalidText
+  else (if (code == "value_too_large") then ValueTooLarge else StorageFailure));
+storage error code: error =
+  match: error {
+    invalidKey: {| "invalid_key"},
+    invalidText: {| "invalid_text"},
+    valueTooLarge: {| "value_too_large"},
+    storageFailure: {| "storage_failure"}
+  };
+read outcome: envelope =
+  if (envelope ~ error == "") then
+    (Ok: (fold: (envelope ~ values), with: {acc, item | Some: item}, from: None))
+  else (Err: (storage error: (envelope ~ error)));
+write outcome: envelope =
+  if (envelope ~ error == "") then
+    (fold: (envelope ~ values), with: {acc, item | Ok: item}, from: (Err: StorageFailure))
+  else (Err: (storage error: (envelope ~ error)));

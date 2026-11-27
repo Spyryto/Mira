@@ -3,11 +3,17 @@
     "browser read text",
     "browser remove text",
     "files read text",
-    "files remove text"
+    "files remove text",
+    "browser try read text",
+    "browser try remove text",
+    "files try read text",
+    "files try remove text"
   ],
   "selectors": [
     "browser save text:for:",
-    "files save text:for:"
+    "files save text:for:",
+    "browser try save text:for:",
+    "files try save text:for:"
   ],
   "types": {
     "browser read text": {
@@ -51,6 +57,86 @@
         "Text"
       ],
       "result": "Boolean"
+    },
+    "browser try read text": {
+      "parameters": [
+        "Text"
+      ],
+      "result": {
+        "record": {
+          "values": {
+            "list": "Text"
+          },
+          "error": "Text"
+        }
+      }
+    },
+    "browser try save text:for:": {
+      "parameters": [
+        "Text",
+        "Text"
+      ],
+      "result": {
+        "record": {
+          "values": {
+            "list": "Boolean"
+          },
+          "error": "Text"
+        }
+      }
+    },
+    "browser try remove text": {
+      "parameters": [
+        "Text"
+      ],
+      "result": {
+        "record": {
+          "values": {
+            "list": "Boolean"
+          },
+          "error": "Text"
+        }
+      }
+    },
+    "files try read text": {
+      "parameters": [
+        "Text"
+      ],
+      "result": {
+        "record": {
+          "values": {
+            "list": "Text"
+          },
+          "error": "Text"
+        }
+      }
+    },
+    "files try save text:for:": {
+      "parameters": [
+        "Text",
+        "Text"
+      ],
+      "result": {
+        "record": {
+          "values": {
+            "list": "Boolean"
+          },
+          "error": "Text"
+        }
+      }
+    },
+    "files try remove text": {
+      "parameters": [
+        "Text"
+      ],
+      "result": {
+        "record": {
+          "values": {
+            "list": "Boolean"
+          },
+          "error": "Text"
+        }
+      }
     }
   },
   "scopes": {
@@ -71,6 +157,24 @@
     ],
     "files remove text": [
       "Providers / Storage Files"
+    ],
+    "browser try read text": [
+      "Providers / Storage Safe Browser"
+    ],
+    "browser try save text:for:": [
+      "Providers / Storage Safe Browser"
+    ],
+    "browser try remove text": [
+      "Providers / Storage Safe Browser"
+    ],
+    "files try read text": [
+      "Providers / Storage Safe Files"
+    ],
+    "files try save text:for:": [
+      "Providers / Storage Safe Files"
+    ],
+    "files try remove text": [
+      "Providers / Storage Safe Files"
     ]
   }
 }

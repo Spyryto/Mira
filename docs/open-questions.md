@@ -205,3 +205,7 @@ Documentazione storica consultata: syntax.md, mira04.md, atlas.md, structured-da
 ## Aggiornamento 0.89.4 (implementazione candidata)
 
 TYPE-10 e MOD-02: primo incremento. Data / Outcome introduce Option e Result comuni e import selettivi di tipi nei contratti indipendenti. Il decoder del pilota usa Result comune, Date Safe espone try date from:, Storage Optional espone find text:. Non sono ancora risolti Result degli errori I/O, fallimenti di aritmetica date, re-export/import di valori nei contratti autonomi, migrazione del servizio JSON storico e semplificazione dell'envelope. HOST-04/06/07 restano parziali. Verificare la CI prima di marcare le voci risolte; nessuna garanzia prestazionale nuova.
+
+## Aggiornamento 0.89.5 (implementazione candidata)
+
+La 0.89.4 è stata integrata (PR #128, merge 98fd67ab0f739d23435eb326dea6c0ae64376ef4, tutti i tre workflow verdi). TYPE-10/HOST-07 avanzano: Storage Safe usa Result (Option (Text), Storage Error) e Result (Boolean, Storage Error) nelle tre operazioni, con errori nominali e provider nativi sostituibili. Il pilota usa questa API, mantiene formato dati e vecchio contratto. Restano aperti la migrazione JSON storico, Date/arithmetic fallibili, codec/ABI nominale host, storage asincrono, transazioni, versionamento e backup. QA-02: misurare il costo degli envelope/validazione e dei controlli di accessibilità. Non segnare come risolto l'intero gruppo prima dei relativi test.

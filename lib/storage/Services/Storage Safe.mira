@@ -1,0 +1,7 @@
+module Services / Storage Safe;
+interface
+try read text: :: (Text) -> Result (Option (Text), Storage Error);
+try save text: for: :: (Text, Text) -> Result (Boolean, Storage Error);
+try remove text: :: (Text) -> Result (Boolean, Storage Error);
+import Data / Outcome { Result; Option; };
+import Data / Storage Outcome { Storage Error; };

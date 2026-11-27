@@ -1,7 +1,7 @@
 (function(){
   'use strict';
   const by=id=>document.getElementById(id),data=MiraLessonImportData;
-  const store=()=>MiraLessonImportProgram({...MiraTextHost,...MiraDateHost,...MiraJsonDecoder.host(data.decoder),...MiraStorageHost.browser(window.localStorage,'lesson-import-v1')});
+  const store=()=>MiraLessonImportProgram({...MiraTextHost,...MiraDateHost,...MiraJsonDecoder.host(data.decoder),...MiraStorageHost.browser({getItem:key=>window.localStorage.getItem(key),setItem:(key,value)=>window.localStorage.setItem(key,value),removeItem:key=>window.localStorage.removeItem(key)},'lesson-import-v1')});
   // Inspection and HTTP remain available when localStorage access is denied.
   const program=MiraLessonImportProgram({...MiraTextHost,...MiraDateHost,...MiraJsonDecoder.host(data.decoder)});
   const http=MiraHttpHost.textService(new URL('./lesson-import-sample.json',window.location.href).href);
@@ -38,17 +38,25 @@
     seq++;controller?.abort();
     const raw=by('raw').value;
     if(!show(program.inspect(raw)))return;
-    if(show(store().save(raw)))status('Salvata su questo browser.');
+    const saved=store().save(raw);
+    if(saved.accepted)status('Salvata su questo browser.');
+    else status('Errore: '+saved.error);
   }));
   by('restore').addEventListener('click',()=>action(()=>{
-    invalidate();const found=store().restore();
+    seq++;controller?.abort();const restored=store().restore();
+    if(restored.tag==='Err'){status('Errore: '+program.errorCode(restored.value));return;}
+    if(restored.tag!=='Ok')throw Error('invalid_storage_outcome');
+    const found=restored.value;
     if(found.tag==='None'){status('Nessuna lezione salvata.');return;}
     if(found.tag!=='Some')throw Error('invalid_storage_outcome');
-    by('raw').value=found.value;if(show(program.inspect(found.value)))status('Recuperata e verificata.');
+    invalidate();by('raw').value=found.value;if(show(program.inspect(found.value)))status('Recuperata e verificata.');
   }));
   by('remove').addEventListener('click',()=>action(()=>{
     if(!window.confirm('Rimuovere la lezione salvata nel laboratorio?'))return;
-    seq++;controller?.abort();store().remove();status('Archivio locale rimosso.');
+    seq++;controller?.abort();const removed=store().remove();
+    if(removed.tag==='Err'){status('Errore: '+program.errorCode(removed.value));return;}
+    if(removed.tag!=='Ok'||removed.value!==true)throw Error('invalid_storage_outcome');
+    status('Archivio locale rimosso.');
   }));
   window.addEventListener('pagehide',()=>{seq++;controller?.abort();});
 })();

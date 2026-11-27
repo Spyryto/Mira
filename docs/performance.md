@@ -130,3 +130,7 @@ La risoluzione del timer Haxe in quel contesto è circa 1 ms: zeri non significa
 ## Consolidamento 0.89.1–0.89.3: correttezza prima della misura
 
 La matrice aritmetica è un test di correttezza, non un benchmark. L'uguaglianza checked PHP risolta staticamente non introduce un wrapper; il fallback polimorfico/unchecked e fmod hanno costi non ancora misurati. Anche l'envelope Result dei decoder e le nuove validazioni hanno costo non quantificato. Non si dichiara zero-cost o un miglioramento di latenza. Misure future: compilazione, byte emessi, esecuzione con warmup e mediane, scenari applicativi e confronto a semantica equivalente. Vedi [rapporto di consolidamento](consolidation-089.md).
+
+## Storage Safe 0.89.5
+
+Gli adapter fallibili riusano le operazioni native; introducono un envelope strutturale, conversione in somma Mira e controllo directory PHP. Il costo non è stato misurato; non è zero-cost dimostrato. I test di assenza, testo vuoto ed errore sono test semantici, non prestazionali.
