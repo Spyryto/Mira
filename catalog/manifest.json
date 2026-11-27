@@ -1,5 +1,5 @@
 {
-  "version": "0.97",
+  "version": "0.97.1",
   "features": [
     {
       "id": "values",
@@ -2244,6 +2244,12 @@
       "title": "Varianti scalari nominali",
       "since": "0.97",
       "doc": "docs/type-representation.md#scalar-variants-097"
+    },
+    {
+      "id": "modular-scalar-variants",
+      "title": "Varianti scalari nei contratti modulari",
+      "since": "0.97.1",
+      "doc": "docs/type-representation.md#modular-scalar-variants-0971"
     }
   ]
 }

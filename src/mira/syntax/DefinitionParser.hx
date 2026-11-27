@@ -40,7 +40,7 @@ class DefinitionParser {
                             throw new MiraError("Duplicate or reserved type " + name,segment[0]);
                         final rhs = segment.slice(marker+1);
                         if (topLevel(rhs,"|") >= 0) {
-                            declareSum(name,identity,rhs,names,definitions,header.parameters,modulePath == null);
+                            declareSum(name,identity,rhs,names,definitions,header.parameters);
                         } else {
                             if (header.parameters.length == 0) {
                                 final base = new TypeParser(rhs,segment[marker+1],names,false).parse();
@@ -120,7 +120,7 @@ class DefinitionParser {
 
     // Sum declarations synthesize ordinary constructor definitions, with a
     // trusted canonical Variant body rather than user-forgeable records.
-    static function declareSum(name:String,identity:String,tokens:Array<Token>,names:Map<String,Type>,definitions:Array<Definition>,parameters:Array<String>,allowScalar:Bool):Void {
+    static function declareSum(name:String,identity:String,tokens:Array<Token>,names:Map<String,Type>,definitions:Array<Definition>,parameters:Array<String>):Void {
         final local = names.copy();
         // Negative ids are declaration-local template slots, never checker ids.
         final arguments:Array<Type> = [for (i in 0...parameters.length) Variable(-i-1)];
@@ -140,8 +140,8 @@ class DefinitionParser {
             final equals = topLevel(part,"=");
             final variant = annotatedName(equals < 0 ? part : part.slice(0,equals),local);
             if (equals >= 0) {
-                if (!allowScalar || parameters.length != 0)
-                    throw new MiraError("Scalar variants currently require a nonparametric type in a flat program",part[0]);
+                if (parameters.length != 0)
+                    throw new MiraError("Scalar variants currently require a nonparametric type",part[0]);
                 if (variant.type != null) throw new MiraError("Scalar variants cannot carry payloads",part[0]);
                 final literal = part.slice(equals+1);
                 var encoded:Expr;

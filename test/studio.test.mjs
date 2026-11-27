@@ -2287,3 +2287,21 @@ test('0.97 Studio checks and compiles scalar variants to native values',()=>{
     assert.deepEqual(JSON.parse(actual),{value:'center',label:'C'});
   }
 });
+
+
+test('0.97.1 Studio resolves scalar encodings through module aliases',()=>{
+  const modules=JSON.stringify({Layout:'module Layout; interface Alignment :: Start = 0 | Center = "0" | End = 2; implementation'});
+  const source='module App; import Layout {Alignment => Position; Center => Middle;}; label: x (Position) = match: x {start: {| "S"}, center: {| "C"}, end: {| "E"}}; result = {value: Middle, label: (label: Middle)};';
+  const checked=bridge.check(source,null,modules);
+  assert.equal(checked.ok,true,checked.message);
+  const row=JSON.parse(checked.output).find(x=>x.name==='App / result');
+  assert.equal(row.schema.fields.find(x=>x.name==='value').type.representation.kind,'Scalar');
+  for(const target of ['js','php']){
+    const built=bridge.compile(source,target,null,false,modules,true);
+    assert.equal(built.ok,true,built.message);
+    const name='__miraModule_v_417070202F20726573756C74';
+    const actual=target==='js'?JSON.stringify(runInNewContext(built.output+'\n'+name,{})):
+      spawnSync('php',['-r',built.output.replace(/^<\?php/,'')+'\necho json_encode($'+name+');'],{encoding:'utf8'}).stdout;
+    assert.deepEqual(JSON.parse(actual),{value:'0',label:'C'});
+  }
+});

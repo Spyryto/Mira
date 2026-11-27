@@ -2228,8 +2228,7 @@ test('0.97 scalar variants preserve nominal identity and exhaustiveness',()=>{
     'A :: First = 9007199254740992 | Second = 0;',
     'A :: First = 01 | Second = 2;',
     'A :: First = 1 + 2 | Second = 0;',
-    'A (T) :: First = "x" | Second = "y";',
-    'module A; Choice :: First = "x" | Second = "y";'
+    'A (T) :: First = "x" | Second = "y";'
   ]) assert.throws(()=>check(invalid),undefined,invalid);
 });
 
@@ -2256,4 +2255,64 @@ test('0.97 checked JS/PHP use native scalar values and strict matches without ta
       }
     }
   } finally {rmSync(dir,{recursive:true,force:true});}
+});
+
+
+test('0.97.1 scalar module contracts keep identity and encoding across provider bindings',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-modular-scalars-'));
+  try{
+    for(const folder of ['Services','Providers'])mkdirSync(join(dir,folder));
+    const contractPath=join(dir,'Services','Layout.mira');
+    const input=join(dir,'App.mira'),manifest=join(dir,'bindings.json');
+    const contract='module Services / Layout; interface Alignment :: Start = "start" | Center = "center" | End = "end"; preferred: :: (Text) -> Alignment;';
+    writeFileSync(contractPath,contract);
+    writeFileSync(join(dir,'Providers','A.mira'),'module Providers / A; implements Services / Layout; implementation preferred: x = if (x == "wide") then Center else Start;');
+    writeFileSync(join(dir,'Providers','B.mira'),'module Providers / B; implements Services / Layout; implementation preferred: x = End;');
+    const source='module App; import Services / Layout {Alignment => Position; Center => Middle; preferred: ;}; label: x (Position) = match: x {start: {| "S"}, center: {| "C"}, end: {| "E"}}; result = {native: (preferred: "wide"), label: (label: (preferred: "wide")), middle: Middle};';
+    writeFileSync(input,source);
+    const run=(...flags)=>spawnSync('node',['dist/mira.cjs',input,...flags],{encoding:'utf8'});
+    const report=(...flags)=>{
+      const r=run('--interfaces',...flags);assert.equal(r.status,0,r.stderr);
+      return JSON.parse(r.stdout).interfaces.find(m=>m.module==='Services / Layout');
+    };
+    const abstract=report();
+    const schema=abstract.surface.types.find(t=>t.name==='Alignment').schema;
+    assert.equal(schema.name,'Services / Layout / Alignment');
+    assert.deepEqual(schema.representation,{kind:'Scalar',cases:[{tag:'Center',value:'center'},{tag:'End',value:'end'},{tag:'Start',value:'start'}]});
+    for(const [provider,native,label] of [['A','center','C'],['B','end','E']]){
+      writeFileSync(manifest,JSON.stringify({'Services / Layout':{provider:'Providers / '+provider}}));
+      const flags=['--bindings',manifest];
+      assert.equal(report(...flags).fingerprint,abstract.fingerprint);
+      for(const target of ['js','php']){
+        const r=run(target,'--checked','--tree-shake',...flags);
+        assert.equal(r.status,0,r.stderr);
+        const result=target==='js'?spawnSync('node',['-e',r.stdout+'\nconsole.log(JSON.stringify(__miraModule_v_417070202F20726573756C74));'],{encoding:'utf8'}):
+          spawnSync('php',['-r',r.stdout.replace(/^<\?php/,'')+'\necho json_encode($__miraModule_v_417070202F20726573756C74);'],{encoding:'utf8'});
+        assert.equal(result.status,0,result.stderr);
+        assert.deepEqual(JSON.parse(result.stdout),{native,label,middle:'center'});
+      }
+    }
+    writeFileSync(contractPath,contract.replace('Center = "center"','Center = "middle"'));
+    assert.notEqual(report().fingerprint,abstract.fingerprint);
+    writeFileSync(contractPath,contract.replace('Start = "start" | Center = "center" | End = "end"','End = "end" | Start = "start" | Center = "center"'));
+    assert.equal(report().fingerprint,abstract.fingerprint);
+    writeFileSync(join(dir,'Providers','B.mira'),'module Providers / B; implements Services / Layout; implementation Alignment :: Start = "s" | Center = "c" | End = "e"; preferred: x = End;');
+    const invalid=run('--check','--bindings',manifest);
+    assert.notEqual(invalid.status,0);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('0.97.1 private scalar representations remain opaque in public interface reports',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-opaque-scalar-'));
+  try{
+    const input=join(dir,'program.mira');
+    const source='module Lib; interface Mode; make: :: (Text) -> Mode; implementation Mode :: Local = "local" | Remote = "remote"; make: x = if (x == "local") then Local else Remote;';
+    writeFileSync(input,source);
+    const run=()=>{const r=spawnSync('node',['dist/mira.cjs',input,'--interfaces'],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);return JSON.parse(r.stdout).interfaces[0];};
+    const before=run();
+    assert.equal(before.surface.types.find(t=>t.name==='Mode').schema.kind,'Opaque');
+    assert.ok(!before.canonical.includes('"remote"'));
+    writeFileSync(input,source.replace('Remote = "remote"','Remote = "remote-v2"'));
+    assert.equal(run().fingerprint,before.fingerprint);
+  }finally{rmSync(dir,{recursive:true,force:true});}
 });
