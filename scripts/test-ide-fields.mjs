@@ -20,6 +20,6 @@ for(const suffix of ['\nresult = {invoice | invoice ~ ', '\nresult = "invoice ~ 
 }
 const php=readFileSync('dist/ide/editor-services.php','utf8').replace(/^<\?php\s*/,'');
 const payload=Buffer.from(JSON.stringify(rows)).toString('base64');
-const run=spawnSync('php',['-r','$GLOBALS["__miraHost"]=["starts with:in:"=>fn($a,$b)=>str_starts_with($b,$a)];'+php+'\n$rows=json_decode(base64_decode("'+payload+'"),true);echo json_encode(editor_fields__prefix__from("invoice","ho",$rows));'],{encoding:'utf8'});
+const run=spawnSync('php',['-r',php+'\n$GLOBALS["__miraHost"]=["starts with:in:"=>fn($a,$b)=>str_starts_with($b,$a)];$rows=json_decode(base64_decode("'+payload+'"),true);echo json_encode(editor_fields__prefix__from("invoice","ho",$rows));'],{encoding:'utf8'});
 assert.equal(run.status,0,run.stderr);assert.deepEqual(JSON.parse(run.stdout),fields('invoice','ho',rows));
 console.log('Verified real compiler schemas, nested fields, optional fields, context limits and JS/PHP parity.');
