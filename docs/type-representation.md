@@ -175,3 +175,28 @@ La proiezione diretta ~ è ammessa sui campi obbligatori, non sui campi opzional
 Nessun nuovo runtime: la rappresentazione è quella dei record già esistenti (oggetti JavaScript e array associativi PHP), con sole proprietà effettivamente presenti. L'annotazione è cancellata dall'emitter. L'array PHP vuoto conserva la semantica preesistente, incluso il formato JSON di un array vuoto, che non è una nuova garanzia di serializzazione del record. L'assegnazione e gli aggiornamenti sono verificati in modalità checked; la compilazione non checked non offre tali garanzie.
 
 Limiti intenzionali: accesso fallibile o con default ai campi opzionali, test di presenza con narrowing, proiezione aperta ~ di uno schema nominale opzionale, unificazione tra schema opzionali e righe aperte e composizione ricorsiva direzionale di schema annidati restano da progettare. Anche i manifest host, i codec e i validatori esterni devono essere estesi esplicitamente prima di usarvi questo nuovo contratto. Il caso di studio GUI non viene ancora migrato: servirà un accesso sicuro e una API tipizzata degli stili. Il Laboratorio tipi di Studio contiene l'esempio Record con campi opzionali, con test di erasure, update immutabile, diagnostica, JS/PHP e report pubblici. La prossima versione è 0.100, non 1.0.
+
+
+## Safe optional access 0.100
+
+Stato: candidata. L'operatore postfix ~? ha la stessa precedenza e associatività di ~; il nome del campo è statico (anche chiave testuale quotata). Riutilizza la somma nominale visibile con forma Option (T) :: Some (T) | None, come la validazione breve riutilizza Result. Nei moduli importare Option da Data / Outcome; non occorre importare i costruttori per usare l'operatore. Nessun nuovo tipo o valore null.
+
+```mira
+Option (T) :: Some (T) | None;
+Style :: {padding?: Number};
+a (Style) = {};
+b (Style) = {padding: 0};
+x = a ~? padding;
+resolve: s (Style) -> Number =
+  match: (s ~? padding) {
+    some: {p | p},
+    none: {| 12}
+  };
+result = [(resolve: a), (resolve: b)];
+```
+
+x ha tipo Option (Number) e result contiene 12 e 0. La modalità checked richiede uno schema noto e il campo esplicitamente opzionale; non introduce inferenza di righe opzionali. Campi sconosciuti e richiesti, record non annotati, proiezioni dirette di opzionali e receiver non record sono rifiutati. La lettura mantiene il tipo del payload. L'assenza è verificata tramite Object.hasOwn (JS) e array_key_exists (PHP), non con truthiness, isset o un valore sentinella. Un valore presente pari a 0, false o testo vuoto resta presente. Input host non validati non acquistano automaticamente garanzie nominali.
+
+Il nuovo nodo OptionalFieldGet conserva il receiver, la chiave e il template Option lessicale. Il checker applica il template al tipo del campo, preservando l'identità nominale e la visibilità. L'emitter usa la rappresentazione tagged già esistente di Some/None solo quando serve un valore Option. Un match diretto ed esaustivo con handler corretti viene invece specializzato nel punto di emissione: un solo test di presenza, receiver valutato una volta, payload originale al ramo Some e nessuna allocazione intermedia di Option. Restano le closure del match. Il tree shaker e la raccolta delle catture visitano il receiver. Nessun nuovo runtime o tabella. La modalità non checked non garantisce validità del receiver o tipo del campo.
+
+Limiti intenzionali: la dichiarazione Option deve essere visibile col nome Option e avere esattamente i due casi standard, non un tipo opaco o un alias con nome differente. Non sono ancora supportate sezioni/accessor ~?, flow narrowing della presenza, ottimizzazione di accessi dopo update, varianti opzionali generiche unboxed o fusione attraverso binding intermedi. Non si promette un miglioramento misurato delle prestazioni. Il Laboratorio tipi mostra esempio e AST; i test esercitano nominalità, import, false/0/testo vuoto, entrambi gli ordini dei rami, catture, tree shaking e JS/PHP. La prossima versione proposta è 0.101 per la presenza statica.
