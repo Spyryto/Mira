@@ -45,7 +45,7 @@ export function mountReference(root, dataset, onOpenExample) {
     card.append(
       link(example.title, 'example/' + example.id, 'reference-item-link'),
       element('p', '', example.description),
-      meta(example), element('div', 'reference-expected', expected(example))
+      meta(example), element('div', 'reference-expected'+(example.expect.kind==='error'?' reference-expected-error':''), expected(example))
     );
 
     const actions = element('div', 'reference-actions');
@@ -105,6 +105,7 @@ export function mountReference(root, dataset, onOpenExample) {
       const matches=values=>{const hay=normalize(values.join(' '));return terms.every(t=>hay.includes(t));};
       const narrowed=!!(category.value||version.value||featureFilter.value||selector.value);
       const entries=[];
+      const exampleEntries=[];
       if(mode==='all'&&!narrowed) for(const feature of dataset.features) {
         if(matches([feature.title,feature.id,feature.since,feature.summary,feature.details])) entries.push(()=> {
           const card=element('section','reference-list-item');
@@ -114,8 +115,20 @@ export function mountReference(root, dataset, onOpenExample) {
       if(mode!=='capabilities'&&(mode==='examples'||terms.length||narrowed)) for(const example of dataset.examples) {
         const f=features.get(example.feature);const info=example.index||{};
         if(category.value&&info.category!==category.value||version.value&&info.since!==version.value||featureFilter.value&&f?.title!==featureFilter.value||selector.value&&!info.ast?.calls?.includes(selector.value))continue;
-        if(matches([example.id,example.title,example.description,example.source,f?.title,f?.id,info.category,info.since,...(info.selectors||[]),...(info.ast?.calls||[]),...(info.ast?.sections||[])])) entries.push(()=>exampleCard(example));
+        if(matches([example.id,example.title,example.description,example.source,f?.title,f?.id,info.category,info.since,...(info.selectors||[]),...(info.ast?.calls||[]),...(info.ast?.sections||[])])){
+          // Rank direct semantic matches ahead of incidental source mentions.
+          const score=terms.reduce((sum,term)=>sum+
+            (normalize(info.category)===term?16:0)+
+            (normalize([f?.id,f?.title].join(' ')).includes(term)?8:0)+
+            (normalize(example.title).includes(term)?6:0)+
+            (normalize([...(info.ast?.calls||[]),...(info.ast?.sections||[])].join(' ')).includes(term)?5:0)+
+            (normalize(example.description).includes(term)?3:0)+
+            (normalize(example.id).includes(term)?2:0),0);
+          exampleEntries.push({score,create:()=>exampleCard(example)});
+        }
       }
+      exampleEntries.sort((a,b)=>b.score-a.score);
+      for(const entry of exampleEntries)entries.push(entry.create);
       if(mode==='all'&&terms.length&&!narrowed) for(const item of dataset.api) {
         if(matches([item.id,item.description,item.signature])) entries.push(()=>{
           const card=element('section','reference-list-item');card.append(link('API: '+item.id,'api/'+encodeURIComponent(item.id),'reference-item-link'),element('p','',item.description));return card;
@@ -176,7 +189,7 @@ export function mountReference(root, dataset, onOpenExample) {
 
     const code = element('pre', 'reference-code', example.source);
     code.setAttribute('tabindex', '0');
-    const result = element('p', 'reference-expected', expected(example.expect ?
+    const result = element('p', 'reference-expected'+(example.expect?.kind==='error'?' reference-expected-error':''), expected(example.expect ?
       example : { expect: { kind: 'error', contains: 'Nessun risultato' } }));
     highlightCode(code, example.source);
     root.append(meta(example));

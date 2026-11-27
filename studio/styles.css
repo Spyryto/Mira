@@ -590,3 +590,5 @@ body[data-studio-view]:not([data-studio-view="code"]) .masthead {padding-bottom:
  .reference-controls{gap:6px;margin:12px 0}
  .reference-controls a{padding:8px 10px;font-size:12px}
 }
+
+.reference-expected-error{background:#f4e7df;color:#74482f}

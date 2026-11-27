@@ -36,9 +36,16 @@ try{
    await page.waitForFunction(()=>document.querySelector('.reference-search')?.value==='gui'&&document.querySelector('.reference-example-card'));
    assert.equal(await page.locator('.reference-search').inputValue(),'gui');
    assert.ok(await page.locator('.reference-example-card').count()>0);
+   assert.equal(await page.locator('.reference-example-card').first().locator('.reference-meta span').first().textContent(),'GUI',name+' semantic search ranking');
    await page.locator('.reference-search').scrollIntoViewIfNeeded();
    await page.screenshot({path:resolve(out,name+'-examples.png'),fullPage:false});
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,name+' guide horizontal overflow');
+   if(name==='phone'){
+     await page.locator('.reference-search').fill('');
+     await page.locator('.reference-filter-panel summary').click();
+     await page.getByLabel('Funzione chiamata (AST)').selectOption('fold:with:from:');
+     assert.equal(await page.locator('.reference-example-card').count(),10,'fold call facet');
+   }
    await page.goto(url+'theme-native-lab.html');
    await page.locator('#theme-preview .mira-ui-button').first().waitFor();
    await page.screenshot({path:resolve(out,name+'-widgets.png'),fullPage:true});
@@ -47,6 +54,7 @@ try{
      await page.goto(url+route+'.html');
      await page.screenshot({path:resolve(out,name+'-'+route+'.png'),fullPage:false});
      if(['type-lab','grammar-lab','module-explorer','host-module-lab'].includes(route))assert.ok((await page.locator('textarea#source').boundingBox()).height>=180,name+' '+route+' editor too short');
+     if(route==='gui-benchmark')assert.equal(await page.evaluate(()=>{const b=document.body.getBoundingClientRect();return Math.abs(b.left-(innerWidth-b.right))<=2&&getComputedStyle(document.body).backgroundColor===getComputedStyle(document.documentElement).backgroundColor;}),true,name+' benchmark centered and coordinated');
     }
    }
   }catch(error){failures.push(name+': '+error.message);}finally{await page.close();}

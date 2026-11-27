@@ -44,3 +44,8 @@ body .type-lab .type-examples summary{cursor:pointer;font-weight:650}
 body .type-lab .type-examples button{margin:4px;padding:8px 10px}
 body .projection-code button[aria-pressed=true]:not([disabled]){background:#e5daf3;color:#39334e;border-color:#7367ad}
 body .projection-code .inline-option:not([disabled]){background:#f8f4f7;color:#39334e}
+
+/* The shared body reset must not remove the benchmark page's centering. */
+html.studio-benchmark-page {background:var(--paper,#f5e9ed);color:var(--ink,#39334e)}
+html.studio-benchmark-page body {margin:0 auto;max-width:920px;background:var(--paper,#f5e9ed)}
+html.studio-benchmark-page #run {background:var(--studio-primary);font-weight:650}
