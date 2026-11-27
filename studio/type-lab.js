@@ -27,6 +27,12 @@
     source.value='Alignment :: Start = "start" | Center = "center" | End = "end";\nlabel: x (Alignment) = match: x {start: {| "S"}, center: {| "C"}, end: {| "E"}};\nresult = {value: Center, label: (label: Center)};\n# Prova Compila checked JS o PHP; prova anche bad (Alignment) = "center";';
     check();
   });
+  document.getElementById('modular-scalar-example').addEventListener('click',()=>{
+    host.value='';
+    modules.value=JSON.stringify({Layout:'module Layout; interface Alignment :: Start = 0 | Center = "0" | End = 2; implementation'},null,2);
+    source.value='module App;\nimport Layout {Alignment => Position; Center => Middle;};\nlabel: x (Position) = match: x {start: {| "S"}, center: {| "C"}, end: {| "E"}};\nresult = {value: Middle, label: (label: Middle)};';
+    check();
+  });
   document.getElementById('style-contract-example').addEventListener('click',()=>{
     host.value='';
     modules.value='';
