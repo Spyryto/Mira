@@ -21,10 +21,12 @@ class Compiler {
         final gui = origins != null && mira.types.GuiTypes.hasPrefix(source);
         var importedGui = false;
         var importedTypedStyles = false;
+        var importedGrammar = false;
         var trackedRead = readModule;
         if (origins != null && readModule != null) trackedRead = function(path:String):Null<String> {
             final text = readModule(path);
             if (path == "lib/gui.mira") importedGui = text != null && mira.types.GuiTypes.matches(text);
+            if (path == "lib/grammar.mira") importedGrammar = text != null && text == haxe.Resource.getString("lib/grammar.mira");
             if (path == "lib/gui-typed-styles.mira") importedTypedStyles = text != null && text == haxe.Resource.getString("lib/gui-typed-styles.mira");
             return text;
         };
@@ -54,7 +56,7 @@ class Compiler {
             definition.guiPrimitive = definition.isFunction() && definition.modulePath == null &&
                 ((importedGui && token.file == "lib/gui.mira") ||
                  (gui && token.file == null && token.line <= mira.types.GuiTypes.libraryLines) ||
-                 (importedTypedStyles && token.file == "lib/gui-typed-styles.mira" && definition.selector() == "styled:with styles:"));
+                 (importedTypedStyles && importedGrammar && token.file == "lib/gui-typed-styles.mira" && definition.selector() == "styled:with styles:"));
         }
         if (profile != null) profile.mark("expressions");
         return result;
