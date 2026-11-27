@@ -91,6 +91,33 @@ try{
   await list.waitFor();await page.waitForFunction(()=>document.querySelector('.cm-tooltip-autocomplete')?.textContent.includes('amount'));
   await page.screenshot({path:resolve(out,name+'-ide-lexical-completion.png'),fullPage:false});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);
+  await editor.press('Escape');
+  if(name==='phone'&&!(await page.locator('#workspace-tree').evaluate(e=>e.open)))await page.locator('#workspace-tree summary').click();
+  page.once('dialog',dialog=>dialog.accept('Music/Intervals.mira'));
+  await page.locator('#new-file').click();
+  await page.locator('#active-file').filter({hasText:'Music/Intervals.mira'}).waitFor();
+  const library='module Music / Intervals;\ninterface\noctave;\ntranspose: by: :: (Number, Number) -> Number;\nimplementation\noctave = 12;\ntranspose: note, by: interval = note + interval;\nsecret = 99;';
+  await editor.fill(library);
+  await page.locator('#status').filter({hasText:'Verificato'}).waitFor();
+  await page.locator('#files button',{hasText:'programma.mira'}).click();
+  await editor.fill('module App;\ninterface\nresult;\nimport Music / I');
+  await editor.press('Control+End');await editor.press('Control+Space');
+  await list.waitFor();await page.waitForFunction(()=>document.querySelector('.cm-tooltip-autocomplete')?.textContent.includes('Music / Intervals'));
+  await page.screenshot({path:resolve(out,name+'-ide-module-completion.png'),fullPage:false});
+  await editor.press('Escape');
+  const app='module App;\ninterface\nresult;\nimport Music / Intervals { octave; transpose: by: ; };\nimplementation\nresult = transpose: 60, by: octave;';
+  await editor.fill(app);
+  await page.locator('#status').filter({hasText:'Verificato'}).waitFor();
+  await page.locator('#symbols button',{hasText:'transpose:by:'}).click();
+  assert.match(await page.locator('#inspect').textContent(),/Importato da Music \/ Intervals/);
+  assert.equal(await page.locator('#symbols button',{hasText:'secret'}).count(),0);
+  await page.screenshot({path:resolve(out,name+'-ide-multifile.png'),fullPage:true});
+  await page.reload();
+  await page.locator('#status').filter({hasText:'Verificato'}).waitFor();
+  assert.match(await page.locator('.cm-content').textContent(),/transpose: 60/);
+  if(name==='phone')await page.locator('#workspace-tree summary').click();
+  await page.locator('#files button',{hasText:'Music/Intervals.mira'}).click();
+  assert.match(await page.locator('.cm-content').textContent(),/secret = 99/);
   await page.close();
  }
 }finally{await browser.close();await new Promise(r=>server.close(r))}

@@ -143,7 +143,7 @@ async function lookupAt(state,pos){
 async function complete(context){
  const before=context.state.doc.lineAt(context.pos).text.slice(0,context.pos-context.state.doc.lineAt(context.pos).from);
  const path=before.match(/^\s*import\s+([A-Za-z_][A-Za-z_0-9 /]*|)$/);
- if(path){const prefix=path[1],items=Object.keys(modulesFor(workspace)).filter(name=>name.startsWith(prefix)).map(name=>make(name,'','Modulo del progetto','','Workspace','namespace'));
+ if(path){const prefix=path[1],items=Object.keys(modulesFor(workspace)).map(name=>make(name,'','Modulo del progetto','','Workspace','namespace'));
   return {from:context.pos-prefix.length,options:editor_complete__from(prefix,items.map(item=>({...item,first:item.label}))).map(item=>({label:item.label,type:'namespace',apply:item.label})),filter:false};}
 
  const field=fieldContext(context.state.doc.toString(),context.pos);

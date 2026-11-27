@@ -1,7 +1,7 @@
 import {workspace_save__in,workspace_find__in,workspace_dependencies__in} from '../../dist/ide/editor-services.js';
 
 export const key='mira-ide:workspace:v1';
-const pathPattern=/^[A-Za-z_][A-Za-z_0-9 -]*(?:\/[A-Za-z_][A-Za-z_0-9 -]*)*\.mira$/;
+const pathPattern=/^[A-Za-z_][A-Za-z_0-9]*(?: [A-Za-z_][A-Za-z_0-9]*)*(?:\/[A-Za-z_][A-Za-z_0-9]*(?: [A-Za-z_][A-Za-z_0-9]*)*)*\.mira$/;
 export function validPath(path){return typeof path==='string'&&path.length<=240&&pathPattern.test(path)&&path.split('/').every(p=>p.trim()===p)}
 export function logical(path){return path.slice(0,-5).split('/').join(' / ')}
 export function validate(value){
