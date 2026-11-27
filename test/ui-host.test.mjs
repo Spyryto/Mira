@@ -1326,3 +1326,45 @@ test('0.106 grammar-refined GUI colors agree with the legacy checker and rendere
     }else assert.throws(()=>host.render({type:'styled',view:{type:'text',text:'Mira'},styles:[{color:value}]}),/Invalid style value/);
   }
 });
+
+
+test('0.108 typed style layers specialize through native literal aliases',()=>{
+  const source='import "lib/gui.mira"; import "lib/gui-typed-styles.mira"; ink (GUI Color) = "#234"; px (GUI Pixels) = 12; panel (GUI Style) = {color: ink, padding: px, width: Style Fill, align: Align Center}; layers (Style Layers) = [panel]; view: n (Number) = column: [(styled: (text: n), with styles: layers), (button: "Next", update: {old | old + 1})];';
+  const checked=compiler.check(source,manifest);
+  assert.equal(checked.ok,true,checked.message);
+  const {root,document,errors}=setup();
+  const sandbox={};
+  runInNewContext(read('ui-host.js'),sandbox);
+  runInNewContext(read('gui-specialize.js'),sandbox);
+  const compiled=sandbox.MiraGuiSpecialize.compile(compiler,source,'view:');
+  const app=sandbox.MiraGuiSpecialize.mount(compiled,root,0,msg=>errors.push(msg));
+  const label=findAll(root,'p')[0],created=document.created;
+  assert.equal(label.style.getPropertyValue('color'),'#234');
+  assert.equal(label.style.getPropertyValue('padding'),'12px');
+  assert.equal(label.style.getPropertyValue('width'),'100%');
+  assert.equal(label.style.getPropertyValue('align-items'),'center');
+  findButtons(root)[0].click();
+  assert.equal(app.getState(),1);
+  assert.equal(label.textContent,'1');
+  assert.equal(findAll(root,'p')[0],label);
+  assert.equal(document.created,created);
+  assert.deepEqual(errors,[]);
+  assert.throws(()=>sandbox.MiraGuiSpecialize.compile(compiler,source+'computed = append: 1, to: [2];','view:'),/only literal global data/);
+});
+
+test('0.108 legacy cardinality and colors are consistent with the typed domain',()=>{
+  const base='import "lib/gui.mira"; ';
+  for(const target of ['js','php']){
+    for(const count of [0,1,32,33]){
+      const source=base+'result = styled: (text: "x"), with: ['+Array(count).fill('{color: "#abc"}').join(',')+'];';
+      const built=compiler.compile(source,target,manifest,false,null,true);
+      assert.equal(built.ok,count<=32,built.message);
+      if(built.ok)assert.equal(built.output,compiler.compile(source,target,manifest).output);
+    }
+    for(const color of ['#fff\n','#abcde','#abcDEF','transparent','currentColor','CurrentColor','é']){
+      const source=base+'result = styled: (text: "x"), with: [{color: '+JSON.stringify(color)+'}];';
+      const built=compiler.compile(source,target,manifest,false,null,true);
+      assert.equal(built.ok,['#abcDEF','transparent','currentColor'].includes(color),color+': '+built.message);
+    }
+  }
+});
