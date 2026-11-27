@@ -486,7 +486,7 @@ test('types: anonymous numeric refinements accept only proven input and reject i
   for(const [src,pattern] of [
     ['Bad :: Number where _ > 10 AND _ <= 10;',/Empty numeric refinement/],
     ['Positive :: Number where _ > 0; Bad :: Positive where _ <= 0;',/Empty numeric refinement/],
-    ['Bad :: Text where _ > 0;',/requires a Number representation/],
+    ['Bad :: Text where _ > 0;',/Expected == in type annotation/],
     ['Bad :: Number where _ > 0 && _ < 10;',/Unexpected token/],
     ['Bad :: Number where _ > 0 AND;',/Expected _/],
     ['p (Number where _ > 0) = 0;',/refinement violated/],
@@ -2609,7 +2609,7 @@ test('0.101 proven optional fields remove checks without changing native JS/PHP 
 
 
 test('0.102 finite text refinements prove literal choices without implicit runtime validation',()=>{
-  const source='Alignment :: Text where _ == "start" OR _ == "center" OR _ == "end"; Middle :: Alignment where _ == "center"; raw = "center"; a (Alignment) = raw; m (Middle) = a; copy (Alignment) = m; read: x (Alignment) -> Text = x; result = read: a; choose: b (Boolean) -> Alignment = if (b) then "start" else "end"; local = () >> {| raw = "start"; x (Alignment) = raw; x};';
+  const source='Alignment :: Text where _ == "start" OR _ == "center" OR _ == "end"; Middle :: Alignment where _ == "center"; raw = "center"; a (Alignment) = raw; m (Middle) = a; copy (Alignment) = m; read: x (Alignment) -> Text = x; result = read: a; choose: b (Boolean) -> Alignment = if (b) then "start" else "end"; local = () >> {| local raw = "start"; x (Alignment) = local raw; x};';
   const types=check(source);
   assert.equal(types.a,'Alignment');
   assert.equal(types.m,'Middle');
