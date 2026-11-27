@@ -1361,7 +1361,7 @@ class TypeChecker {
                         // Contextual checking here leaves ordinary list inference
                         // homogeneous and does not change the emitted AST.
                         final view = infer(args[0],scope);
-                        if (layers.length > 32) guiFailure("styled.styles must be a bounded sequence (max 32)",args[1]);
+                        if (!GuiStyleRules.layerCountAllowed(layers.length)) guiFailure("styled.styles must be a bounded sequence (max " + GuiStyleRules.layerLimit() + ")",args[1]);
                         for (layer in layers) checkGuiStyle(layer,scope);
                         selectorCall(selector,[view,ListType(fresh())]);
                     default: selectorCall(selector,[for (arg in args) infer(arg,scope)]);

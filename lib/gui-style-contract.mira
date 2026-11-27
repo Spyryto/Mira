@@ -1,4 +1,5 @@
-# Compile-time data. Ordinary Mira syntax; not imported into applications.
+# Historical 0.96 ConstantData example only. Not an active GUI contract.
+# Current style domains are defined solely in lib/gui-typed-styles.mira.
 Scalar Rule ::
     Range ({min: Number, max: Number})
   | Whole ({min: Number, max: Number})
