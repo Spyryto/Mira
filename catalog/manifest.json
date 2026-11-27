@@ -1,5 +1,5 @@
 {
-  "version": "0.102",
+  "version": "0.103",
   "features": [
     {
       "id": "values",
@@ -2280,6 +2280,12 @@
       "title": "Refinement testuali a insieme finito",
       "since": "0.102",
       "doc": "docs/type-representation.md#text-refinements-0102"
+    },
+    {
+      "id": "typed-gui-styles",
+      "title": "Stili GUI dichiarati mediante tipi Mira",
+      "since": "0.103",
+      "doc": "docs/type-representation.md#typed-gui-styles-0103"
     }
   ]
 }
