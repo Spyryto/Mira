@@ -67,6 +67,7 @@ class TypeVisibility {
             case TextRefinedType(base,choices): TextRefinedType(child(base),choices);
             case StructuralType(name,fields): StructuralType(name,[for (key => value in fields) key => child(value)]);
             case ListType(item): ListType(child(item));
+            case ListRefinedType(base,length): ListRefinedType(child(base),length);
             case FunctionType(args,result): FunctionType([for (a in args) child(a)],child(result));
             case RecordType(fields,tail): RecordType([for (key => value in fields) key => child(value)],tail == null ? null : child(tail));
             case OptionalRecordType(required,optional): OptionalRecordType([for (key => value in required) key => child(value)],[for (key => value in optional) key => child(value)]);
@@ -116,6 +117,7 @@ class TypeVisibility {
                     }
                     walk(base);
                 case ListType(item): walk(item);
+                case ListRefinedType(base,_): walk(base);
                 case FunctionType(args,result): for (a in args) walk(a); walk(result);
                 case OptionalRecordType(required,optional):
                     for (field in required) walk(field);

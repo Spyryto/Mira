@@ -69,6 +69,7 @@ class PublicSignature {
                 x == y && sameArray(xs,ys);
             case [RefinedType(x,r),RefinedType(y,s)]: r.equal(s) && same(x,y);
             case [GrammarRefinedType(_,x),GrammarRefinedType(_,y)]: x.equal(y);
+            case [ListRefinedType(x,r),ListRefinedType(y,s)]: r.equal(s) && same(x,y);
             case [TextRefinedType(x,r),TextRefinedType(y,s)]: r.equal(s) && same(x,y);
             case [ListType(x),ListType(y)]: same(x,y);
             case [FunctionType(xs,x),FunctionType(ys,y)]: sameArray(xs,ys) && same(x,y);

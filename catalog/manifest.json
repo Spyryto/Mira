@@ -1,5 +1,5 @@
 {
-  "version": "0.106",
+  "version": "0.107",
   "features": [
     {
       "id": "values",
@@ -2304,6 +2304,12 @@
       "title": "Tutti gli stili GUI dichiarati in Mira, colori grammaticali",
       "since": "0.106",
       "doc": "docs/type-representation.md#grammar-powered-gui-colors-0106"
+    },
+    {
+      "id": "list-cardinality",
+      "title": "Refinement della cardinalità delle liste",
+      "since": "0.107",
+      "doc": "docs/type-representation.md#list-cardinality-0107"
     }
   ]
 }

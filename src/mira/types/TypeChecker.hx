@@ -14,6 +14,7 @@ private typedef LocalScheme = {
     var narrowed:Null<NumericRange>;
     var present:Null<Array<String>>;
     var textChoices:Null<TextChoices>;
+    var length:Null<NumericRange>;
 }
 
 // Experimental, target-independent inference. No code generation or evaluation.
@@ -36,6 +37,8 @@ class TypeChecker {
     final globalPresence = new Map<String,Array<String>>();
     final textFacts = new haxe.ds.ObjectMap<Dynamic,TextChoices>();
     final globalTextFacts = new Map<String,TextChoices>();
+    final lengthFacts = new haxe.ds.ObjectMap<Dynamic,NumericRange>();
+    final globalLengths = new Map<String,NumericRange>();
     final provenPresence:Null<haxe.ds.ObjectMap<Dynamic,Bool>>;
     final integers = new haxe.ds.ObjectMap<Dynamic,Bool>();
     final wideObservations = new haxe.ds.ObjectMap<Dynamic,NumericRange>();
@@ -161,7 +164,7 @@ class TypeChecker {
     function occurs(id:Int, type:Type):Bool {
         return switch (prune(type)) {
             case Variable(other): id == other;
-            case ListType(item): occurs(id, item);
+            case ListType(item) | ListRefinedType(item,_): occurs(id, item);
             case OpaqueType(_,arguments) | SumType(_,_,arguments) | SumReference(_,_,arguments) | ParametricNamedType(_,_,arguments): Lambda.exists(arguments,t -> occurs(id,t));
             case FunctionType(args, result): Lambda.exists(args, t -> occurs(id,t)) || occurs(id,result);
             case OptionalRecordType(required,optional):
@@ -206,6 +209,7 @@ class TypeChecker {
                 for (i in 0...xs.length) unify(xs[i],ys[i]);
             case [RefinedType(x,r),RefinedType(y,s)] if (r.equal(s)): unify(x,y);
             case [TextRefinedType(x,r),TextRefinedType(y,s)] if (r.equal(s)): unify(x,y);
+            case [ListRefinedType(x,r),ListRefinedType(y,s)] if (r.equal(s)): unify(x,y);
             case [GrammarRefinedType(_,x),GrammarRefinedType(_,y)] if (x.equal(y)):
             case [StructuralType(_,x),StructuralType(_,y)]: unifyRecords(RecordType(x,null),RecordType(y,null));
             case [IntegerType,IntegerType] | [NumberType, NumberType] | [TextType,TextType] | [BooleanType,BooleanType]:
@@ -227,7 +231,7 @@ class TypeChecker {
     function representation(type:Type):Type {
         final visible = visibility.reveal(prune(type),moduleOwner);
         return switch (visible) {
-            case NamedType(_,base) | ParametricNamedType(_,base,_) | RefinedType(base,_) | TextRefinedType(base,_): representation(base);
+            case NamedType(_,base) | ParametricNamedType(_,base,_) | RefinedType(base,_) | TextRefinedType(base,_) | ListRefinedType(base,_): representation(base);
             case GrammarRefinedType(_,_): TextType;
             default: visible;
         };
@@ -249,6 +253,10 @@ class TypeChecker {
             case [TextRefinedType(base,choices),_]:
                 proveText(choices,given,null);
                 accept(base,given);
+            case [ListRefinedType(base,length),_]:
+                accept(base,given);
+                proveLength(length,given,null);
+            case [_,ListRefinedType(base,_)]: accept(wanted,base);
             case [GrammarRefinedType(_,machine),_]:
                 proveGrammar(machine,given,null);
             case [_,GrammarRefinedType(_,_)]: accept(wanted,TextType);
@@ -333,6 +341,9 @@ class TypeChecker {
                         construct(base,given,expr);
                         prove(range,given,expr);
                 }
+            case ListRefinedType(base,length):
+                accept(base,given);
+                proveLength(length,given,expr);
             case GrammarRefinedType(_,machine):
                 accept(TextType,given);
                 proveGrammar(machine,given,expr);
@@ -412,6 +423,20 @@ class TypeChecker {
         final guard = guardFor(expr,false);
         if (guard != null) { guard.requireRange(range); return; }
         numericFailure("refinement not statically proven: " + range.predicate(),Unknown,"refinement_unproven");
+    }
+
+    function collectionInput(type:Type):Type {
+        final visible = visibility.reveal(prune(type),moduleOwner);
+        return ListLengths.ofType(visible) != null ? representation(visible) : type;
+    }
+
+    function proveLength(required:NumericRange,actual:Type,expr:Null<Expr>):Void {
+        final known = ListLengths.ofType(visibility.reveal(prune(actual),moduleOwner));
+        final fact = expr == null ? null : lengthFacts.get(expr);
+        for (candidate in [known,fact,ListLengths.domain()]) if (candidate != null && candidate.proof(required) == Proven) return;
+        for (candidate in [known,fact]) if (candidate != null && candidate.proof(required) == Violated)
+            numericFailure("list cardinality refinement violated: " + ListLengths.predicate(required),Violated,"cardinality_disjoint");
+        numericFailure("list cardinality refinement not statically proven: " + ListLengths.predicate(required) + "; use validate:as:",Unknown,"cardinality_unproven");
     }
 
     function proveGrammar(machine:mira.grammar.GrammarMachine,actual:Type,expr:Null<Expr>):Void {
@@ -551,6 +576,7 @@ class TypeChecker {
                 seen.get(id);
             case OpaqueType(name,args): OpaqueType(name,[for (a in args) instantiate(a,seen,quantified)]);
             case ListType(item): ListType(instantiate(item,seen,quantified));
+            case ListRefinedType(base,length): ListRefinedType(instantiate(base,seen,quantified),length);
             case ParametricNamedType(name,base,arguments):
                 ParametricNamedType(name,instantiate(base,seen,quantified),[for (argument in arguments) instantiate(argument,seen,quantified)]);
             case SumReference(name,template,arguments):
@@ -573,7 +599,7 @@ class TypeChecker {
     function free(type:Type, found:Map<Int,Bool>):Void {
         switch (prune(type)) {
             case Variable(id): found.set(id,true);
-            case ListType(item): free(item,found);
+            case ListType(item) | ListRefinedType(item,_): free(item,found);
             case OpaqueType(_,arguments) | SumType(_,_,arguments) | SumReference(_,_,arguments) | ParametricNamedType(_,_,arguments): for (argument in arguments) free(argument,found);
             case FunctionType(args,result):
                 for (arg in args) free(arg,found);
@@ -588,7 +614,7 @@ class TypeChecker {
         }
     }
 
-    function mono(type:Type,?present:Array<String>,?textChoices:TextChoices):LocalScheme return {type:type, quantified:new Map<Int,Bool>(), narrowed:null, present:present,textChoices:textChoices};
+    function mono(type:Type,?present:Array<String>,?textChoices:TextChoices,?length:NumericRange):LocalScheme return {type:type, quantified:new Map<Int,Bool>(), narrowed:null, present:present,textChoices:textChoices,length:length};
 
     // Value restriction: generalize only non-expansive local initializers.
     // In particular a call might eventually perform an external effect.
@@ -601,7 +627,7 @@ class TypeChecker {
     }
 
     function localScheme(expr:Expr,type:Type,scope:Map<String,LocalScheme>):LocalScheme {
-        final scheme = mono(type,presentFields.get(expr),textFacts.get(expr));
+        final scheme = mono(type,presentFields.get(expr),textFacts.get(expr),lengthFacts.get(expr));
         if (!isValue(expr)) return scheme;
         final excluded = new Map<Int,Bool>();
         for (binding in scope) {
@@ -693,6 +719,7 @@ class TypeChecker {
             } else unify(active.get(name),type);
             if (!d.isFunction() && presentFields.exists(d.body)) globalPresence.set(name,presentFields.get(d.body));
             if (!d.isFunction() && textFacts.exists(d.body)) globalTextFacts.set(name,textFacts.get(d.body));
+            if (!d.isFunction() && lengthFacts.exists(d.body)) globalLengths.set(name,lengthFacts.get(d.body));
         }
         for (name in group) {
             inferred.set(name,active.get(name));
@@ -791,13 +818,13 @@ class TypeChecker {
         final result = fresh();
         switch (selector) {
             case "append:to:":
-                unify(item,args[0]); unify(ListType(item),args[1]); return ListType(item);
+                unify(item,args[0]); unify(ListType(item),collectionInput(args[1])); return ListType(item);
             case "map:with:" | "collect:with:":
-                unify(ListType(item),args[0]); unify(FunctionType([item],result),args[1]); return ListType(result);
+                unify(ListType(item),collectionInput(args[0])); unify(FunctionType([item],result),args[1]); return ListType(result);
             case "filter:with:" | "select:with:" | "select:if:" | "remove:if:":
-                unify(ListType(item),args[0]); unify(FunctionType([item],BooleanType),args[1]); return ListType(item);
+                unify(ListType(item),collectionInput(args[0])); unify(FunctionType([item],BooleanType),args[1]); return ListType(item);
             case "fold:with:from:":
-                unify(ListType(item),args[0]); unify(result,args[2]); unify(FunctionType([result,item],result),args[1]); return result;
+                unify(ListType(item),collectionInput(args[0])); unify(result,args[2]); unify(FunctionType([result,item],result),args[1]); return result;
             case "update:with:":
                 return updateRecord(args[0],args[1]);
             default: return call(declaration(selector),args);
@@ -916,7 +943,7 @@ class TypeChecker {
         // Still check unreachable branches normally: no bottom-type rules yet.
         if (narrowed.empty()) return scope;
         final inner = scope.copy();
-        inner.set(name,{type:binding.type,quantified:binding.quantified,narrowed:narrowed,present:binding.present,textChoices:binding.textChoices});
+        inner.set(name,{type:binding.type,quantified:binding.quantified,narrowed:narrowed,present:binding.present,textChoices:binding.textChoices,length:binding.length});
         return inner;
     }
 
@@ -969,6 +996,31 @@ class TypeChecker {
         };
         final knownTexts = texts == null ? TextChoices.ofType(visibility.reveal(prune(type),moduleOwner)) : texts;
         if (knownTexts != null) textFacts.set(expr,knownTexts);
+        final length:Null<NumericRange> = switch (expr) {
+            case Sequence(items): ListLengths.exact(items.length);
+            case Name(name):
+                if (scope.exists(name)) scope.get(name).length;
+                else if (definitions.exists(name) && definitions.get(name).modulePath == moduleOwner) globalLengths.get(name);
+                else null;
+            case Conditional(_,yes,no):
+                final a = lengthFacts.get(yes);
+                final b = lengthFacts.get(no);
+                a == null || b == null ? null : new NumericRange(Math.min(a.low,b.low),Math.max(a.high,b.high),true,true);
+            case Steps(items) if (items.length > 0): lengthFacts.get(items[items.length-1]);
+            // Only native collection selectors preserve these cardinality facts.
+            case Call("append:to:",args) if (args.length == 2):
+                final prior = lengthFacts.get(args[1]);
+                prior == null ? null : new NumericRange(prior.low+1,prior.high+1,true,true);
+            case Call(selector,args) if (args.length == 2 && ["collect:with:","map:with:"].indexOf(selector) >= 0 && host.selectors.indexOf(selector) < 0):
+                lengthFacts.get(args[0]);
+            case Call(selector,args) if (args.length == 2 && ["select:with:","select:if:","filter:with:"].indexOf(selector) >= 0 && host.selectors.indexOf(selector) < 0):
+                final prior = lengthFacts.get(args[0]);
+                prior == null ? null : new NumericRange(0,prior.high,true,true);
+            default: null;
+        };
+        final declaredLength = ListLengths.ofType(visibility.reveal(prune(type),moduleOwner));
+        final knownLength = length == null ? declaredLength : length.intersect(ListLengths.domain());
+        if (knownLength != null && !knownLength.empty()) lengthFacts.set(expr,knownLength);
         final presence = recordPresence(expr,scope);
         if (presence != null && presence.length > 0) presentFields.set(expr,presence);
         final fact:Null<NumericRange> = switch (expr) {
@@ -1023,6 +1075,13 @@ class TypeChecker {
         switch (representation(actual)) {
             case OpaqueType(name,_): fail("Cannot validate opaque representation " + name);
             default:
+        }
+        if (ListLengths.ofType(required) != null) {
+            // Validation checks length only: item compatibility must already be proven.
+            switch (representation(required)) {
+                case ListType(item): unify(ListType(item),representation(actual));
+                default: fail("Expected list cardinality validation type");
+            }
         }
         // Even a Text or Boolean input may fail normally. Do not rebrand siblings.
         final identity = nominalName(actual);
@@ -1273,7 +1332,7 @@ class TypeChecker {
                             if (anchor != null) origin = anchor;
                             construct(annotations[0],type,value);
                             origin = previous;
-                            inner.set(name,mono(annotations[0],presentFields.get(value),textFacts.get(value)));
+                            inner.set(name,mono(annotations[0],presentFields.get(value),textFacts.get(value),lengthFacts.get(value)));
                         } else inner.set(name,localScheme(value,type,inner));
                     default: result = infer(e,inner);
                 }
@@ -1366,6 +1425,7 @@ class TypeChecker {
             case ParametricNamedType(name,base,arguments):
                 {kind:"Named",name:name,arguments:[for (arg in arguments) describe(arg,seen)],base:describe(base,seen)};
             case RefinedType(base,range): {kind:"Refined",base:describe(base,seen),range:range.schema()};
+            case ListRefinedType(base,length): {kind:"ListRefined",base:describe(base,seen),length:length.schema()};
             case GrammarRefinedType(_,machine): {kind:"GrammarRefined",base:{kind:"Text"},machine:machine.schema()};
             case TextRefinedType(base,choices): {kind:"TextRefined",base:describe(base,seen),choices:choices.values};
             case StructuralType(name,fields):
@@ -1424,6 +1484,7 @@ class TypeChecker {
             case ParametricNamedType(name,_,arguments): name + " (" + [for (arg in arguments) render(arg,names,order)].join(", ") + ")";
             case SumType(name,_,arguments) | SumReference(name,_,arguments): name + (arguments.length == 0 ? "" : " (" + [for (arg in arguments) render(arg,names,order)].join(", ") + ")");
             case RefinedType(base,range): render(base,names,order) + " where " + range.predicate();
+            case ListRefinedType(base,length): render(base,names,order) + " where " + ListLengths.predicate(length);
             case GrammarRefinedType(name,_): "Text where matches: _, grammar: " + name;
             case TextRefinedType(base,choices): render(base,names,order) + " where " + choices.predicate();
             case StructuralType(name,_): "~ " + name;

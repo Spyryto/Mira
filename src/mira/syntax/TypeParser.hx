@@ -62,6 +62,14 @@ class TypeParser {
                 if (words.length == 0 || current() != null) return fail("Expected preceding grammar value name");
                 final name = words.join(" ");
                 type = GrammarRefinedType(name,grammarResolver(name));
+            } else if (current() != null && current().isSymbol("(")) {
+                switch (type) {
+                    case ListType(_):
+                    default: return fail("Cardinality refinement currently requires a direct list base");
+                }
+                final range = readRange(true).intersect(mira.types.ListLengths.domain()).integerHull();
+                if (range.empty()) return fail("Empty list cardinality refinement");
+                type = ListRefinedType(type,range);
             } else if (TextChoices.isText(type)) {
                 if (mira.grammar.GrammarMachine.ofType(type) != null) return fail("Composed grammar refinements are not yet supported");
                 final choices = readChoices();
@@ -110,12 +118,22 @@ class TypeParser {
         return new TextChoices(values);
     }
 
-    function readRange():NumericRange {
+    function readRange(?cardinality:Bool = false):NumericRange {
         var result = NumericRange.any();
         while (true) {
+            if (cardinality) {
+                require("(");
+                if (current() == null || current().kind != Word || current().value != "length")
+                    return fail("Expected length of: _ in cardinality refinement");
+                position++;
+                if (current() == null || current().kind != Word || current().value != "of") return fail("Expected length of: _ in cardinality refinement");
+                position++;
+                require(":");
+            }
             if (current() == null || current().kind != Word || current().value != "_")
                 return fail("Expected _ in numeric refinement");
             position++;
+            if (cardinality) require(")");
             final op = current();
             if (op == null || [">",">=","<","<=","=="].indexOf(op.value) < 0 || op.kind != Symbol)
                 return fail("Expected numeric refinement comparison");

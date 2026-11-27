@@ -275,3 +275,8 @@ Vedi [Typed GUI styles](type-representation.md#typed-gui-styles-0103). Il nuovo 
 ## 0.106 — Colori tipizzati mediante grammatiche
 
 GUI Style comprende tutte le 20 proprietà nel percorso opt-in. background, color e borderColor condividono GUI Color, un refinement grammaticale su Text. Il renderer e il formato descrittore restano invariati; i controlli del percorso legacy e al confine host non vengono eliminati in questo incremento. Vedi [Grammar-powered GUI colors](type-representation.md#grammar-powered-gui-colors-0106).
+
+
+## 0.107 — Lista di strati limitata
+
+Il decoratore opt-in riceve ora Style Layers, nominale su [GUI Style] con cardinalità massima 32. Il programma costruisce esplicitamente layers (Style Layers) = [panel]; poi styled: (text: "Mira"), with styles: layers. Il checker prova la cardinalità; per una lista sconosciuta usare validate:as:. Nessun nuovo guard implicito. Il decoratore legacy e il confine host conservano i controlli esistenti.
