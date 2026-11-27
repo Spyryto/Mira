@@ -32,3 +32,9 @@ editor parameter parts: parameter (Signature Parameter) -> [{text: Text, role: T
    {text: (if: (parameter ~ type == ""), then: (""), else: (")")), role: "type"}];
 editor signature: parameters ([Signature Parameter]), returning: result (Text) -> {parameters: [[{text: Text, role: Text}]], result: Text} =
   {parameters: (collect: parameters, with: {parameter (Signature Parameter) | editor parameter parts: parameter}), result: result};
+
+# Local bindings shadow global names. Preserve the nearest binding supplied by the checker.
+editor visible: locals ([Suggestion]), globals: globals ([Suggestion]) -> [Suggestion] =
+  fold: (select: globals, with: {global (Suggestion) |
+    (count: (editor lookup: (global ~ label), from: locals)) == 0}),
+    with: {items ([Suggestion]), item (Suggestion) | append: item, to: items}, from: locals;

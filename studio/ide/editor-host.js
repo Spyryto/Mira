@@ -5,7 +5,7 @@ import {autocompletion,snippetCompletion,startCompletion,completionKeymap} from 
 import {setDiagnostics} from '@codemirror/lint';
 import {tokenizeMira} from '../syntax-highlight.js';
 import {fieldContext,fieldRows,formatSchema} from './field-context.js';
-import {editor_complete__from,editor_lookup__from,editor_tooltip,editor_templates,editor_fields__prefix__from,editor_field_lookup__name__from,editor_field_tooltip,editor_signature__returning} from '../../dist/ide/editor-services.js';
+import {editor_complete__from,editor_lookup__from,editor_tooltip,editor_templates,editor_fields__prefix__from,editor_field_lookup__name__from,editor_field_tooltip,editor_signature__returning,editor_visible__globals} from '../../dist/ide/editor-services.js';
 
 const $=id=>document.getElementById(id);
 if(matchMedia('(max-width:850px)').matches)$('workspace-tree').open=false;
@@ -67,9 +67,27 @@ function fieldsFor(base){
  const promise=new Promise(resolve=>{pendingFields.set(request,resolve);worker.postMessage({kind:'fields',request,source:base});});
  fieldCache={base,promise};return promise;
 }
+const pendingScopes=new Map();
+let scopeCache=null;
+function queryScope(source,line,column){
+ const key=JSON.stringify([source,line,column]);
+ if(scopeCache?.key===key)return scopeCache.promise;
+ const request=++requestId;
+ const promise=new Promise(resolve=>{pendingScopes.set(request,resolve);worker.postMessage({kind:'scope',request,source,line,column});});
+ scopeCache={key,promise};return promise;
+}
+function localSuggestions(report,probe=false){
+ return (report?.bindings||[]).map(x=>make(x.name,probe?'':x.type,
+   probe?'Binding lessicale visibile; tipo da verificare nel sorgente completo.':'Binding lessicale verificato dal compilatore.',
+   '',probe?'Contesto con segnaposto':'Scope lessicale verificato','variable'));
+}
 async function lookupAt(state,pos){
  const w=wordAt(state,pos),site=fieldContext(state.doc.toString(),w.to);
- if(!site)return lookup(w.name);
+ if(!site){
+   if(w.name){const line=state.doc.lineAt(w.from);const report=await queryScope(state.doc.toString(),line.number,w.from-line.from+1);
+     if(report?.found){const local=editor_lookup__from(w.name,localSuggestions(report));if(local.length)return local;}}
+   return lookup(w.name);
+ }
  const rows=await fieldsFor(site.base);
  return editor_field_lookup__name__from(site.receiver,site.prefix,rows).map(editor_field_tooltip);
 }
@@ -89,7 +107,20 @@ async function complete(context){
  const line=context.state.doc.lineAt(context.pos);
  const inToken=tokenizeMira(line.text.slice(0,context.pos-line.from)).at(-1);
  if(inToken?.kind==='comment'||inToken?.kind==='string')return null;
- const items=editor_complete__from(match,candidates());
+ // Ask the real checker first. A numeric probe may make an incomplete
+ // identifier parseable; only its binding names, never inferred types, are used.
+ let scope=null,probe=false;
+ const source=context.state.doc.toString(),lineAt=context.state.doc.lineAt(from),column=from-lineAt.from+1;
+ const end=wordAt(context.state,context.pos).to;
+ if(match&&end>=context.pos)scope=await queryScope(source,lineAt.number,column);
+ if(!scope?.found){
+   const replacement=source.slice(0,from)+'0'+source.slice(end);
+   const candidate=replacement.trimEnd().endsWith(';')?replacement:replacement+';';
+   scope=await queryScope(candidate,lineAt.number,column);probe=true;
+ }
+ if(context.aborted||editor.state.doc!==context.state.doc)return null;
+ const visible=scope?.found?editor_visible__globals(localSuggestions(scope,probe),candidates()):candidates();
+ const items=editor_complete__from(match,visible);
  const options=items.map(item=>{
    const data=lastValid.includes(item)?{...item,origin:provenance()}:item;
    const option={label:item.label,type:item.kind,detail:item.rich?'':item.signature||item.origin,rich:item.rich,info:()=>renderTooltip(data)};
@@ -110,7 +141,7 @@ const syntax=ViewPlugin.fromClass(class{constructor(view){this.decorations=marks
 function analyze(view){
  clearTimeout(timer);revision++;
  const rev=revision,source=view.state.doc.toString();
- inspected=inspected.filter(item=>item.kind!=='property');
+ inspected=inspected.filter(item=>item.kind!=='property'&&item.origin!=='Scope lessicale verificato'&&item.origin!=='Contesto con segnaposto');
  refreshInspector();
  $('status').textContent='Analisi…';$('status').className='status';
  timer=setTimeout(()=>worker.postMessage({revision:rev,source}),220);
@@ -123,6 +154,10 @@ const editor=new EditorView({parent:$('editor'),state:EditorState.create({doc:sa
 ]})});
 function position(line,column){if(!Number.isInteger(line)||line<1||line>editor.state.doc.lines||!Number.isInteger(column))return null;const l=editor.state.doc.line(line);return Math.min(l.to,l.from+Math.max(0,column-1))}
 worker.onmessage=({data})=>{
+ if(data.kind==='scope'){
+   const done=pendingScopes.get(data.request);pendingScopes.delete(data.request);
+   if(done)done(data.checked.ok?JSON.parse(data.checked.output):null);return;
+ }
  if(data.kind==='fields'){
    const done=pendingFields.get(data.request);pendingFields.delete(data.request);
    if(done)done(data.checked.ok?fieldRows(JSON.parse(data.checked.output)):[]);return;

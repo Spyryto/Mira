@@ -27,3 +27,19 @@ console.log('Verified real compiler schemas, nested fields, optional fields, con
 const named=namedSignature([{selector:'add',name:'a number',type:'Number'},{selector:'and',name:'b',type:'Number'}],'Number');
 assert.deepEqual(named.parameters[0],[{text:'add',role:'selector'},{text:': ',role:'selector'},{text:'a number',role:'parameter'},{text:' (',role:'type'},{text:'Number',role:'type'},{text:')',role:'type'}]);
 assert.equal(named.result,'Number');
+
+const lexical=(source,needle,occurrence=0)=>{
+ let at=-1;for(let i=0;i<=occurrence;i++)at=source.indexOf(needle,at+1);
+ const lines=source.slice(0,at).split('\n');
+ const response=ctx.MiraStudioCompiler.scopeAt(source,lines.length,lines.at(-1).length+1);
+ assert.equal(response.ok,true,response.message);
+ const scope=JSON.parse(response.output);assert.equal(scope.found,true);return Object.fromEntries(scope.bindings.map(x=>[x.name,x.type]));
+};
+const lexicalSource='x = 9;\nf: outer (Number) = outer >> {x (Number) | local = x + 1; local >> {x (Text) | x}};';
+assert.deepEqual(lexical(lexicalSource,'x}}'),{local:'Number',outer:'Number',x:'Text'});
+const prior='f: x (Number) = x >> {y (Number) | z = y + 1; z + x};';
+assert.deepEqual(lexical(prior,'y +'),{x:'Number',y:'Number'});
+assert.deepEqual(lexical(prior,'z +'),{x:'Number',y:'Number',z:'Number'});
+const probeSource='double: amount (Number) -> Number = 0 + 1;';
+assert.deepEqual(lexical(probeSource,'0 +'),{amount:'Number'});
+console.log('Verified compiler lexical environments: parameter binding, nested shadowing, sequential locals and completion probe.');

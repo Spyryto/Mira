@@ -49,6 +49,11 @@ class TypeChecker {
     final comparisonInputs:Array<{expr:Expr,type:Type,owner:Null<String>}> = [];
     var nextId = 0;
     var origin:Token;
+    // Opt-in IDE query: retain just the requested lexical environment.
+    var scopeLine:Int = -1;
+    var scopeColumn:Int = -1;
+    var inspectedScope:Null<Map<String,LocalScheme>> = null;
+    var inspectedOwner:Null<String> = null;
 
     final origins:ExpressionOrigins;
 
@@ -122,6 +127,20 @@ class TypeChecker {
             }
         }
         return result;
+    }
+
+    public function scopeAt(program:Array<Definition>,line:Int,column:Int):Dynamic {
+        scopeLine = line;
+        scopeColumn = column;
+        check(program);
+        if (inspectedScope == null) return {found:false, bindings:[]};
+        moduleOwner = inspectedOwner;
+        final names = [for (name in inspectedScope.keys()) name];
+        names.sort(Reflect.compare);
+        return {found:true,bindings:[for (name in names) {
+            name:name, type:show(inspectedScope.get(name).type),
+            schema:describe(inspectedScope.get(name).type)
+        }]};
     }
 
     // Specialize a declared function against concrete argument types, using
@@ -980,6 +999,13 @@ class TypeChecker {
         final previous = origin;
         final anchor = origins.get(expr);
         if (anchor != null) origin = anchor;
+        if (scopeLine >= 0 && anchor != null && anchor.file == null
+            && anchor.line == scopeLine && anchor.column == scopeColumn) switch (expr) {
+            case Name(_) | Numeric(_) | Text(_) | BooleanLiteral(_):
+                inspectedScope = scope.copy();
+                inspectedOwner = moduleOwner;
+            default:
+        }
         final type:Type = inferNode(expr,scope);
         final texts:Null<TextChoices> = switch (expr) {
             case Text(value): new TextChoices([value]);
