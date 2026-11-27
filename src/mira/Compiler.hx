@@ -79,7 +79,7 @@ class Compiler {
         var definitions = parse(source,host,readModule,entry,origins,visibility,providers,true,false,null,profile);
         final guards = new haxe.ds.ObjectMap<Dynamic,mira.types.NumericGuard>();
         final comparisons = target == Php ? new haxe.ds.ObjectMap<Dynamic,mira.types.ScalarComparison>() : null;
-        final scalarMatches = new haxe.ds.ObjectMap<Dynamic,Array<mira.syntax.Expr>>();
+        final scalarMatches = new haxe.ds.ObjectMap<Dynamic,Array<mira.types.NativeVariants.NativeCase>>();
         new mira.types.TypeChecker(origins,host == null ? HostEnvironment.empty() : host,guards,visibility,comparisons,scalarMatches).check(definitions);
         if (profile != null) profile.mark("checking");
         if (treeShake) {
