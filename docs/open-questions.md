@@ -232,3 +232,8 @@ Sostituire le firme fidate dei costruttori con dichiarazioni Mira quando
 sarà possibile rappresentare in modo opaco view eterogenee senza wrapper.
 Verificare progressivamente liste di stili eterogenei, proprietà CSS,
 chiavi e vincoli dinamici senza promettere prove statiche non disponibili.
+
+
+### 0.93 — Style layers (candidata)
+
+Supporto contestuale delle liste letterali eterogenee passate direttamente a styled:with: della GUI verificata. Restano aperti stili di prima classe con forme eterogenee, verifica CSS e vincoli dinamici. Nessun nuovo tipo unione o wrapper runtime.
