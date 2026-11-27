@@ -85,7 +85,31 @@ for (const filename of assets) {
 
 copyFileSync(resolve(root,'runtime/js/typed-data.js'),resolve(destination,'typed-data.js'));
 
-writeFileSync(resolve(destination,'mira-native-theme.css'),nativeCozyCss(readFileSync(resolve(destination,'mira-theme.css'),'utf8')));
+// The canonical sources remain shared. Embed the exact CSS in the two published
+// HTML pages so a stale service worker or HTTP cache cannot substitute an older
+// stylesheet with different selectors. Keep the standalone CSS for other hosts.
+const cozyCss=readFileSync(resolve(destination,'mira-theme.css'),'utf8');
+const nativeCss=nativeCozyCss(cozyCss);
+writeFileSync(resolve(destination,'mira-native-theme.css'),nativeCss);
+for(const [page,stylesheet,css] of [
+  ['theme-lab.html','mira-theme.css',cozyCss],
+  ['theme-native-lab.html','mira-native-theme.css',nativeCss]
+]){
+  const file=resolve(destination,page);
+  const link='<link rel="stylesheet" href="./'+stylesheet+'">';
+  let html=readFileSync(file,'utf8');
+  if(!html.includes(link)||!html.includes('</head>')||/<\/style/i.test(css))
+    throw Error('Invalid Cozy stylesheet embedding: '+page);
+  html=html.replace(link,'').replace('</head>',()=>'<style data-cozy-source="'+stylesheet+'">'+css+'</style></head>');
+  if(page==='theme-lab.html'){
+    // The reference is fully self-contained, including its shared palette logic.
+    const palette=readFileSync(resolve(destination,'cozy-palette.js'),'utf8');
+    const script='<script src="./cozy-palette.js"></script>';
+    if(!html.includes(script)||/<\/script/i.test(palette))throw Error('Invalid Cozy palette embedding');
+    html=html.replace(script,()=>'<script data-cozy-palette>'+palette+'</script>');
+  }
+  writeFileSync(file,html);
+}
 
 // Bundle the actual reusable Text library, not a duplicate Studio fixture.
 const textFile = path => readFileSync(resolve(root,'lib/text',path),'utf8');

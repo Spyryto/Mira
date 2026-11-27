@@ -94,7 +94,8 @@ const ASSETS = [
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE).then(cache => cache.addAll(ASSETS.map(asset =>
+      new Request(new URL(asset, self.registration.scope), {cache: 'reload'}))))
   );
 });
 
@@ -143,6 +144,13 @@ self.addEventListener('fetch', event => {
       : url.pathname.endsWith('/theme-native-lab.html') ? './theme-native-lab.html'
       : url.pathname.endsWith('/theme-lab.html') ? './theme-lab.html'
       : url.pathname.endsWith('/ui-preview.html') ? './ui-preview.html' : './index.html';
+    // Keep the native lab's HTML and compiler/host scripts in the same installed
+    // generation; a network-first navigation can otherwise mix old and new ABI.
+    if (page === './theme-lab.html' || page === './theme-native-lab.html') {
+      event.respondWith(caches.open(CACHE).then(cache =>
+        cache.match(page).then(hit => hit || fetch(request))));
+      return;
+    }
     event.respondWith(
       fetch(request).then(response => {
         if (response.ok) {
@@ -156,7 +164,7 @@ self.addEventListener('fetch', event => {
   }
 
   event.respondWith(
-    caches.match(request).then(hit => hit || fetch(request).then(response => {
+    caches.open(CACHE).then(cache => cache.match(request)).then(hit => hit || fetch(request).then(response => {
       if (response.ok) {
         const copy = response.clone();
         caches.open(CACHE).then(cache => cache.put(request, copy));
