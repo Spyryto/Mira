@@ -24,12 +24,11 @@ class Bridge {
             interfaces: interfaces,
             verifyContract: verifyContract,
             constantData: constantData,
-            styleContractSource: styleContractSource,
             typedStylesSource: typedStylesSource,
             grammarSource: grammarSource,
             grammarAnalyze: grammarAnalyze,
             grammarEmit: grammarEmit,
-            version: "0.108"
+            version: "0.109"
         });
     }
 
@@ -124,10 +123,6 @@ class Bridge {
     }
 
     public static function typedStylesSource():Null<String> return haxe.Resource.getString("lib/gui-typed-styles.mira");
-
-    public static function styleContractSource():Null<String> {
-        return haxe.Resource.getString("lib/gui-style-contract.mira");
-    }
 
     public static function tokens(source:String):Dynamic {
         return safely(function() return Compiler.inspectTokens(source));
