@@ -247,3 +247,8 @@ Controllo del vocabolario, tipi noti e valori letterali delle liste di stile dir
 ### 0.95 — Widget safety (candidata)
 
 Controlli locali su griglia, identità, opzioni letterali dei select e numero di strati. Firma Text per la chiave di reset. Restano aperti vincoli di dominio trasportabili attraverso funzioni, collisioni fra fratelli e liste dinamiche; non rimuovere le guardie host in assenza di prove.
+
+
+### 0.96 — Declarative contracts (candidata)
+
+Estratta la tabella degli stili in Mira e introdotto un valutatore limitato ai dati costanti. Da sviluppare: collegamento esplicito di contratti di libreria definiti dall'utente, vincoli relazionali e sulle liste, firme View opache e regole comuni tra checker e renderer. Prima di estendere il valutatore a funzioni arbitrarie occorre definire purezza, terminazione, diagnostica e risorse. Nessuna nuova sintassi.
