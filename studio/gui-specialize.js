@@ -199,7 +199,7 @@
           if(children.kind!=='Sequence')fail('static children');
           children.items.forEach((child,i)=>visit(child,[...path,i],depth+1));break;
         }
-        case 'title':case 'text':{
+        case 'title':case 'text':case 'led':{
           const f=fields(node,['type','text']);
           const expr=expression(f.get('text'),parameter);
           // Even constant expressions are evaluated by the regular compiler
@@ -212,12 +212,12 @@
           if(f.get('label').kind!=='Text'||!transition(action,1))fail('static unary transition');
           buttons.push(path);break;
         }
-        case 'input':case 'checkbox':case 'select':{
-          const property=type.value==='checkbox'?'checked':'value';
-          const f=fields(node,['type','label',property,'update',...(type.value==='select'?['options']:[])]);
+        case 'input':case 'checkbox':case 'select':case 'slider':case 'toggle':case 'tabs':case 'stepper':{
+          const property=['checkbox','toggle'].includes(type.value)?'checked':'value';
+          const f=fields(node,['type','label',property,'update',...(['select','tabs'].includes(type.value)?['options']:[])]);
           if(f.get('label').kind!=='Text'||!transition(f.get('update'),2))fail('static label and closed binary transition');
           let options;
-          if(type.value==='select'){
+          if(['select','tabs'].includes(type.value)){
             const list=f.get('options');
             if(list.kind!=='Sequence'||list.items.some(item=>item.kind!=='Text'))fail('static select options');
             options=list.items.map(item=>item.value);
@@ -355,7 +355,8 @@
         binding.textNode=text;
       }
       if(slot.kind==='control'){
-        binding.control=controls.get(node.children[1]);
+        const surface=node.children[1];
+        binding.control=controls.get(surface)??controls.get(surface.children[0]);
         binding.control.slot=binding;
       }
       return binding;
