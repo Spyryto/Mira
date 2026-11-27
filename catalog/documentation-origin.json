@@ -108,6 +108,10 @@
     "docs/studio-cozy-roadmap.md": {
       "kind": "ai_assisted",
       "note": "Piano di redesign Cozy Functional e limiti del primo incremento, redatti con assistenza IA."
+    },
+    "docs/studio-ide.md": {
+      "kind": "ai_assisted",
+      "note": "Documentazione del pilota IDE, limiti e scelte architetturali redatti con assistenza IA."
     }
   },
   "generatedSections": {
