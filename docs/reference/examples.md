@@ -2240,3 +2240,58 @@ render (state: {name: "Mira", active: true}, view: (profile: _));
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/gui-checked-form)
 
+<a id="example-gui-checked-styles"></a>
+## Stili verificati
+
+Strati di stile con campi differenti, verificati nella stessa view.
+
+Feature: [GUI checked](language.md#feature-gui-checked)
+
+```mira
+# Mira GUI: ordinary functions; no compiler or DOM dependencies.
+column: items = {type: "column", children: items};
+row: items = {type: "row", children: items};
+title: caption = {type: "title", text: caption};
+text: content = {type: "text", text: content};
+button: caption, on click: action = {
+  type: "button", label: caption, onClick: action
+};
+button: caption, update: transition = {
+  type: "button", label: caption, update: transition
+};
+text input: caption, value: current, update: transition = {
+  type: "input", label: caption, value: current, update: transition
+};
+checkbox: caption, checked: current, update: transition = {
+  type: "checkbox", label: caption, checked: current, update: transition
+};
+choose: caption, value: current, options: choices, update: transition = {
+  type: "select", label: caption, value: current, options: choices, update: transition
+};
+state: initial, view: factory = {type: "state", initial: initial, view: factory};
+# Explicit identity for resetting a state at the same structural position.
+state: initial, key: identity, view: factory = {
+  type: "state", initial: initial, key: identity, view: factory
+};
+
+# Style records compose from left to right; decorators do not add DOM nodes.
+styled: view, with: layers = {type: "styled", view: view, styles: layers};
+grid: count, children: items = {type: "grid", columns: count, children: items};
+
+# Identity belongs to the represented data, not its current position.
+keyed: identity, view: content = {type: "keyed", key: identity, view: content};
+each: items, identified by: identity, view: factory = collect: items, with: {item |
+  keyed: (item >> identity), view: (item >> factory)
+};
+
+# Attiva GUI checked in Mira Studio.
+render (styled: (column: [
+  title: "Stili verificati",
+  text: "Record diversi, un solo layout."
+]), with: [{padding: 16, gap: 8}, {background: "#e8f4ff"}, {radius: 12}]);
+```
+
+**Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/gui-checked-styles)
+
