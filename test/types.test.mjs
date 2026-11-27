@@ -2606,3 +2606,70 @@ test('0.101 proven optional fields remove checks without changing native JS/PHP 
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.102 finite text refinements prove literal choices without implicit runtime validation',()=>{
+  const source='Alignment :: Text where _ == "start" OR _ == "center" OR _ == "end"; Middle :: Alignment where _ == "center"; raw = "center"; a (Alignment) = raw; m (Middle) = a; copy (Alignment) = m; read: x (Alignment) -> Text = x; result = read: a; choose: b (Boolean) -> Alignment = if (b) then "start" else "end"; local = () >> {| raw = "start"; x (Alignment) = raw; x};';
+  const types=check(source);
+  assert.equal(types.a,'Alignment');
+  assert.equal(types.m,'Middle');
+  assert.equal(types.copy,'Alignment');
+  assert.equal(types.result,'Text');
+  assert.equal(types.local,'Alignment');
+  assert.equal(types['choose:'],'(Boolean) -> Alignment');
+  for(const [extra,pattern] of [
+    ['bad (Alignment) = "middle";',/text refinement violated/],
+    ['bad: x (Text) -> Alignment = x;',/text refinement not statically proven/],
+    ['bad = read: "center";',/expected Alignment/],
+    ['Other :: Text where _ == "center"; other (Other) = "center"; bad (Alignment) = other;',/expected Alignment/],
+    ['Empty :: Middle where _ == "end";',/Empty text refinement/],
+    ['bad (Alignment) = 1;',/expected Text/],
+    ['bad: b (Boolean) -> Alignment = if (b) then "start" else "bad";',/text refinement not statically proven/],
+    ['bad: raw (Text) -> Alignment = raw;',/text refinement not statically proven/]
+  ])assert.throws(()=>check(source+extra),pattern,extra);
+  for(const invalid of ['X :: Text where _ == 1;','X :: Text where _ != "x";','X :: Text where _ == "x" AND _ == "y";'])
+    assert.throws(()=>check(invalid),undefined,invalid);
+});
+
+test('0.102 text refinements erase to native Text and explicit validation uses strict membership on JS/PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-text-refinement-'));
+  try{
+    const input=join(dir,'program.mira');
+    const prefix='Alignment :: Text where _ == "start" OR _ == "center" OR _ == "0" OR _ == "01" OR _ == "" OR _ == "è";';
+    const source=prefix+'Result (T, E) :: Ok (T) | Err (E); raw = "center"; a (Alignment) = raw; parse: x (Text) = validate: (x), as: (Alignment); label: x (Text) -> Text = validate: (x), as: (Alignment), then: {v | v}, else: {e | "invalid"}; result = {value: a, valid: (parse: "0"), invalid: (parse: "00"), empty: (parse: ""), unicode: (parse: "è"), numeric: (validate: (0), as: (Alignment)), label: (label: "bad")};';
+    const expected={value:'center',valid:{tag:'Ok',value:'0'},invalid:{tag:'Err',value:'Invalid text value'},empty:{tag:'Ok',value:''},unicode:{tag:'Ok',value:'è'},numeric:{tag:'Err',value:'Invalid text value'},label:'invalid'};
+    for(const target of ['js','php']){
+      const build=(src,flags)=>{writeFileSync(input,src);return spawnSync('node',['dist/mira.cjs',input,target,...flags],{encoding:'utf8'});};
+      const checked=build(prefix+'raw = "center"; a (Alignment) = raw;',['--checked']);
+      const bare=build('raw = "center"; a = raw;',[]);
+      assert.equal(checked.status,0,checked.stderr);
+      assert.equal(checked.stdout,bare.stdout);
+      const invalid=build(prefix+'bad: x (Text) -> Alignment = x;',['--checked']);
+      assert.notEqual(invalid.status,0);
+      assert.match(invalid.stderr,/text refinement not statically proven/);
+      const built=build(source,['--checked','--tree-shake']);
+      assert.equal(built.status,0,built.stderr);
+      assert.match(built.stdout,/===/);
+      const executed=target==='js'?spawnSync('node',['-e',built.stdout+'\nconsole.log(JSON.stringify(result));'],{encoding:'utf8'}):
+        spawnSync('php',['-r',built.stdout.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'});
+      assert.equal(executed.status,0,executed.stderr);
+      assert.deepEqual(JSON.parse(executed.stdout),expected);
+      const constant=build(prefix+'Result (T, E) :: Ok (T) | Err (E); result = validate: ("start"), as: (Alignment);',['--checked','--tree-shake']);
+      assert.equal(constant.status,0,constant.stderr);
+      assert.doesNotMatch(constant.stdout,/===/);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('0.102 public text refinement fingerprints canonicalize choice order and reject changes',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-text-abi-'));
+  try{
+    const input=join(dir,'program.mira');
+    const source='module Lib; interface Alignment :: Text where _ == "start" OR _ == "center"; value (Alignment); implementation value = "start";';
+    const report=src=>{writeFileSync(input,src);const r=spawnSync('node',['dist/mira.cjs',input,'--interfaces'],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);return JSON.parse(r.stdout).interfaces[0];};
+    const first=report(source);
+    assert.deepEqual(first.surface.types.find(t=>t.name==='Alignment').schema.base,{kind:'TextRefined',base:{kind:'Text'},choices:['center','start']});
+    assert.equal(report(source.replace('_ == "start" OR _ == "center"','_ == "center" OR _ == "start" OR _ == "start"')).fingerprint,first.fingerprint);
+    assert.notEqual(report(source.replace('_ == "center"','_ == "end"')).fingerprint,first.fingerprint);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
