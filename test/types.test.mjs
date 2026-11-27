@@ -2636,7 +2636,7 @@ test('0.102 text refinements erase to native Text and explicit validation uses s
   try{
     const input=join(dir,'program.mira');
     const prefix='Alignment :: Text where _ == "start" OR _ == "center" OR _ == "0" OR _ == "01" OR _ == "" OR _ == "è";';
-    const source=prefix+'Result (T, E) :: Ok (T) | Err (E); raw = "center"; a (Alignment) = raw; parse: x (Text) = validate: (x), as: (Alignment); label: x (Text) -> Text = validate: (x), as: (Alignment), then: {v | v}, else: {e | "invalid"}; result = {value: a, valid: (parse: "0"), invalid: (parse: "00"), empty: (parse: ""), unicode: (parse: "è"), numeric: (validate: (0), as: (Alignment)), label: (label: "bad")};';
+    const source=prefix+'Result (T, E) :: Ok (T) | Err (E); raw = "center"; a (Alignment) = raw; parse: x (Text) = validate: (x), as: (Alignment); read: v (Alignment) -> Text = v; label: x (Text) -> Text = validate: (x), as: (Alignment), then: {v | read: v}, else: {e | "invalid"}; result = {value: a, valid: (parse: "0"), invalid: (parse: "00"), empty: (parse: ""), unicode: (parse: "è"), numeric: (validate: (0), as: (Alignment)), label: (label: "bad")};';
     const expected={value:'center',valid:{tag:'Ok',value:'0'},invalid:{tag:'Err',value:'Invalid text value'},empty:{tag:'Ok',value:''},unicode:{tag:'Ok',value:'è'},numeric:{tag:'Err',value:'Invalid text value'},label:'invalid'};
     for(const target of ['js','php']){
       const build=(src,flags)=>{writeFileSync(input,src);return spawnSync('node',['dist/mira.cjs',input,target,...flags],{encoding:'utf8'});};
