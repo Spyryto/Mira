@@ -246,3 +246,22 @@ Il checker conserva fatti testuali da literal, alias immutabili locali e nello s
 La validazione esplicita validate:as: riutilizza entrambe le forme esistenti, con Result oppure handler then/else. Per un input sconosciuto emette confronti stretti con i literal ammessi, evitando coercizioni PHP (ad esempio "00" non è "0"). Il receiver è valutato una volta. Un literal noto usa una condizione costante. I valori rimangono stringhe; Result mantiene la rappresentazione normale. Nessuna modifica del runtime. La modalità unchecked non offre garanzie sulle costruzioni annotate.
 
 Limiti: solo insiemi finiti di literal espressi con == e OR; non sono ancora disponibili regex, lunghezza, testo non vuoto, predicati generici, AND testuale o narrowing da confronti. Non si aggiunge un sistema di conversioni implicite, né una prova interprocedurale; l'inferenza di fatti non attraversa i moduli, mentre i tipi pubblici sì. Non si estende ancora il criterio di disgiunzione delle Native variants ai sottoinsiemi del dominio Text. Codec esterni e migrazione GUI restano da verificare prima di utilizzarli. Il Laboratorio tipi offre un esempio modificabile, con schema, esecuzione JS/PHP e diagnostica; i test confrontano il codice emesso con quello non annotato. Nessun benchmark specifico ancora disponibile.
+
+
+## Typed GUI styles 0.103
+
+Stato: candidata. Primo percorso opt-in, senza modificare la libreria legacy né il renderer. Importare lib/gui.mira e lib/gui-typed-styles.mira in compilazione checked.
+
+```mira
+import "lib/gui.mira";
+import "lib/gui-typed-styles.mira";
+px (GUI Pixels) = 12;
+panel (GUI Style) = {padding: px, width: Style Fill, align: Align Center};
+result = styled: (text: "Mira"), with styles: [panel];
+```
+
+GUI Style è un record chiuso con 17 campi opzionali. GUI Pixels, GUI Font Weight e GUI Flex usano refinement numerici; GUI Size usa una Native variant; GUI Alignment usa Scalar variants; le altre cinque scelte finite sono Text refinements. I valori devono essere costruiti esplicitamente nel tipo richiesto (nessuna conversione implicita nei campi). Le liste possono essere calcolate e riutilizzate perché il tipo [GUI Style] è verificato dalla normale firma. La rappresentazione del descrittore e dei suoi campi rimane nativa. Non si aggiunge una nuova fase di validazione runtime.
+
+Il nuovo decoratore mantiene l'ABI di View già fidato: il compilatore riconosce soltanto l'import della sorgente esatta incorporata, non una funzione omonima. La firma usa il tipo layers già dichiarato nel sorgente Mira. Il checker contestuale checkGuiStyle non viene eseguito dal nuovo selettore. Non si introduce alcuna conoscenza di nomi, limiti o tipi delle 17 proprietà in Haxe.
+
+Misura a livello di sorgenti: 17/20 proprietà (85%) migrate nel percorso opt-in; 3 colori esclusi perché richiedono regex. Delta netto nel compilatore Haxe: Compiler +3 righe, GuiTypes +3, TypeChecker invariato nel numero di righe; Studio Bridge +5. Nessuna riga del controllo legacy è rimossa, poiché serve ancora alle applicazioni esistenti. Le regole legacy sono ancora duplicate in dati Mira: non è una riduzione netta del codice, ma una prima migrazione del percorso di verifica. Nessuna misura di prestazioni o dimensione del JS/PHP generato rivendicata. Il limite massimo di 32 strati resta verificato dall'host, non dal nuovo tipo lista. Il supporto dei colori, il vincolo sulla lunghezza delle liste, l'integrazione dello specializzatore GUI e l'unificazione delle due API sono passi successivi. Il record vuoto in PHP mantiene la rappresentazione array associativo già esistente (JSON []); non si cambia l'ABI. Il Laboratorio tipi include l'esempio Stili GUI tipizzati. Test di regressione verificano nominalità, errori, descrittori nativi JS/PHP e rifiuto di una libreria modificata come fonte fidata.
