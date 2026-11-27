@@ -9,16 +9,15 @@
 <label><input type="checkbox" id="projection-semicolon" checked> Mostra ;</label>
 </section>
 <section class="projection-panel">
-<h2>Programma</h2><div id="projection-code" class="projection-code" aria-label="Programma strutturale"></div>
-<p class="projection-note">Tocca un numero, un riferimento o un operatore. Frecce ← → tra nodi, ↑ padre, ↓ figlio. Digita + − * / per avvolgere.</p>
+<h2>Programma</h2><label for="projection-sample">Esempio</label><select id="projection-sample"><option value="arithmetic">Aritmetica</option><option value="match">Match esaustivo</option></select><div id="projection-code" class="projection-code" aria-label="Programma strutturale"></div>
+<p class="projection-note">Tocca un numero o un riferimento per modificarlo sul posto. Invio apre l’editing, Esc annulla. Frecce ← → tra nodi, ↑ padre, ↓ figlio. Digita + − * / per avvolgere. Nell’esempio Match digita mat sul risultato.</p>
 <div class="projection-actions" aria-label="Navigazione"><button data-nav="previous">←</button><button data-nav="parent">↑</button><button data-nav="child">↓</button><button data-nav="next">→</button><button id="projection-undo">Annulla</button><button id="projection-redo">Ripeti</button></div>
 </section>
 <section class="projection-panel" aria-label="Modifica selezione">
 <h2 id="projection-selection">Selezione</h2>
-<div class="projection-actions" aria-label="Composizione"><button data-wrap="+">+ </button><button data-wrap="-">−</button><button data-wrap="*">×</button><button data-wrap="/">÷</button><button id="projection-remove">Svuota</button></div>
-<form id="projection-form"><label for="projection-input">Numero o riferimento</label><div class="projection-input-row"><input id="projection-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="es. 12 o hours"><button type="submit">Inserisci</button></div></form>
-<div class="projection-actions" id="projection-suggestions" aria-label="Riferimenti disponibili"></div><p id="projection-message" role="status" aria-live="polite"></p>
+<div class="projection-actions" aria-label="Composizione"><button data-wrap="+">+ </button><button data-wrap="-">−</button><button data-wrap="*">×</button><button data-wrap="/">÷</button><button id="projection-edit">Modifica</button><button id="projection-remove">Svuota</button></div>
+<p id="projection-message" role="status" aria-live="polite"></p>
 </section>
 <section class="projection-panel"><h2>Sorgente Mira</h2><p id="projection-check" role="status"></p><pre id="projection-export"></pre><button id="projection-copy" disabled>Copia sorgente verificato</button></section>
-<details><summary>Limiti di questo incremento</summary><p>Solo dichiarazioni numeriche, riferimenti, quattro operatori e buchi. Nessun salvataggio, import generale, match, inferenza nei buchi o benchmark UX ancora. La tabella dei nodi è in memoria; non è un formato persistente.</p></details>
+<details><summary>Limiti di questo incremento</summary><p>Sottoinsieme numerico e match generati da tipi somma noti al checker. I buchi si aspettano Number; non è ancora inferenza generale. Nessun salvataggio, import generale o benchmark UX. La tabella dei nodi è in memoria; non è un formato persistente.</p></details>
 </main><script src="./compiler.js"></script><script type="module" src="./projection-lab.js"></script></body></html>

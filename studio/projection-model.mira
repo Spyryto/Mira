@@ -1,6 +1,7 @@
 # The editable arithmetic subset is a flat, immutable node table.
 # The browser adapter allocates IDs and owns input, history and DOM.
-Node :: {id: Number, kind: Text, text: Text, left: Number, right: Number};
+Case :: {tag: Text, param: Text, type: Text, root: Number};
+Node :: {id: Number, kind: Text, text: Text, left: Number, right: Number, cases: [Case]};
 
 projection replace: replacement (Node), in: nodes ([Node]) -> [Node] =
   collect: nodes, with: {node (Node) |
