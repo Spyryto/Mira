@@ -25,36 +25,8 @@ function switchFile(path){
  states.set(workspace.active,editor.state);workspace={...workspace,active:path};
  lastValid=[];inspected=[];validRevision=-1;fieldCache=null;scopeCache=null;$('symbols').replaceChildren();
  editor.setState(states.get(path)||EditorState.create({doc:get(workspace,path).source,extensions}));
- renderFiles();saveLocal();renderFiles();saveLocal();analyze(editor);
-$('new-file').onclick=()=>{
- const path=prompt('Percorso del nuovo file .mira (es. Music/Intervals.mira)');
- if(!path)return;
- try{const next=newFile(workspace,path.trim());workspace={...next,active:workspace.active};switchFile(next.active)}catch(error){$('persistence').textContent=error.message;}
-};
-$('open-folder').disabled=typeof window.showDirectoryPicker!=='function';
-if($('open-folder').disabled)$('open-folder').title='Richiede un browser con File System Access; usa Importa/Esporta progetto.';
-$('open-folder').onclick=async()=>{
- try{const handle=await window.showDirectoryPicker({mode:'readwrite'});
-  const result=await readFolder(handle);
-  if(!confirm('Aprire '+handle.name+' e sostituire il workspace locale? Esporta prima eventuali modifiche da conservare.'))return;
-  folder=handle;baseline=new Map(result.workspace.files.map(f=>[f.path,f.source]));$('save-disk').disabled=false;replaceWorkspace(result.workspace);
-  if(result.skipped.length)$('persistence').textContent='File ignorati: '+result.skipped.join(', ');
- }catch(error){if(error.name!=='AbortError')$('persistence').textContent=error.message}
-};
-$('save-disk').onclick=async()=>{
- try{const file=get(workspace,workspace.active);await saveDisk(folder,file,baseline);$('persistence').textContent='Scritto su disco: '+file.path;}
- catch(error){$('persistence').textContent=error.message}
-};
-$('export-project').onclick=()=>{
- const url=URL.createObjectURL(new Blob([JSON.stringify(workspace,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='mira-workspace.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-};
-$('import-project').onclick=()=>$('project-input').click();
-$('project-input').onchange=async()=>{
- try{const file=$('project-input').files[0];if(!file)return;const next=validate(JSON.parse(await file.text()));
- if(!confirm('Sostituire il workspace locale con il progetto importato?'))return;
- folder=null;baseline=new Map();$('save-disk').disabled=true;replaceWorkspace(next);
- }catch(error){$('persistence').textContent=error.message}finally{$('project-input').value=''}
-};
+ renderFiles();saveLocal();analyze(editor);
+
 }
 function replaceWorkspace(next){
  workspace=validate(next);states.clear();lastValid=[];inspected=[];validRevision=-1;fieldCache=null;scopeCache=null;$('symbols').replaceChildren();
@@ -143,7 +115,7 @@ async function lookupAt(state,pos){
 async function complete(context){
  const before=context.state.doc.lineAt(context.pos).text.slice(0,context.pos-context.state.doc.lineAt(context.pos).from);
  const path=before.match(/^\s*import\s+([A-Za-z_][A-Za-z_0-9 /]*|)$/);
- if(path){const prefix=path[1],items=Object.keys(modulesFor(workspace)).map(name=>make(name,'','Modulo del progetto','','Workspace','namespace'));
+ if(path){const prefix=path[1]||'',items=Object.keys(modulesFor(workspace)).map(name=>make(name,'','Modulo del progetto','','Workspace','namespace'));
   return {from:context.pos-prefix.length,options:editor_complete__from(prefix,items.map(item=>({...item,first:item.label}))).map(item=>({label:item.label,type:'namespace',apply:item.label})),filter:false};}
 
  const field=fieldContext(context.state.doc.toString(),context.pos);
@@ -266,4 +238,34 @@ fetch('./reference.json').then(r=>r.json()).then(data=>{
  api=data.nativeApi.flatMap(group=>[...group.symbols,...group.types].map(x=>namedSignature(make(x.name,signature(x.schema),group.description,'',group.name,x.kind==='type'?'type':'function'),x.kind==='selector'?x:undefined,x.schema)));
  renderApi();
 }).catch(()=>{$('api-results').textContent='Catalogo non disponibile.'});
-analyze(editor);
+renderFiles();saveLocal();analyze(editor);
+$('new-file').onclick=()=>{
+ const path=prompt('Percorso del nuovo file .mira (es. Music/Intervals.mira)');
+ if(!path)return;
+ try{const next=newFile(workspace,path.trim());workspace={...next,active:workspace.active};switchFile(next.active)}catch(error){$('persistence').textContent=error.message;}
+};
+$('open-folder').disabled=typeof window.showDirectoryPicker!=='function';
+if($('open-folder').disabled)$('open-folder').title='Richiede un browser con File System Access; usa Importa/Esporta progetto.';
+$('open-folder').onclick=async()=>{
+ try{const handle=await window.showDirectoryPicker({mode:'readwrite'});
+  const result=await readFolder(handle);
+  if(!confirm('Aprire '+handle.name+' e sostituire il workspace locale? Esporta prima eventuali modifiche da conservare.'))return;
+  folder=handle;baseline=new Map(result.workspace.files.map(f=>[f.path,f.source]));$('save-disk').disabled=false;replaceWorkspace(result.workspace);
+  if(result.skipped.length)$('persistence').textContent='File ignorati: '+result.skipped.join(', ');
+ }catch(error){if(error.name!=='AbortError')$('persistence').textContent=error.message}
+};
+$('save-disk').onclick=async()=>{
+ try{const file=get(workspace,workspace.active);await saveDisk(folder,file,baseline);$('persistence').textContent='Scritto su disco: '+file.path;}
+ catch(error){$('persistence').textContent=error.message}
+};
+$('export-project').onclick=()=>{
+ const url=URL.createObjectURL(new Blob([JSON.stringify(workspace,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='mira-workspace.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+$('import-project').onclick=()=>$('project-input').click();
+$('project-input').onchange=async()=>{
+ try{const file=$('project-input').files[0];if(!file)return;const next=validate(JSON.parse(await file.text()));
+ if(!confirm('Sostituire il workspace locale con il progetto importato?'))return;
+ folder=null;baseline=new Map();$('save-disk').disabled=true;replaceWorkspace(next);
+ }catch(error){$('persistence').textContent=error.message}finally{$('project-input').value=''}
+};
+
