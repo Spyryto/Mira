@@ -257,3 +257,8 @@ Estratta la tabella degli stili in Mira e introdotto un valutatore limitato ai d
 ### 0.97 — Scalar variants (candidata)
 
 Somme nominali nullarie con codifica esplicita a literal Text o intero sicuro, riconosciute dal checker e emesse come valori nativi. Nessuna nuova categoria di tipo; compile checked obbligatorio per questi programmi. Prima implementazione in sorgenti piatti: mapping nell'ABI modulare, interop esterna, ScalarEq delle somme scalari, payload disgiunti e migrazione GUI restano aperti. Vedi [Scalar variants](type-representation.md#scalar-variants-097).
+
+
+### 0.97.1 — Modular scalar variants (candidata)
+
+Estensione delle varianti scalari ai moduli, ai contratti indipendenti e ai provider ereditati. Codifica pubblica nel report canonico delle somme; opacità invariata. Nessuna nuova semantica di linking separato. Ancora da progettare payload nativi disgiunti, interop esterna e uguaglianza tipizzata delle somme. Vedi [modular scalar variants](type-representation.md#modular-scalar-variants-0971).
