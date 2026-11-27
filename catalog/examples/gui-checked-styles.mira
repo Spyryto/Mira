@@ -1,0 +1,5 @@
+# Attiva GUI checked in Mira Studio.
+render (styled: (column: [
+  title: "Stili verificati",
+  text: "Record diversi, un solo layout."
+]), with: [{padding: 16, gap: 8}, {background: "#e8f4ff"}, {radius: 12}]);
