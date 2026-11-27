@@ -90,8 +90,35 @@
   }
   function expandView(ast,definition){
     const functions=new Map(ast.definitions.filter(d=>d.kind==='Function').map(d=>[d.selector,d]));
-    const constants=new Map(ast.definitions.filter(d=>d.kind==='Value').map(d=>[d.name,d.body]));
-    if([...constants.values()].some(value=>!literalData(value)))fail('only literal global data');
+    const constants=new Map(ast.definitions.filter(d=>d.kind==='Value').map(d=>[d.name,d]));
+    // A typed style library includes compile-time grammar data. Do not inline
+    // computed grammar globals; the original program still initializes them.
+    // All application globals must remain in the finite literal-data subset.
+    const resolved=new Map(),resolving=new Set();
+    let dataWork=0;
+    function constant(name,depth=0){
+      if(++dataWork>20000||depth>64)fail('literal data expansion limit');
+      if(resolved.has(name))return resolved.get(name);
+      const d=constants.get(name);
+      if(!d||resolving.has(name))fail('only literal global data');
+      resolving.add(name);
+      function visit(node,level){
+        if(++dataWork>20000||level>64)fail('literal data expansion limit');
+        switch(node?.kind){
+          case 'Name':return constant(node.value,level+1);
+          case 'Number':case 'Text':case 'Boolean':return node;
+          case 'Record':return {...node,fields:node.fields.map(f=>({...f,value:visit(f.value,level+1)}))};
+          case 'Sequence':return {...node,items:node.items.map(v=>visit(v,level+1))};
+          default:fail('only literal global data');
+        }
+      }
+      const result=visit(d.scalarEncoding??d.body,depth);
+      resolving.delete(name);resolved.set(name,result);return result;
+    }
+    for(const [name,d] of constants){
+      if(d.file==='lib/gui-typed-styles.mira' && d.body.kind==='Call' && !d.scalarEncoding)continue;
+      constant(name);
+    }
     let work=0,calls=0;
     function expand(node,env,stack,depth){
       if(++work>20000||depth>64)fail('component expansion limit');
@@ -99,7 +126,7 @@
       switch(node?.kind){
         case 'Name':
           if(env.has(node.value))return env.get(node.value);
-          if(constants.has(node.value))return constants.get(node.value);
+          if(constants.has(node.value))return constant(node.value);
           fail('unbound component name '+node.value);break;
         case 'Number':case 'Text':case 'Boolean':return node;
         case 'Record':return {...node,fields:node.fields.map(f=>({...f,value:child(f.value)}))};
@@ -118,12 +145,13 @@
           if(!target||stack.includes(node.selector)||target.parameters.length!==node.arguments.length)
             fail('recursive or unresolved component '+node.selector);
           const args=node.arguments.map(child);
-          const strict=strictNames(target.body);
+          const body=target.scalarEncoding??target.body;
+          const strict=strictNames(body);
           if(target.parameters.some((name,i)=>!strict.has(name)&&!literalData(args[i])))
             fail('non-strict component argument '+node.selector);
           calls++;
           const local=new Map(target.parameters.map((name,i)=>[name,args[i]]));
-          return expand(target.body,local,[...stack,node.selector],depth+1);
+          return expand(body,local,[...stack,node.selector],depth+1);
         }
         default:fail('component expression '+String(node?.kind));
       }
