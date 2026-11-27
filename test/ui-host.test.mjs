@@ -1319,7 +1319,7 @@ test('0.106 grammar-refined GUI colors agree with the legacy checker and rendere
     const {host,root}=setup();
     if(valid){
       runInNewContext(checked.output,{__miraHost:host});
-      const panel=findAll(root,'div').find(n=>n.style.getPropertyValue('color')===value);
+      const panel=findAll(root,'p').find(n=>n.style.getPropertyValue('color')===value);
       assert.ok(panel,'rendered color '+value);
       assert.equal(panel.style.getPropertyValue('background-color'),value);
       assert.equal(panel.style.getPropertyValue('border-color'),value);
