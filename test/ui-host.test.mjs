@@ -1376,10 +1376,11 @@ test('Widget Kit switch and slider preserve state and identity in generic and sp
   runInNewContext(read('ui-host.js'),sandbox);
   runInNewContext(read('gui-specialize.js'),sandbox);
   const compiled=sandbox.MiraGuiSpecialize.compile(compiler,source,'widget view:');
-  for(const mode of ['generic','specialized']){
+  const hybrid=sandbox.MiraGuiSpecialize.compileHybrid(compiler,source+'\nchanging view: model = if (model ~ active) then (text: "on") else (column: [(text: "off")]);',['widget view:','changing view:']);
+  for(const mode of ['generic','specialized','hybrid']){
     const {root,host,document,errors}=setup();
     const initial={active:false,level:10};
-    const app=mode==='generic'?host.renderState(compiled.program.view,initial):sandbox.MiraGuiSpecialize.mount(compiled,root,initial,msg=>errors.push(msg));
+    const app=mode==='generic'?host.renderState(compiled.program.view,initial):mode==='hybrid'?sandbox.MiraGuiSpecialize.mountHybrid(hybrid,root,initial,msg=>errors.push(msg)):sandbox.MiraGuiSpecialize.mount(compiled,root,initial,msg=>errors.push(msg));
     const [toggle,slider]=findAll(root,'input');
     assert.equal(toggle.type,'checkbox');
     assert.equal(toggle.getAttribute('role'),'switch');
@@ -1398,6 +1399,6 @@ test('Widget Kit switch and slider preserve state and identity in generic and sp
     assert.equal(toggle.checked,false);
     assert.equal(slider.value,'10');
     assert.equal(findAll(root,'input')[1],slider);
-    assert.equal(document.created,created);
+    if(mode!=='hybrid')assert.equal(document.created,created);
   }
 });
