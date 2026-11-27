@@ -2768,7 +2768,7 @@ test('0.107 cardinality validation preserves item type and executes on both targ
       const folded=run(pre+'result = validate: ([1]), as: (Small);','--checked','--tree-shake');
       assert.equal(folded.status,0,folded.stderr);assert.doesNotMatch(folded.stdout,/\.length|\\count\(|array_is_list|Array.isArray/);
       const erased=run(pre+'result (Small) = [1, 2];','--checked','--tree-shake');
-      const plain=run('result = [1, 2];','--checked','--tree-shake');
+      const plain=run('Result (T,E) :: Ok (T) | Err (E); result = [1, 2];','--checked','--tree-shake');
       assert.equal(erased.status,0,erased.stderr);assert.equal(erased.stdout,plain.stdout);
       for(const bad of ['bad = validate: (["x"]), as: (Small);','bad = validate: (42), as: (Small);','bad = validate: ({x: 1}), as: (Small);'])assert.notEqual(run(pre+bad,'--checked').status,0,bad);
     }
