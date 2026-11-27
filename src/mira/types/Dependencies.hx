@@ -86,7 +86,7 @@ class Dependencies {
                 for (arg in args) walk(arg,locals,found);
             case HostCall(_,args) | HostSection(_,args) | Sequence(args) | Record(_,args):
                 for (arg in args) walk(arg,locals,found);
-            case FieldGet(receiver,_): walk(receiver,locals,found);
+            case FieldGet(receiver,_) | OptionalFieldGet(receiver,_,_): walk(receiver,locals,found);
             case Match(input,_,handlers):
                 walk(input,locals,found); for (handler in handlers) walk(handler,locals,found);
             case Variant(_,_,payload): if (payload != null) walk(payload,locals,found);
