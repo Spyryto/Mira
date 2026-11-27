@@ -151,6 +151,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Nucleo indipendente di validazione e codec JSON tipizzati | `0.91` | [Dettagli](docs/studio.md#mira-091-nucleo-dati-tipizzati-indipendente) |
 | ✅ | GUI checked | `0.92` | [Dettagli](docs/reference/language.md#feature-gui-checked) |
 | ✅ | Dati dichiarativi a compile time | `0.96` | [Dettagli](docs/declarative-contracts.md) |
+| ✅ | Varianti scalari nominali | `0.97` | [Dettagli](docs/type-representation.md#scalar-variants-097) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
