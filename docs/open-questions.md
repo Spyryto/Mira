@@ -282,3 +282,8 @@ Operatore ~? per campi dichiarati opzionali, risultato Option nominale esistente
 ### 0.101 — Static presence inference (candidata)
 
 Fatti positivi di presenza su binding immutabili, literal, alias, update e intersezione dei rami. Accessi diretti sicuri e specializzazione del match opzionale senza test quando provato. Nessuna modifica ai tipi pubblici; host fidati devono rispettare immutabilità. Restano aperti narrowing da test espliciti, inferenza interprocedurale, assenza, refinement testuali e migrazione GUI. Vedi [static presence inference](type-representation.md#static-presence-inference-0101).
+
+
+### 0.102 — Text refinements (candidata)
+
+Refinement finiti via where _ == "..." OR _ == "...", con prove statiche, nominalità, validazione esplicita Result/handler e rappresentazione nativa. Nessun guard testuale implicito. Regex, lunghezze, narrowing, codec, disgiunzione di sottoinsiemi Text e migrazione GUI restano aperti. Vedi [text refinements](type-representation.md#text-refinements-0102).

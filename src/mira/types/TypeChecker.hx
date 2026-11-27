@@ -13,6 +13,7 @@ private typedef LocalScheme = {
     var quantified:Map<Int,Bool>;
     var narrowed:Null<NumericRange>;
     var present:Null<Array<String>>;
+    var textChoices:Null<TextChoices>;
 }
 
 // Experimental, target-independent inference. No code generation or evaluation.
@@ -33,6 +34,8 @@ class TypeChecker {
     // Positive presence facts are immutable snapshots, never type identities.
     final presentFields = new haxe.ds.ObjectMap<Dynamic,Array<String>>();
     final globalPresence = new Map<String,Array<String>>();
+    final textFacts = new haxe.ds.ObjectMap<Dynamic,TextChoices>();
+    final globalTextFacts = new Map<String,TextChoices>();
     final provenPresence:Null<haxe.ds.ObjectMap<Dynamic,Bool>>;
     final integers = new haxe.ds.ObjectMap<Dynamic,Bool>();
     final wideObservations = new haxe.ds.ObjectMap<Dynamic,NumericRange>();
@@ -202,6 +205,7 @@ class TypeChecker {
             case [SumType(x,_,xs),SumType(y,_,ys)] | [SumReference(x,_,xs),SumReference(y,_,ys)] | [SumType(x,_,xs),SumReference(y,_,ys)] | [SumReference(x,_,xs),SumType(y,_,ys)] | [ParametricNamedType(x,_,xs),ParametricNamedType(y,_,ys)] if (x == y && xs.length == ys.length):
                 for (i in 0...xs.length) unify(xs[i],ys[i]);
             case [RefinedType(x,r),RefinedType(y,s)] if (r.equal(s)): unify(x,y);
+            case [TextRefinedType(x,r),TextRefinedType(y,s)] if (r.equal(s)): unify(x,y);
             case [StructuralType(_,x),StructuralType(_,y)]: unifyRecords(RecordType(x,null),RecordType(y,null));
             case [IntegerType,IntegerType] | [NumberType, NumberType] | [TextType,TextType] | [BooleanType,BooleanType]:
             case [ListType(x),ListType(y)]: unify(x,y);
@@ -222,7 +226,7 @@ class TypeChecker {
     function representation(type:Type):Type {
         final visible = visibility.reveal(prune(type),moduleOwner);
         return switch (visible) {
-            case NamedType(_,base) | ParametricNamedType(_,base,_) | RefinedType(base,_): representation(base);
+            case NamedType(_,base) | ParametricNamedType(_,base,_) | RefinedType(base,_) | TextRefinedType(base,_): representation(base);
             default: visible;
         };
     }
@@ -240,7 +244,10 @@ class TypeChecker {
             case [RefinedType(base,range),_]:
                 prove(range,given,null);
                 accept(base,given);
-            case [_,NamedType(_,base)] | [_,ParametricNamedType(_,base,_)] | [_,RefinedType(base,_)]: accept(wanted,base);
+            case [TextRefinedType(base,choices),_]:
+                proveText(choices,given,null);
+                accept(base,given);
+            case [_,NamedType(_,base)] | [_,ParametricNamedType(_,base,_)] | [_,RefinedType(base,_)] | [_,TextRefinedType(base,_)]: accept(wanted,base);
             case [ListType(x),ListType(y)]: accept(x,y);
             // Records with named fields are invariant in this first increment.
             default: unify(wanted,given);
@@ -321,6 +328,13 @@ class TypeChecker {
                         construct(base,given,expr);
                         prove(range,given,expr);
                 }
+            case TextRefinedType(base,choices):
+                switch (given) {
+                    case Variable(_): unify(wanted,given);
+                    default:
+                        construct(base,given,expr);
+                        proveText(choices,given,expr);
+                }
             case IntegerType:
                 if (!NumericRange.integerType(given) && (expr == null || !integers.exists(expr))) {
                     switch (given) {
@@ -392,16 +406,25 @@ class TypeChecker {
         numericFailure("refinement not statically proven: " + range.predicate(),Unknown,"refinement_unproven");
     }
 
+    function proveText(required:TextChoices,actual:Type,expr:Null<Expr>):Void {
+        final declared = TextChoices.ofType(visibility.reveal(prune(actual),moduleOwner));
+        final fact = expr == null ? null : textFacts.get(expr);
+        for (candidate in [declared,fact]) if (candidate != null && candidate.proof(required) == Proven) return;
+        for (candidate in [declared,fact]) if (candidate != null && candidate.proof(required) == Violated)
+            numericFailure("text refinement violated: " + required.predicate(),Violated,"text_refinement_disjoint");
+        numericFailure("text refinement not statically proven: " + required.predicate() + "; use validate:as:",Unknown,"text_refinement_unproven");
+    }
+
     function nominalName(type:Type):Null<String> return switch (prune(type)) {
         case OpaqueType(name,_) | NamedType(name,_) | SumType(name,_,_) | SumReference(name,_,_) | ParametricNamedType(name,_,_): name;
-        case RefinedType(base,_): nominalName(base);
+        case RefinedType(base,_) | TextRefinedType(base,_): nominalName(base);
         default: null;
     };
 
     function ancestor(type:Type,name:String):Bool return switch (prune(type)) {
         case NamedType(n,base): n == name || ancestor(base,name);
         case OpaqueType(n,_) | SumType(n,_,_) | SumReference(n,_,_) | ParametricNamedType(n,_,_): n == name;
-        case RefinedType(base,_): ancestor(base,name);
+        case RefinedType(base,_) | TextRefinedType(base,_): ancestor(base,name);
         default: false;
     };
 
@@ -544,7 +567,7 @@ class TypeChecker {
         }
     }
 
-    function mono(type:Type,?present:Array<String>):LocalScheme return {type:type, quantified:new Map<Int,Bool>(), narrowed:null, present:present};
+    function mono(type:Type,?present:Array<String>,?textChoices:TextChoices):LocalScheme return {type:type, quantified:new Map<Int,Bool>(), narrowed:null, present:present,textChoices:textChoices};
 
     // Value restriction: generalize only non-expansive local initializers.
     // In particular a call might eventually perform an external effect.
@@ -557,7 +580,7 @@ class TypeChecker {
     }
 
     function localScheme(expr:Expr,type:Type,scope:Map<String,LocalScheme>):LocalScheme {
-        final scheme = mono(type,presentFields.get(expr));
+        final scheme = mono(type,presentFields.get(expr),textFacts.get(expr));
         if (!isValue(expr)) return scheme;
         final excluded = new Map<Int,Bool>();
         for (binding in scope) {
@@ -648,6 +671,7 @@ class TypeChecker {
                 construct(expected,body,d.body);
             } else unify(active.get(name),type);
             if (!d.isFunction() && presentFields.exists(d.body)) globalPresence.set(name,presentFields.get(d.body));
+            if (!d.isFunction() && textFacts.exists(d.body)) globalTextFacts.set(name,textFacts.get(d.body));
         }
         for (name in group) {
             inferred.set(name,active.get(name));
@@ -714,7 +738,7 @@ class TypeChecker {
     // Unification may solve it now or propagate it to another variable.
     function requireScalarEq(type:Type):Void {
         switch (visibility.reveal(prune(type),moduleOwner)) {
-            case NamedType(_,base) | RefinedType(base,_): requireScalarEq(base);
+            case NamedType(_,base) | RefinedType(base,_) | TextRefinedType(base,_): requireScalarEq(base);
             case IntegerType | NumberType | TextType | BooleanType:
             case Variable(id):
                 if (rigid.exists(id)) fail("Explicit type parameter does not guarantee scalar equality");
@@ -870,7 +894,7 @@ class TypeChecker {
         // Still check unreachable branches normally: no bottom-type rules yet.
         if (narrowed.empty()) return scope;
         final inner = scope.copy();
-        inner.set(name,{type:binding.type,quantified:binding.quantified,narrowed:narrowed,present:binding.present});
+        inner.set(name,{type:binding.type,quantified:binding.quantified,narrowed:narrowed,present:binding.present,textChoices:binding.textChoices});
         return inner;
     }
 
@@ -908,6 +932,21 @@ class TypeChecker {
         final anchor = origins.get(expr);
         if (anchor != null) origin = anchor;
         final type:Type = inferNode(expr,scope);
+        final texts:Null<TextChoices> = switch (expr) {
+            case Text(value): new TextChoices([value]);
+            case Name(name):
+                if (scope.exists(name)) scope.get(name).textChoices;
+                else if (definitions.exists(name) && definitions.get(name).modulePath == moduleOwner) globalTextFacts.get(name);
+                else null;
+            case Conditional(_,yes,no):
+                final a = textFacts.get(yes);
+                final b = textFacts.get(no);
+                a == null || b == null ? null : a.union(b);
+            case Steps(items) if (items.length > 0): textFacts.get(items[items.length-1]);
+            default: null;
+        };
+        final knownTexts = texts == null ? TextChoices.ofType(visibility.reveal(prune(type),moduleOwner)) : texts;
+        if (knownTexts != null) textFacts.set(expr,knownTexts);
         final presence = recordPresence(expr,scope);
         if (presence != null && presence.length > 0) presentFields.set(expr,presence);
         final fact:Null<NumericRange> = switch (expr) {
@@ -1212,7 +1251,7 @@ class TypeChecker {
                             if (anchor != null) origin = anchor;
                             construct(annotations[0],type,value);
                             origin = previous;
-                            inner.set(name,mono(annotations[0],presentFields.get(value)));
+                            inner.set(name,mono(annotations[0],presentFields.get(value),textFacts.get(value)));
                         } else inner.set(name,localScheme(value,type,inner));
                     default: result = infer(e,inner);
                 }
@@ -1305,6 +1344,7 @@ class TypeChecker {
             case ParametricNamedType(name,base,arguments):
                 {kind:"Named",name:name,arguments:[for (arg in arguments) describe(arg,seen)],base:describe(base,seen)};
             case RefinedType(base,range): {kind:"Refined",base:describe(base,seen),range:range.schema()};
+            case TextRefinedType(base,choices): {kind:"TextRefined",base:describe(base,seen),choices:choices.values};
             case StructuralType(name,fields):
                 final keys = [for (key in fields.keys()) key];
                 keys.sort(Reflect.compare);
@@ -1361,6 +1401,7 @@ class TypeChecker {
             case ParametricNamedType(name,_,arguments): name + " (" + [for (arg in arguments) render(arg,names,order)].join(", ") + ")";
             case SumType(name,_,arguments) | SumReference(name,_,arguments): name + (arguments.length == 0 ? "" : " (" + [for (arg in arguments) render(arg,names,order)].join(", ") + ")");
             case RefinedType(base,range): render(base,names,order) + " where " + range.predicate();
+            case TextRefinedType(base,choices): render(base,names,order) + " where " + choices.predicate();
             case StructuralType(name,_): "~ " + name;
             case NumberType: "Number";
             case IntegerType: "Integer";

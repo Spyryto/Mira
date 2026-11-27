@@ -1,5 +1,5 @@
 {
-  "version": "0.101",
+  "version": "0.102",
   "features": [
     {
       "id": "values",
@@ -2274,6 +2274,12 @@
       "title": "Inferenza statica della presenza dei campi",
       "since": "0.101",
       "doc": "docs/type-representation.md#static-presence-inference-0101"
+    },
+    {
+      "id": "text-refinements",
+      "title": "Refinement testuali a insieme finito",
+      "since": "0.102",
+      "doc": "docs/type-representation.md#text-refinements-0102"
     }
   ]
 }

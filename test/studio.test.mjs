@@ -2386,3 +2386,21 @@ test('0.101 Studio preserves nominal types and eliminates checks only for proven
     assert.deepEqual(JSON.parse(actual),[0,0]);
   }
 });
+
+
+test('0.102 Studio text refinements expose canonical choices and validate native text',()=>{
+  const source='Result (T, E) :: Ok (T) | Err (E); Alignment :: Text where _ == "start" OR _ == "center"; a (Alignment) = "center"; parse: x (Text) = validate: (x), as: (Alignment); result = [(parse: "start"), (parse: "bad")];';
+  const checked=bridge.check(source);
+  assert.equal(checked.ok,true,checked.message);
+  const rows=JSON.parse(checked.output);
+  assert.deepEqual(rows.find(x=>x.name==='a').schema.base,{kind:'TextRefined',base:{kind:'Text'},choices:['center','start']});
+  assert.equal(bridge.check(source+'bad (Alignment) = "wrong";').ok,false);
+  assert.equal(bridge.check(source+'bad: x (Text) -> Alignment = x;').ok,false);
+  for(const target of ['js','php']){
+    const built=bridge.compile(source,target,null,false,null,true);
+    assert.equal(built.ok,true,built.message);
+    const actual=target==='js'?JSON.stringify(runInNewContext(built.output+'\nresult',{})):
+      spawnSync('php',['-r',built.output.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'}).stdout;
+    assert.deepEqual(JSON.parse(actual),[{tag:'Ok',value:'start'},{tag:'Err',value:'Invalid text value'}]);
+  }
+});

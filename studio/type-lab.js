@@ -27,6 +27,12 @@
     source.value='Alignment :: Start = "start" | Center = "center" | End = "end";\nlabel: x (Alignment) = match: x {start: {| "S"}, center: {| "C"}, end: {| "E"}};\nresult = {value: Center, label: (label: Center)};\n# Prova Compila checked JS o PHP; prova anche bad (Alignment) = "center";';
     check();
   });
+  document.getElementById('text-refinement-example').addEventListener('click',()=>{
+    host.value='';
+    modules.value='';
+    source.value='Result (T, E) :: Ok (T) | Err (E);\nAlignment :: Text where _ == "start" OR _ == "center" OR _ == "end";\na (Alignment) = "center";\nparse: x (Text) = validate: (x), as: (Alignment);\nresult = [(parse: "start"), (parse: "bad")];\n# Prova bad (Alignment) = "middle"; oppure bad: x (Text) -> Alignment = x;';
+    check();
+  });
   document.getElementById('static-presence-example').addEventListener('click',()=>{
     host.value='';
     modules.value='';

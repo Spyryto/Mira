@@ -9,6 +9,7 @@ enum Type {
     // A finite nominal back-reference; the shared declaration map is never traversed implicitly.
     SumReference(name:String,template:Map<String,Null<Type>>,arguments:Array<Type>);
     RefinedType(base:Type,range:NumericRange);
+    TextRefinedType(base:Type,choices:TextChoices);
     // A read-only structural requirement; additional fields are unknown.
     StructuralType(name:String,fields:Map<String,Type>);
     NumberType;

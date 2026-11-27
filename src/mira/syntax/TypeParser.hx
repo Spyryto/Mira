@@ -5,6 +5,7 @@ import mira.lex.Token.TokenKind;
 import mira.MiraError;
 import mira.types.Type;
 import mira.types.NumericRange;
+import mira.types.TextChoices;
 
 // Closed data annotations and the initial numeric refinement subset.
 class TypeParser {
@@ -41,13 +42,20 @@ class TypeParser {
         if (projected && !allowProjection) return fail("Structural projection is an annotation, not a nominal base");
         var type = readType(0);
         if (current() != null && current().kind == Word && current().value == "where") {
-            if (projected) return fail("Numeric refinement cannot refine a structural projection");
+            if (projected) return fail("Refinement cannot refine a structural projection");
             position++;
-            final inherited = NumericRange.ofType(type);
-            if (inherited == null) return fail("Numeric refinement requires a Number representation");
-            final range = readRange();
-            if ((NumericRange.integerType(type) ? inherited.intersect(range).integerHull() : inherited.intersect(range)).empty()) return fail("Empty numeric refinement");
-            type = RefinedType(type,range);
+            if (TextChoices.isText(type)) {
+                final choices = readChoices();
+                final inherited = TextChoices.ofType(type);
+                if (inherited != null && inherited.intersect(choices).values.length == 0) return fail("Empty text refinement");
+                type = TextRefinedType(type,choices);
+            } else {
+                final inherited = NumericRange.ofType(type);
+                if (inherited == null) return fail("Refinement requires a Number or Text representation");
+                final range = readRange();
+                if ((NumericRange.integerType(type) ? inherited.intersect(range).integerHull() : inherited.intersect(range)).empty()) return fail("Empty numeric refinement");
+                type = RefinedType(type,range);
+            }
         }
         if (current() != null) fail("Unexpected token in type annotation");
         if (!projected) return type;
@@ -68,6 +76,21 @@ class TypeParser {
 
     // Initial predicate subset: conjunctions of comparisons against numeric
     // constants. All occurrences of _ refer to the same refined value.
+    function readChoices():TextChoices {
+        final values:Array<String> = [];
+        while (true) {
+            if (current() == null || current().kind != Word || current().value != "_")
+                return fail("Expected _ in text refinement");
+            position++;
+            require("==");
+            if (current() == null || current().kind != Text) return fail("Expected Text literal in text refinement");
+            values.push(current().value);
+            position++;
+            if (!take("OR")) break;
+        }
+        return new TextChoices(values);
+    }
+
     function readRange():NumericRange {
         var result = NumericRange.any();
         while (true) {
