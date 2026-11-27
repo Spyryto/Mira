@@ -2495,3 +2495,58 @@ test('0.104 Grammar Lab rejects unsupported computation and resource-limit error
   assert.match(read('grammar-lab.html'),/Grammar Lab/);
   assert.match(read('grammar-lab.js'),/grammarAnalyze/);
 });
+
+
+test('0.105 grammar refinements reuse grammar values and reject unproven nominal construction',()=>{
+  const pre='import "lib/grammar.mira"; digit = character in: "0123456789"; digits = one or more of: digit; Digits :: Text where matches: _, grammar: digits;';
+  const source=pre+'raw = "123"; valid (Digits) = raw; copy (Digits) = valid; read: n (Digits) -> Text = n; result = read: valid; choose: b (Boolean) -> Digits = if (b) then "12" else "34";';
+  const checked=bridge.check(source);
+  assert.equal(checked.ok,true,checked.message);
+  const rows=JSON.parse(checked.output);
+  assert.equal(rows.find(x=>x.name==='valid').type,'Digits');
+  assert.equal(rows.find(x=>x.name==='valid').schema.base.kind,'GrammarRefined');
+  assert.equal(rows.find(x=>x.name==='result').type,'Text');
+  for(const [extra,pattern] of [
+    ['bad (Digits) = "12a";',/grammar refinement violated/],
+    ['bad (Digits) = "";',/grammar refinement violated/],
+    ['bad: x (Text) -> Digits = x;',/grammar refinement not statically proven/],
+    ['bad: b (Boolean) -> Digits = if (b) then "12" else "a";',/grammar refinement not statically proven/],
+    ['bad = read: "123";',/expected Digits/]
+  ]){
+    const result=bridge.check(source+extra);
+    assert.equal(result.ok,false,extra);
+    assert.match(result.message,pattern);
+  }
+  for(const bad of [
+    'import "lib/grammar.mira"; raw = "a"; Bad :: Text where matches: _, grammar: raw;',
+    'import "lib/grammar.mira"; Bad :: Text where matches: _, grammar: later; later = one: "a";',
+    'import "lib/grammar.mira"; g = one: "é"; Bad :: Text where matches: _, grammar: g;',
+    pre+'Bad :: Digits where _ == "12";'
+  ])assert.equal(bridge.check(bad).ok,false,bad);
+  for(const target of ['js','php']){
+    const built=bridge.compile(source,target,null,false,null,true,true);
+    assert.equal(built.ok,true,built.message);
+    assert.doesNotMatch(built.output,/transitions|miraGrammarMatches/);
+    const actual=target==='js'?JSON.stringify(runInNewContext(built.output+'\nresult',{})):
+      spawnSync('php',['-r',built.output.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'}).stdout;
+    assert.equal(JSON.parse(actual),'123');
+  }
+});
+
+test('0.105 grammar refinement validation agrees with Grammar Lab and native JS/PHP',()=>{
+  const pre='import "lib/grammar.mira"; hex digit = character in: "0123456789abcdefABCDEF"; hex color = all of: [(one: "#"), (one of: [(exactly: 3, of: hex digit), (exactly: 4, of: hex digit), (exactly: 6, of: hex digit), (exactly: 8, of: hex digit)])]; css color = one of: [hex color, (one: "transparent"), (one: "currentColor")]; GUI Color :: Text where matches: _, grammar: css color; Result (T,E) :: Ok (T) | Err (E);';
+  const source=pre+'parse: x (Text) = validate: (x), as: (GUI Color); read: v (GUI Color) -> Text = v; fallback: x (Text) -> Text = validate: (x), as: (GUI Color), then: {v | read: v}, else: {e | "bad"}; result = {values: [(parse: "#fff"), (parse: "#abcd"), (parse: "transparent"), (parse: "#12"), (parse: "red"), (parse: "é")], wrong: (validate: (42), as: (GUI Color)), direct: (validate: ("#abc"), as: (GUI Color)), fallback: (fallback: "red")};';
+  const ok=value=>({tag:'Ok',value}),err={tag:'Err',value:'Invalid text value'};
+  const expected={values:[ok('#fff'),ok('#abcd'),ok('transparent'),err,err,err],wrong:err,direct:ok('#abc'),fallback:'bad'};
+  for(const target of ['js','php']){
+    const built=bridge.compile(source,target,null,false,null,true,true);
+    assert.equal(built.ok,true,built.message);
+    assert.match(built.output,/transitions/);
+    const actual=target==='js'?JSON.stringify(runInNewContext(built.output+'\nresult',{})):
+      spawnSync('php',['-r',built.output.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'}).stdout;
+    assert.deepEqual(JSON.parse(actual),expected);
+    const folded=bridge.compile(pre+'result = validate: ("#abc"), as: (GUI Color);',target,null,false,null,true,true);
+    assert.equal(folded.ok,true,folded.message);
+    assert.doesNotMatch(folded.output,/transitions|miraGrammarMatches/);
+  }
+});
