@@ -2269,3 +2269,21 @@ test('0.96 data-only evaluator uses real Mira AST and checked algebraic construc
     'config = 1; config;'
   ]) assert.equal(bridge.constantData(source,'config').ok,false,source);
 });
+
+
+test('0.97 Studio checks and compiles scalar variants to native values',()=>{
+  const source='Alignment :: Start = "start" | Center = "center" | End = "end"; label: x (Alignment) = match: x {start: {| "S"}, center: {| "C"}, end: {| "E"}}; result = {value: Center, label: (label: Center)};';
+  const checked=bridge.check(source);
+  assert.equal(checked.ok,true,checked.message);
+  assert.equal(JSON.parse(checked.output).find(x=>x.name==='Center').type,'Alignment');
+  const ast=JSON.parse(bridge.ast(source).output);
+  assert.equal(ast.definitions.find(x=>x.name==='Center').scalarEncoding.value,'center');
+  for(const target of ['js','php']){
+    const compiled=bridge.compile(source,target,null,false,null,true);
+    assert.equal(compiled.ok,true,compiled.message);
+    assert.doesNotMatch(compiled.output,/\.tag|\['tag'\]/);
+    const actual=target==='js'?JSON.stringify(runInNewContext(compiled.output+'\nresult',{})):
+      spawnSync('php',['-r',compiled.output.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'}).stdout;
+    assert.deepEqual(JSON.parse(actual),{value:'center',label:'C'});
+  }
+});
