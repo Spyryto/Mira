@@ -17,7 +17,8 @@
     "benchmark:gui": "npm run build:studio && node --test --test-name-pattern='synthetic GUI benchmark' test/ui-host.test.mjs",
     "build:fullstack": "npm run build:studio && node scripts/build-fullstack.mjs",
     "test:fullstack": "npm run build:studio && node --test test/fullstack.test.mjs",
-    "build:project": "node scripts/build-project.mjs"
+    "build:project": "node scripts/build-project.mjs",
+    "build:ide": "node scripts/build-ide.mjs"
   },
   "engines": {
     "node": ">=22"

@@ -1,0 +1,14 @@
+{
+  "selectors": [
+    "starts with:in:"
+  ],
+  "types": {
+    "starts with:in:": {
+      "parameters": [
+        "Text",
+        "Text"
+      ],
+      "result": "Boolean"
+    }
+  }
+}
