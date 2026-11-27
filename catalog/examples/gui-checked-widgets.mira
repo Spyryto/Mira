@@ -1,0 +1,6 @@
+# Attiva GUI checked in Mira Studio.
+panel: choice = grid: 2, children: [
+  keyed: "caption", view: (title: choice),
+  keyed: "choice", view: (choose: "Strumento", value: choice, options: ["Chitarra", "Basso"], update: {old, entered | entered})
+];
+render (state: "Chitarra", view: (panel: _));

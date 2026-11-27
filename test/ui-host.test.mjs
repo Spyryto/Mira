@@ -1223,3 +1223,84 @@ test('GUI checked style catalog example compiles and applies native CSS',()=>{
   assert.equal(panel.style.getPropertyValue('border-style'),'solid');
   assert.deepEqual(errors,[]);
 });
+
+
+test('GUI checked: widget domain checks agree with the native host on known inputs',()=>{
+  const header='import "lib/gui.mira";\n';
+  const cases=[
+    ['grid: 1, children: []',{type:'grid',columns:1,children:[]},true],
+    ['grid: 6, children: []',{type:'grid',columns:6,children:[]},true],
+    ['grid: 0, children: []',{type:'grid',columns:0,children:[]},false],
+    ['grid: 7, children: []',{type:'grid',columns:7,children:[]},false],
+    ['grid: (3 + 4), children: []',{type:'grid',columns:7,children:[]},false],
+    ['grid: 2.5, children: []',{type:'grid',columns:2.5,children:[]},false],
+    ['keyed: "id", view: (text: "x")',{type:'keyed',key:'id',view:{type:'text',text:'x'}},true],
+    ['keyed: 0, view: (text: "x")',{type:'keyed',key:0,view:{type:'text',text:'x'}},true],
+    ['keyed: "", view: (text: "x")',{type:'keyed',key:'',view:{type:'text',text:'x'}},false],
+    ['keyed: true, view: (text: "x")',{type:'keyed',key:true,view:{type:'text',text:'x'}},false],
+    ['keyed: 1.5, view: (text: "x")',{type:'keyed',key:1.5,view:{type:'text',text:'x'}},false],
+    ['keyed: 9007199254740992, view: (text: "x")',{type:'keyed',key:9007199254740992,view:{type:'text',text:'x'}},false],
+    ['state: 0, key: "", view: {n | text: n}',{type:'state',initial:0,key:'',view:n=>({type:'text',text:n})},true],
+    ['state: 0, key: 1, view: {n | text: n}',{type:'state',initial:0,key:1,view:n=>({type:'text',text:n})},false],
+    ['styled: (text: "x"), with: ['+Array(33).fill('{padding: 1}').join(',')+']',{type:'styled',view:{type:'text',text:'x'},styles:Array(33).fill({padding:1})},false]
+  ];
+  for(const [expression,spec,valid] of cases){
+    const source=header+'render ('+expression+');';
+    for(const target of ['js','php']){
+      const result=compiler.compile(source,target,manifest,false,undefined,true);
+      assert.equal(result.ok,valid,source+': '+result.message);
+      if(valid) assert.equal(result.output,compiler.compile(source,target,manifest).output);
+    }
+    const {host}=setup();
+    if(valid) assert.doesNotThrow(()=>host.render(spec));
+    else assert.throws(()=>host.render(spec));
+  }
+});
+
+test('GUI checked: select options reject duplicate literals and missing literal selection',()=>{
+  const header='import "lib/gui.mira";\n';
+  const cases=[
+    ['"A"','["A", "B"]',true],
+    ['"A"','["A", "A"]',false],
+    ['"C"','["A", "B"]',false],
+    ['"A"','[]',false]
+  ];
+  for(const [value,options,valid] of cases){
+    const source=header+'render (state: "A", view: {n | choose: "Choice", value: '+value+', options: '+options+', update: {old, entered | entered}});';
+    for(const target of ['js','php']){
+      const result=compiler.compile(source,target,manifest,false,undefined,true);
+      assert.equal(result.ok,valid,source+': '+result.message);
+      if(valid) assert.equal(result.output,compiler.compile(source,target,manifest).output);
+    }
+    const {host}=setup();
+    const ordinary=compiler.compile(source,'js',manifest);
+    assert.equal(ordinary.ok,true,ordinary.message);
+    if(valid) assert.doesNotThrow(()=>runInNewContext(ordinary.output,{__miraHost:host}));
+    else assert.throws(()=>runInNewContext(ordinary.output,{__miraHost:host}),/select requires/);
+  }
+  const dynamic=header+'panel: n = grid: n, children: []; render (panel: 7);';
+  const compiled=compiler.compile(dynamic,'js',manifest,false,undefined,true);
+  assert.equal(compiled.ok,true,compiled.message);
+  const {host}=setup();
+  assert.throws(()=>runInNewContext(compiled.output,{__miraHost:host}),/grid.columns/);
+  assert.equal(compiler.check('grid: n, children: xs = n; result = grid: 7, children: [];').ok,true);
+});
+
+
+test('GUI checked widgets catalog mounts and changes selection without recreating the select',()=>{
+  const source=demo('gui-checked-widgets').source;
+  for(const target of ['js','php']){
+    const compiled=compiler.compile(source,target,manifest,false,undefined,true);
+    assert.equal(compiled.ok,true,compiled.message);
+    assert.equal(compiled.output,compiler.compile(source,target,manifest).output);
+  }
+  const {root,host,errors}=setup();
+  runInNewContext(compiler.compile(source,'js',manifest,false,undefined,true).output,{__miraHost:host});
+  const select=findAll(root,'select')[0];
+  assert.equal(select.value,'Chitarra');
+  select.value='Basso';
+  select.dispatch('change');
+  assert.match(root.textContent,/Basso/);
+  assert.equal(findAll(root,'select')[0],select);
+  assert.deepEqual(errors,[]);
+});

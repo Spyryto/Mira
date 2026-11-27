@@ -247,3 +247,16 @@ Il controllo contestuale delle liste letterali passate direttamente a `styled:wi
 La tabella compile-time in GuiStyleRules riproduce il piccolo vocabolario host senza modificare renderer o emitter. I test di concordanza verificano compilazione JS/PHP, equivalenza dell'output nei casi accettati e comportamento del renderer. La duplicazione è provvisoria: se il vocabolario cresce, valutare una singola specifica generativa.
 
 Limiti espliciti: non è una prova generale di validità CSS; righe aperte, valori calcolati non dimostrati, variabili di dimensione (Number o Text) non risolte e liste di stili non letterali mantengono i controlli host. Nessun nuovo controllo a runtime, nessuna eliminazione delle guardie host. L'anteprima checked resta opt-in.
+
+
+## Mira 0.95 — Widget safety (candidata)
+
+Oltre ai tipi dei widget, il checker rifiuta valori incompatibili noti nelle chiamate dirette alle primitive della libreria GUI verificata:
+
+- `grid:children:`: colonne intere da 1 a 6, per letterali e fatti numerici puntuali disponibili.
+- `keyed:view:`: chiave Text non vuota oppure intero sicuro (±9007199254740991); tipi noti diversi sono rifiutati.
+- `state:key:view:`: chiave di reset Text, anche vuota, come nel contratto host. La firma è verificata anche attraverso sezioni e funzioni.
+- `choose:value:options:update:`: sequenza letterale non vuota, nessuna opzione testuale letterale duplicata; se tutte le opzioni e il valore sono letterali, verifica appartenenza.
+- `styled:with:`: massimo 32 strati nella lista letterale.
+
+I valori sconosciuti non sono prove. Le chiavi dinamiche, le liste costruite a runtime, le collisioni tra fratelli, la composizione ripetuta di chiavi e i limiti globali del DOM restano soggetti alle guardie host. Il dominio alternativo Text/intero della chiave non viene inferito attraverso variabili generiche o sezioni; solo il tipo di reset è stato ristretto nella firma. Nessuna modifica a renderer, emitter o libreria GUI; i test confrontano JS/PHP emessi con la compilazione ordinaria e verificano il comportamento host. Esempio interattivo Widget verificati nel catalogo Studio.
