@@ -1311,7 +1311,7 @@ test('0.106 grammar-refined GUI colors agree with the legacy checker and rendere
   const samples=[['#abc',true],['#aBcD',true],['#123456',true],['#12345678',true],['transparent',true],['currentColor',true],['red',false],['#12',false],['#12345',false],['#ggg',false],['Transparent',false],['',false]];
   for(const [value,valid] of samples){
     const literal=JSON.stringify(value);
-    const source=header+'ink (GUI Color) = '+literal+'; panel (GUI Style) = {background: ink, color: ink, borderColor: ink}; render (styled: (text: "Mira"), with styles: [panel]);';
+    const source=header+'ink (GUI Color) = '+literal+'; panel (GUI Style) = {background: ink, color: ink, borderColor: ink}; layers (Style Layers) = [panel]; render (styled: (text: "Mira"), with styles: layers);';
     const legacy='import "lib/gui.mira"; render (styled: (text: "Mira"), with: [{color: '+literal+'}]);';
     assert.equal(compiler.check(legacy,manifest).ok,valid,value);
     const checked=compiler.compile(source,'js',manifest,false,null,true,true);
