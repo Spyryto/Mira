@@ -307,3 +307,8 @@ Nominali Text con where matches: _, grammar: nome precedente; static proof e val
 ### 0.106 — Grammar-powered GUI colors (candidata)
 
 20/20 proprietà dello stile dichiarate in Mira; tre colori condividono GUI Color e una grammatica. Verifica anche della dipendenza grammaticale della libreria fidata. Misure di emissione per uno/due siti dinamici; deduplicazione automatica rinviata, riuso manuale mediante normale funzione. Ancora aperti limite di lunghezza della lista di strati, migrazione del contratto legacy (incluso Pattern), specializzazione GUI, Unicode e moduli grammaticali. Vedi [grammar-powered GUI colors](type-representation.md#grammar-powered-gui-colors-0106).
+
+
+### 0.107 — List cardinality (candidata)
+
+Refinement su liste con (length of: _) e intervalli interi, prove statiche, validazione esplicita della cardinalità, Style Layers massimo 32. Resta aperta la migrazione definitiva del percorso GUI legacy, la deduplicazione delle tabelle grammaticali, il selettore length of: nelle espressioni, i vincoli sugli elementi e le collezioni generiche. Vedi [list cardinality](type-representation.md#list-cardinality-0107).
