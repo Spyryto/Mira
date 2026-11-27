@@ -51,8 +51,8 @@ class Compiler {
         };
     }
 
-    // A distinct checked path preserves byte-for-byte unchecked emission
-    // when all obligations are proven. The same parsed AST reaches both phases.
+    // The same parsed AST reaches checking and emission. Proven numeric
+    // guards and scalar representation facts can specialize native output.
     public static function transpileChecked(source:String,target:Target,?host:HostEnvironment,
         ?locations:Array<GeneratedLocation>,?readModule:String->Null<String>,?entry:String, ?treeShake:Bool = false, ?optimization:Dynamic, ?providers:mira.resolve.ProviderBindings, ?profile:mira.CompileProfile):String {
         if (profile != null) profile.begin();
@@ -60,7 +60,8 @@ class Compiler {
         final visibility = new mira.types.TypeVisibility();
         var definitions = parse(source,host,readModule,entry,origins,visibility,providers,true,false,null,profile);
         final guards = new haxe.ds.ObjectMap<Dynamic,mira.types.NumericGuard>();
-        new mira.types.TypeChecker(origins,host == null ? HostEnvironment.empty() : host,guards,visibility).check(definitions);
+        final comparisons = target == Php ? new haxe.ds.ObjectMap<Dynamic,mira.types.ScalarComparison>() : null;
+        new mira.types.TypeChecker(origins,host == null ? HostEnvironment.empty() : host,guards,visibility,comparisons).check(definitions);
         if (profile != null) profile.mark("checking");
         if (treeShake) {
             definitions = mira.optimize.TreeShaker.run(definitions,guards,optimization);
@@ -69,7 +70,7 @@ class Compiler {
         final symbols = new Symbols(definitions,host);
         final result = switch (target) {
             case JavaScript: JsEmitter.emit(definitions,symbols,locations,guards);
-            case Php: PhpEmitter.emit(definitions,symbols,locations,guards);
+            case Php: PhpEmitter.emit(definitions,symbols,locations,guards,comparisons);
         };
         if (profile != null) profile.mark("emission");
         return result;

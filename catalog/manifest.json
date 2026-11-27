@@ -1,5 +1,5 @@
 {
-  "version": "0.89.1",
+  "version": "0.89.2",
   "features": [
     {
       "id": "values",
@@ -2118,6 +2118,12 @@
       "title": "Consolidamento HTTP e importazione lezione con verifica browser",
       "since": "0.89.1",
       "doc": "docs/studio.md#mira-0891-consolidamento-dei-servizi"
+    },
+    {
+      "id": "portable-scalar-equality",
+      "title": "Uguaglianza scalare portabile con specializzazione checked",
+      "since": "0.89.2",
+      "doc": "docs/type-checker.md#mira-0892-uguaglianza-scalare-portabile"
     }
   ]
 }
