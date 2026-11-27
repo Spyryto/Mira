@@ -25,7 +25,7 @@ class Bridge {
             verifyContract: verifyContract,
             constantData: constantData,
             styleContractSource: styleContractSource,
-            version: "0.101"
+            version: "0.102"
         });
     }
 
@@ -308,9 +308,13 @@ class Bridge {
             case Variant(sum,tag,payload):
                 {kind:"Variant", sum:switch(sum){case SumType(name,_,_):name;default:null;},tag:tag,payload:expression(payload)};
             case ValidateResult(input,required,_):
-                {kind:"ValidateResult",input:expression(input),numericRange:mira.types.NumericRange.ofType(required).schema()};
+                final choices = mira.types.TextChoices.ofType(required);
+                if (choices != null) {kind:"ValidateResult",input:expression(input),textChoices:choices.values}
+                else {kind:"ValidateResult",input:expression(input),numericRange:mira.types.NumericRange.ofType(required).schema()};
             case Validate(input,required,success,failure):
-                {kind:"Validate", input:expression(input), numericRange:mira.types.NumericRange.ofType(required).schema(),
+                final choices = mira.types.TextChoices.ofType(required);
+                if (choices != null) {kind:"Validate",input:expression(input),textChoices:choices.values,success:expression(success),failure:expression(failure)}
+                else {kind:"Validate", input:expression(input), numericRange:mira.types.NumericRange.ofType(required).schema(),
                     integer:mira.types.NumericRange.integerType(required), success:expression(success), failure:expression(failure)};
             case Conditional(predicate, whenTrue, whenFalse):
                 {kind: "Conditional", condition: expression(predicate),
