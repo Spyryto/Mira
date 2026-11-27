@@ -1,5 +1,5 @@
 {
-  "version": "0.99",
+  "version": "0.100",
   "features": [
     {
       "id": "values",
@@ -2262,6 +2262,12 @@
       "title": "Record chiusi con campi opzionali",
       "since": "0.99",
       "doc": "docs/type-representation.md#optional-record-fields-099"
+    },
+    {
+      "id": "safe-optional-access",
+      "title": "Accesso sicuro ai campi opzionali con Option",
+      "since": "0.100",
+      "doc": "docs/type-representation.md#safe-optional-access-0100"
     }
   ]
 }
