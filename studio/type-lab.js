@@ -27,6 +27,12 @@
     source.value='Alignment :: Start = "start" | Center = "center" | End = "end";\nlabel: x (Alignment) = match: x {start: {| "S"}, center: {| "C"}, end: {| "E"}};\nresult = {value: Center, label: (label: Center)};\n# Prova Compila checked JS o PHP; prova anche bad (Alignment) = "center";';
     check();
   });
+  document.getElementById('cardinality-example').addEventListener('click',()=>{
+    host.value='';
+    modules.value='';
+    source.value='Result (T,E) :: Ok (T) | Err (E);\nSmall :: [Number] where (length of: _) >= 1 AND (length of: _) <= 3;\nraw = [1, 2];\nfirst (Small) = raw;\nexpanded = append: 3, to: first;\nnext (Small) = expanded;\nparse: xs ([Number]) = validate: (xs), as: (Small);\nresult = [(parse: [1]), (parse: [1, 2, 3, 4])];\n# Prova bad (Small) = append: 4, to: next;';
+    check();
+  });
   document.getElementById('typed-style-example').addEventListener('click',()=>{
     host.value='';
     modules.value='';
