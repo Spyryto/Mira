@@ -161,6 +161,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Stili GUI dichiarati mediante tipi Mira | `0.103` | [Dettagli](docs/type-representation.md#typed-gui-styles-0103) |
 | ✅ | Grammatiche componibili e automi deterministici | `0.104` | [Dettagli](docs/type-representation.md#composable-grammars-0104) |
 | ✅ | Refinement testuali mediante grammatiche Mira | `0.105` | [Dettagli](docs/type-representation.md#grammar-refinements-0105) |
+| ✅ | Tutti gli stili GUI dichiarati in Mira, colori grammaticali | `0.106` | [Dettagli](docs/type-representation.md#grammar-powered-gui-colors-0106) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

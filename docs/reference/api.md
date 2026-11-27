@@ -109,7 +109,7 @@ class Compiler
 public static function check(source:String, ?host:HostEnvironment, ?readModule:String->Null<String>, ?entry:String, ?providers:mira.resolve.ProviderBindings):Array<Dynamic>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L103)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L105)
 
 <a id="api-mira-compiler-inspecttokens"></a>
 ### `mira.Compiler.inspectTokens`
@@ -120,7 +120,7 @@ public static function check(source:String, ?host:HostEnvironment, ?readModule:S
 public static function inspectTokens(source:String):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L139)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L141)
 
 <a id="api-mira-compiler-interfaces"></a>
 ### `mira.Compiler.interfaces`
@@ -131,7 +131,7 @@ public static function inspectTokens(source:String):String
 public static function interfaces(source:String,?host:HostEnvironment,?readModule:String->Null<String>,?entry:String,?providers:mira.resolve.ProviderBindings):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L110)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L112)
 
 <a id="api-mira-compiler-parse"></a>
 ### `mira.Compiler.parse`
@@ -155,7 +155,7 @@ Feature: [Dichiarazioni successive](language.md#feature-forward)
 public static function specialize(source:String,name:String,args:Array<mira.types.Type>,?host:HostEnvironment, ?readModule:String->Null<String>,?entry:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L131)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L133)
 
 <a id="api-mira-compiler-transpile"></a>
 ### `mira.Compiler.transpile`
@@ -166,7 +166,7 @@ public static function specialize(source:String,name:String,args:Array<mira.type
 public static function transpile(source:String, target:Target, ?host:HostEnvironment, ?locations:Array<GeneratedLocation>, ?readModule:String->Null<String>, ?entry:String):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L63)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L65)
 
 <a id="api-mira-compiler-transpilechecked"></a>
 ### `mira.Compiler.transpileChecked`
@@ -177,7 +177,7 @@ public static function transpile(source:String, target:Target, ?host:HostEnviron
 public static function transpileChecked(source:String,target:Target,?host:HostEnvironment, ?locations:Array<GeneratedLocation>,?readModule:String->Null<String>,?entry:String, ?treeShake:Bool = false, ?optimization:Dynamic, ?providers:mira.resolve.ProviderBindings, ?profile:mira.CompileProfile):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L77)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L79)
 
 <a id="api-mira-emit-jsemitter"></a>
 ### `mira.emit.JsEmitter`
