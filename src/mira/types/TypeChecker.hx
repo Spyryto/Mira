@@ -1155,6 +1155,22 @@ class TypeChecker {
                     tag:tag,payload:alternatives.get(tag) == null ? null : describe(alternatives.get(tag),seen)
                 }]};
                 if (arguments.length > 0) Reflect.setField(schema,"arguments",[for (arg in arguments) describe(arg,seen)]);
+                if (scalarEncodings.exists(name)) {
+                    final codes = scalarEncodings.get(name);
+                    // ABI belongs to the canonical type, not to an import alias.
+                    // The opaque view never enters this branch outside its owner.
+                    Reflect.setField(schema,"representation",{
+                        kind:"Scalar",
+                        cases:[for (tag in tags) {
+                            tag:tag,
+                            value:switch (codes.get(tag)) {
+                                case Text(value): (value:Dynamic);
+                                case Numeric(value): (Std.parseFloat(value):Dynamic);
+                                default: throw new MiraError("Missing scalar encoding for " + name + " / " + tag);
+                            }
+                        }]
+                    });
+                }
                 schema;
             case OpaqueType(name,args):
                 final schema:Dynamic = {kind:"Opaque",name:name};
