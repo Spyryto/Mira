@@ -1,5 +1,5 @@
 {
-  "version": "0.91",
+  "version": "0.92",
   "features": [
     {
       "id": "values",
@@ -459,6 +459,18 @@
         "gui-keyed-students"
       ],
       "since": "0.33"
+    },
+    {
+      "id": "gui-checked",
+      "title": "GUI checked",
+      "summary": "View, componenti e binding verificati staticamente.",
+      "details": "Il type checker assegna View (State) ai costruttori della libreria GUI verificata. Layout e componenti condividono il tipo di stato; state isola uno stato figlio. Input e select ricevono Text, checkbox Boolean; gli updater restituiscono lo stesso tipo di stato. GUI checked è opt-in in Studio e usa il checker Haxe. Nessun wrapper a runtime. Stili eterogenei e vincoli di dominio dinamici restano fuori dal primo incremento.",
+      "api": "mira.HostEnvironment",
+      "examples": [
+        "gui-checked-counter",
+        "gui-checked-form"
+      ],
+      "since": "0.92"
     }
   ],
   "examples": [
@@ -1648,6 +1660,32 @@
       "feature": "gui-keyed",
       "library": "lib/gui.mira",
       "path": "catalog/examples/gui-keyed-students.mira"
+    },
+    {
+      "id": "gui-checked-counter",
+      "feature": "gui-checked",
+      "title": "Contatore verificato",
+      "description": "Componenti e transizioni con stato Number; attiva GUI checked in Studio.",
+      "path": "catalog/examples/gui-checked-counter.mira",
+      "library": "lib/gui.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "ui",
+        "description": "Anteprima interattiva nel browser"
+      }
+    },
+    {
+      "id": "gui-checked-form",
+      "feature": "gui-checked",
+      "title": "Form verificato",
+      "description": "Binding Text e Boolean con aggiornamenti immutabili del modello.",
+      "path": "catalog/examples/gui-checked-form.mira",
+      "library": "lib/gui.mira",
+      "host": "studio/host.json",
+      "expect": {
+        "kind": "ui",
+        "description": "Anteprima interattiva nel browser"
+      }
     }
   ],
   "additionalCapabilities": [

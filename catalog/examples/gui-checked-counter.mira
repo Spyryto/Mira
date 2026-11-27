@@ -1,0 +1,7 @@
+# Attiva GUI checked in Mira Studio.
+counter: n = column: [
+  title: "Contatore verificato",
+  text: n,
+  button: "+1", update: {old | old + 1}
+];
+render (state: 0, view: (counter: _));

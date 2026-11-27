@@ -181,3 +181,48 @@ Recuperati i rapporti strutturati dei sei job PWA integrati (0.29–0.34), con t
 L'altezza è in px; in entrambi i casi il contenuto lontano risulta saltato. Il layout differito riduce il costo misurato di circa 3× / 3,44×, non il tempo complessivo di paint; il reveal ha un costo aggiuntivo. Le due CI fallite prima del merge hanno evidenziato perdita della stima al toggle e problemi del runner Chromium (chiusura profilo e attesa documento). La versione integrata verifica la riacquisizione delle dimensioni. [Job 139440393387](https://github.com/Spyryto/Mira/actions/runs/45680764254/job/139440393387).
 
 La 0.30–0.34 sposta la priorità dalle prestazioni alle applicazioni. La 0.33 aggiunge identità per chiave nel renderer generico, con focus/caret verificati in Chromium su percorso nativo e fallback; la 0.34 usa il renderer generico nel registro persistente. Nessun benchmark mirato alla performance delle collezioni o delle liste keyed, nessuna misura nuova su iPhone/TV. Punto di pareggio, paint, memoria e specializzazione più ampia sono rinviati. Vedi [decisioni](decisions.md#stato-e-direzione-034).
+
+## Mira 0.92 — GUI checked
+
+Il checker attribuisce ai costruttori della libreria standard il tipo
+fantasma opaco interno `#GUI.View (State)`: non esiste un nuovo record,
+tag o helper di tipo nel codice emesso. Il tipo del modello è condiviso
+fra i figli di un layout e le transizioni; uno state annidato introduce
+un modello indipendente. Il render standard non ha un proprietario di
+stato: una transizione direttamente sotto il render viene rifiutata.
+
+```mira
+import "lib/gui.mira";
+counter: n = column: [
+  text: n,
+  button: "+1", update: {old | old + 1}
+];
+render (state: 0, view: (counter: _));
+```
+
+Il pulsante GUI checked di Studio passa il sorgente al checker Haxe prima
+di eseguire l'anteprima. Anche CLI --check e --checked utilizzano la stessa
+ABI. La firma di input/select richiede Text e una funzione (State, Text)
+-> State; checkbox richiede Boolean e (State, Boolean) -> State; button
+update richiede State -> State. Un componente rimane una normale funzione.
+
+Decisione provvisoria: la libreria GUI esistente usa record eterogenei
+e il checker non ha un tipo unione di record con rappresentazione
+nativa. Per evitare wrapper o una seconda libreria runtime, la piccola
+ABI è associata solo all'esatto sorgente standard (SHA-256), importato
+come lib/gui.mira o concatenato all'inizio del sorgente come nel catalogo.
+Una libreria diversa non acquisisce le firme speciali. Le firme sono
+fidate e testate, non dedotte dai corpi dei costruttori. Quando il sistema
+di tipi permetterà di dichiarare la rappresentazione opaca eterogenea
+in Mira, rivalutare questo confine.
+
+Limiti: decoratori con liste di record di stile eterogenei non sono
+ancora checked; proprietà CSS, appartenenza di un valore alle opzioni,
+chiavi duplicate o non valide, range delle colonne e rappresentabilità
+dello stato a runtime restano controlli host. I callback on click checked
+sono nullari; altre funzioni host richiedono firme esplicite. Il render
+standard non tipizzato riceve la firma speciale solo con la libreria
+verificata; una firma host esplicita resta responsabilità dell'host.
+Il codice PHP dei descrittori si può generare, ma non esegue il DOM.
+Il rendering non viene modificato da questa fase; le prestazioni
+devono essere misurate separatamente se si modificano gli updater.

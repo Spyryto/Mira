@@ -225,3 +225,10 @@ La 0.89.4 è stata integrata (PR #128, merge 98fd67ab0f739d23435eb326dea6c0ae643
 ## Aggiornamento 0.91 (implementazione candidata)
 
 0.90 integrata (PR #132, merge f76d86b85e10012b66a4d2491507f1071293bf38, tre workflow verdi). HOST-04 avanza: nucleo indipendente JS/PHP per validazione checked, decodeJson/encodeJson sullo stesso schema concreto e controllo schema comune ai generatori. JSON non dipende da effetti/RPC; compatibilità delle funzioni RPC mantenuta, dipendenza runtime esplicita. Restano encoder esposti da contratti Mira, codec di tipi nominali/somme/refinement/Integer, categorie di errori e integrazione con persistenza/form. Validazione strutturale del sottoinsieme wire, non type system universale. MOD-06 e TOOL-01: packaging/workspace/cache ancora aperti. QA-02: costo delle verifiche e delle copie non misurato. Attendere CI prima di segnare la candidata integrata.
+
+### GUI checked: ABI transitoria (0.92)
+
+Sostituire le firme fidate dei costruttori con dichiarazioni Mira quando
+sarà possibile rappresentare in modo opaco view eterogenee senza wrapper.
+Verificare progressivamente liste di stili eterogenei, proprietà CSS,
+chiavi e vincoli dinamici senza promettere prove statiche non disponibili.

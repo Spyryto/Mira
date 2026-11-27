@@ -24,6 +24,8 @@ class TypeChecker {
     final active = new Map<String, Type>();
     final lacks = new Map<Int, Map<String,Bool>>();
     final scalarEq = new Map<Int,Bool>();
+    final guiState = new Map<Int,Bool>();
+    var hasGui = false;
     // Proof facts belong to expressions, not the public inference algebra.
     final ranges = new haxe.ds.ObjectMap<Dynamic,NumericRange>();
     final integers = new haxe.ds.ObjectMap<Dynamic,Bool>();
@@ -49,8 +51,10 @@ class TypeChecker {
     }
 
     function prepare(program:Array<Definition>):Void {
-        for (d in program) if (!d.isStatement)
+        for (d in program) if (!d.isStatement) {
             definitions.set(d.isFunction() ? d.selector() : d.name, d);
+            if (d.guiPrimitive) hasGui = true;
+        }
         final graph = new Dependencies(program);
         for (group in graph.ordered()) checkGroup(group,graph.recursive(group));
         for (d in program) if (d.isExported && !d.isStatement) {
@@ -153,6 +157,7 @@ class TypeChecker {
         if (occurs(id,type)) fail("infinite type");
         if (lacks.exists(id)) constrainRow(type,lacks.get(id));
         if (scalarEq.exists(id)) requireScalarEq(type);
+        if (guiState.exists(id)) requireGuiState(type);
         bindings.set(id,type);
     }
 
@@ -438,6 +443,7 @@ class TypeChecker {
                     final copy = fresh();
                     if (lacks.exists(id)) constrainRow(copy,lacks.get(id));
                     if (scalarEq.exists(id)) requireScalarEq(copy);
+                    if (guiState.exists(id)) requireGuiState(copy);
                     seen.set(id,copy);
                 }
                 seen.get(id);
@@ -510,6 +516,12 @@ class TypeChecker {
             origin = d.origin;
             moduleOwner = d.modulePath;
             if (recursive && !d.isFunction()) fail("recursive value dependency not supported: " + name);
+            if (d.guiPrimitive) {
+                final signature = GuiTypes.signature(name,fresh,requireScalarEq,requireGuiState);
+                if (signature == null) fail("Unknown checked GUI primitive " + name);
+                active.set(name,signature);
+                continue;
+            }
             if (d.isAbstractContract) {
                 final signature:Type = d.isFunction() ? FunctionType([for (a in d.parameterAnnotations) a],d.resultAnnotation) : d.resultAnnotation;
                 active.set(name,instantiate(signature));
@@ -554,7 +566,7 @@ class TypeChecker {
             final d = definitions.get(name);
             origin = d.origin;
             moduleOwner = d.modulePath;
-            if (d.isAbstractContract) continue; // explicitly declared, no body to check
+            if (d.guiPrimitive || d.isAbstractContract) continue; // verified ABI or explicit contract
             final scope = new Map<String,LocalScheme>();
             final params:Array<Type> = switch (active.get(name)) {
                 case FunctionType(args,_) if (d.isFunction()): args;
@@ -585,6 +597,8 @@ class TypeChecker {
     }
 
     function hostType(name:String):Type {
+        if (hasGui && name == "render" && host.callables.indexOf(name) >= 0 && !host.types.exists(name))
+            return GuiTypes.renderType();
         if (!host.types.exists(name)) return fail("host type signature required: " + name);
         return host.types.get(name);
     }
@@ -611,6 +625,19 @@ class TypeChecker {
                 final result = fresh();
                 unify(type,FunctionType(args,result));
                 return result;
+        }
+    }
+
+    // A transition requires a state owner; root render has no owner. The
+    // constraint follows inference variables through reusable components.
+    function requireGuiState(type:Type):Void {
+        switch (prune(type)) {
+            case Variable(id):
+                if (rigid.exists(id)) fail("Explicit type parameter does not guarantee a GUI state owner");
+                guiState.set(id,true);
+            case OpaqueType(name,_) if (name == "#GUI.NoState"):
+                fail("GUI binding requires a state owner");
+            default:
         }
     }
 
@@ -1014,8 +1041,10 @@ class TypeChecker {
                 }
                 final missing = lacks.exists(id) ? [for (key in lacks.get(id).keys()) key] : [];
                 missing.sort(Reflect.compare);
-                {kind:"Variable",id:seen.get(id),scalarEq:scalarEq.exists(id),
+                final variable:Dynamic = {kind:"Variable",id:seen.get(id),scalarEq:scalarEq.exists(id),
                     row:lacks.exists(id),lacks:missing};
+                if (guiState.exists(id)) Reflect.setField(variable,"guiState",true);
+                variable;
             case ListType(item): {kind:"List",item:describe(item,seen)};
             case FunctionType(args,result):
                 {kind:"Function",parameters:[for (a in args) describe(a,seen)],result:describe(result,seen)};
@@ -1033,6 +1062,7 @@ class TypeChecker {
         final order:Array<Int> = [];
         final body = render(type,names,order);
         final predicates = [for (id in order) if (scalarEq.exists(id)) names.get(id) + ": ScalarEq"];
+        for (id in order) if (guiState.exists(id)) predicates.push(names.get(id) + ": GUI state");
         return body + (predicates.length == 0 ? "" : " where " + predicates.join(", "));
     }
 
