@@ -2406,6 +2406,50 @@ public function reachable(roots:Array<String>,statements:Array<Definition>):Map<
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Dependencies.hx#L37)
 
+<a id="api-mira-types-guistylerules"></a>
+### `mira.types.GuiStyleRules`
+
+**class** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+class GuiStyleRules
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiStyleRules.hx#L5)
+
+<a id="api-mira-types-guistylerules-allowsnumber"></a>
+### `mira.types.GuiStyleRules.allowsNumber`
+
+**method** · Membro pubblico di mira.types.GuiStyleRules.
+
+```haxe
+public static function allowsNumber(kind:String):Bool return kind == "length" || kind == "weight" || kind == "flex" || kind == "size"; public static function allowsText(kind:String):Bool return kind == "color" || kind == "choice" || kind == "size"; public static function numberAllowed(kind:String,n:Float):Bool
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiStyleRules.hx#L17)
+
+<a id="api-mira-types-guistylerules-kind"></a>
+### `mira.types.GuiStyleRules.kind`
+
+**method** · Membro pubblico di mira.types.GuiStyleRules.
+
+```haxe
+public static function kind(key:String):Null<String> return switch (key)
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiStyleRules.hx#L7)
+
+<a id="api-mira-types-guistylerules-textallowed"></a>
+### `mira.types.GuiStyleRules.textAllowed`
+
+**method** · Membro pubblico di mira.types.GuiStyleRules.
+
+```haxe
+public static function textAllowed(key:String,kind:String,value:String):Bool
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiStyleRules.hx#L33)
+
 <a id="api-mira-types-guitypes"></a>
 ### `mira.types.GuiTypes`
 
@@ -3086,7 +3130,7 @@ public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.
 public function publicSchema(type:Type):Dynamic return describe(visibility.view(type,null,prune)); function describe(type:Type, ?ids:Map<Int,Int>):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L1018)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L1064)
 
 <a id="api-mira-types-typechecker-specialize"></a>
 ### `mira.types.TypeChecker.specialize`

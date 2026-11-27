@@ -2288,7 +2288,7 @@ each: items, identified by: identity, view: factory = collect: items, with: {ite
 render (styled: (column: [
   title: "Stili verificati",
   text: "Record diversi, un solo layout."
-]), with: [{padding: 16, gap: 8}, {background: "#e8f4ff"}, {radius: 12}]);
+]), with: [{padding: 16, gap: 8, width: "fill"}, {background: "#e8f4ff"}, {radius: 12, borderStyle: "solid", borderWidth: 1, borderColor: "#9ac5e8"}]);
 ```
 
 **Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
