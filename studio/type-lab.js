@@ -27,6 +27,12 @@
     source.value='Alignment :: Start = "start" | Center = "center" | End = "end";\nlabel: x (Alignment) = match: x {start: {| "S"}, center: {| "C"}, end: {| "E"}};\nresult = {value: Center, label: (label: Center)};\n# Prova Compila checked JS o PHP; prova anche bad (Alignment) = "center";';
     check();
   });
+  document.getElementById('optional-record-example').addEventListener('click',()=>{
+    host.value='';
+    modules.value='';
+    source.value='Style :: {name: Text, padding?: Number, color?: Text};\noriginal (Style) = {name: "base"};\nchanged = update: original, with: {padding: 12};\nresult = {original: original, changed: changed, title: (changed ~ name)};\n# Prova Compila checked JS o PHP. Aggiungi bad = original ~ padding; per vedere la diagnostica.';
+    check();
+  });
   document.getElementById('native-variant-example').addEventListener('click',()=>{
     host.value='';
     modules.value='';
