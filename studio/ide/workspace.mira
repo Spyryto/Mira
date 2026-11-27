@@ -1,0 +1,8 @@
+# Pure workspace operations. Paths and storage are host capabilities.
+Workspace File :: {path: Text, source: Text};
+workspace save: file (Workspace File), in: files ([Workspace File]) -> [Workspace File] =
+  append: file, to: (select: files, with: {item (Workspace File) | item ~ path != file ~ path});
+workspace find: path (Text), in: files ([Workspace File]) -> [Workspace File] =
+  select: files, with: {item (Workspace File) | item ~ path == path};
+workspace dependencies: path (Text), in: files ([Workspace File]) -> [Workspace File] =
+  select: files, with: {item (Workspace File) | item ~ path != path};

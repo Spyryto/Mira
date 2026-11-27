@@ -7,10 +7,59 @@ import {tokenizeMira} from '../syntax-highlight.js';
 import {fieldContext,fieldRows,formatSchema} from './field-context.js';
 import {editor_complete__from,editor_lookup__from,editor_tooltip,editor_templates,editor_fields__prefix__from,editor_field_lookup__name__from,editor_field_tooltip,editor_signature__returning,editor_visible__globals} from '../../dist/ide/editor-services.js';
 
+import {load,persist,update,get,modulesFor,newFile,validate,readFolder,saveDisk,logical} from './workspace-host.js';
 const $=id=>document.getElementById(id);
 if(matchMedia('(max-width:850px)').matches)$('workspace-tree').open=false;
 const initial='double: x (Number) -> Number = x * 2;\nitems = [1, 2, 3];\nresult = collect: items, with: {x | double: x};';
-let saved=initial;try{saved=localStorage.getItem('mira-ide:source:v1')??initial}catch{}
+let workspace,storageBlocked=false;try{workspace=load(localStorage,initial)}catch(error){storageBlocked=true;workspace={format:1,active:'programma.mira',files:[{path:'programma.mira',source:initial}]};$('persistence').textContent=error.message+' · esporta per non perdere il lavoro.'}
+const states=new Map();let folder=null,baseline=new Map();
+const saved=get(workspace,workspace.active).source;
+const moduleJson=()=>JSON.stringify(modulesFor(workspace));
+function saveLocal(){if(storageBlocked)return;try{persist(localStorage,workspace);$('persistence').textContent='Salvato nel browser'+(folder?' · '+folder.name:'');}catch(error){$('persistence').textContent='Salvataggio locale fallito: '+error.message+' · esporta il progetto.'}}
+function renderFiles(){
+ $('active-file').textContent=workspace.active;
+ $('files').replaceChildren(...workspace.files.slice().sort((a,b)=>a.path.localeCompare(b.path)).map(f=>{const b=document.createElement('button');b.type='button';b.textContent=f.path;b.className=f.path===workspace.active?'selected':'';b.setAttribute('aria-pressed',String(f.path===workspace.active));b.onclick=()=>switchFile(f.path);return b}));
+}
+function switchFile(path){
+ if(path===workspace.active)return;
+ states.set(workspace.active,editor.state);workspace={...workspace,active:path};
+ lastValid=[];inspected=[];validRevision=-1;fieldCache=null;scopeCache=null;$('symbols').replaceChildren();
+ editor.setState(states.get(path)||EditorState.create({doc:get(workspace,path).source,extensions}));
+ renderFiles();saveLocal();renderFiles();saveLocal();analyze(editor);
+$('new-file').onclick=()=>{
+ const path=prompt('Percorso del nuovo file .mira (es. Music/Intervals.mira)');
+ if(!path)return;
+ try{const next=newFile(workspace,path.trim());workspace={...next,active:workspace.active};switchFile(next.active)}catch(error){$('persistence').textContent=error.message;}
+};
+$('open-folder').disabled=typeof window.showDirectoryPicker!=='function';
+if($('open-folder').disabled)$('open-folder').title='Richiede un browser con File System Access; usa Importa/Esporta progetto.';
+$('open-folder').onclick=async()=>{
+ try{const handle=await window.showDirectoryPicker({mode:'readwrite'});
+  const result=await readFolder(handle);
+  if(!confirm('Aprire '+handle.name+' e sostituire il workspace locale? Esporta prima eventuali modifiche da conservare.'))return;
+  folder=handle;baseline=new Map(result.workspace.files.map(f=>[f.path,f.source]));$('save-disk').disabled=false;replaceWorkspace(result.workspace);
+  if(result.skipped.length)$('persistence').textContent='File ignorati: '+result.skipped.join(', ');
+ }catch(error){if(error.name!=='AbortError')$('persistence').textContent=error.message}
+};
+$('save-disk').onclick=async()=>{
+ try{const file=get(workspace,workspace.active);await saveDisk(folder,file,baseline);$('persistence').textContent='Scritto su disco: '+file.path;}
+ catch(error){$('persistence').textContent=error.message}
+};
+$('export-project').onclick=()=>{
+ const url=URL.createObjectURL(new Blob([JSON.stringify(workspace,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='mira-workspace.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+$('import-project').onclick=()=>$('project-input').click();
+$('project-input').onchange=async()=>{
+ try{const file=$('project-input').files[0];if(!file)return;const next=validate(JSON.parse(await file.text()));
+ if(!confirm('Sostituire il workspace locale con il progetto importato?'))return;
+ folder=null;baseline=new Map();$('save-disk').disabled=true;replaceWorkspace(next);
+ }catch(error){$('persistence').textContent=error.message}finally{$('project-input').value=''}
+};
+}
+function replaceWorkspace(next){
+ workspace=validate(next);states.clear();lastValid=[];inspected=[];validRevision=-1;fieldCache=null;scopeCache=null;$('symbols').replaceChildren();
+ editor.setState(EditorState.create({doc:get(workspace,workspace.active).source,extensions}));renderFiles();saveLocal();analyze(editor);
+}
 const worker=new Worker('./ide-analysis-worker.js');
 let revision=0,lastValid=[],validRevision=-1,timer,api=[],inspected=[];
 const first=label=>label.split(':')[0];
@@ -64,16 +113,16 @@ const pendingFields=new Map();
 function fieldsFor(base){
  if(fieldCache?.base===base)return fieldCache.promise;
  const request=++requestId;
- const promise=new Promise(resolve=>{pendingFields.set(request,resolve);worker.postMessage({kind:'fields',request,source:base});});
+ const promise=new Promise(resolve=>{pendingFields.set(request,resolve);worker.postMessage({kind:'fields',request,source:base,modules:moduleJson()});});
  fieldCache={base,promise};return promise;
 }
 const pendingScopes=new Map();
 let scopeCache=null;
 function queryScope(source,line,column){
- const key=JSON.stringify([source,line,column]);
+ const key=JSON.stringify([source,line,column,moduleJson()]);
  if(scopeCache?.key===key)return scopeCache.promise;
  const request=++requestId;
- const promise=new Promise(resolve=>{pendingScopes.set(request,resolve);worker.postMessage({kind:'scope',request,source,line,column});});
+ const promise=new Promise(resolve=>{pendingScopes.set(request,resolve);worker.postMessage({kind:'scope',request,source,line,column,modules:moduleJson()});});
  scopeCache={key,promise};return promise;
 }
 function localSuggestions(report,probe=false){
@@ -92,6 +141,11 @@ async function lookupAt(state,pos){
  return editor_field_lookup__name__from(site.receiver,site.prefix,rows).map(editor_field_tooltip);
 }
 async function complete(context){
+ const before=context.state.doc.lineAt(context.pos).text.slice(0,context.pos-context.state.doc.lineAt(context.pos).from);
+ const path=before.match(/^\s*import\s+([A-Za-z_][A-Za-z_0-9 /]*|)$/);
+ if(path){const prefix=path[1],items=Object.keys(modulesFor(workspace)).filter(name=>name.startsWith(prefix)).map(name=>make(name,'','Modulo del progetto','','Workspace','namespace'));
+  return {from:context.pos-prefix.length,options:editor_complete__from(prefix,items.map(item=>({...item,first:item.label}))).map(item=>({label:item.label,type:'namespace',apply:item.label})),filter:false};}
+
  const field=fieldContext(context.state.doc.toString(),context.pos);
  if(field){
    const rows=await fieldsFor(field.base);
@@ -144,14 +198,16 @@ function analyze(view){
  inspected=inspected.filter(item=>item.kind!=='property'&&item.origin!=='Scope lessicale verificato'&&item.origin!=='Contesto con segnaposto');
  refreshInspector();
  $('status').textContent='Analisi…';$('status').className='status';
- timer=setTimeout(()=>worker.postMessage({revision:rev,source}),220);
+ timer=setTimeout(()=>worker.postMessage({revision:rev,source,modules:moduleJson()}),220);
 }
-const editor=new EditorView({parent:$('editor'),state:EditorState.create({doc:saved,extensions:[
+const extensions=[
  basicSetup,syntax,autocompletion({override:[complete],activateOnTyping:true,addToOptions:[{position:90,render:option=>{if(!option.rich)return null;const span=document.createElement('span');span.className='mira-completion-signature';appendSignature(span,option.rich,true);return span}}]}),keymap.of(completionKeymap),
  hoverTooltip(async(view,pos)=>{const state=view.state,w=wordAt(state,pos),items=await lookupAt(state,pos);return view.state.doc===state.doc&&items.length?{pos:w.from,end:w.to,above:true,create:()=>{const dom=document.createElement('div');dom.append(...items.map(renderTooltip));return {dom}}}:null}),
  EditorView.contentAttributes.of({'aria-label':'Codice sorgente Mira','spellcheck':'false','autocapitalize':'off'}),
- EditorView.updateListener.of(update=>{if(update.docChanged){try{localStorage.setItem('mira-ide:source:v1',update.state.doc.toString())}catch{}analyze(update.view)}})
-]})});
+ EditorView.updateListener.of(update=>{if(update.docChanged){workspace=updateWorkspaceSource(update.state.doc.toString());saveLocal();fieldCache=null;analyze(update.view)}})
+];
+function updateWorkspaceSource(source){return update(workspace,workspace.active,source)}
+const editor=new EditorView({parent:$('editor'),state:EditorState.create({doc:saved,extensions})});
 function position(line,column){if(!Number.isInteger(line)||line<1||line>editor.state.doc.lines||!Number.isInteger(column))return null;const l=editor.state.doc.line(line);return Math.min(l.to,l.from+Math.max(0,column-1))}
 worker.onmessage=({data})=>{
  if(data.kind==='scope'){
@@ -169,8 +225,24 @@ worker.onmessage=({data})=>{
   const defs=data.ast.ok?JSON.parse(data.ast.output).definitions:[];
   lastValid=JSON.parse(checked.output).filter(x=>!x.file).map(x=>{
    const def=defs.find(d=>d.name===x.name&&d.line===x.line&&d.column===x.column);
-   return namedSignature(make(x.name,x.type,'Tipo verificato dal compilatore.',snippet(x.name,def?.parameters),'Documento verificato',x.name.endsWith(':')?'function':'variable'),def,x.schema);
+   const name=x.module&&x.name.startsWith(x.module+' / ')?x.name.slice(x.module.length+3):x.name;
+   const localDef=def?{...def,labels:def.labels?.map((label,i)=>i===0&&x.module&&label.startsWith(x.module+' / ')?label.slice(x.module.length+3):label)}:undefined;
+   return namedSignature(make(name,x.type,'Tipo verificato dal compilatore.',snippet(name,localDef?.parameters),'Documento verificato',name.endsWith(':')?'function':'variable'),localDef,x.schema);
   });
+  if(data.interfaces?.ok){
+   const info=JSON.parse(data.interfaces.output),owner=JSON.parse(checked.output).find(x=>!x.file&&x.module)?.module;
+   const rows=JSON.parse(checked.output);
+   for(const edge of info.dependencies.filter(e=>e.from===owner&&e.kind==='import'&&e.file==null)){
+    const surface=info.interfaces.find(m=>m.module===edge.to)?.surface;if(!surface)continue;
+    const entries=edge.wildcard?surface.symbols.map(s=>({name:s.name,alias:s.name})):edge.names||[];
+    for(const imported of entries){const symbol=surface.symbols.find(s=>s.name===imported.name);if(!symbol)continue;
+     const name=imported.alias||imported.name;if(lastValid.some(s=>s.label===name))continue;
+     const original=rows.find(x=>x.name===edge.to+' / '+symbol.name);const ast=defs.find(d=>d.name===original?.name&&d.file===original?.file);
+     const localDef=ast?{...ast,labels:name.endsWith(':')?name.slice(0,-1).split(':'):undefined}:undefined;
+     lastValid.push(namedSignature(make(name,formatSchema(symbol.schema),'Importato da '+edge.to, snippet(name,localDef?.parameters),'Documento verificato',symbol.kind==='selector'?'function':'variable'),localDef,symbol.schema));
+    }
+   }
+  }
   validRevision=revision;
   $('symbols').replaceChildren(...lastValid.map(item=>{
    const b=document.createElement('button');b.textContent=item.label;b.onclick=()=>inspect([item]);return b;

@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
+import {spawnSync} from 'node:child_process';
+import {load,persist,update,get,modulesFor,newFile,validate,saveDisk,readFolder} from '../studio/ide/workspace-host.js';
+const store=new Map(),storage={getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v)};
+let w=load(storage,'result = 1;');w=newFile(w,'Music/Intervals.mira');
+w=update(w,w.active,'module Music / Intervals;\ninterface\noctave;\nimplementation\noctave = 12;');
+w={...w,active:'programma.mira'};w=update(w,w.active,'module App;\ninterface\nresult;\nimport Music / Intervals { octave; };\nimplementation\nresult = octave;');
+persist(storage,w);assert.deepEqual(load(storage,''),w);
+assert.throws(()=>newFile(w,'../Bad.mira'));assert.throws(()=>newFile(w,'music/intervals.mira'));
+const c={};runInNewContext(readFileSync('dist/studio/compiler.js','utf8'),c);
+const modules=JSON.stringify(modulesFor(w));
+for(const target of ['js','php'])assert.equal(c.MiraStudioCompiler.compile(get(w,w.active).source,target,null,false,modules,true).ok,true);
+const php=readFileSync('dist/ide/editor-services.php','utf8').replace(/^<\?php\s*/,'');
+const result=spawnSync('php',['-r',php+'\necho json_encode(workspace_save__in(["path"=>"a.mira","source"=>"new"],[["path"=>"a.mira","source"=>"old"]]));'],{encoding:'utf8'});
+assert.equal(result.status,0,result.stderr);assert.deepEqual(JSON.parse(result.stdout),[{path:'a.mira',source:'new'}]);
+// In-memory File System Access double: verifies the host protocol, not OS permissions.
+let bytes='old';
+const handle={kind:'file',getFile:async()=>({size:bytes.length,text:async()=>bytes}),createWritable:async()=>({write:async v=>{bytes=v},close:async()=>{}})};
+const root={entries:async function*(){yield ['App.mira',handle]},getFileHandle:async()=>handle};
+const opened=await readFolder(root);const baseline=new Map(opened.workspace.files.map(f=>[f.path,f.source]));
+await saveDisk(root,{path:'App.mira',source:'new'},baseline);assert.equal(bytes,'new');bytes='external';
+await assert.rejects(()=>saveDisk(root,{path:'App.mira',source:'unsaved'},baseline),/Conflitto/);assert.equal(bytes,'external');
+console.log('Verified multifile persistence, real compiler module map, JS/PHP model parity, disk adapter conflict handling.');
