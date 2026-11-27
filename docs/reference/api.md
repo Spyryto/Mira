@@ -2767,7 +2767,7 @@ public function reachable(roots:Array<String>,statements:Array<Definition>):Map<
 class GuiStyleRules
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiStyleRules.hx#L7)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiStyleRules.hx#L8)
 
 <a id="api-mira-types-guistylerules-get"></a>
 ### `mira.types.GuiStyleRules.get`
@@ -2778,7 +2778,29 @@ class GuiStyleRules
 public static function get(key:String):Null<ScalarRule>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiStyleRules.hx#L11)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiStyleRules.hx#L29)
+
+<a id="api-mira-types-guistylerules-layercountallowed"></a>
+### `mira.types.GuiStyleRules.layerCountAllowed`
+
+**method** · Membro pubblico di mira.types.GuiStyleRules.
+
+```haxe
+public static function layerCountAllowed(count:Int):Bool
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiStyleRules.hx#L34)
+
+<a id="api-mira-types-guistylerules-layerlimit"></a>
+### `mira.types.GuiStyleRules.layerLimit`
+
+**method** · Membro pubblico di mira.types.GuiStyleRules.
+
+```haxe
+public static function layerLimit():String
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiStyleRules.hx#L39)
 
 <a id="api-mira-types-guitypes"></a>
 ### `mira.types.GuiTypes`
@@ -3328,7 +3350,7 @@ Strict
 class ScalarRules
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L13)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L15)
 
 <a id="api-mira-types-scalarrules-allowsnumber"></a>
 ### `mira.types.ScalarRules.allowsNumber`
@@ -3336,10 +3358,10 @@ class ScalarRules
 **method** · Membro pubblico di mira.types.ScalarRules.
 
 ```haxe
-public static function allowsNumber(rule:ScalarRule):Bool
+public static function allowsNumber(rule:ScalarRule):Bool return switch (rule)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L45)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L48)
 
 <a id="api-mira-types-scalarrules-allowstext"></a>
 ### `mira.types.ScalarRules.allowsText`
@@ -3347,10 +3369,21 @@ public static function allowsNumber(rule:ScalarRule):Bool
 **method** · Membro pubblico di mira.types.ScalarRules.
 
 ```haxe
-public static function allowsText(rule:ScalarRule):Bool
+public static function allowsText(rule:ScalarRule):Bool return switch (rule)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L53)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L54)
+
+<a id="api-mira-types-scalarrules-fromtype"></a>
+### `mira.types.ScalarRules.fromType`
+
+**method** · Membro pubblico di mira.types.ScalarRules.
+
+```haxe
+public static function fromType(type:Type,definitions:Array<Definition>):ScalarRule
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L18)
 
 <a id="api-mira-types-scalarrules-numberallowed"></a>
 ### `mira.types.ScalarRules.numberAllowed`
@@ -3358,21 +3391,10 @@ public static function allowsText(rule:ScalarRule):Bool
 **method** · Membro pubblico di mira.types.ScalarRules.
 
 ```haxe
-public static function numberAllowed(rule:ScalarRule,n:Float):Bool
+public static function numberAllowed(rule:ScalarRule,n:Float):Bool return switch (rule)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L61)
-
-<a id="api-mira-types-scalarrules-readrecord"></a>
-### `mira.types.ScalarRules.readRecord`
-
-**method** · Membro pubblico di mira.types.ScalarRules.
-
-```haxe
-public static function readRecord(source:String,name:String):Map<String,ScalarRule>
-```
-
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L16)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L60)
 
 <a id="api-mira-types-scalarrules-scalarrule"></a>
 ### `mira.types.ScalarRules.ScalarRule`
@@ -3383,7 +3405,7 @@ public static function readRecord(source:String,name:String):Map<String,ScalarRu
 enum ScalarRule
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L7)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L9)
 
 <a id="api-mira-types-scalarrules-scalarrule-alternatives"></a>
 ### `mira.types.ScalarRules.ScalarRule.Alternatives`
@@ -3394,7 +3416,7 @@ enum ScalarRule
 Alternatives(rules:Array<ScalarRule>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L12)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L14)
 
 <a id="api-mira-types-scalarrules-scalarrule-bounds"></a>
 ### `mira.types.ScalarRules.ScalarRule.Bounds`
@@ -3402,10 +3424,10 @@ Alternatives(rules:Array<ScalarRule>)
 **variant** · Membro pubblico di mira.types.ScalarRules.ScalarRule.
 
 ```haxe
-Bounds(min:Float,max:Float,whole:Bool)
+Bounds(range:NumericRange,whole:Bool)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L9)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L11)
 
 <a id="api-mira-types-scalarrules-scalarrule-textchoices"></a>
 ### `mira.types.ScalarRules.ScalarRule.TextChoices`
@@ -3416,18 +3438,18 @@ Bounds(min:Float,max:Float,whole:Bool)
 TextChoices(values:Array<String>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L10)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L12)
 
-<a id="api-mira-types-scalarrules-scalarrule-textpattern"></a>
-### `mira.types.ScalarRules.ScalarRule.TextPattern`
+<a id="api-mira-types-scalarrules-scalarrule-textgrammar"></a>
+### `mira.types.ScalarRules.ScalarRule.TextGrammar`
 
 **variant** · Membro pubblico di mira.types.ScalarRules.ScalarRule.
 
 ```haxe
-TextPattern(pattern:EReg)
+TextGrammar(machine:GrammarMachine)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L11)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L13)
 
 <a id="api-mira-types-scalarrules-textallowed"></a>
 ### `mira.types.ScalarRules.textAllowed`
@@ -3435,10 +3457,10 @@ TextPattern(pattern:EReg)
 **method** · Membro pubblico di mira.types.ScalarRules.
 
 ```haxe
-public static function textAllowed(rule:ScalarRule,value:String):Bool
+public static function textAllowed(rule:ScalarRule,value:String):Bool return switch (rule)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L70)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarRules.hx#L66)
 
 <a id="api-mira-types-textchoices"></a>
 ### `mira.types.TextChoices`
