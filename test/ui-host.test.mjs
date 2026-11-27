@@ -1162,3 +1162,64 @@ render (state: 0, view: (card: _));`;
   assert.match(root.textContent,/0/);
   assert.deepEqual(errors,[]);
 });
+
+
+test('GUI checked style vocabulary agrees with the actual host for known values',()=>{
+  const header='import "lib/gui.mira";\n';
+  const cases=[
+    ['padding',0,true],['margin',4096,true],['gap',1.5,true],['radius',4097,false],
+    ['padding',-1,false],['borderWidth','12',false],['fontSize',true,false],
+    ['fontWeight',100,true],['fontWeight',900,true],['fontWeight',450.5,false],['fontWeight',99,false],
+    ['flex',100,true],['flex',101,false],['width','fill',true],['minWidth','auto',true],
+    ['maxWidth',240,true],['width','100%',false],['width',false,false],
+    ['background','#aBcD',true],['color','#12345678',true],['borderColor','currentColor',true],
+    ['color','transparent',true],['background','red',false],['color','#12',false],
+    ['borderStyle','dashed',true],['borderStyle','double',false],['align','baseline',true],
+    ['justify','space-between',true],['wrap','nowrap',true],['textAlign','right',true],
+    ['shadow','soft',true],['shadow','toString',false],['textAlign','justify',false],
+    ['position','fixed',false]
+  ];
+  for(const [key,value,valid] of cases){
+    const literal=typeof value==='number' && value<0 ? '(0 - '+Math.abs(value)+')' : JSON.stringify(value);
+    const source=header+'render (styled: (text: "x"), with: [{'+key+': '+literal+'}]);';
+    for(const target of ['js','php']){
+      const checked=compiler.compile(source,target,manifest,false,undefined,true);
+      assert.equal(checked.ok,valid,source+': '+checked.message);
+      if(valid) assert.equal(checked.output,compiler.compile(source,target,manifest).output);
+    }
+    const {host}=setup();
+    const spec={type:'styled',view:{type:'text',text:'x'},styles:[{[key]:value}]};
+    if(valid) assert.doesNotThrow(()=>host.render(spec));
+    else assert.throws(()=>host.render(spec),/Invalid style value|Unsupported style property/);
+  }
+});
+
+test('GUI checked styles infer numeric parameters but leave computed domain checks to the host',()=>{
+  const header='import "lib/gui.mira";\n';
+  const source=header+'panel: n = styled: (text: "x"), with: [{padding: n}]; render (panel: 12);';
+  assert.equal(compiler.check(source,manifest).ok,true);
+  assert.equal(compiler.check(source.replace('panel: 12','panel: "wrong"'),manifest).ok,false);
+  const unknown=source.replace('panel: 12','panel: 5000');
+  const checked=compiler.compile(unknown,'js',manifest,false,undefined,true);
+  assert.equal(checked.ok,true,checked.message);
+  const {host}=setup();
+  assert.throws(()=>runInNewContext(checked.output,{__miraHost:host}),/Invalid style value/);
+  assert.equal(compiler.check(header+'render (styled: (text: "x"), with: [{notAStyle: 1}]);',manifest).ok,false);
+  assert.equal(compiler.check('styled: x, with: y = y; result = styled: 0, with: [{notAStyle: 1}];').ok,true);
+});
+
+
+test('GUI checked style catalog example compiles and applies native CSS',()=>{
+  const source=demo('gui-checked-styles').source;
+  for(const target of ['js','php']){
+    const compiled=compiler.compile(source,target,manifest,false,undefined,true);
+    assert.equal(compiled.ok,true,compiled.message);
+    assert.equal(compiled.output,compiler.compile(source,target,manifest).output);
+  }
+  const {root,host,errors}=setup();
+  runInNewContext(compiler.compile(source,'js',manifest,false,undefined,true).output,{__miraHost:host});
+  const panel=findAll(root,'div').find(n=>n.className==='mira-ui-column');
+  assert.equal(panel.style.getPropertyValue('width'),'100%');
+  assert.equal(panel.style.getPropertyValue('border-style'),'solid');
+  assert.deepEqual(errors,[]);
+});

@@ -237,3 +237,8 @@ chiavi e vincoli dinamici senza promettere prove statiche non disponibili.
 ### 0.93 — Style layers (candidata)
 
 Supporto contestuale delle liste letterali eterogenee passate direttamente a styled:with: della GUI verificata. Restano aperti stili di prima classe con forme eterogenee, verifica CSS e vincoli dinamici. Nessun nuovo tipo unione o wrapper runtime.
+
+
+### 0.94 — Style safety (candidata)
+
+Controllo del vocabolario, tipi noti e valori letterali delle liste di stile dirette. Nessuna nuova rappresentazione runtime. Restano aperti il contratto degli stili di prima classe, il tipo alternativo Number/Text per le dimensioni, prova dei domini dinamici e una fonte unica delle regole se il vocabolario cresce.

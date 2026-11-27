@@ -238,3 +238,12 @@ render (styled: (text: "Mira"), with: [{padding: 12}, {background: "#fff", radiu
 ```
 
 Non cambia l'inferenza delle liste ordinarie, la libreria GUI, il renderer o gli emitter. Il controllo contestuale è limitato alle chiamate dirette alla primitiva verificata: liste memorizzate, sezioni e liste generate seguono ancora l'inferenza omogenea. Nomi di proprietà CSS e vincoli dei valori rimangono responsabilità dell'host. I test verificano anche che JS e PHP emessi siano identici alla compilazione non checked.
+
+
+## Mira 0.94 — Style safety (candidata)
+
+Il controllo contestuale delle liste letterali passate direttamente a `styled:with:` della GUI verificata riconosce il vocabolario esistente di `studio/ui-host.js`. Rifiuta proprietà sconosciute, tipi incompatibili e valori letterali non ammessi. Esempi: padding numerico da 0 a 4096, fontWeight intero da 100 a 900, width numerico oppure "fill"/"auto", colori esadecimali o "transparent"/"currentColor", align nelle opzioni supportate. Anche un fatto numerico puntuale già disponibile nell'analisi può evidenziare una violazione. Un parametro numerico inferito non dimostra il suo intervallo.
+
+La tabella compile-time in GuiStyleRules riproduce il piccolo vocabolario host senza modificare renderer o emitter. I test di concordanza verificano compilazione JS/PHP, equivalenza dell'output nei casi accettati e comportamento del renderer. La duplicazione è provvisoria: se il vocabolario cresce, valutare una singola specifica generativa.
+
+Limiti espliciti: non è una prova generale di validità CSS; righe aperte, valori calcolati non dimostrati, variabili di dimensione (Number o Text) non risolte e liste di stili non letterali mantengono i controlli host. Nessun nuovo controllo a runtime, nessuna eliminazione delle guardie host. L'anteprima checked resta opt-in.
