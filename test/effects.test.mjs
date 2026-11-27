@@ -280,6 +280,7 @@ test('0.88 HTTP text adapters use real loopback transport, bound endpoint and bo
     else if(req.url==='/missing'){res.writeHead(404);res.end('missing');}
     else if(req.url==='/redirect'){res.writeHead(302,{Location:'/ok'});res.end();}
     else if(req.url==='/large'){res.writeHead(200);res.end('x'.repeat(33));}
+    else if(req.url==='/truncated'){res.writeHead(200,{'Content-Length':'20','Connection':'close'});res.end('short');}
     else if(req.url==='/bad'){res.writeHead(200);res.end(Buffer.from([0xc3,0x28]));}
     else if(req.url==='/slow'){res.writeHead(200);res.flushHeaders();const timer=setTimeout(()=>res.end('late'),500);res.on('close',()=>clearTimeout(timer));}
     else {res.writeHead(500);res.end('unknown');}
@@ -291,7 +292,7 @@ test('0.88 HTTP text adapters use real loopback transport, bound endpoint and bo
   const adapter=fileURLToPath(new URL('../lib/http/http-host.php',import.meta.url));
   const php=async(path,max=32)=>JSON.parse((await exec('php',['-r','require $argv[1];try{$h=\\Mira\\Http\\textService($argv[2],(int)$argv[3],1000);echo json_encode(["value"=>$h(true)],JSON_THROW_ON_ERROR);}catch(Throwable $e){echo json_encode(["error"=>$e->getMessage()]);}',adapter,url+path,String(max)],{timeout:5000})).stdout);
   try{
-    for(const [path,expected] of [['/ok',{value:{status:200,body:'Caffè 🎸'}}],['/missing',{value:{status:404,body:'missing'}}],['/redirect',{error:'http_redirect'}],['/large',{error:'http_too_large'}],['/bad',{error:'http_invalid_text'}]]){
+    for(const [path,expected] of [['/ok',{value:{status:200,body:'Caffè 🎸'}}],['/missing',{value:{status:404,body:'missing'}}],['/redirect',{error:'http_redirect'}],['/large',{error:'http_too_large'}],['/bad',{error:'http_invalid_text'}],['/truncated',{error:'http_transport'}]]){
       let js;try{js={value:await service(url+path,{maxBytes:32})(true,new AbortController().signal)}}catch(e){js={error:e.message}}
       assert.deepEqual(plain(js),expected,path);assert.deepEqual(await php(path),expected,path);
     }
