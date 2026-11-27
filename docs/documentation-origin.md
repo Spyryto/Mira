@@ -8,10 +8,10 @@
 | Categoria | Parole | Quota | Documenti coinvolti |
 | --- | ---: | ---: | ---: |
 | Generata automaticamente dal tooling | 30.957 | 29,7% | 4 |
-| Redatta con assistenza IA (dichiarata) | 63.947 | 61,4% | 20 |
+| Redatta con assistenza IA (dichiarata) | 64.034 | 61,5% | 20 |
 | Redazione umana dichiarata | 0 | 0,0% | 0 |
 | Provenienza non verificata | 9199 | 8,8% | 3 |
-| **Totale** | **104.103** | **100%** | **26** |
+| **Totale** | **104.190** | **100%** | **26** |
 
 I documenti coinvolti **non sono sommabili**: per esempio il README contiene
 una sezione generata dal tooling e altre sezioni editoriali. Le percentuali
@@ -41,7 +41,7 @@ arrotondamenti).
 | [`docs/reference/language.md`](../docs/reference/language.md) | Intero documento | Generata automaticamente dal tooling | 4077 | `scripts/generate-reference.mjs` |
 | [`docs/reference/README.md`](../docs/reference/README.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 161 | — |
 | [`docs/structured-data.md`](../docs/structured-data.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 1617 | — |
-| [`docs/studio-cozy-roadmap.md`](../docs/studio-cozy-roadmap.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 443 | — |
+| [`docs/studio-cozy-roadmap.md`](../docs/studio-cozy-roadmap.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 530 | — |
 | [`docs/studio.md`](../docs/studio.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 6288 | — |
 | [`docs/syntax.md`](../docs/syntax.md) | Intero documento | Provenienza non verificata | 1838 | — |
 | [`docs/theme.md`](../docs/theme.md) | Intero documento | Redatta con assistenza IA (dichiarata) | 597 | — |
@@ -89,5 +89,5 @@ npm run docs
 node scripts/generate-documentation-origin.mjs --check
 ```
 
-Dimensione totale classificata: **773.591 byte UTF-8**,
+Dimensione totale classificata: **774.221 byte UTF-8**,
 in **26 documenti** e **27 sezioni attribuite**.
