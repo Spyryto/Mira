@@ -897,6 +897,53 @@ class TypeChecker {
         };
     }
 
+    // Check known fields without pretending that an open row or a computed
+    // value is a proof of the complete host style contract.
+    function checkGuiStyle(layer:Expr,scope:Map<String,LocalScheme>):Void {
+        final actual = representation(infer(layer,scope));
+        unifyAt(RecordType(new Map<String,Type>(),fresh()),actual,layer);
+        final fields = row(actual).fields;
+        final keys = [for (key in fields.keys()) key];
+        keys.sort(Reflect.compare);
+        final previous = origin;
+        for (key in keys) {
+            final value:Null<Expr> = switch (layer) {
+                case Record(names,values):
+                    final index = names.indexOf(key);
+                    index < 0 ? null : values[index];
+                default: null;
+            };
+            final anchor = origins.get(value == null ? layer : value);
+            if (anchor != null) origin = anchor;
+            final kind = GuiStyleRules.kind(key);
+            if (kind == null) fail("Unsupported style property: " + key);
+            final field = fields.get(key);
+            final numeric = GuiStyleRules.allowsNumber(kind);
+            final textual = GuiStyleRules.allowsText(kind);
+            if (numeric && textual) {
+                // Size has two native representations. Do not invent a union
+                // or constrain an unresolved variable to just one of them.
+                switch (representation(field)) {
+                    case NumberType | IntegerType | TextType | Variable(_):
+                    default: fail("Invalid style type for " + key + ": expected Number or Text");
+                }
+            } else {
+                accept(numeric ? NumberType : TextType,field);
+            }
+            if (value != null) {
+                final valid = switch (value) {
+                    case Text(text): GuiStyleRules.textAllowed(key,kind,text);
+                    case Numeric(number): GuiStyleRules.numberAllowed(kind,Std.parseFloat(number));
+                    default:
+                        final fact = ranges.get(value);
+                        fact == null || fact.low != fact.high || GuiStyleRules.numberAllowed(kind,fact.low);
+                };
+                if (!valid) fail("Invalid style value for " + key);
+            }
+        }
+        origin = previous;
+    }
+
     function inferNode(expr:Expr,scope:Map<String,LocalScheme>):Type {
         return switch (expr) {
             case Numeric(_): NumberType;
@@ -997,8 +1044,7 @@ class TypeChecker {
                         // Contextual checking here leaves ordinary list inference
                         // homogeneous and does not change the emitted AST.
                         final view = infer(args[0],scope);
-                        for (layer in layers)
-                            unifyAt(RecordType(new Map<String,Type>(),fresh()),representation(infer(layer,scope)),layer);
+                        for (layer in layers) checkGuiStyle(layer,scope);
                         selectorCall(selector,[view,ListType(fresh())]);
                     default: selectorCall(selector,[for (arg in args) infer(arg,scope)]);
                 }
