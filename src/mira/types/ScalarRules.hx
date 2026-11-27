@@ -24,7 +24,7 @@ class ScalarRules {
         return switch (value) {
             case CVariant(tag,CRecord(fields)) if (tag == "Range" || tag == "Whole"):
                 switch [fields.get("min"),fields.get("max")] {
-                    case [CNumber(min),CNumber(max)] if (Math.isFinite(min) && Math.isFinite(max) && min <= max && fields.keys().hasNext()):
+                    case [CNumber(min),CNumber(max)] if (Math.isFinite(min) && Math.isFinite(max) && min <= max && Lambda.count(fields) == 2):
                         Bounds(min,max,tag == "Whole");
                     default: throw new MiraError("Invalid scalar bounds");
                 }
