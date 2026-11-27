@@ -1,0 +1,46 @@
+/* Mira theme foundation: native CSS, scoped, shared by both DOM renderers. */
+.mira-theme {
+  --mira-bg:#203044; --mira-panel:#2e4152; --mira-control:#3b5063;
+  --mira-ink:#f7fbff; --mira-accent:#83d1c4; --mira-on-accent:#102c2a;
+  --mira-border:#687e90; --mira-well:#233545;
+  --mira-radius:12px; --mira-gap:12px; --mira-pad:12px;
+  --mira-font: ui-rounded, "Trebuchet MS", system-ui, sans-serif;
+  --mira-tracking:.035em; --mira-font-size:16px;
+  --mira-raised: inset 0 1px 1px #ffffff42, 0 2px 4px #00000042;
+  --mira-inset: inset 0 2px 5px #00000030;
+  --mira-gloss: linear-gradient(180deg,#ffffff15,#00000012);
+  color-scheme:dark; color:var(--mira-ink); background:var(--mira-bg);
+  font-family:var(--mira-font); font-size:var(--mira-font-size);
+  letter-spacing:var(--mira-tracking); border-radius:var(--mira-radius);
+  padding:var(--mira-pad);
+}
+.mira-theme[data-palette="grafite"]{--mira-bg:#303641;--mira-panel:#39414d;--mira-control:#4b5664;--mira-ink:#fff;--mira-accent:#f0be83;--mira-on-accent:#302212;--mira-border:#78818f;--mira-well:#303641}
+.mira-theme[data-palette="prisma"]{color-scheme:light;--mira-bg:#e6d4e9;--mira-panel:#fff0e9;--mira-control:#f4e4e7;--mira-ink:#292234;--mira-accent:#a6a9db;--mira-on-accent:#201e38;--mira-border:#93839d;--mira-well:#f8e8e5}
+.mira-theme[data-palette="bosco"]{--mira-bg:#203b34;--mira-panel:#304d42;--mira-control:#496458;--mira-ink:#f7fff8;--mira-accent:#b6d9a1;--mira-on-accent:#20351d;--mira-border:#789285;--mira-well:#294239}
+.mira-theme[data-palette="ambra"]{color-scheme:light;--mira-bg:#e7c58e;--mira-panel:#fff3de;--mira-control:#f2d9af;--mira-ink:#332616;--mira-accent:#d49b52;--mira-on-accent:#33200c;--mira-border:#a48b68;--mira-well:#fff1d9}
+.mira-theme[data-surface="flat"]{--mira-raised:none;--mira-inset:none;--mira-gloss:none}
+.mira-theme[data-type="system"]{--mira-font:system-ui,sans-serif;--mira-tracking:normal}
+.mira-theme[data-geometry="square"]{--mira-radius:3px}
+.mira-theme[data-density="compact"]{--mira-gap:7px;--mira-pad:8px}
+.mira-theme,.mira-theme *{box-sizing:border-box}
+.mira-theme .mira-ui-state{display:block}
+.mira-theme .mira-ui-column,.mira-theme .mira-ui-grid{display:grid;gap:var(--mira-gap)}
+.mira-theme .mira-ui-row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--mira-gap)}
+.mira-theme .mira-ui-title{margin:0;font-size:1.5em;line-height:1.25}
+.mira-theme .mira-ui-text{margin:0;line-height:1.5;overflow-wrap:anywhere}
+.mira-theme .mira-ui-state > .mira-ui-column{padding:var(--mira-pad);background:var(--mira-panel);border:1px solid var(--mira-border);border-radius:var(--mira-radius);box-shadow:var(--mira-raised)}
+.mira-theme .mira-ui-control{display:grid;gap:5px;min-width:0}
+.mira-theme .mira-ui-label{font-weight:600}
+.mira-theme .mira-ui-button,.mira-theme .mira-ui-input{font:inherit;letter-spacing:inherit;color:inherit;border:1px solid var(--mira-border);border-radius:var(--mira-radius);min-height:44px;padding:var(--mira-pad);min-width:0}
+.mira-theme .mira-ui-button{cursor:pointer;background:var(--mira-gloss),var(--mira-control);box-shadow:var(--mira-raised);font-weight:600}
+.mira-theme .mira-ui-button:active{box-shadow:var(--mira-inset);transform:translateY(1px)}
+.mira-theme .mira-ui-button:disabled{opacity:.55;cursor:default;transform:none}
+.mira-theme .mira-ui-input:not([type=checkbox]){width:100%;background:var(--mira-well);box-shadow:var(--mira-inset)}
+.mira-theme select.mira-ui-input{background:var(--mira-control);box-shadow:var(--mira-raised)}
+.mira-theme .mira-ui-check{display:flex;align-items:center;gap:10px;min-height:44px}
+.mira-theme .mira-ui-check input{order:-1;width:22px;height:22px;min-height:0;padding:0;accent-color:var(--mira-accent)}
+.mira-theme .mira-ui-button:focus-visible,.mira-theme .mira-ui-input:focus-visible{outline:3px solid var(--mira-accent);outline-offset:3px}
+.mira-theme .mira-ui-dialog{color:var(--mira-ink);background:var(--mira-panel);border:1px solid var(--mira-border);border-radius:var(--mira-radius);padding:var(--mira-pad);max-width:calc(100% - 24px)}
+.mira-theme .mira-ui-dialog::backdrop{background:#0008}
+.mira-theme .mira-primary{background:var(--mira-gloss),var(--mira-accent);color:var(--mira-on-accent)}
+@media(forced-colors:active){.mira-theme .mira-ui-button:focus-visible,.mira-theme .mira-ui-input:focus-visible{outline-color:Highlight}}

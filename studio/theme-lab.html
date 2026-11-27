@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mira · Theme Lab</title>
+<link rel="stylesheet" href="./mira-theme.css">
+<style>
+body{margin:0 auto;max-width:650px;padding:18px;font:16px/1.5 system-ui,sans-serif;background:#fffdf7;color:#242932} a{color:inherit} h1{margin-bottom:4px} .settings{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin:18px 0}.settings label{display:grid;gap:4px;font-weight:600}.settings select{font:inherit;min-height:44px;width:100%;border:1px solid #9b9da2;border-radius:8px;background:white;color:#242932}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}#theme-status{font-size:14px}
+</style></head><body>
+<a href="./index.html">← Mira Studio</a><h1>Theme Lab</h1><p>Una view Mira, cinque dimensioni indipendenti. Cambiare il tema non ricrea la view.</p>
+<div class="settings">
+<label>Palette<select data-theme-axis="palette"><option value="notturno">Notturno</option><option value="grafite">Grafite</option><option value="prisma">Prisma</option><option value="bosco">Bosco</option><option value="ambra">Ambra</option></select></label>
+<label>Superfici<select data-theme-axis="surface"><option value="balanced">Balanced</option><option value="flat">Flat</option></select></label>
+<label>Tipografia<select data-theme-axis="type"><option value="cozy">Cozy</option><option value="system">System</option></select></label>
+<label>Geometria<select data-theme-axis="geometry"><option value="rounded">Morbida</option><option value="square">Squadrata</option></select></label>
+<label>Densità<select data-theme-axis="density"><option value="comfortable">Comoda</option><option value="compact">Compatta</option></select></label>
+</div><main class="mira-theme" id="theme-preview" aria-label="Anteprima del tema Mira"></main>
+<p id="theme-status" role="status">Preparazione…</p><details><summary>Sorgente Mira</summary><pre id="theme-source"></pre></details>
+<script src="./compiler.js"></script><script src="./ui-host.js"></script><script src="./theme-lab.js"></script></body></html>

@@ -31,6 +31,9 @@ const ASSETS = [
   './compiler.js',
   './worker.js',
   './ui-preview.html',
+  './theme-lab.html',
+  './theme-lab.js',
+  './mira-theme.css',
   './ui-host.js',
   './persistent-state.js',
   './persistent-ledger.html',
@@ -134,6 +137,7 @@ self.addEventListener('fetch', event => {
       : url.pathname.endsWith('/lesson-import.html') ? './lesson-import.html'
       : url.pathname.endsWith('/persistent-ledger.html') ? './persistent-ledger.html'
       : url.pathname.endsWith('/gui-benchmark.html') ? './gui-benchmark.html'
+      : url.pathname.endsWith('/theme-lab.html') ? './theme-lab.html'
       : url.pathname.endsWith('/ui-preview.html') ? './ui-preview.html' : './index.html';
     event.respondWith(
       fetch(request).then(response => {
