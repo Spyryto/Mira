@@ -36,5 +36,5 @@ editor signature: parameters ([Signature Parameter]), returning: result (Text) -
 # Local bindings shadow global names. Preserve the nearest binding supplied by the checker.
 editor visible: locals ([Suggestion]), globals: globals ([Suggestion]) -> [Suggestion] =
   fold: (select: globals, with: {global (Suggestion) |
-    (count: (editor lookup: (global ~ label), from: locals)) == 0}),
+    NOT (fold: locals, with: {found (Boolean), binding (Suggestion) | found OR ((binding ~ label) == (global ~ label))}, from: false)}),
     with: {items ([Suggestion]), item (Suggestion) | append: item, to: items}, from: locals;

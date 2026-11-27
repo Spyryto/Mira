@@ -35,7 +35,7 @@ const lexical=(source,needle,occurrence=0)=>{
  assert.equal(response.ok,true,response.message);
  const scope=JSON.parse(response.output);assert.equal(scope.found,true);return Object.fromEntries(scope.bindings.map(x=>[x.name,x.type]));
 };
-const lexicalSource='x = 9;\nf: outer (Number) = outer >> {x (Number) | local = x + 1; local >> {x (Text) | x}};';
+const lexicalSource='x = 9;\nf: outer (Number) = outer >> {x (Number) | local = x + 1; "a" >> {x (Text) | x}};';
 assert.deepEqual(lexical(lexicalSource,'x}}'),{local:'Number',outer:'Number',x:'Text'});
 const prior='f: x (Number) = x >> {y (Number) | z = y + 1; z + x};';
 assert.deepEqual(lexical(prior,'y +'),{x:'Number',y:'Number'});
