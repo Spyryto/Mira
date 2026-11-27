@@ -2417,3 +2417,81 @@ test('0.103 Studio bundles typed styles and emits the native GUI descriptor on b
     const d=JSON.parse(actual);assert.equal(d.type,'styled');assert.equal(d.styles[0].width,'fill');assert.equal(d.styles[0].minWidth,12);assert.equal(d.styles[0].align,'center');assert.equal(Object.keys(d.styles[0]).length,17);
   }
 });
+
+
+test('0.104 grammar combinators are ordinary Mira values on JS and PHP',()=>{
+  const library=readFileSync(resolve(root,'lib/grammar.mira'),'utf8');
+  assert.equal(bridge.grammarSource(),library);
+  const source='import "lib/grammar.mira"; digit = character in: "0123456789"; grammar = all of: [(one: "#"), (exactly: 3, of: digit)];';
+  const checked=bridge.check(source);
+  assert.equal(checked.ok,true,checked.message);
+  assert.equal(JSON.parse(checked.output).find(x=>x.name==='grammar').type,'Grammar');
+  const expected={tag:'Sequence',value:[{tag:'Literal',value:'#'},{tag:'Repeat',value:{pattern:{tag:'Character Set',value:'0123456789'},min:3,max:3,unbounded:false}}]};
+  for(const target of ['js','php']){
+    const built=bridge.compile(source,target,null,false,null,true,true);
+    assert.equal(built.ok,true,built.message);
+    const actual=target==='js'?JSON.stringify(runInNewContext(built.output+'\ngrammar',{})):
+      spawnSync('php',['-r',built.output.replace(/^<\?php/,'')+'\necho json_encode($grammar);'],{encoding:'utf8'}).stdout;
+    assert.deepEqual(JSON.parse(actual),expected);
+  }
+});
+
+test('0.104 grammar automata and standalone recognizers agree on full match across targets',()=>{
+  const cases=[
+    ['digit = character in: "0123456789"; integer part = one or more of: digit; fraction = all of: [(one: "."), (one or more of: digit)]; grammar = all of: [(zero or one of: (one: "-")), integer part, (zero or one of: fraction)];',
+      ['-3.14','42','0.5','12.','--1','.5','', '42\n','é'],[true,true,true,false,false,false,false,false,false]],
+    ['hex digit = character in: "0123456789abcdefABCDEF"; hex color = all of: [(one: "#"), (one of: [(exactly: 3, of: hex digit), (exactly: 4, of: hex digit), (exactly: 6, of: hex digit), (exactly: 8, of: hex digit)])]; grammar = one of: [hex color, (one: "transparent"), (one: "currentColor")];',
+      ['#fff','#ABcD','#123456','#abcdef80','transparent','currentColor','#12345','red','#xyz','#fff\n'],[true,true,true,true,true,true,false,false,false,false]],
+    ['prefix = one of: [(one: "a"), (one: "ab")]; grammar = all of: [prefix, (one: "c")];',['ac','abc','ab','abbc','c'],[true,true,false,false,false]],
+    ['grammar = zero or more of: (zero or one of: (one: "a"));',['','a','aaaa','b'],[true,true,true,false]],
+    ['grammar = between: 2, and: 4, of: (one: "x");',['','x','xx','xxx','xxxx','xxxxx'],[false,false,true,true,true,false]],
+    ['grammar = all of: [];',['','a'],[true,false]],
+    ['grammar = one of: [];',['','a'],[false,false]],
+    ['grammar = exactly: 0, of: (one: "x");',['','x'],[true,false]],
+    ['grammar = character in: "";',['','x'],[false,false]]
+  ];
+  for(const [source,inputs,expected] of cases){
+    for(let i=0;i<inputs.length;i++){
+      const report=bridge.grammarAnalyze(source,'grammar',inputs[i]);
+      assert.equal(report.ok,true,report.message);
+      const parsed=JSON.parse(report.output);
+      assert.equal(parsed.accepted,expected[i],source+' / '+inputs[i]);
+      assert.equal(parsed.path[0],0);
+      assert.ok(parsed.dfaStates>=1);
+    }
+    for(const target of ['js','php']){
+      const built=bridge.grammarEmit(source,'grammar',target);
+      assert.equal(built.ok,true,built.message);
+      const samples=JSON.stringify([...inputs,0,false,null]);
+      const actual=target==='js'?JSON.stringify(runInNewContext(built.output+'\n'+samples+'.map(miraGrammarMatches)',{})):
+        spawnSync('php',['-r',built.output.replace(/^<\?php/,'')+'\necho json_encode(array_map("miraGrammarMatches",json_decode(base64_decode("'+Buffer.from(samples).toString('base64')+'"),true)));'],{encoding:'utf8'}).stdout;
+      assert.deepEqual(JSON.parse(actual),[...expected,false,false,false]);
+      assert.doesNotMatch(built.output,/RegExp|preg_match/);
+    }
+  }
+});
+
+test('0.104 Grammar Lab rejects unsupported computation and resource-limit errors',()=>{
+  for(const source of [
+    'grammar = "a";',
+    'grammar = one: 42;',
+    'grammar = exactly: 1.5, of: (one: "a");',
+    'grammar = between: 3, and: 2, of: (one: "a");',
+    'grammar = exactly: 65, of: (one: "a");',
+    'grammar = exactly: 64, of: (one: "abc");',
+    'grammar = one: "é";',
+    'grammar = if (true) then (one: "a") else (one: "b");'
+  ]){
+    const report=bridge.grammarAnalyze(source,'grammar','a');
+    assert.equal(report.ok,false,source);
+  }
+  const long=bridge.grammarAnalyze('grammar = one or more of: (one: "a");','grammar','a'.repeat(4097));
+  assert.equal(long.ok,false);
+  assert.match(long.message,/limit/);
+  assert.equal(bridge.grammarEmit('grammar = one: "a";','grammar','unknown').ok,false);
+  assert.match(read('index.html'),/grammar-lab.html/);
+  assert.match(read('sw.js'),/grammar-lab.html/);
+  assert.match(read('sw.js'),/grammar-lab.js/);
+  assert.match(read('grammar-lab.html'),/Grammar Lab/);
+  assert.match(read('grammar-lab.js'),/grammarAnalyze/);
+});
