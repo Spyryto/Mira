@@ -23,7 +23,9 @@ class Bridge {
             exploreModules: exploreModules,
             interfaces: interfaces,
             verifyContract: verifyContract,
-            version: "0.95"
+            constantData: constantData,
+            styleContractSource: styleContractSource,
+            version: "0.96"
         });
     }
 
@@ -92,6 +94,14 @@ class Bridge {
             final types = [for (i in 0...args.length) mira.types.HostTypeCodec.decode(args[i],"argument "+i)];
             return haxe.Json.stringify(Compiler.specialize(source,name,types,host,resolver(modulesJson)),null,"  ");
         });
+    }
+
+    public static function constantData(source:String,name:String):Dynamic {
+        return safely(function() return mira.types.ConstantData.json(mira.types.ConstantData.read(source,name)));
+    }
+
+    public static function styleContractSource():Null<String> {
+        return haxe.Resource.getString("lib/gui-style-contract.mira");
     }
 
     public static function tokens(source:String):Dynamic {
