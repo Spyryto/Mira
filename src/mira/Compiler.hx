@@ -32,6 +32,7 @@ class Compiler {
         };
         final definitions = Modules.collect(source, trackedRead, entry,types,moduleTypes,interfaceData == null ? null : interfaceData.publicTypes,bindings,visibility,interfaceData == null ? null : interfaceData.reexports,interfaceData == null ? null : interfaceData.edges,providers,allowContracts,allowUnbound);
         if (interfaceData != null) interfaceData.moduleTypes = moduleTypes;
+        if (origins != null && origins.highlight != null) origins.highlight.headers(source,definitions);
         if (profile != null) profile.mark("collect");
         final groups = new Map<String,Array<Definition>>();
         for (definition in definitions) {

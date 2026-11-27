@@ -18,6 +18,7 @@ class Bridge {
             check: check,
             specialize: specialize,
             tokens: tokens,
+            highlight: highlight,
             ast: ast,
             trace: trace,
             exploreModules: exploreModules,
@@ -127,6 +128,21 @@ class Bridge {
 
     public static function styleContractSource():Null<String> {
         return haxe.Resource.getString("lib/gui-style-contract.mira");
+    }
+
+    public static function highlight(source:String, ?hostJson:String, ?modulesJson:String):Dynamic {
+        final spans = new mira.syntax.HighlightSpans();
+        var complete = false;
+        if (source.length <= 50000) {
+            try {
+                final host = hostJson == null ? HostEnvironment.empty() : HostEnvironment.fromJson(hostJson);
+                Compiler.parse(source,host,resolver(modulesJson),null,new mira.syntax.ExpressionOrigins(spans),null,null,true,true);
+                complete = true;
+            } catch (_:Dynamic) {
+                // Keep the confirmed prefix spans; the editor also has a lexical fallback.
+            }
+        }
+        return {complete:complete,spans:spans.spans};
     }
 
     public static function tokens(source:String):Dynamic {

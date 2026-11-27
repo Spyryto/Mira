@@ -11,11 +11,13 @@ class SelectorMatch {
     public final selector:String;
     public final arguments:Array<Array<Token>>;
     public final end:Int;
+    public final labels:Null<Array<Array<Token>>>;
 
-    public function new(selector:String, arguments:Array<Array<Token>>, end:Int) {
+    public function new(selector:String, arguments:Array<Array<Token>>, end:Int, ?labels:Array<Array<Token>>) {
         this.selector = selector;
         this.arguments = arguments;
         this.end = end;
+        this.labels = labels;
     }
 }
 
@@ -26,12 +28,12 @@ class SelectorResolver {
         this.symbols = symbols;
     }
 
-    public function match(tokens:Array<Token>, start:Int):Null<SelectorMatch> {
+    public function match(tokens:Array<Token>, start:Int, capture:Bool = false):Null<SelectorMatch> {
         final candidates = symbols.matchingFunctions(tokens, start);
         final matches:Array<SelectorMatch> = [];
 
         for (definition in candidates) {
-            final result = matchDefinition(tokens, start, definition);
+            final result = matchDefinition(tokens, start, definition,capture);
             if (result != null) matches.push(result);
         }
 
@@ -51,18 +53,21 @@ class SelectorResolver {
         return best;
     }
 
-    function matchDefinition(tokens:Array<Token>, start:Int, definition:Definition):Null<SelectorMatch> {
+    function matchDefinition(tokens:Array<Token>, start:Int, definition:Definition,capture:Bool):Null<SelectorMatch> {
         var cursor = start;
+        final labels:Array<Array<Token>> = capture ? [] : null;
         final arguments:Array<Array<Token>> = [];
 
         for (labelIndex in 0...definition.labels.length) {
             final label = definition.labels[labelIndex];
 
             if (!Symbols.matchesWords(tokens, cursor, label)) return null;
+            final labelStart = cursor;
             cursor += label.split(" ").length;
 
             final punctuated = cursor < tokens.length && tokens[cursor].isSymbol(":");
             if (punctuated) cursor++;
+            if (labels != null) labels.push(tokens.slice(labelStart,cursor));
 
             if (cursor >= tokens.length) return null;
             final token = tokens[cursor];
@@ -119,6 +124,6 @@ class SelectorResolver {
             }
         }
 
-        return new SelectorMatch(definition.selector(), arguments, cursor);
+        return new SelectorMatch(definition.selector(), arguments, cursor,labels);
     }
 }

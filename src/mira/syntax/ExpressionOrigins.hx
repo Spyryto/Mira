@@ -10,7 +10,8 @@ class ExpressionOrigins {
     final anchors = new ObjectMap<Dynamic,Token>();
     final bindingTypes = new ObjectMap<Dynamic,Array<Null<Type>>>();
 
-    public function new() {}
+    public final highlight:Null<HighlightSpans>;
+    public function new(?highlight:HighlightSpans) { this.highlight = highlight; }
 
     public function remember(expr:Expr, token:Token):Expr {
         switch (expr) {

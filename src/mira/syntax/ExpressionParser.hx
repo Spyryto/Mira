@@ -21,10 +21,14 @@ class ExpressionParser {
     final allowOperatorArgument:Bool;
     final origins:Null<ExpressionOrigins>;
     final types:Map<String,Type>;
+    final parameterNames:Null<Array<String>>;
+    final highlight:Null<HighlightSpans>;
 
     public function new(tokens:Array<Token>, symbols:Symbols, localNames:Array<String>,
-        ?allowOperatorArgument:Bool = false, ?pendingLocals:Array<String>, ?origins:ExpressionOrigins, ?types:Map<String,Type>) {
+        ?allowOperatorArgument:Bool = false, ?pendingLocals:Array<String>, ?origins:ExpressionOrigins, ?types:Map<String,Type>, ?parameterNames:Array<String>) {
         this.origins = origins;
+        this.highlight = origins == null ? null : origins.highlight;
+        this.parameterNames = highlight == null ? null : parameterNames == null ? localNames.copy() : parameterNames;
         this.types = types == null ? new Map<String,Type>() : types;
         this.tokens = tokens.copy();
         final last = tokens.length > 0 ? tokens[tokens.length - 1] : new Token(End, "", 1, 1);
@@ -159,7 +163,9 @@ class ExpressionParser {
         while (current().isSymbol("~") || current().isSymbol("~?")) {
             final op = consume();
             final keyToken = current();
+            final keyStart = position;
             final key = literalKey("Expected a field name after " + op.value);
+            if (highlight != null) highlight.add(tokens[keyStart],tokens[position-1],"field");
             if (op.value == "~?") {
                 final template = types.get("Option");
                 switch (template) {
@@ -258,6 +264,7 @@ class ExpressionParser {
             // Inside an explicit {_ | body} block, every _ is the SAME
             // lexical variable, not a new implicit section parameter.
             if (localNames.indexOf("_") >= 0) {
+                if (highlight != null && parameterNames.indexOf("_") >= 0) highlight.add(token,token,"parameter");
                 consume();
                 return at(Name("_"),token);
             }
@@ -268,8 +275,10 @@ class ExpressionParser {
             throw new MiraError("Placeholder '_' must be a complete keyword-selector argument", token);
         }
 
-        final matched = selectorResolver.match(tokens, position);
+        final matched = selectorResolver.match(tokens, position, highlight != null);
         if (matched != null) {
+            if (highlight != null && matched.labels != null) for (label in matched.labels)
+                highlight.add(label[0],label[label.length-1],"selector");
             position = matched.end;
             final args:Array<Expr> = [];
             var holes = 0;
@@ -280,7 +289,7 @@ class ExpressionParser {
                     holes++;
                 } else {
                     args.push(new ExpressionParser(argumentTokens, symbols, localNames,
-                        true, pendingLocals, origins,types).parse());
+                        true, pendingLocals, origins,types,parameterNames).parse());
                 }
             }
             if (symbols.isHostSelector(matched.selector)) {
@@ -293,6 +302,8 @@ class ExpressionParser {
 
         final name = symbols.resolveName(tokens, position, localNames);
         if (name != null) {
+            if (highlight != null && localNames.indexOf(name) >= 0 && parameterNames.indexOf(name) >= 0)
+                highlight.words(tokens,position,name,"parameter");
             position += name.split(" ").length;
             // Local parameter shadows an external name if explicitly present.
             if (localNames.indexOf(name) == -1 && symbols.isHostName(name)) {
@@ -344,7 +355,7 @@ class ExpressionParser {
         }
         if (start == position) throw new MiraError("Expected then expression", current());
         final whenTrue = new ExpressionParser(tokens.slice(start, position), symbols,
-            localNames, allowOperatorArgument, pendingLocals, origins,types).parse();
+            localNames, allowOperatorArgument, pendingLocals, origins,types,parameterNames).parse();
 
         optionalSymbol(",");
         requireWord("else");
@@ -378,7 +389,7 @@ class ExpressionParser {
 
     function matchExpression(opening:Int):Expr {
         final input = new ExpressionParser(tokens.slice(position+2,opening),symbols,
-            localNames.copy(),false,pendingLocals.copy(),origins,types).parse();
+            localNames.copy(),false,pendingLocals.copy(),origins,types,parameterNames).parse();
         position = opening + 1;
         final tags:Array<String> = [];
         final handlers:Array<Expr> = [];
@@ -534,12 +545,14 @@ class ExpressionParser {
         final annotations:Array<Null<Type>> = [];
         final emitted:Array<String> = [];
         if (!current().isSymbol("|")) while (true) {
+            final parameterStart = position;
             final parameterToken = current();
             final end = bindingEnd(position);
             if (end < 0) throw new MiraError("Expected block parameter",parameterToken);
             final binding = DefinitionParser.annotatedName(tokens.slice(position,end),types);
             position = end;
             final parameter = binding.name;
+            if (highlight != null) highlight.words(tokens,parameterStart,parameter,"parameter");
             annotations.push(binding.type);
             final symbol = Mangle.name(parameter);
             if (symbol == "__miraHost") {
@@ -566,7 +579,10 @@ class ExpressionParser {
         requireSymbol("|");
         final pending = upcomingLocalNames(position);
         for (name in pending) pendingLocals.push(name);
-        for (parameter in parameters) localNames.unshift(parameter);
+        for (parameter in parameters) {
+            localNames.unshift(parameter);
+            if (parameterNames != null) parameterNames.unshift(parameter);
+        }
         final expressions:Array<Expr> = [];
         if (current().isSymbol("}")) {
             throw new MiraError("A block needs at least one expression", current());
@@ -622,7 +638,10 @@ class ExpressionParser {
             }
         }
         for (_ in bindings) localNames.shift();
-        for (_ in parameters) localNames.shift();
+        for (_ in parameters) {
+            localNames.shift();
+            if (parameterNames != null) parameterNames.shift();
+        }
         for (_ in pending) pendingLocals.pop();
         requireSymbol("}");
         final body:Expr = expressions.length == 1 ? expressions[0] : Expr.Steps(expressions);
@@ -694,10 +713,12 @@ class ExpressionParser {
         final values:Array<Expr> = [];
         while (!current().isSymbol("}")) {
             final keyToken = current();
+            final keyStart = position;
             final key = literalKey("Expected record key");
             if (keys.indexOf(key) >= 0) throw new MiraError("Duplicate record key " + key, keyToken);
             if (!current().isSymbol(":")) throw new MiraError("Expected : after record key", current());
             consume();
+            if (highlight != null) highlight.add(tokens[keyStart],tokens[position-1],"field");
             keys.push(key);
             values.push(expression());
             if (current().isSymbol("}")) break;
