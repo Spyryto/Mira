@@ -43,7 +43,7 @@ class GuiTypes {
             case "checkbox:checked:update:": FunctionType([TextType,BooleanType,transition(BooleanType)],v);
             case "choose:value:options:update:": FunctionType([TextType,TextType,ListType(TextType),transition(TextType)],v);
             case "state:view:": FunctionType([s,FunctionType([s],v)],view(fresh()));
-            case "state:key:view:": FunctionType([s,scalarValue(),FunctionType([s],v)],view(fresh()));
+            case "state:key:view:": FunctionType([s,TextType,FunctionType([s],v)],view(fresh()));
             case "grid:children:": FunctionType([NumberType,ListType(v)],v);
             case "keyed:view:": FunctionType([scalarValue(),v],v);
             case "styled:with:": FunctionType([v,ListType(RecordType(new Map<String,Type>(),fresh()))],v);
