@@ -33,3 +33,18 @@ keyed: identity, view: content = {type: "keyed", key: identity, view: content};
 each: items, identified by: identity, view: factory = collect: items, with: {item |
   keyed: (item >> identity), view: (item >> factory)
 };
+
+# Cozy controls are ordinary descriptors, independent of any theme.
+slider: caption, value: current, update: transition = {
+  type: "slider", label: caption, value: current, update: transition
+};
+toggle: caption, checked: current, update: transition = {
+  type: "toggle", label: caption, checked: current, update: transition
+};
+tabs: caption, value: current, options: choices, update: transition = {
+  type: "tabs", label: caption, value: current, options: choices, update: transition
+};
+led: caption = {type: "led", text: caption};
+stepper: caption, value: current, update: transition = {
+  type: "stepper", label: caption, value: current, update: transition
+};

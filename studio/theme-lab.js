@@ -1,12 +1,12 @@
 (function(global){
   'use strict';
-  const source = "# Real Mira view; theme settings live outside the application model.\ntheme view: n = {type: \"column\", children: [\n  {type: \"title\", text: \"Mira\"},\n  {type: \"input\", label: \"Campo di testo\", value: (n ~ name), update: {old, value | {name: value, target: (old ~ target), active: (old ~ active), count: (old ~ count)}}},\n  {type: \"select\", label: \"Menu a tendina\", value: (n ~ target), options: [\"JavaScript\", \"PHP\"], update: {old, value | {name: (old ~ name), target: value, active: (old ~ active), count: (old ~ count)}}},\n  {type: \"checkbox\", label: \"Attivo\", checked: (n ~ active), update: {old, value | {name: (old ~ name), target: (old ~ target), active: value, count: (old ~ count)}}},\n  {type: \"row\", children: [\n    {type: \"button\", label: \"−\", update: {old | {name: (old ~ name), target: (old ~ target), active: (old ~ active), count: (old ~ count - 1)}}},\n    {type: \"text\", text: (n ~ count)},\n    {type: \"button\", label: \"+\", update: {old | {name: (old ~ name), target: (old ~ target), active: (old ~ active), count: (old ~ count + 1)}}}\n  ]},\n  {type: \"button\", label: \"Ripristina\", update: {old | {name: \"Hello, Mira!\", target: \"JavaScript\", active: true, count: 0}}}\n]};\n";
-  const initial = () => ({name:'Hello, Mira!', target:'JavaScript', active:true, count:0});
+  const source = "# Real Mira view; theme settings live outside the application model.\ntheme view: n = {type: \"column\", children: [\n  {type: \"title\", text: \"Mira\"},\n  {type: \"input\", label: \"Campo di testo\", value: (n ~ name), update: {old, value | update: old, with: {name: value}}},\n  {type: \"select\", label: \"Menu a tendina\", value: (n ~ target), options: [\"JavaScript\", \"PHP\"], update: {old, value | update: old, with: {target: value}}},\n  {type: \"checkbox\", label: \"Anteprima\", checked: (n ~ preview), update: {old, value | update: old, with: {preview: value}}},\n  {type: \"slider\", label: \"Slider\", value: (n ~ amount), update: {old, value | update: old, with: {amount: value}}},\n  {type: \"toggle\", label: \"Attivo\", checked: (n ~ active), update: {old, value | update: old, with: {active: value}}},\n  {type: \"tabs\", label: \"Sezione\", value: (n ~ tab), options: [\"Controlli\", \"Dati\", \"Opzioni\"], update: {old, value | update: old, with: {tab: value}}},\n  {type: \"stepper\", label: \"Contatore\", value: (n ~ count), update: {old, value | update: old, with: {count: value}}},\n  {type: \"led\", text: (n ~ tab)},\n  {type: \"button\", label: \"Ripristina\", update: {old | {name: \"Hello, Mira!\", target: \"JavaScript\", preview: true, amount: 65, active: true, tab: \"Controlli\", count: 0}}}\n]};\n";
+  const initial = () => ({name:'Hello, Mira!', target:'JavaScript', preview:true, amount:65, active:true, tab:'Controlli', count:0});
   function mount(compiler, root, report) {
-    const compiled = compiler.compile(source, 'js');
-    if(!compiled.ok) throw new Error(compiled.message);
-    const view = new Function(compiled.output+'\nreturn theme_view;')();
-    return global.MiraUiHost.createUiHost(root.ownerDocument, root, report).renderState(view, initial());
+    const specializer=global.MiraGuiSpecialize;
+    const plan=specializer.compileAuto(compiler,source,'theme view:');
+    if(plan.mode!=='specialized') throw Error('Expected static Cozy control plan: '+plan.reason);
+    return specializer.mountAuto(plan,root,initial(),report);
   }
   global.MiraThemeLab = Object.freeze({source, mount});
   if(!global.document) return;

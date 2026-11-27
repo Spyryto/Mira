@@ -14,14 +14,17 @@ test('theme lab uses real Mira compiler and existing native descriptors',()=>{
   const compiled=context.MiraStudioCompiler.compile(context.MiraThemeLab.source,'js');
   assert.equal(compiled.ok,true,compiled.message);
   const view=runInNewContext(compiled.output+'\ntheme_view',context);
-  const model={name:'Hello, Mira!',target:'JavaScript',active:true,count:0};
+  const model={name:'Hello, Mira!',target:'JavaScript',preview:true,amount:65,active:true,tab:'Controlli',count:0};
   const children=view(model).children;
   assert.equal(children[1].update(model,'New').name,'New');
   assert.equal(children[2].update(model,'PHP').target,'PHP');
-  assert.equal(children[3].update(model,false).active,false);
-  assert.equal(children[4].children[2].update(model).count,1);
-  assert.equal(children[4].children[0].update(model).count,-1);
-  assert.equal(children[5].update({...model,count:9}).count,0);
+  assert.equal(children[3].update(model,false).preview,false);
+  assert.equal(children[4].update(model,38).amount,38);
+  assert.equal(children[5].update(model,false).active,false);
+  assert.equal(children[6].update(model,'Dati').tab,'Dati');
+  assert.equal(children[7].update(model,1).count,1);
+  assert.equal(children[8].text,'Controlli');
+  assert.equal(children[9].update({...model,count:9}).count,0);
 });
 test('canonical theme and generated native adapter are published and cached',()=>{
   const css=read('mira-theme.css'),native=read('mira-native-theme.css'),html=read('theme-native-lab.html'),sw=read('sw.js');
@@ -92,20 +95,41 @@ test('browser: native widget styles agree with Cozy and palette changes keep rea
       const selection=q('#native-palette');
       equal(selection.options.length,12,'palette count');
       field.value='Native state';field.dispatchEvent(new native.contentWindow.Event('input',{bubbles:true}));
-      q('.mira-ui-row button:last-child').click();
-      equal(q('.mira-ui-row .mira-ui-text').textContent,'1','native counter');
+      q('.mira-ui-stepper button:last-child').click();
+      equal(q('.mira-ui-stepper strong').textContent,'1','native counter');
+      const slider=q('.mira-ui-slider-input'),toggle=q('.mira-ui-toggle-input'),tabs=q('.mira-ui-tabs'),stepper=q('.mira-ui-stepper'),led=q('.mira-ui-led');
+      slider.value='38';slider.dispatchEvent(new native.contentWindow.Event('input',{bubbles:true}));
+      equal(q('.mira-ui-slider-value').textContent,'38%','slider update');
+      r.querySelector('#czRange').value='38';r.querySelector('#czRange').dispatchEvent(new ref.contentWindow.Event('input',{bubbles:true}));
+      toggle.click();equal(toggle.checked,false,'toggle update');r.querySelector('#czActive').click();
+      tabs.children[1].click();equal(led.textContent,'Dati','tab and LED update');
+      r.querySelector('[data-tab=data]').setAttribute('aria-selected','true');r.querySelector('[data-tab=controls]').setAttribute('aria-selected','false');
       const props=['backgroundImage','boxShadow','borderColor','borderRadius','color','fontFamily','fontSize','letterSpacing','height'];
       for(let i=0;i<12;i++){
         r.querySelector('[data-preset="'+i+'"]').click();selection.value=String(i);selection.dispatchEvent(new native.contentWindow.Event('change',{bubbles:true}));
         equal(q('input.mira-ui-input[type=text]'),field,'field identity');
         equal(field.value,'Native state','field state');
-        equal(q('.mira-ui-row .mira-ui-text').textContent,'1','counter state');
+        equal(q('.mira-ui-stepper strong').textContent,'1','counter state');
         check(r.querySelector('#czText'),field,props,'text box '+i);
         check(r.querySelector('#czTarget'),select,props,'select '+i);
         check(r.querySelector('#czPreview'),checkbox,props,'checkbox '+i);
         check(r.querySelector('#cozy .panel'),root,['backgroundImage','boxShadow','borderColor','borderRadius'],'panel '+i);
         check(r.querySelector('label[for=czText]'),q('.mira-ui-label'),['color','fontFamily','fontSize','letterSpacing','fontWeight'],'label '+i);
-        check(r.querySelector('[data-act=minus]'),q('.mira-ui-row button'),['backgroundImage','boxShadow','borderColor','color'],'button '+i);
+        check(r.querySelector('[data-act=minus]'),q('.mira-ui-stepper button'),['backgroundImage','boxShadow','borderColor','color','height'],'button '+i);
+        check(r.querySelector('#czRange'),slider,['backgroundImage','boxShadow','borderColor','borderRadius','height'],'slider '+i);
+        check(r.querySelector('.switch i'),q('.mira-ui-switch i'),['backgroundImage','boxShadow','borderColor','borderRadius'],'toggle '+i);
+        check(r.querySelector('[data-tab=data]'),tabs.children[1],['backgroundImage','boxShadow','borderColor','color','height'],'tabs '+i);
+        check(r.querySelector('.stepper'),stepper,['backgroundColor','boxShadow','borderColor','borderRadius'],'stepper '+i);
+        for(const key of ['backgroundImage','boxShadow','borderColor','borderRadius','width','height']){
+          equal(ref.contentWindow.getComputedStyle(r.querySelector('.led'))[key],native.contentWindow.getComputedStyle(led,'::before')[key],'LED '+i+' '+key);
+        }
+        equal(q('.mira-ui-slider-input'),slider,'slider identity');
+        equal(q('.mira-ui-toggle-input'),toggle,'toggle identity');
+        equal(q('.mira-ui-tabs'),tabs,'tabs identity');
+        equal(q('.mira-ui-stepper'),stepper,'stepper identity');
+        equal(toggle.checked,false,'toggle state');
+        equal(slider.value,'38','slider state');
+        equal(led.textContent,'Dati','LED state');
       }
       const size=q('#native-size');size.value='18';size.dispatchEvent(new native.contentWindow.Event('input',{bubbles:true}));
       equal(native.contentWindow.getComputedStyle(field).fontSize,'18px','font config');

@@ -1368,3 +1368,61 @@ test('0.108 legacy cardinality and colors are consistent with the typed domain',
     }
   }
 });
+
+test('Cozy controls use the same state and retained nodes in generic, specialized and hybrid rendering',()=>{
+  const source=readFileSync(resolve(root,'lib/gui.mira'),'utf8')+`
+cozy view: n = column: [
+  slider: "Livello", value: (n ~ amount), update: {old, value | update: old, with: {amount: value}},
+  toggle: "Attivo", checked: (n ~ enabled), update: {old, value | update: old, with: {enabled: value}},
+  tabs: "Sezione", value: (n ~ tab), options: ["Uno", "Due"], update: {old, value | update: old, with: {tab: value}},
+  stepper: "Numero", value: (n ~ count), update: {old, value | update: old, with: {count: value}},
+  led: (n ~ tab)
+];
+`;
+  const initial={amount:65,enabled:true,tab:'Uno',count:0};
+  const compiled=compiler.compile(source,'js');
+  assert.equal(compiled.ok,true,compiled.message);
+  const view=runInNewContext(compiled.output+'\ncozy_view',{});
+  for(const mode of ['generic','specialized','hybrid']){
+    const {root:mount,host,errors,document}=setup(),sandbox={};
+    runInNewContext(read('ui-host.js'),sandbox);runInNewContext(read('gui-specialize.js'),sandbox);
+    const special=sandbox.MiraGuiSpecialize;
+    const plan=special.compileAuto(compiler,source,'cozy view:');
+    assert.equal(plan.mode,'specialized',plan.reason);
+    const app=mode==='generic'?host.renderState(view,initial):
+      mode==='specialized'?special.mountAuto(plan,mount,initial,msg=>errors.push(msg)):
+      special.mountHybrid(special.compileHybrid(compiler,source,['cozy view:']),mount,initial,msg=>errors.push(msg));
+    const [slider,toggle]=findAll(mount,'input');
+    const buttons=findButtons(mount), [one,two,minus,plus]=buttons;
+    const indicator=findAll(mount,'span').find(n=>n.className==='mira-ui-led');
+    const output=findAll(mount,'output')[0],number=findAll(mount,'strong')[0];
+    const created=document.created;
+    slider.value='38';slider.dispatch('input');
+    toggle.checked=false;toggle.dispatch('change');
+    two.click();plus.click();plus.click();minus.click();
+    assert.equal(JSON.stringify(app.getState()),JSON.stringify({amount:38,enabled:false,tab:'Due',count:1}),mode);
+    assert.equal(output.textContent,'38%');assert.equal(slider.style.getPropertyValue('--pct'),'38%');
+    assert.equal(indicator.textContent,'Due');assert.equal(number.textContent,'1');
+    assert.equal(one.getAttribute('aria-pressed'),'false');assert.equal(two.getAttribute('aria-pressed'),'true');
+    assert.equal(document.created,created,mode+' allocated new DOM nodes');
+    slider.value='101';slider.dispatch('input');
+    assert.equal(app.getState().amount,38);assert.equal(slider.value,'38');
+    assert.equal(errors.length,1);assert.match(errors[0],/slider requires a safe integer/);
+    assert.equal(findAll(mount,'input')[0],slider);
+    assert.equal(findButtons(mount)[1],two);
+    assert.deepEqual(initial,{amount:65,enabled:true,tab:'Uno',count:0});
+  }
+});
+test('Cozy controls reject invalid descriptors before changing the mounted view',()=>{
+  const {host,root}=setup();
+  host.render({type:'led',text:'Pronto'});
+  const old=root.children[0];
+  for(const invalid of [
+    {type:'slider',value:101},{type:'slider',value:1.5},
+    {type:'stepper',value:Infinity},{type:'toggle',checked:1},
+    {type:'tabs',value:'x',options:['a','b']},{type:'tabs',value:'a',options:['a','a']}
+  ]){
+    assert.throws(()=>host.render({type:'state',initial:0,view:()=>({...invalid,label:'X',update:old=>old})}));
+    assert.equal(root.children[0],old);
+  }
+});

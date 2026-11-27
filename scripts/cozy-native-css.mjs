@@ -19,7 +19,7 @@ export function nativeCozyCss(source) {
     ['#cozy .shell','.mira-theme .shell'],
     ['#cozy .panel','.mira-theme .panel'],
     ['#cozy .panel label,#cozy .panel output,#cozy .panel strong,#cozy .panel span:not(.switch),#cozy .panel pre,#cozy .panel .group','.mira-theme .panel .mira-ui-label,.mira-theme .panel .mira-ui-text,.mira-theme .panel .mira-ui-title'],
-    ['#cozy .field label','.mira-theme .mira-ui-control:not(.mira-ui-check) .mira-ui-label'],
+    ['#cozy .field label','.mira-theme .mira-ui-control:not(.mira-ui-check):not(.mira-ui-toggle) .mira-ui-label'],
     ['#cozy .btn','.mira-theme .mira-ui-button'],
     ['#cozy .btn.primary','.mira-theme .mira-ui-button.mira-primary'],
     ['#cozy .btn:active:not(:disabled)','.mira-theme .mira-ui-button:active:not(:disabled)'],
@@ -29,12 +29,38 @@ export function nativeCozyCss(source) {
     ['#cozy select option','.mira-theme select.mira-ui-input option'],
     ['#cozy .check','.mira-theme input.mira-ui-input[type=checkbox]'],
     ['#cozy .check:checked','.mira-theme input.mira-ui-input[type=checkbox]:checked'],
-    ['#cozy .check:checked:after','.mira-theme input.mira-ui-input[type=checkbox]:checked:after']
+    ['#cozy .check:checked:after','.mira-theme input.mira-ui-input[type=checkbox]:checked:after'],
+    ['#cozy .rangebox','.mira-theme .mira-ui-rangebox'],
+    ['#cozy .range','.mira-theme .mira-ui-slider-input'],
+    ['#cozy .range::-webkit-slider-thumb','.mira-theme .mira-ui-slider-input::-webkit-slider-thumb'],
+    ['#cozy .range::-moz-range-thumb','.mira-theme .mira-ui-slider-input::-moz-range-thumb'],
+    ['#cozy output','.mira-theme .mira-ui-slider-value'],
+    ['#cozy .switch','.mira-theme .mira-ui-switch'],
+    ['#cozy .switch input','.mira-theme .mira-ui-switch input'],
+    ['#cozy .switch i','.mira-theme .mira-ui-switch i'],
+    ['#cozy .switch input:checked+i','.mira-theme .mira-ui-switch input:checked+i'],
+    ['#cozy .switch i:before','.mira-theme .mira-ui-switch i:before'],
+    ['#cozy .switch input:checked+i:before','.mira-theme .mira-ui-switch input:checked+i:before'],
+    ['#cozy .switch input:focus-visible+i','.mira-theme .mira-ui-switch input:focus-visible+i'],
+    ['#cozy .tabs','.mira-theme .mira-ui-tabs'],
+    ['#cozy .tabs button','.mira-theme .mira-ui-tabs button'],
+    ['#cozy .tabs button[aria-selected=true]','.mira-theme .mira-ui-tabs button[aria-pressed=true]'],
+    ['#cozy .btn','.mira-theme .mira-ui-step-button'],
+    ['#cozy .btn:active:not(:disabled)','.mira-theme .mira-ui-step-button:active:not(:disabled)'],
+    ['#cozy .stepper','.mira-theme .mira-ui-stepper'],
+    ['#cozy .stepper .btn','.mira-theme .mira-ui-stepper .mira-ui-step-button'],
+    ['#cozy .stepper strong','.mira-theme .mira-ui-stepper strong'],
+    ['#cozy .status','.mira-theme .mira-ui-led'],
+    ['#cozy .led','.mira-theme .mira-ui-led::before']
   ];
   const internal=rule('#cozy .stepper .btn','.unused').match(/box-shadow:[^;}]+/)[0];
   return '/* Generated from mira-theme.css; do not edit. */\n'+pairs.map(([a,b])=>rule(a,b)).join('\n')+
     '\n.mira-theme .panel .mira-ui-button:not(:active){'+internal+'}'+
     '\n.mira-theme{font-size:var(--size);letter-spacing:var(--spacing);color:var(--pInk)}'+
+    '\n.mira-theme .mira-ui-led::before{content:"";flex:none;box-sizing:border-box}'+
+    '\n.mira-theme .mira-ui-toggle{display:flex;align-items:center;gap:7px}'+
+    '\n.mira-theme .mira-ui-rangebox output{color:var(--pInk)}'+
+    '\n.mira-theme .mira-ui-stepper{width:max-content;max-width:100%}'+
     '\n.mira-theme .mira-ui-state{display:block}'+
     '\n.mira-theme .mira-ui-column,.mira-theme .mira-ui-grid{display:grid;gap:17px}'+
     '\n.mira-theme .mira-ui-row{display:flex;flex-wrap:wrap;align-items:center;gap:7px}'+

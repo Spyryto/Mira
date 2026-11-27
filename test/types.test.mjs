@@ -2,7 +2,7 @@ import test from 'node:test';
 import {createHash} from 'node:crypto';
 import assert from 'node:assert/strict';
 import {spawnSync} from 'node:child_process';
-import {mkdtempSync,writeFileSync,rmSync, mkdirSync} from 'node:fs';
+import {mkdtempSync,writeFileSync,rmSync, mkdirSync, readFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
@@ -2773,4 +2773,26 @@ test('0.107 cardinality validation preserves item type and executes on both targ
       for(const bad of ['bad = validate: (["x"]), as: (Small);','bad = validate: (42), as: (Small);','bad = validate: ({x: 1}), as: (Small);'])assert.notEqual(run(pre+bad,'--checked').status,0,bad);
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('Cozy GUI checked constructors accept typed controlled values and reject wrong updater signatures',()=>{
+  const gui=readFileSync('lib/gui.mira','utf8')+'\n';
+  const program=`
+cozy view: n = column: [
+  slider: "Percent", value: (n ~ amount), update: {old, v | update: old, with: {amount: v}},
+  toggle: "Active", checked: (n ~ active), update: {old, v | update: old, with: {active: v}},
+  tabs: "Tab", value: (n ~ tab), options: ["A", "B"], update: {old, v | update: old, with: {tab: v}},
+  stepper: "Count", value: (n ~ count), update: {old, v | update: old, with: {count: v}},
+  led: (n ~ tab)
+];
+result = state: {amount: 65, active: true, tab: "A", count: 0}, view: (cozy view: _);
+`;
+  assert.doesNotThrow(()=>check(gui+program));
+  for(const bad of [
+    program.replace('value: (n ~ amount)','value: "65"'),
+    program.replace('checked: (n ~ active)','checked: 1'),
+    program.replace('options: ["A", "B"]','options: [1, 2]'),
+    program.replace('value: (n ~ count)','value: false'),
+    program.replace('with: {amount: v}','with: {amount: "bad"}')
+  ])assert.throws(()=>check(gui+bad),undefined,bad);
 });

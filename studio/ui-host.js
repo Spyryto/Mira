@@ -48,12 +48,18 @@
   }
 
   // Both renderers use the same native control lifecycle and IME handling.
+  const checkedType = type => type === 'checkbox' || type === 'toggle';
+  const choiceType = type => type === 'select' || type === 'tabs';
+  const numericType = type => type === 'slider' || type === 'stepper';
   function controlValue(type, value, options) {
-    if (type === 'checkbox') {
-      if (typeof value !== 'boolean') throw new Error('checkbox.checked must be boolean');
-    } else if (type === 'select') {
+    if (checkedType(type)) {
+      if (typeof value !== 'boolean') throw new Error(type + '.checked must be boolean');
+    } else if (numericType(type)) {
+      if (!Number.isSafeInteger(value) || (type === 'slider' && (value < 0 || value > 100)))
+        throw new Error(type + ' requires a safe integer' + (type === 'slider' ? ' from 0 to 100' : ''));
+    } else if (choiceType(type)) {
       if (typeof value !== 'string' || !options.includes(value)) {
-        throw new Error('select requires unique string options and a matching string value');
+        throw new Error(type + ' requires unique string options and a matching string value');
       }
     } else if (typeof value !== 'string') throw new Error('input.value must be a string');
     return value;
@@ -61,20 +67,24 @@
 
   function connectControl(control, type, binding, report) {
     let composing = false;
-    const property = type === 'checkbox' ? 'checked' : 'value';
+    const property = checkedType(type) ? 'checked' : 'value';
     function sync(value) {
-      if (!composing && control[property] !== value) control[property] = value;
+      if (composing) return;
+      const native = type === 'slider' ? String(value) : value;
+      if (control[property] !== native) control[property] = native;
+      if (control.miraSync) control.miraSync(value);
     }
     function change(event) {
       if (!binding.active()) return;
       if (event?.isComposing) { composing = true; return; }
       if (composing) return;
-      const value = control[property];
-      if (value === binding.read()) return;
+      const value = numericType(type) ? Number(control[property]) : control[property];
+      if (value === binding.read()) { sync(value); return; }
       try { binding.apply(value); }
       catch (error) { sync(binding.read()); report(error); }
     }
-    control.addEventListener(type === 'input' ? 'input' : 'change', change);
+    if (type === 'tabs' || type === 'stepper') control.miraChange = change;
+    else control.addEventListener(type === 'input' || type === 'slider' ? 'input' : 'change', change);
     if (type === 'input') {
       control.addEventListener('compositionstart', () => { composing = true; });
       control.addEventListener('compositionend', () => { composing = false; change(); });
@@ -162,6 +172,7 @@
       switch (type) {
         case 'title':
         case 'text':
+        case 'led':
           plan.text = String(spec.text ?? '');
           break;
         case 'grid':
@@ -209,18 +220,22 @@
         case 'input':
         case 'checkbox':
         case 'select':
+        case 'slider':
+        case 'toggle':
+        case 'tabs':
+        case 'stepper':
           if (typeof spec.update !== 'function') throw new Error(type + '.update must be a Mira function');
           if (!parentState) throw new Error(type + '.update requires a state parent');
           plan.text = String(spec.label ?? '');
-          if (type === 'select') {
+          if (choiceType(type)) {
             if (!Array.isArray(spec.options) || !spec.options.every(option => typeof option === 'string') ||
                 new Set(spec.options).size !== spec.options.length) {
-              throw new Error('select requires unique string options and a matching string value');
+              throw new Error(type + ' requires unique string options and a matching string value');
             }
             budget.nodes += spec.options.length;
             if (budget.nodes > MAX_NODES) throw new Error('The view exceeds its size/depth limit');
           }
-          controlValue(type, type === 'checkbox' ? spec.checked : spec.value, spec.options);
+          controlValue(type, checkedType(type) ? spec.checked : spec.value, spec.options);
           break;
         case 'state':
           if (typeof spec.view !== 'function') throw new Error('state.view must be a Mira function');
@@ -254,23 +269,72 @@
     }
 
     function syncControl(instance) {
-      instance.sync(instance.spec.type === 'checkbox' ? instance.spec.checked : instance.spec.value);
+      instance.sync(checkedType(instance.spec.type) ? instance.spec.checked : instance.spec.value);
     }
 
     function buildControl(instance, type) {
-      const wrapper = doc.createElement('label');
-      wrapper.className = 'mira-ui-control' + (type === 'checkbox' ? ' mira-ui-check' : '');
+      const composite = type === 'tabs' || type === 'stepper';
+      const wrapper = doc.createElement(composite ? 'div' : 'label');
+      wrapper.className = 'mira-ui-control' + (type === 'checkbox' ? ' mira-ui-check' :
+        type === 'toggle' ? ' mira-ui-toggle' : '');
       instance.label = addText('span', '', 'mira-ui-label');
-      const control = instance.control = doc.createElement(type === 'select' ? 'select' : 'input');
-      control.className = 'mira-ui-input';
-      if (type !== 'select') control.type = type === 'checkbox' ? 'checkbox' : 'text';
+      const control = instance.control = doc.createElement(composite ? 'div' : type === 'select' ? 'select' : 'input');
+      control.className = composite ? 'mira-ui-' + type : type === 'slider' ? 'mira-ui-slider-input' :
+        type === 'toggle' ? 'mira-ui-toggle-input' : 'mira-ui-input';
+      if (!composite && type !== 'select') control.type = checkedType(type) ? 'checkbox' : type === 'slider' ? 'range' : 'text';
+      let surface = control;
+      if (type === 'slider') {
+        control.min = '0'; control.max = '100'; control.step = '1';
+        surface = doc.createElement('div'); surface.className = 'mira-ui-rangebox';
+        const output = addText('output', '', 'mira-ui-slider-value');
+        surface.append(control, output);
+        let last;
+        control.miraSync = value => {
+          if (last === value) return;
+          last = value;
+          control.style.setProperty('--pct', value + '%');
+          setText(output, value + '%');
+        };
+      } else if (type === 'toggle') {
+        surface = doc.createElement('span'); surface.className = 'mira-ui-switch';
+        const track = doc.createElement('i'); track.setAttribute('aria-hidden','true');
+        control.setAttribute('role','switch');
+        surface.append(control, track);
+      } else if (type === 'tabs') {
+        control.setAttribute('role','group');
+        control.miraSync = value => {
+          for (const button of control.children) {
+            const selected = button.value === value;
+            if (button.getAttribute('aria-pressed') !== String(selected)) button.setAttribute('aria-pressed', String(selected));
+          }
+        };
+      } else if (type === 'stepper') {
+        control.setAttribute('role','group');
+        const minus = addText('button','−','mira-ui-step-button'), plus = addText('button','+','mira-ui-step-button');
+        const value = addText('strong','','mira-ui-step-value');
+        value.setAttribute('aria-live','polite');
+        for (const [button,delta,label] of [[minus,-1,'Decrementa'],[plus,1,'Incrementa']]) {
+          button.type = 'button'; button.setAttribute('aria-label',label);
+          button.addEventListener('click',()=>{
+            if (!instance.active || button.disabled) return;
+            control.value = Number(control.value) + delta;
+            control.miraChange();
+          });
+        }
+        control.append(minus,value,plus);
+        control.miraSync = n => {
+          setText(value,String(n));
+          minus.disabled = n === Number.MIN_SAFE_INTEGER;
+          plus.disabled = n === Number.MAX_SAFE_INTEGER;
+        };
+      }
       instance.sync = bindControl(control, type, {
         active: () => instance.active,
-        read: () => type === 'checkbox' ? instance.spec.checked : instance.spec.value,
+        read: () => checkedType(type) ? instance.spec.checked : instance.spec.value,
         transition: () => instance.spec.update,
         apply: value => update(instance.parentState, old => instance.spec.update(old, value))
       }, report);
-      wrapper.append(instance.label, control);
+      wrapper.append(instance.label, surface);
       return wrapper;
     }
 
@@ -282,6 +346,7 @@
       switch (type) {
         case 'title': return addText('h2', '', 'mira-ui-title');
         case 'text': return addText('p', '', 'mira-ui-text');
+        case 'led': { const node = addText('span', '', 'mira-ui-led'); node.setAttribute('role','status'); return node; }
         case 'column':
         case 'row':
         case 'grid':
@@ -293,6 +358,10 @@
         case 'input':
         case 'checkbox':
         case 'select':
+        case 'slider':
+        case 'toggle':
+        case 'tabs':
+        case 'stepper':
           return buildControl(instance, type);
         case 'button': {
           const node = addText('button', '', 'mira-ui-button');
@@ -327,17 +396,24 @@
       instance.depth = plan.depth;
       instance.active = true;
       if (type === 'state') instance.state = plan.state;
-      if (type === 'title' || type === 'text' || type === 'button') {
+      if (type === 'title' || type === 'text' || type === 'button' || type === 'led') {
         setText(node, plan.text);
-      } else if (type === 'input' || type === 'checkbox' || type === 'select') {
+      } else if (type === 'input' || checkedType(type) || choiceType(type) || numericType(type)) {
         setText(instance.label, plan.text);
         const control = instance.control;
         if (control.getAttribute('aria-label') !== plan.text) control.setAttribute('aria-label', plan.text);
-        if (type === 'select' && (!previous || previous.options.length !== spec.options.length ||
+        if (choiceType(type) && (!previous || previous.options.length !== spec.options.length ||
             spec.options.some((value, i) => value !== previous.options[i]))) {
           control.replaceChildren(...spec.options.map(choice => {
-            const option = addText('option', choice);
+            const option = addText(type === 'tabs' ? 'button' : 'option', choice);
             option.value = choice;
+            if (type === 'tabs') {
+              option.type = 'button';
+              option.addEventListener('click',()=>{
+                if (!instance.active || option.parentNode !== control) return;
+                control.value = choice; control.miraChange();
+              });
+            }
             return option;
           }));
         }
@@ -418,7 +494,7 @@
     // Hybrid roots use the ordinary state owner and reconciliation for
     // generic regions. Specialized regions retain instance references.
     function regionSize(instance) {
-      return 1 + (instance.spec.type === 'select' ? instance.spec.options.length : 0)
+      return 1 + (choiceType(instance.spec.type) ? instance.spec.options.length : 0)
         + instance.children.reduce((sum, child) => sum + regionSize(child), 0);
     }
 
@@ -455,7 +531,7 @@
             if (slot.kind === 'text') setText(instance.node, value);
             else if (slot.kind === 'style') patchStyles(instance, {...instance.css, ...value});
             else if (slot.kind === 'control') {
-              const key = slot.type === 'checkbox' ? 'checked' : 'value';
+              const key = checkedType(slot.type) ? 'checked' : 'value';
               instance.spec = {...instance.spec, [key]: value};
               syncControl(instance);
             }
