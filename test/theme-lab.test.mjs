@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync} from 'node:fs';
+import {readFileSync,writeFileSync,mkdtempSync,rmSync} from 'node:fs';
+import {spawnSync} from 'node:child_process';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {pathToFileURL} from 'node:url';
 import {runInNewContext} from 'node:vm';
 const read=name=>readFileSync(new URL('../dist/studio/'+name,import.meta.url),'utf8');
 test('theme lab uses real Mira compiler and existing native descriptors',()=>{
@@ -65,4 +69,55 @@ test('Cozy Edition is the main Theme Lab and retains the approved defaults',()=>
   assert.ok(script.includes('[0,9,10,1,2,3,4,5,6,7,8,11].map'));
   assert.ok(script.includes('data-color='));
   assert.ok(script.includes('function apply()'));
+});
+
+test('browser: native widget styles agree with Cozy and palette changes keep real Mira nodes', t=>{
+  const chrome=[process.env.CHROME_BIN,'google-chrome','chromium','chromium-browser'].filter(Boolean)
+    .find(bin=>spawnSync(bin,['--version'],{encoding:'utf8'}).status===0);
+  if(!chrome){if(process.env.CI)assert.fail('Chromium required for theme regression in CI');t.skip('Chromium not available locally');return;}
+  const folder=mkdtempSync(join(tmpdir(),'mira-cozy-'));
+  try{
+    const reference=new URL('../dist/studio/theme-lab.html',import.meta.url).href;
+    const native=new URL('../dist/studio/theme-native-lab.html',import.meta.url).href;
+    const page=join(folder,'test.html');
+    writeFileSync(page,`<!doctype html><meta charset="utf-8"><body><pre id="result">PENDING</pre><script>
+    const load=url=>new Promise(resolve=>{const frame=document.createElement('iframe');frame.style.width='650px';frame.style.height='900px';frame.onload=()=>resolve(frame);frame.src=url;document.body.append(frame)});
+    const equal=(a,b,label)=>{if(a!==b)throw Error(label+': '+a+' != '+b)};
+    const check=(a,b,props,label)=>{for(const p of props)equal(a.ownerDocument.defaultView.getComputedStyle(a)[p],b.ownerDocument.defaultView.getComputedStyle(b)[p],label+' '+p)};
+    (async()=>{
+      const [ref,native]=await Promise.all([load(${JSON.stringify(reference)}),load(${JSON.stringify(native)})]);
+      const r=ref.contentDocument,n=native.contentDocument, q=s=>n.querySelector(s);
+      const root=q('#theme-preview'), field=q('input.mira-ui-input[type=text]'), select=q('select.mira-ui-input'), checkbox=q('input.mira-ui-input[type=checkbox]');
+      if(!field||!select||!checkbox)throw Error('Compiled Mira view did not mount: '+q('#theme-status').textContent);
+      const selection=q('#native-palette');
+      equal(selection.options.length,12,'palette count');
+      field.value='Native state';field.dispatchEvent(new native.contentWindow.Event('input',{bubbles:true}));
+      q('.mira-ui-row button:last-child').click();
+      equal(q('.mira-ui-row .mira-ui-text').textContent,'1','native counter');
+      const props=['backgroundImage','boxShadow','borderColor','borderRadius','color','fontFamily','fontSize','letterSpacing','height'];
+      for(let i=0;i<12;i++){
+        r.querySelector('[data-preset="'+i+'"]').click();selection.value=String(i);selection.dispatchEvent(new native.contentWindow.Event('change',{bubbles:true}));
+        equal(q('input.mira-ui-input[type=text]'),field,'field identity');
+        equal(field.value,'Native state','field state');
+        equal(q('.mira-ui-row .mira-ui-text').textContent,'1','counter state');
+        check(r.querySelector('#czText'),field,props,'text box '+i);
+        check(r.querySelector('#czTarget'),select,props,'select '+i);
+        check(r.querySelector('#czPreview'),checkbox,props,'checkbox '+i);
+        check(r.querySelector('#cozy .panel'),root,['backgroundImage','boxShadow','borderColor','borderRadius'],'panel '+i);
+        check(r.querySelector('label[for=czText]'),q('.mira-ui-label'),['color','fontFamily','fontSize','letterSpacing','fontWeight'],'label '+i);
+        check(r.querySelector('[data-act=minus]'),q('.mira-ui-row button'),['backgroundImage','boxShadow','borderColor','color'],'button '+i);
+      }
+      const size=q('#native-size');size.value='18';size.dispatchEvent(new native.contentWindow.Event('input',{bubbles:true}));
+      equal(native.contentWindow.getComputedStyle(field).fontSize,'18px','font config');
+      equal(q('input.mira-ui-input[type=text]'),field,'font preserves node');
+      const color=q('#native-colors input');color.value='#123456';color.dispatchEvent(new native.contentWindow.Event('input',{bubbles:true}));
+      equal(q('#native-theme').style.getPropertyValue('--top'),'#123456','custom color');
+      q('.mira-ui-column > button:last-child').click();equal(field.value,'Hello, Mira!','native reset');
+      document.querySelector('#result').textContent='MIRA_COZY_PASS';
+    })().catch(e=>document.querySelector('#result').textContent='FAIL: '+e.message);
+    </script></body>`);
+    const run=spawnSync(chrome,['--headless','--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--allow-file-access-from-files','--user-data-dir='+join(folder,'profile'),'--virtual-time-budget=10000','--dump-dom',pathToFileURL(page).href],{encoding:'utf8',timeout:45000,maxBuffer:4*1024*1024});
+    assert.equal(run.status,0,run.error?.message||run.stderr);
+    assert.match(run.stdout,/<pre id="result">MIRA_COZY_PASS<\/pre>/,run.stdout.match(/<pre id="result">[^<]*/)?.[0]||run.stdout.slice(0,500));
+  }finally{rmSync(folder,{recursive:true,force:true});}
 });
