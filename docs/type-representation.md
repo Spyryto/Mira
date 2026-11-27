@@ -94,3 +94,28 @@ Il parser conserva SumType, Variant e le firme dei costruttori già esistenti. L
 La prima implementazione richiede compilazione checked e dichiarazioni non parametriche in sorgenti senza modulo nominale. Non si può emettere correttamente un match scalare senza conoscere il tipo della scrutinee. Le dichiarazioni modulari sono rinviate: il mapping dovrà essere parte del contratto ABI pubblico e della verifica di compatibilità dei provider, non solo una proprietà di un costruttore locale. Nessuna migrazione della GUI in questo incremento. Non si promette che il codice match non allochi closure; la sola rappresentazione del valore non richiede un involucro. Non sono ancora disponibili misure comparative delle prestazioni.
 
 Test previsti: esecuzione effettiva JS/PHP e Studio, rifiuto di codici duplicati, collisione -0/0, interi fuori limite, payload e tipi incompatibili, match non esaustivi e handler errati, e preservazione delle somme ordinarie. I prossimi passi sono supporto delle codifiche nelle interfacce dei moduli e somme miste con payload nativi disgiunti, evitando di estendere prematuramente la sintassi.
+
+
+## Modular scalar variants 0.97.1
+
+Stato: candidata. La restrizione ai sorgenti piatti della 0.97 viene rimossa. La rappresentazione è definita una volta nel tipo, anche in un'interfaccia indipendente:
+
+```mira
+module Services / Layout;
+interface
+Alignment :: Start = "start" | Center = "center" | End = "end";
+preferred: :: (Text) -> Alignment;
+```
+
+Il provider eredita le definizioni dei costruttori, con identità nominale del contratto quando selezionato tramite binding:
+
+```mira
+module Providers / A;
+implements Services / Layout;
+implementation
+preferred: x = if (x == "wide") then Center else Start;
+```
+
+Non occorre ripetere le codifiche; ridefinire il tipo pubblico è rifiutato dal controllo di dichiarazioni duplicate già presente. Il report delle interfacce include la proprietà representation con kind Scalar e cases ordinate per nome del caso, contenenti tag e valore nativo. Il fingerprint distingue modifiche delle codifiche ma non il riordino delle alternative. L'identità nominale, gli alias e le riesportazioni riusano il resolver esistente. Per un tipo opaco la rappresentazione privata non entra nello schema pubblico. Il collegamento è a programma intero, non un nuovo meccanismo di linking binario separato.
+
+Il checker continua a raccogliere le codifiche dai costruttori sintetizzati e a risolvere i match prima dell'emissione; nessun nuovo emitter, runtime o tipo. Le firme host che non esprimono ancora queste somme e la validazione al confine esterno restano aperte. Il Laboratory di Studio offre un esempio di import e alias; i test di CLI esercitano contratti senza provider, sostituzione dei provider, fingerprint, opacità e JS/PHP con tree shaking. In questo incremento non sono introdotte alternative con payload nativi, codifiche parametriche o conversioni implicite.
