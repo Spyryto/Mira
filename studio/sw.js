@@ -94,7 +94,8 @@ const ASSETS = [
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE).then(cache => cache.addAll(ASSETS.map(asset =>
+      new Request(new URL(asset, self.registration.scope), {cache: 'reload'}))))
   );
 });
 
