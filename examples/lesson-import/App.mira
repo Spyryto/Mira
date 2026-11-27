@@ -5,8 +5,8 @@ import Services / Lesson Import { try decode imported lesson: ; };
 import Services / Text { code points: ; };
 import Services / Date { iso of: ; weekday of: ; };
 import Services / Date Safe { try date from: ; };
-import Services / Storage { save text: for: ; remove text: ; };
-import Services / Storage Optional { find text: ; };
+import Services / Storage Safe { try read text: ; try save text: for: ; try remove text: ; };
+import Data / Storage Outcome { storage error code: ; };
 import Services / Http { get text: ; successful: ; };
 implementation
 failure: message = {
@@ -42,7 +42,10 @@ persist lesson: raw =
   () >> {|
     inspected = inspect lesson: raw;
     if (inspected ~ accepted) then (
-      if (save text: raw, for: "lesson") then inspected else (failure: "storage_failure")
+      match: (try save text: raw, for: "lesson") {
+        ok: {saved | if saved then inspected else (failure: "storage_failure")},
+        err: {error | failure: (storage error code: error)}
+      }
     ) else inspected
   };
 
@@ -51,6 +54,7 @@ result = {
   accept: {response | accept response: response},
   inspect: {raw | inspect lesson: raw},
   save: {raw | persist lesson: raw},
-  restore: {| find text: "lesson"},
-  remove: {| remove text: "lesson"}
+  restore: {| try read text: "lesson"},
+  remove: {| try remove text: "lesson"},
+  errorCode: {error | storage error code: error}
 };

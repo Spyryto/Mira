@@ -1,0 +1,7 @@
+module Providers / Storage Safe Files;
+implements Services / Storage Safe;
+implementation
+import Data / Storage Outcome { read outcome: ; write outcome: ; };
+try read text: key = read outcome: (files try read text key);
+try save text: value, for: key = write outcome: (files try save text: value, for: key);
+try remove text: key = write outcome: (files try remove text key);

@@ -2056,7 +2056,7 @@ test('0.89 integrated lesson import composes checked modules and preserves the v
   assert.equal(p.accept({status:404,body:raw}).error,'http_status');
   assert.deepEqual(plain(p.save(raw)),expected);
   const cases=[['bad','invalid_json_data'],[raw.replace('2026-11-27','2026-02-29'),'invalid_date'],[raw.replace('1.5','0'),'invalid_hours'],[raw.replace('Ada',''),'invalid_name']];
-  for(const [bad,error] of cases){assert.equal(p.save(bad).error,error);assert.deepEqual(plain(p.restore()),{tag:'Some',value:raw});}
+  for(const [bad,error] of cases){assert.equal(p.save(bad).error,error);assert.deepEqual(plain(p.restore()),{tag:'Ok',value:{tag:'Some',value:raw}});}
   assert.deepEqual(plain(p.request(3)),{service:'http text',id:3,reply:'http loaded',payload:true});
   const dir=mkdtempSync(resolve(tmpdir(),'mira-import-'));
   try{
@@ -2065,11 +2065,11 @@ test('0.89 integrated lesson import composes checked modules and preserves the v
     const php=spawnSync('php',args,{encoding:'utf8'});
     assert.equal(php.status,0,php.stderr);
     const actual=JSON.parse(php.stdout);
-    assert.deepEqual(actual,[expected,expected,plain(p.inspect('bad')),{tag:'Some',value:raw},plain(p.accept({status:404,body:raw}))]);
+    assert.deepEqual(actual,[expected,expected,plain(p.inspect('bad')),{tag:'Ok',value:{tag:'Some',value:raw}},plain(p.accept({status:404,body:raw}))]);
   }finally{rmSync(dir,{recursive:true,force:true});}
-  assert.equal(p.remove(),true);assert.deepEqual(plain(p.restore()),{tag:'None'});
-  assert.ok(d.js.includes('browser save text:for:'));assert.ok(!d.js.includes('files save text:for:'));
-  assert.ok(d.php.includes('files save text:for:'));assert.ok(!d.php.includes('browser save text:for:'));
+  assert.deepEqual(plain(p.remove()),{tag:'Ok',value:true});assert.deepEqual(plain(p.restore()),{tag:'Ok',value:{tag:'None'}});
+  assert.ok(d.js.includes('browser try save text:for:'));assert.ok(!d.js.includes('files try save text:for:'));
+  assert.ok(d.php.includes('files try save text:for:'));assert.ok(!d.php.includes('browser try save text:for:'));
   const nodes=new Map();const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',hidden:false,disabled:false,listeners:{},addEventListener(event,fn){this.listeners[event]=fn;}});return nodes.get(id);};
   ctx.document={getElementById:node};ctx.window={localStorage:storage,location:{href:'https://example.test/studio/lesson-import.html'},confirm:()=>true,addEventListener(){}};
   let response={body:raw,status:200};
@@ -2082,6 +2082,15 @@ test('0.89 integrated lesson import composes checked modules and preserves the v
   assert.equal(node('save').disabled,false);assert.equal(node('summary').hidden,false);
   storage.setItem=setItem;
   node('save').listeners.click();assert.match(node('status').textContent,/Salvata/);
+  const getItem=storage.getItem;
+  storage.getItem=()=>{throw Error('denied');};
+  node('restore').listeners.click();assert.match(node('status').textContent,/storage_failure/);
+  assert.equal(node('raw').value,raw);assert.equal(node('summary').hidden,false);
+  storage.getItem=getItem;
+  const removeItem=storage.removeItem;
+  storage.removeItem=()=>{throw Error('denied');};
+  node('remove').listeners.click();assert.match(node('status').textContent,/storage_failure/);
+  storage.removeItem=removeItem;
   response={body:'not a lesson',status:404};
   await node('load').listeners.click();assert.equal(node('raw').value,raw);assert.match(node('status').textContent,/http_status/);
   response={body:'bad',status:200};
@@ -2129,7 +2138,36 @@ test('0.89.4 lesson import shares nominal outcomes across services',()=>{
     const schema=(module,name)=>rows.find(m=>m.module===module).surface.symbols.find(s=>s.name===name).schema;
     assert.equal(schema('Services / Lesson Import','try decode imported lesson:').result.name,'Data / Outcome / Result');
     assert.equal(schema('Services / Date Safe','try date from:').result.name,'Data / Outcome / Result');
-    assert.equal(schema('Services / Storage Optional','find text:').result.name,'Data / Outcome / Option');
-    assert.equal(schema('App','result').fields.find(x=>x.name==='restore').type.result.name,'Data / Outcome / Option');
+    const restore=schema('Services / Storage Safe','try read text:').result;
+    assert.equal(restore.name,'Data / Outcome / Result');
+    assert.equal(restore.arguments[0].name,'Data / Outcome / Option');
+    assert.equal(restore.arguments[1].name,'Data / Storage Outcome / Storage Error');
+    assert.equal(schema('App','result').fields.find(x=>x.name==='restore').type.result.name,'Data / Outcome / Result');
   }
+});
+
+test('0.89.5 checked fallible storage distinguishes absence, empty value and I/O errors in JS/PHP',async()=>{
+  const {mkdtempSync,rmSync,symlinkSync,writeFileSync,renameSync}=await import('node:fs');
+  const {tmpdir}=await import('node:os');
+  const ctx={TextEncoder};for(const asset of ['storage-host.js','lesson-import-data.js'])runInNewContext(read(asset),ctx);
+  const d=ctx.MiraLessonImportData;
+  const source='module App; interface result; import Services / Storage Safe {try read text: ; try save text: for: ; try remove text: ;}; implementation result = {read: {key | try read text: key}, save: {value,key | try save text: value, for: key}, remove: {key | try remove text: key}};';
+  const name='__miraModule_v_417070202F20726573756C74',plain=x=>JSON.parse(JSON.stringify(x));
+  const ok=value=>({tag:'Ok',value}),err=tag=>({tag:'Err',value:{tag}});
+  const expected=[ok({tag:'None'}),ok(true),ok({tag:'Some',value:''}),ok(true),ok({tag:'Some',value:'Caffè 🎸'}),err('InvalidKey'),err('ValueTooLarge'),err('InvalidText'),err('StorageFailure'),ok(true),ok({tag:'None'})];
+  const out=bridge.compile(source,'js',d.host,false,d.modules,true,true,d.jsBindings);assert.equal(out.ok,true,out.message);
+  const map=new Map(),storage={getItem:k=>{if(k.endsWith(':broken'))throw Error('denied');return map.get(k)??null;},setItem:(k,v)=>map.set(k,v),removeItem:k=>map.delete(k)};
+  const program=runInNewContext('(function(__miraHost){'+out.output+'\nreturn '+name+';})',{})(ctx.MiraStorageHost.browser(storage,'test'));
+  assert.deepEqual(plain([program.read('note'),program.save('','note'),program.read('note'),program.save('Caffè 🎸','note'),program.read('note'),program.read('../x'),program.save('x'.repeat(65537),'note'),program.save('\uD800','note'),program.read('broken'),program.remove('note'),program.read('note')]),expected);
+  const dir=mkdtempSync(resolve(tmpdir(),'mira-safe-storage-'));
+  try{
+    const outside=dir+'-outside';writeFileSync(outside,'untouched');
+    try{
+      symlinkSync(outside,resolve(dir,'broken.txt'));
+      const php=bridge.compile(source,'php',d.host,false,d.modules,true,true,d.phpBindings);assert.equal(php.ok,true,php.message);
+      const code=php.output.replace(/^<\?php/,'').replace('declare(strict_types=1);','declare(strict_types=1);require $argv[1];$GLOBALS["__miraHost"]=\\Mira\\Storage\\files($argv[2]);')+'\n$p=$'+name+';$r=[$p["read"]("note"),$p["save"]("","note"),$p["read"]("note"),$p["save"]("Caffè 🎸","note"),$p["read"]("note"),$p["read"]("../x"),$p["save"](str_repeat("x",65537),"note"),$p["save"]("\\xFF","note"),$p["read"]("broken"),$p["remove"]("note"),$p["read"]("note")];rename($argv[2],$argv[2]."-moved");try{$r[]=$p["read"]("note");}finally{rename($argv[2]."-moved",$argv[2]);}echo json_encode($r,JSON_THROW_ON_ERROR);';
+      const run=spawnSync('php',['-r',code,resolve(root,'lib/storage/storage-host.php'),dir],{encoding:'utf8'});assert.equal(run.status,0,run.stderr);assert.deepEqual(JSON.parse(run.stdout),[...expected,err('StorageFailure')]);
+      assert.equal(readFileSync(outside,'utf8'),'untouched');
+    }finally{rmSync(outside,{force:true});}
+  }finally{rmSync(dir,{recursive:true,force:true});rmSync(dir+'-moved',{recursive:true,force:true});}
 });

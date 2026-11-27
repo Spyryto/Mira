@@ -25,3 +25,7 @@ supporta). Non fsync, non transazioni, non isolamento, non backup né sincronizz
 Il controllo symlink è difensivo ma non protegge da race con processi locali
 ostili. Browser: spazio e durata dipendono da quota/policy dell'origine;
 non è un archivio cifrato. Il namespace va scelto dall'host, non dall'utente.
+
+## API fallibile 0.89.5
+
+Services / Storage Safe aggiunge try read text: -> Result (Option (Text), Storage Error), try save text:for: e try remove text: -> Result (Boolean, Storage Error), true al successo. Data / Storage Outcome dichiara InvalidKey, InvalidText, ValueTooLarge, StorageFailure e storage error code:. Provider Browser/Files riusano gli adapter esistenti tramite envelope strutturale privato {values, error}; i costruttori nominali restano Mira. None significa soltanto chiave assente; Some("") è un valore. La configurazione iniziale non valida della directory resta un errore di setup; la perdita di accessibilità durante le operazioni è StorageFailure. Non si promette distinzione perfetta di errori stat/race su filesystem ostile. Nessuna migrazione dei dati, nessun cambiamento ai selettori legacy; nuove capability e binding sono espliciti. Costi non misurati.

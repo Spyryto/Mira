@@ -187,11 +187,15 @@ const lessonData=buildLessonImport(context.MiraStudioCompiler,lessonFile('App.mi
     'Data / Outcome':commonFile('Data/Outcome.mira'),
     'Services / Date Safe':commonFile('Services/Date Safe.mira'),
     'Services / Storage Optional':commonFile('Services/Storage Optional.mira'),
+    'Data / Storage Outcome':commonFile('Data/Storage Outcome.mira'),
+    'Services / Storage Safe':storageFile('Services/Storage Safe.mira'),
+    'Providers / Storage Safe Browser':storageFile('Providers/Storage Safe Browser.mira'),
+    'Providers / Storage Safe Files':storageFile('Providers/Storage Safe Files.mira'),
     'Services / Lesson Import':lessonFile('Services/Lesson Import.mira'),
     'Providers / Lesson Import Native':lessonFile('Providers/Lesson Import Native.mira')},
   [JSON.parse(textData.host),JSON.parse(dateData.host),JSON.parse(storageData.host)],
-  {js:{...JSON.parse(textData.bindings),...JSON.parse(dateData.bindings),...JSON.parse(storageData.browser)},
-   php:{...JSON.parse(textData.bindings),...JSON.parse(dateData.bindings),...JSON.parse(storageData.files)}});
+  {js:{...JSON.parse(textData.bindings),...JSON.parse(dateData.bindings),...JSON.parse(storageData.browser),'Services / Storage Safe':{provider:'Providers / Storage Safe Browser'}},
+   php:{...JSON.parse(textData.bindings),...JSON.parse(dateData.bindings),...JSON.parse(storageData.files),'Services / Storage Safe':{provider:'Providers / Storage Safe Files'}}});
 writeFileSync(resolve(destination,'lesson-import-data.js'),'globalThis.MiraLessonImportData = '+JSON.stringify(lessonData)+';\n');
 writeFileSync(resolve(destination,'lesson-import-program.js'),'globalThis.MiraLessonImportProgram = function(__miraHost){\n'+lessonData.js+'\nreturn __miraModule_v_417070202F20726573756C74;\n};\n');
 copyFileSync(resolve(root,'examples/lesson-import/sample.json'),resolve(destination,'lesson-import-sample.json'));
