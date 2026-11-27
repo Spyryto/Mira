@@ -1,5 +1,5 @@
 {
-  "version": "0.96",
+  "version": "0.97",
   "features": [
     {
       "id": "values",
@@ -2238,6 +2238,12 @@
       "title": "Dati dichiarativi a compile time",
       "since": "0.96",
       "doc": "docs/declarative-contracts.md"
+    },
+    {
+      "id": "scalar-variants",
+      "title": "Varianti scalari nominali",
+      "since": "0.97",
+      "doc": "docs/type-representation.md#scalar-variants-097"
     }
   ]
 }
