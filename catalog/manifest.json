@@ -1,5 +1,5 @@
 {
-  "version": "0.107",
+  "version": "0.108",
   "features": [
     {
       "id": "values",
@@ -2310,6 +2310,12 @@
       "title": "Refinement della cardinalità delle liste",
       "since": "0.107",
       "doc": "docs/type-representation.md#list-cardinality-0107"
+    },
+    {
+      "id": "unified-style-domains",
+      "title": "Unificazione dei domini degli stili GUI",
+      "since": "0.108",
+      "doc": "docs/type-representation.md#unified-style-domains-0108"
     }
   ]
 }
