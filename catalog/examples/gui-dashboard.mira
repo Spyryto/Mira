@@ -1,19 +1,21 @@
+# Esempio a basso livello: descrittori nativi, validati dall'host.
+raw styled: view, with: layers = {type: "styled", view: view, styles: layers};
 # Stili riutilizzabili, layout e componenti in Mira.
 panel style = {padding: 16, gap: 8, radius: 14, borderWidth: 2,
   borderStyle: "solid", borderColor: "#202629", shadow: "hard"};
-metric: caption, amount: number, tint: tone = styled: (column: [
+metric: caption, amount: number, tint: tone = raw styled: (column: [
   text: caption,
-  styled: (title: number), with: [{fontSize: 30, fontWeight: 800}]
+  raw styled: (title: number), with: [{fontSize: 30, fontWeight: 800}]
 ]), with: [panel style, {background: tone}];
 
-dashboard: count = styled: (column: [
-  styled: (title: "Studio musicale"), with: [{fontSize: 25}],
+dashboard: count = raw styled: (column: [
+  raw styled: (title: "Studio musicale"), with: [{fontSize: 25}],
   text: "Riepilogo lezioni",
   grid: 2, children: [
     metric: "Lezioni", amount: count, tint: "#c1f1dc",
     metric: "Compenso EUR", amount: (count * 30), tint: "#ffdbab"
   ],
-  styled: (button: "Nuova lezione", update: {old | old + 1}),
+  raw styled: (button: "Nuova lezione", update: {old | old + 1}),
     with: [{background: "#272a52", color: "#ffffff", padding: 14, radius: 10}]
 ]), with: [{gap: 16, padding: 12}];
 
