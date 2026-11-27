@@ -8,14 +8,15 @@ import {fieldContext,fieldRows,formatSchema} from './field-context.js';
 import {editor_complete__from,editor_lookup__from,editor_tooltip,editor_templates,editor_fields__prefix__from,editor_field_lookup__name__from,editor_field_tooltip,editor_signature__returning,editor_visible__globals} from '../../dist/ide/editor-services.js';
 
 import {load,persist,update,get,modulesFor,newFile,validate,readFolder,saveDisk,logical} from './workspace-host.js';
+import {desktopEnabled,openDesktop,saveDesktop} from './desktop-host.js';
 const $=id=>document.getElementById(id);
 if(matchMedia('(max-width:850px)').matches)$('workspace-tree').open=false;
 const initial='double: x (Number) -> Number = x * 2;\nitems = [1, 2, 3];\nresult = collect: items, with: {x | double: x};';
-let workspace,storageBlocked=false;try{workspace=load(localStorage,initial)}catch(error){storageBlocked=true;workspace={format:1,active:'programma.mira',files:[{path:'programma.mira',source:initial}]};$('persistence').textContent=error.message+' · esporta per non perdere il lavoro.'}
+let workspace,storageBlocked=false;try{workspace=desktopEnabled?{format:1,active:'App.mira',files:[{path:'App.mira',source:''}]}:load(localStorage,initial)}catch(error){storageBlocked=true;workspace={format:1,active:'programma.mira',files:[{path:'programma.mira',source:initial}]};$('persistence').textContent=error.message+' · esporta per non perdere il lavoro.'}
 const states=new Map();let folder=null,baseline=new Map();
 const saved=get(workspace,workspace.active).source;
 const moduleJson=()=>JSON.stringify(modulesFor(workspace));
-function saveLocal(){if(storageBlocked)return;try{persist(localStorage,workspace);$('persistence').textContent='Salvato nel browser'+(folder?' · '+folder.name:'');}catch(error){$('persistence').textContent='Salvataggio locale fallito: '+error.message+' · esporta il progetto.'}}
+function saveLocal(){if(desktopEnabled){$('persistence').textContent='Workspace desktop · salva esplicitamente su disco';return;}if(storageBlocked)return;try{persist(localStorage,workspace);$('persistence').textContent='Salvato nel browser'+(folder?' · '+folder.name:'');}catch(error){$('persistence').textContent='Salvataggio locale fallito: '+error.message+' · esporta il progetto.'}}
 function renderFiles(){
  $('active-file').textContent=workspace.active;
  $('files').replaceChildren(...workspace.files.slice().sort((a,b)=>a.path.localeCompare(b.path)).map(f=>{const b=document.createElement('button');b.type='button';b.textContent=f.path;b.className=f.path===workspace.active?'selected':'';b.setAttribute('aria-pressed',String(f.path===workspace.active));b.onclick=()=>switchFile(f.path);return b}));
@@ -244,7 +245,7 @@ $('new-file').onclick=()=>{
  if(!path)return;
  try{const next=newFile(workspace,path.trim());workspace={...next,active:workspace.active};switchFile(next.active)}catch(error){$('persistence').textContent=error.message;}
 };
-$('open-folder').disabled=typeof window.showDirectoryPicker!=='function';
+$('open-folder').disabled=desktopEnabled||typeof window.showDirectoryPicker!=='function';
 if($('open-folder').disabled)$('open-folder').title='Richiede un browser con File System Access; usa Importa/Esporta progetto.';
 $('open-folder').onclick=async()=>{
  try{const handle=await window.showDirectoryPicker({mode:'readwrite'});
@@ -255,13 +256,17 @@ $('open-folder').onclick=async()=>{
  }catch(error){if(error.name!=='AbortError')$('persistence').textContent=error.message}
 };
 $('save-disk').onclick=async()=>{
- try{const file=get(workspace,workspace.active);await saveDisk(folder,file,baseline);$('persistence').textContent='Scritto su disco: '+file.path;}
+ try{const file=get(workspace,workspace.active);if(desktopEnabled){await saveDesktop(file,baseline.get(file.path)??null);baseline.set(file.path,file.source)}else await saveDisk(folder,file,baseline);$('persistence').textContent='Scritto su disco: '+file.path;}
  catch(error){$('persistence').textContent=error.message}
 };
 $('export-project').onclick=()=>{
  const url=URL.createObjectURL(new Blob([JSON.stringify(workspace,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='mira-workspace.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
 $('import-project').onclick=()=>$('project-input').click();
+if(desktopEnabled){
+ $('editor').inert=true;$('new-file').disabled=true;$('import-project').disabled=true;
+ openDesktop().then(data=>{baseline=new Map(Object.entries(data.baseline));replaceWorkspace(data.workspace);$('editor').inert=false;$('new-file').disabled=false;$('save-disk').disabled=false;$('persistence').textContent='Cartella desktop: '+data.name;}).catch(error=>{$('persistence').textContent=error.message;});
+}
 $('project-input').onchange=async()=>{
  try{const file=$('project-input').files[0];if(!file)return;const next=validate(JSON.parse(await file.text()));
  if(!confirm('Sostituire il workspace locale con il progetto importato?'))return;

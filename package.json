@@ -18,7 +18,8 @@
     "build:fullstack": "npm run build:studio && node scripts/build-fullstack.mjs",
     "test:fullstack": "npm run build:studio && node --test test/fullstack.test.mjs",
     "build:project": "node scripts/build-project.mjs",
-    "build:ide": "node scripts/build-ide.mjs"
+    "build:ide": "node scripts/build-ide.mjs",
+    "studio:desktop": "node scripts/studio-desktop.mjs"
   },
   "engines": {
     "node": ">=22"
