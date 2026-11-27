@@ -109,7 +109,7 @@ class Compiler
 public static function check(source:String, ?host:HostEnvironment, ?readModule:String->Null<String>, ?entry:String, ?providers:mira.resolve.ProviderBindings):Array<Dynamic>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L80)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L96)
 
 <a id="api-mira-compiler-inspecttokens"></a>
 ### `mira.Compiler.inspectTokens`
@@ -120,7 +120,7 @@ public static function check(source:String, ?host:HostEnvironment, ?readModule:S
 public static function inspectTokens(source:String):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L116)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L132)
 
 <a id="api-mira-compiler-interfaces"></a>
 ### `mira.Compiler.interfaces`
@@ -131,7 +131,7 @@ public static function inspectTokens(source:String):String
 public static function interfaces(source:String,?host:HostEnvironment,?readModule:String->Null<String>,?entry:String,?providers:mira.resolve.ProviderBindings):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L87)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L103)
 
 <a id="api-mira-compiler-parse"></a>
 ### `mira.Compiler.parse`
@@ -155,7 +155,7 @@ Feature: [Dichiarazioni successive](language.md#feature-forward)
 public static function specialize(source:String,name:String,args:Array<mira.types.Type>,?host:HostEnvironment, ?readModule:String->Null<String>,?entry:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L108)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L124)
 
 <a id="api-mira-compiler-transpile"></a>
 ### `mira.Compiler.transpile`
@@ -166,7 +166,7 @@ public static function specialize(source:String,name:String,args:Array<mira.type
 public static function transpile(source:String, target:Target, ?host:HostEnvironment, ?locations:Array<GeneratedLocation>, ?readModule:String->Null<String>, ?entry:String):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L44)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L60)
 
 <a id="api-mira-compiler-transpilechecked"></a>
 ### `mira.Compiler.transpileChecked`
@@ -177,7 +177,7 @@ public static function transpile(source:String, target:Target, ?host:HostEnviron
 public static function transpileChecked(source:String,target:Target,?host:HostEnvironment, ?locations:Array<GeneratedLocation>,?readModule:String->Null<String>,?entry:String, ?treeShake:Bool = false, ?optimization:Dynamic, ?providers:mira.resolve.ProviderBindings, ?profile:mira.CompileProfile):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L56)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L72)
 
 <a id="api-mira-emit-jsemitter"></a>
 ### `mira.emit.JsEmitter`
@@ -291,7 +291,7 @@ class HostEnvironment
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/HostEnvironment.hx#L8)
 
-Feature: [UI web e interoperabilità](language.md#feature-browser-ui), [Filtri con predicati Mira](language.md#feature-filtering), [Libreria GUI Mira e binding](language.md#feature-gui-library), [DOM incrementale e stato indipendente](language.md#feature-incremental-gui), [Stili GUI componibili e griglia](language.md#feature-styled-gui), [Identità stabile delle liste GUI](language.md#feature-gui-keyed)
+Feature: [UI web e interoperabilità](language.md#feature-browser-ui), [Filtri con predicati Mira](language.md#feature-filtering), [Libreria GUI Mira e binding](language.md#feature-gui-library), [DOM incrementale e stato indipendente](language.md#feature-incremental-gui), [Stili GUI componibili e griglia](language.md#feature-styled-gui), [Identità stabile delle liste GUI](language.md#feature-gui-keyed), [GUI checked](language.md#feature-gui-checked)
 
 <a id="api-mira-hostenvironment-callables"></a>
 ### `mira.HostEnvironment.callables`
@@ -1280,7 +1280,7 @@ class Definition
 public var body:Null<Expr>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L23)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L25)
 
 <a id="api-mira-syntax-definition-bodytokens"></a>
 ### `mira.syntax.Definition.bodyTokens`
@@ -1302,7 +1302,18 @@ public final bodyTokens:Array<Token>
 public function canonical():Definition
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L44)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L46)
+
+<a id="api-mira-syntax-definition-guiprimitive"></a>
+### `mira.syntax.Definition.guiPrimitive`
+
+**field** · Definizione Mira, valore o funzione keyword, con testo del corpo e origine.
+
+```haxe
+public var guiPrimitive:Bool
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L19)
 
 <a id="api-mira-syntax-definition-haspublicsignature"></a>
 ### `mira.syntax.Definition.hasPublicSignature`
@@ -1324,7 +1335,7 @@ public var hasPublicSignature:Bool
 public var importedGlobals:Array<String>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L18)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L20)
 
 <a id="api-mira-syntax-definition-isabstractcontract"></a>
 ### `mira.syntax.Definition.isAbstractContract`
@@ -1357,7 +1368,7 @@ public var isExported:Bool
 public function isFunction():Bool
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L63)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L65)
 
 <a id="api-mira-syntax-definition-isstatement"></a>
 ### `mira.syntax.Definition.isStatement`
@@ -1412,7 +1423,7 @@ public final name:String
 public function new(name:String, labels:Array<String>, parameters:Array<String>, bodyTokens:Array<Token>, origin:Token, isStatement:Bool = false, ?parameterOrigins:Array<Token>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L25)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L27)
 
 <a id="api-mira-syntax-definition-origin"></a>
 ### `mira.syntax.Definition.origin`
@@ -1434,7 +1445,7 @@ public final origin:Token
 public var parameterAnnotations:Array<Null<Type>>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L20)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L22)
 
 <a id="api-mira-syntax-definition-parameterorigins"></a>
 ### `mira.syntax.Definition.parameterOrigins`
@@ -1467,7 +1478,7 @@ public final parameters:Array<String>
 public var resultAnnotation:Null<Type>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L21)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L23)
 
 <a id="api-mira-syntax-definition-resultannotationorigin"></a>
 ### `mira.syntax.Definition.resultAnnotationOrigin`
@@ -1478,7 +1489,7 @@ public var resultAnnotation:Null<Type>
 public var resultAnnotationOrigin:Null<Token>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L22)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L24)
 
 <a id="api-mira-syntax-definition-selector"></a>
 ### `mira.syntax.Definition.selector`
@@ -1489,7 +1500,7 @@ public var resultAnnotationOrigin:Null<Token>
 public function selector():String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L67)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L69)
 
 <a id="api-mira-syntax-definition-typeparameters"></a>
 ### `mira.syntax.Definition.typeParameters`
@@ -1500,7 +1511,7 @@ public function selector():String
 public var typeParameters:Array<String>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L19)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/syntax/Definition.hx#L21)
 
 <a id="api-mira-syntax-definitionparser"></a>
 ### `mira.syntax.DefinitionParser`
@@ -2395,6 +2406,39 @@ public function reachable(roots:Array<String>,statements:Array<Definition>):Map<
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/Dependencies.hx#L37)
 
+<a id="api-mira-types-guitypes"></a>
+### `mira.types.GuiTypes`
+
+**class** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+class GuiTypes
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiTypes.hx#L7)
+
+<a id="api-mira-types-guitypes-matches"></a>
+### `mira.types.GuiTypes.matches`
+
+**method** · Membro pubblico di mira.types.GuiTypes.
+
+```haxe
+public static function matches(source:String):Bool return source.length == libraryLength && haxe.crypto.Sha256.encode(source) == digest; public static function hasPrefix(source:String):Bool return source.length >= libraryLength && matches(source.substr(0,libraryLength)); public static function view(state:Type):Type return OpaqueType("#GUI.View",[state]); public static function root():Type return OpaqueType("#GUI.NoState",[]); public static function renderType():Type
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiTypes.hx#L12)
+
+<a id="api-mira-types-guitypes-signature"></a>
+### `mira.types.GuiTypes.signature`
+
+**method** · Membro pubblico di mira.types.GuiTypes.
+
+```haxe
+public static function signature(selector:String, fresh:Void->Type, scalar:Type->Void, needsState:Type->Void):Null<Type>
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/GuiTypes.hx#L24)
+
 <a id="api-mira-types-hosttypecodec"></a>
 ### `mira.types.HostTypeCodec`
 
@@ -3020,7 +3064,7 @@ class TypeChecker
 public function check(program:Array<Definition>):Array<Dynamic>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L63)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L67)
 
 <a id="api-mira-types-typechecker-new"></a>
 ### `mira.types.TypeChecker.new`
@@ -3031,7 +3075,7 @@ public function check(program:Array<Definition>):Array<Dynamic>
 public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.ds.ObjectMap<Dynamic,NumericGuard>,?visibility:TypeVisibility,?comparisons:haxe.ds.ObjectMap<Dynamic,ScalarComparison>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L43)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L45)
 
 <a id="api-mira-types-typechecker-publicschema"></a>
 ### `mira.types.TypeChecker.publicSchema`
@@ -3042,7 +3086,7 @@ public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.
 public function publicSchema(type:Type):Dynamic return describe(visibility.view(type,null,prune)); function describe(type:Type, ?ids:Map<Int,Int>):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L978)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L1005)
 
 <a id="api-mira-types-typechecker-specialize"></a>
 ### `mira.types.TypeChecker.specialize`
@@ -3053,7 +3097,7 @@ public function publicSchema(type:Type):Dynamic return describe(visibility.view(
 public function specialize(program:Array<Definition>,name:String,args:Array<Type>):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L98)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L102)
 
 <a id="api-mira-types-typetemplates"></a>
 ### `mira.types.TypeTemplates`

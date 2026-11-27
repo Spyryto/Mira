@@ -149,6 +149,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Decoder JSON condivisi e radici logiche CLI esplicite | `0.89.7` | [Dettagli](docs/studio.md#mira-0897-decoder-json-consolidati) |
 | ✅ | Configurazione multifile e build di progetto condivisa | `0.90` | [Dettagli](docs/studio.md#mira-090-progetto-multifile-dichiarativo) |
 | ✅ | Nucleo indipendente di validazione e codec JSON tipizzati | `0.91` | [Dettagli](docs/studio.md#mira-091-nucleo-dati-tipizzati-indipendente) |
+| ✅ | GUI checked | `0.92` | [Dettagli](docs/reference/language.md#feature-gui-checked) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

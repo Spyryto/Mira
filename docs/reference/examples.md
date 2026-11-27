@@ -2125,3 +2125,118 @@ render (state: {reversed: false, show ada: true}, view: (view: _));
 
 [Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/gui-keyed-students)
 
+<a id="example-gui-checked-counter"></a>
+## Contatore verificato
+
+Componenti e transizioni con stato Number; attiva GUI checked in Studio.
+
+Feature: [GUI checked](language.md#feature-gui-checked)
+
+```mira
+# Mira GUI: ordinary functions; no compiler or DOM dependencies.
+column: items = {type: "column", children: items};
+row: items = {type: "row", children: items};
+title: caption = {type: "title", text: caption};
+text: content = {type: "text", text: content};
+button: caption, on click: action = {
+  type: "button", label: caption, onClick: action
+};
+button: caption, update: transition = {
+  type: "button", label: caption, update: transition
+};
+text input: caption, value: current, update: transition = {
+  type: "input", label: caption, value: current, update: transition
+};
+checkbox: caption, checked: current, update: transition = {
+  type: "checkbox", label: caption, checked: current, update: transition
+};
+choose: caption, value: current, options: choices, update: transition = {
+  type: "select", label: caption, value: current, options: choices, update: transition
+};
+state: initial, view: factory = {type: "state", initial: initial, view: factory};
+# Explicit identity for resetting a state at the same structural position.
+state: initial, key: identity, view: factory = {
+  type: "state", initial: initial, key: identity, view: factory
+};
+
+# Style records compose from left to right; decorators do not add DOM nodes.
+styled: view, with: layers = {type: "styled", view: view, styles: layers};
+grid: count, children: items = {type: "grid", columns: count, children: items};
+
+# Identity belongs to the represented data, not its current position.
+keyed: identity, view: content = {type: "keyed", key: identity, view: content};
+each: items, identified by: identity, view: factory = collect: items, with: {item |
+  keyed: (item >> identity), view: (item >> factory)
+};
+
+# Attiva GUI checked in Mira Studio.
+counter: n = column: [
+  title: "Contatore verificato",
+  text: n,
+  button: "+1", update: {old | old + 1}
+];
+render (state: 0, view: (counter: _));
+```
+
+**Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/gui-checked-counter)
+
+<a id="example-gui-checked-form"></a>
+## Form verificato
+
+Binding Text e Boolean con aggiornamenti immutabili del modello.
+
+Feature: [GUI checked](language.md#feature-gui-checked)
+
+```mira
+# Mira GUI: ordinary functions; no compiler or DOM dependencies.
+column: items = {type: "column", children: items};
+row: items = {type: "row", children: items};
+title: caption = {type: "title", text: caption};
+text: content = {type: "text", text: content};
+button: caption, on click: action = {
+  type: "button", label: caption, onClick: action
+};
+button: caption, update: transition = {
+  type: "button", label: caption, update: transition
+};
+text input: caption, value: current, update: transition = {
+  type: "input", label: caption, value: current, update: transition
+};
+checkbox: caption, checked: current, update: transition = {
+  type: "checkbox", label: caption, checked: current, update: transition
+};
+choose: caption, value: current, options: choices, update: transition = {
+  type: "select", label: caption, value: current, options: choices, update: transition
+};
+state: initial, view: factory = {type: "state", initial: initial, view: factory};
+# Explicit identity for resetting a state at the same structural position.
+state: initial, key: identity, view: factory = {
+  type: "state", initial: initial, key: identity, view: factory
+};
+
+# Style records compose from left to right; decorators do not add DOM nodes.
+styled: view, with: layers = {type: "styled", view: view, styles: layers};
+grid: count, children: items = {type: "grid", columns: count, children: items};
+
+# Identity belongs to the represented data, not its current position.
+keyed: identity, view: content = {type: "keyed", key: identity, view: content};
+each: items, identified by: identity, view: factory = collect: items, with: {item |
+  keyed: (item >> identity), view: (item >> factory)
+};
+
+# Attiva GUI checked in Mira Studio.
+profile: model = column: [
+  title: "Profilo",
+  text input: "Nome", value: (model ~ name), update: {old, entered | {name: entered, active: (old ~ active)}},
+  checkbox: "Attivo", checked: (model ~ active), update: {old, checked | {name: (old ~ name), active: checked}},
+  text: (model ~ name)
+];
+render (state: {name: "Mira", active: true}, view: (profile: _));
+```
+
+**Risultato:** Anteprima interattiva (browser JS; PHP compilato soltanto)
+
+[Apri in Mira Studio](https://spyryto.github.io/Mira/#/example/gui-checked-form)
+
