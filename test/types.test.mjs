@@ -2774,3 +2774,13 @@ test('0.107 cardinality validation preserves item type and executes on both targ
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('Widget Kit checked signatures reject nonnumeric slider and nonboolean switch',async()=>{
+  const {readFileSync}=await import('node:fs');
+  const gui=readFileSync('lib/gui.mira','utf8')+'\n';
+  check(gui+'result = state: 50, view: {n | slider: "Level", value: n, update: {old, next | next}};');
+  check(gui+'result = state: true, view: {n | switch: "Active", checked: n, update: {old, next | next}};');
+  assert.throws(()=>check(gui+'result = state: "x", view: {n | slider: "Level", value: n, update: {old, next | next}};'));
+  assert.throws(()=>check(gui+'result = state: 1, view: {n | switch: "Active", checked: n, update: {old, next | next}};'));
+});
