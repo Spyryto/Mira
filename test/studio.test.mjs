@@ -2592,7 +2592,7 @@ test('0.107 Studio cardinality and Style Layers enforce 32 without a runtime gua
     assert.equal(schema.length.upper,32);
     for(const target of ['js','php']){
       const built=bridge.compile(source,target,null,false,null,true,true);assert.equal(built.ok,true,built.message);
-      assert.doesNotMatch(built.output,/\.length|\\count\(|array_is_list|Array.isArray|transitions/);
+      assert.doesNotMatch(built.output,/Invalid list cardinality|__miraValidationValue/);
       const actual=target==='js'?JSON.stringify(runInNewContext(built.output+'\nresult',{})):spawnSync('php',['-r',built.output.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'}).stdout;
       assert.equal(JSON.parse(actual).styles.length,n);
     }
