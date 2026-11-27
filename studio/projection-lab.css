@@ -1,0 +1,15 @@
+.projection-shell{max-width:720px;margin:auto;padding:1rem;display:grid;gap:1rem}
+.projection-shell header h1{margin:.25rem 0}.projection-shell h2{font-size:1.1rem;margin:0 0 .75rem}
+.projection-panel{border:1px solid #8494ae66;border-radius:1rem;padding:1rem;background:#8294bd0d;min-width:0}
+.projection-code{background:#172033;color:#e2e8f0;padding:1rem;border-radius:.75rem;font:1rem/2.8 ui-monospace,monospace;overflow-wrap:anywhere}
+.projection-code .definition{display:block}.projection-code .var{color:#93c5fd}.projection-code .literal{color:#a7f3d0}.projection-code .operator{color:#f0abfc}.projection-code .hole{color:#fde68a;border:1px dashed currentColor}
+.projection-code button{font:inherit;line-height:1.6;min-width:2rem;min-height:44px;display:inline-block;padding:0 .25rem;background:transparent;border:1px solid transparent;border-radius:.35rem;color:inherit;cursor:pointer}
+.projection-code button[aria-pressed="true"]{border-color:#93c5fd;background:#334869}
+.projection-code button:focus-visible,.projection-shell button:focus-visible{outline:2px solid #38bdf8;outline-offset:2px}
+.projection-code.php .var::before{content:"$"}.projection-code.math .assign::after{content:"≔"}.projection-code.math .assign span{display:none}
+.projection-code.math [data-op="*"] .symbol{display:none}.projection-code.math [data-op="*"]::after{content:"×"}
+.projection-code.no-semi .terminator{display:none}
+.projection-actions,.projection-input-row{display:flex;gap:.4rem;flex-wrap:wrap;margin:.65rem 0}
+.projection-shell button,.projection-shell select,.projection-shell input{min-height:44px;font-size:1rem}
+.projection-shell button:disabled{opacity:.5}.projection-input-row input{flex:1;min-width:0;max-width:100%}
+.projection-shell pre{white-space:pre-wrap;overflow-wrap:anywhere}.projection-note{font-size:.88rem;opacity:.8}

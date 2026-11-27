@@ -3,6 +3,12 @@ const CACHE = 'mira-studio-__CACHE_VERSION__';
 const ASSETS = [
   './',
   './index.html',
+  './projection-lab.html',
+  './projection-lab.css',
+  './projection-lab.js',
+  './projection-core.js',
+  './projection-model.mira',
+  './projection-program.js',
   './styles.css',
   './app.js',
   './workbench-fullscreen.js',
@@ -131,7 +137,8 @@ self.addEventListener('fetch', event => {
           .then(hit => hit || fetch(request))));
       return;
     }
-    const page = url.pathname.endsWith('/design-notes.html') ? './design-notes.html'
+    const page = url.pathname.endsWith('/projection-lab.html') ? './projection-lab.html'
+      : url.pathname.endsWith('/design-notes.html') ? './design-notes.html'
       : url.pathname.endsWith('/host-module-lab.html') ? './host-module-lab.html'
       : url.pathname.endsWith('/module-explorer.html') ? './module-explorer.html'
       : url.pathname.endsWith('/grammar-lab.html') ? './grammar-lab.html'
