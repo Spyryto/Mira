@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {execFileSync} from 'node:child_process';
-import {seedSource,matchPrefix,matchSeed,fromAst,source,references,history,getNode,order,semanticContext,completions} from '../dist/studio/projection-core.js';
+import {seedSource,matchPrefix,matchSeed,fromAst,source,references,history,getNode,order,semanticContext,completions,revealDelta} from '../dist/studio/projection-core.js';
 import * as mira from '../dist/studio/projection-program.js';
 const read=p=>readFileSync(new URL(p,import.meta.url),'utf8');
 const context={};runInNewContext(read('../dist/studio/compiler.js'),context);
@@ -72,4 +72,15 @@ test('Inline editing replaces the selected expression; no detached textbox in ma
   assert.doesNotMatch(html,/id="projection-input"/);
   assert.match(js,/original\.replaceWith\(anchor\)/);assert.match(js,/old\.anchor\.replaceWith\(old\.original\)/);
   assert.match(js,/input\.addEventListener\('input',refresh\)/);
+});
+
+test('Visual viewport reveal prioritizes the complete editor, then the input',()=>{
+  const viewport={offsetTop:20,height:300};
+  const delta=(editor,input)=>revealDelta(editor,input,viewport);
+  assert.equal(delta({top:60,bottom:180},{top:60,bottom:104}),0);
+  assert.equal(delta({top:240,bottom:370},{top:240,bottom:284}),62);
+  assert.equal(delta({top:0,bottom:120},{top:0,bottom:44}),-32);
+  assert.equal(delta({top:250,bottom:650},{top:250,bottom:294}),0);
+  assert.equal(delta({top:300,bottom:700},{top:300,bottom:344}),36);
+  assert.equal(revealDelta({top:450,bottom:560},{top:450,bottom:494},{offsetTop:0,height:300}),272);
 });
