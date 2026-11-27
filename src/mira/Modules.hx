@@ -107,8 +107,10 @@ class Modules {
                         final selection = providers == null ? null : providers.get(inheritedContract);
                         if (selection != null && selection.signatures == null && selection.provider == modulePath)
                             interfaceIdentity = inheritedContract;
-                        // The inherited interface has no import directives yet.
                         offset = declaration.next + 1;
+                        // Resolve inherited type imports with original tokens.
+                        publicEnd = offset + sections.imports.length;
+                        tokens = tokens.slice(0,offset).concat(sections.imports).concat(tokens.slice(offset));
                         if (moduleEdges != null) moduleEdges.push({from:modulePath,to:inheritedContract,kind:"implements",phase:"interface",line:anchor.line,column:anchor.column,file:anchor.file});
                     }
                 }
@@ -118,19 +120,6 @@ class Modules {
                         if (!allowUnbound) throw new MiraError("Expected implementation section or selected provider for contract " + modulePath,tokens[offset]);
                         ContractModule.validate(sections,tokens[offset]);
                         if (abstractModules != null) abstractModules.push(modulePath);
-                        final names = moduleTypes.get(modulePath);
-                        final abstractDefinitions = ContractModule.elaborate(sections,modulePath,names,visibility);
-                        final exported = new Map<String,Definition>();
-                        for (d in abstractDefinitions) {
-                            definitions.push(d);
-                            exported.set(d.isFunction() ? d.selector() : d.name,d);
-                        }
-                        publicTypes.set(modulePath,[for (name in names.keys()) name]);
-                        publicTypes.get(modulePath).sort(Reflect.compare);
-                        exportedSymbols.set(modulePath,exported);
-                        reexports.set(modulePath,[]);
-                        bindings.set(modulePath,[]);
-                        return;
                     }
                     publicEnd = offset + sections.imports.length;
                     tokens = tokens.slice(0,offset).concat(sections.imports).concat(tokens.slice(sections.bodyOffset));
@@ -197,6 +186,8 @@ class Modules {
                     for (item in requested) {
                         final d = exported.get(item.name);
                         final isType = availableTypes.indexOf(item.name) >= 0;
+                        if (isPublic && sections != null && (sections.isAbstract || inheritedContract != null) && !isType)
+                            throw new MiraError("Independent contract imports types only: " + item.name,item.origin);
                         if (d != null && isType) throw new MiraError("Ambiguous imported symbol " + item.name,item.origin);
                         if (d == null && !isType) throw new MiraError("Symbol not exported by " + service + ": " + item.name,item.origin);
                         if (aliasNames.exists(item.alias)) throw new MiraError("Duplicate imported name " + item.alias,item.origin);
@@ -253,6 +244,24 @@ class Modules {
                 loaded.set(path, true);
             }
             final localTypes = modulePath == null ? types : moduleTypes.get(modulePath);
+            if (sections != null && sections.isAbstract && inheritedContract == null) {
+                for (name => type in publicAliases) localTypes.set(name,type);
+                final abstractDefinitions = ContractModule.elaborate(sections,modulePath,localTypes,visibility);
+                final exported = new Map<String,Definition>();
+                for (d in abstractDefinitions) {
+                    if (aliasNames.exists(d.isFunction() ? d.selector() : d.name))
+                        throw new MiraError("Imported name conflicts with local declaration " + (d.isFunction() ? d.selector() : d.name),d.origin);
+                    definitions.push(d);
+                    exported.set(d.isFunction() ? d.selector() : d.name,d);
+                }
+                publicTypes.set(modulePath,[for (name in localTypes.keys()) if (!publicAliases.exists(name)) name]);
+                publicTypes.get(modulePath).sort(Reflect.compare);
+                for (name in publicTypes.get(modulePath)) visibility.requirePublic(localTypes.get(name),tokens[offset],t -> t);
+                exportedSymbols.set(modulePath,exported);
+                reexports.set(modulePath,[]);
+                bindings.set(modulePath,[]);
+                return;
+            }
             final local:Array<Definition> = [];
             final signatures:Array<PublicSignature> = [];
             var signatureTypes:Map<String,Type> = null;

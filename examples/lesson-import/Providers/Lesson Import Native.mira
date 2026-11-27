@@ -1,6 +1,7 @@
 module Providers / Lesson Import Native;
 implements Services / Lesson Import;
 implementation
+import Data / Outcome { Ok: ; Err: ; };
 decode imported lesson: source = native decode imported lesson source;
 try decode imported lesson: source =
   () >> {|

@@ -2067,3 +2067,54 @@ test('0.89.3 finite arithmetic differential matrix and fractional remainder',()=
     assert.throws(()=>check('bad (Integer) = 5.5 % 2;'),/Integer/);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('0.89.4 independent contracts share nominal types with inherited selective imports',async()=>{
+  const {readFileSync}=await import('node:fs');
+  const dir=mkdtempSync(join(tmpdir(),'mira-common-outcomes-'));
+  try{
+    for(const folder of ['Data','Services','Providers'])mkdirSync(join(dir,folder));
+    writeFileSync(join(dir,'Data','Outcome.mira'),readFileSync('lib/common/Data/Outcome.mira','utf8'));
+    const a='module Services / A; interface parse: :: (Text) -> Result (Text, Text); import Data / Outcome {Result;};';
+    const b='module Services / B; interface inspect: :: (Text) -> Result (Text, Text); import Data / Outcome {Result;};';
+    const ca=join(dir,'Services','A.mira');
+    writeFileSync(ca,a);writeFileSync(join(dir,'Services','B.mira'),b);
+    writeFileSync(join(dir,'Providers','A.mira'),'module Providers / A; implements Services / A; implementation import Data / Outcome {Ok: ; Err: ;}; parse: x = if (x == "") then (Err: "empty") else (Ok: x);');
+    writeFileSync(join(dir,'Providers','B.mira'),'module Providers / B; implements Services / B; implementation import Data / Outcome {Ok: ; Err: ;}; inspect: x = Ok: x;');
+    const input=join(dir,'App.mira'),manifest=join(dir,'bindings.json');
+    const source='module App; interface result; import Services / A {parse: ;}; import Services / B {inspect: ;}; import Data / Outcome {Result;}; implementation summarize: x (Result (Text, Text)) -> Text = match: x {ok: {v | v}, err: {e | e}}; result = [(summarize: (parse: "Ada")), (summarize: (parse: "")), (summarize: (inspect: "Mira"))];';
+    writeFileSync(input,source);writeFileSync(manifest,JSON.stringify({'Services / A':{provider:'Providers / A'},'Services / B':{provider:'Providers / B'}}));
+    const run=(...flags)=>spawnSync('node',['dist/mira.cjs',input,...flags],{encoding:'utf8'});
+    const abstract=run('--interfaces');assert.equal(abstract.status,0,abstract.stderr);
+    const bound=run('--interfaces','--bindings',manifest);assert.equal(bound.status,0,bound.stderr);
+    const x=JSON.parse(abstract.stdout),y=JSON.parse(bound.stdout);
+    for(const name of ['Services / A','Services / B']){
+      const first=x.interfaces.find(m=>m.module===name),second=y.interfaces.find(m=>m.module===name);
+      assert.equal(first.fingerprint,second.fingerprint);
+      assert.equal(first.surface.symbols[0].schema.result.name,'Data / Outcome / Result');
+      assert.deepEqual(first.surface.types,[]);
+    }
+    assert.ok(x.dependencies.some(e=>e.from==='Services / A'&&e.to==='Data / Outcome'&&e.phase==='interface'));
+    assert.ok(y.dependencies.some(e=>e.from==='Providers / A'&&e.to==='Data / Outcome'&&e.phase==='interface'));
+    for(const target of ['js','php']){
+      const out=run(target,'--checked','--tree-shake','--bindings',manifest);assert.equal(out.status,0,out.stderr);
+      const file=join(dir,target==='js'?'out.mjs':'out.php'),name='__miraModule_v_417070202F20726573756C74';
+      writeFileSync(file,out.stdout+(target==='js'?'\nconsole.log(JSON.stringify('+name+'));':'\necho json_encode($'+name+');'));
+      const result=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});assert.equal(result.status,0,result.stderr);assert.deepEqual(JSON.parse(result.stdout),['Ada','empty','Mira']);
+    }
+    writeFileSync(input,'module App; import Services / A {Result;}; result = 1;');
+    let bad=run('--check');assert.notEqual(bad.status,0);assert.match(bad.stderr,/Symbol not exported/);
+    writeFileSync(input,source);
+    for(const [changed,pattern] of [
+      [a.replace('Result;','*;'),/explicit type names/],
+      [a.replace('Result;','Ok: ;'),/types only/],
+      [a.replace('import Data','export Data'),/selective logical type imports/],
+      [a.replace('Data / Outcome','Services / A'),/Import cycle/],
+      [a.replace('import Data / Outcome {Result;};','import "foreign.mira";'),/selective logical type imports/]
+    ]){
+      writeFileSync(ca,changed);
+      for(const flags of [[],['--bindings',manifest]]){
+        bad=run('--check',...flags);assert.notEqual(bad.status,0,changed);assert.match(bad.stderr,pattern);
+      }
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

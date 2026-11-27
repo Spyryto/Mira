@@ -1,0 +1,5 @@
+module Data / Outcome;
+interface
+Option (T) :: Some (T) | None;
+Result (T, E) :: Ok (T) | Err (E);
+implementation

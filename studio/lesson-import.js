@@ -41,9 +41,10 @@
     if(show(store().save(raw)))status('Salvata su questo browser.');
   }));
   by('restore').addEventListener('click',()=>action(()=>{
-    invalidate();const values=store().restore();
-    if(!values.length){status('Nessuna lezione salvata.');return;}
-    by('raw').value=values[0];if(show(program.inspect(values[0])))status('Recuperata e verificata.');
+    invalidate();const found=store().restore();
+    if(found.tag==='None'){status('Nessuna lezione salvata.');return;}
+    if(found.tag!=='Some')throw Error('invalid_storage_outcome');
+    by('raw').value=found.value;if(show(program.inspect(found.value)))status('Recuperata e verificata.');
   }));
   by('remove').addEventListener('click',()=>action(()=>{
     if(!window.confirm('Rimuovere la lezione salvata nel laboratorio?'))return;
