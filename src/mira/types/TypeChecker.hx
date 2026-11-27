@@ -4,6 +4,7 @@ import mira.MiraError;
 import mira.HostEnvironment;
 import mira.syntax.Definition;
 import mira.syntax.Expr;
+import mira.types.NativeVariants.NativeCase;
 import mira.syntax.ExpressionOrigins;
 import mira.lex.Token;
 
@@ -32,8 +33,8 @@ class TypeChecker {
     final wideObservations = new haxe.ds.ObjectMap<Dynamic,NumericRange>();
     final guards:Null<haxe.ds.ObjectMap<Dynamic,NumericGuard>>;
     final comparisons:Null<haxe.ds.ObjectMap<Dynamic,ScalarComparison>>;
-    final scalarMatches:Null<haxe.ds.ObjectMap<Dynamic,Array<Expr>>>;
-    final scalarEncodings = new Map<String,Map<String,Expr>>();
+    final scalarMatches:Null<haxe.ds.ObjectMap<Dynamic,Array<NativeCase>>>;
+    final scalarEncodings = new Map<String,Map<String,NativeCase>>();
     final comparisonInputs:Array<{expr:Expr,type:Type,owner:Null<String>}> = [];
     var nextId = 0;
     var origin:Token;
@@ -44,7 +45,7 @@ class TypeChecker {
     final visibility:TypeVisibility;
     var moduleOwner:Null<String> = null;
 
-    public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.ds.ObjectMap<Dynamic,NumericGuard>,?visibility:TypeVisibility,?comparisons:haxe.ds.ObjectMap<Dynamic,ScalarComparison>,?scalarMatches:haxe.ds.ObjectMap<Dynamic,Array<Expr>>) {
+    public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.ds.ObjectMap<Dynamic,NumericGuard>,?visibility:TypeVisibility,?comparisons:haxe.ds.ObjectMap<Dynamic,ScalarComparison>,?scalarMatches:haxe.ds.ObjectMap<Dynamic,Array<NativeCase>>) {
         this.comparisons = comparisons;
         this.scalarMatches = scalarMatches;
         this.guards = guards;
@@ -58,9 +59,14 @@ class TypeChecker {
             definitions.set(d.isFunction() ? d.selector() : d.name, d);
             if (d.guiPrimitive) hasGui = true;
             if (d.scalarValue != null) switch (d.body) {
-                case Variant(SumType(name,_,_),tag,null):
-                    if (!scalarEncodings.exists(name)) scalarEncodings.set(name,new Map<String,Expr>());
-                    scalarEncodings.get(name).set(tag,d.scalarValue);
+                case Variant(SumType(name,alternatives,_),tag,payload):
+                    if (!scalarEncodings.exists(name)) scalarEncodings.set(name,new Map<String,NativeCase>());
+                    final encoding = if (payload == null) NativeCase.Literal(d.scalarValue) else {
+                        final domain = NativeVariants.domain(alternatives.get(tag));
+                        if (domain == null) fail("Unknown native payload representation");
+                        NativeCase.Payload(domain);
+                    };
+                    scalarEncodings.get(name).set(tag,encoding);
                 default: fail("Invalid scalar constructor metadata");
             }
         }
@@ -1160,14 +1166,16 @@ class TypeChecker {
                     // ABI belongs to the canonical type, not to an import alias.
                     // The opaque view never enters this branch outside its owner.
                     Reflect.setField(schema,"representation",{
-                        kind:"Scalar",
+                        kind:Lambda.exists(codes,code -> switch(code) { case Payload(_): true; default: false; }) ? "Native" : "Scalar",
                         cases:[for (tag in tags) {
-                            tag:tag,
-                            value:switch (codes.get(tag)) {
-                                case Text(value): (value:Dynamic);
-                                case Numeric(value): (Std.parseFloat(value):Dynamic);
-                                default: throw new MiraError("Missing scalar encoding for " + name + " / " + tag);
+                            final row:Dynamic = {tag:tag};
+                            switch (codes.get(tag)) {
+                                case Literal(Text(value)): Reflect.setField(row,"value",value);
+                                case Literal(Numeric(value)): Reflect.setField(row,"value",Std.parseFloat(value));
+                                case Payload(domain): Reflect.setField(row,"domain",domain);
+                                default: throw new MiraError("Missing native encoding for " + name + " / " + tag);
                             }
+                            row;
                         }]
                     });
                 }
