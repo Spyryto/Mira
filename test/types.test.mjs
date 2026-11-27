@@ -2774,3 +2774,25 @@ test('0.107 cardinality validation preserves item type and executes on both targ
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('Cozy GUI checked constructors accept typed controlled values and reject wrong updater signatures',()=>{
+  const gui=readFileSync('lib/gui.mira','utf8')+'\n';
+  const program=`
+cozy view: n = column: [
+  slider: "Percent", value: (n ~ amount), update: {old, v | update: old, with: {amount: v}},
+  toggle: "Active", checked: (n ~ active), update: {old, v | update: old, with: {active: v}},
+  tabs: "Tab", value: (n ~ tab), options: ["A", "B"], update: {old, v | update: old, with: {tab: v}},
+  stepper: "Count", value: (n ~ count), update: {old, v | update: old, with: {count: v}},
+  led: (n ~ tab)
+];
+result = state: {amount: 65, active: true, tab: "A", count: 0}, view: (cozy view: _);
+`;
+  assert.doesNotThrow(()=>check(gui+program));
+  for(const bad of [
+    program.replace('value: (n ~ amount)','value: "65"'),
+    program.replace('checked: (n ~ active)','checked: 1'),
+    program.replace('options: ["A", "B"]','options: [1, 2]'),
+    program.replace('value: (n ~ count)','value: false'),
+    program.replace('with: {amount: v}','with: {amount: "bad"}')
+  ])assert.throws(()=>check(gui+bad),undefined,bad);
+});
