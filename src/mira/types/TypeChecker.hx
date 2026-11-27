@@ -425,6 +425,11 @@ class TypeChecker {
         numericFailure("refinement not statically proven: " + range.predicate(),Unknown,"refinement_unproven");
     }
 
+    function collectionInput(type:Type):Type {
+        final visible = visibility.reveal(prune(type),moduleOwner);
+        return ListLengths.ofType(visible) != null ? representation(visible) : type;
+    }
+
     function proveLength(required:NumericRange,actual:Type,expr:Null<Expr>):Void {
         final known = ListLengths.ofType(visibility.reveal(prune(actual),moduleOwner));
         final fact = expr == null ? null : lengthFacts.get(expr);
@@ -813,13 +818,13 @@ class TypeChecker {
         final result = fresh();
         switch (selector) {
             case "append:to:":
-                unify(item,args[0]); unify(ListType(item),representation(args[1])); return ListType(item);
+                unify(item,args[0]); unify(ListType(item),collectionInput(args[1])); return ListType(item);
             case "map:with:" | "collect:with:":
-                unify(ListType(item),representation(args[0])); unify(FunctionType([item],result),args[1]); return ListType(result);
+                unify(ListType(item),collectionInput(args[0])); unify(FunctionType([item],result),args[1]); return ListType(result);
             case "filter:with:" | "select:with:" | "select:if:" | "remove:if:":
-                unify(ListType(item),representation(args[0])); unify(FunctionType([item],BooleanType),args[1]); return ListType(item);
+                unify(ListType(item),collectionInput(args[0])); unify(FunctionType([item],BooleanType),args[1]); return ListType(item);
             case "fold:with:from:":
-                unify(ListType(item),representation(args[0])); unify(result,args[2]); unify(FunctionType([result,item],result),args[1]); return result;
+                unify(ListType(item),collectionInput(args[0])); unify(result,args[2]); unify(FunctionType([result,item],result),args[1]); return result;
             case "update:with:":
                 return updateRecord(args[0],args[1]);
             default: return call(declaration(selector),args);
