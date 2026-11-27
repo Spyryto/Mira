@@ -7,6 +7,7 @@ import {tokenizeMira} from '../syntax-highlight.js';
 import {editor_complete__from,editor_lookup__from,editor_tooltip,editor_templates} from '../../dist/ide/editor-services.js';
 
 const $=id=>document.getElementById(id);
+if(matchMedia('(max-width:850px)').matches)$('workspace-tree').open=false;
 const initial='double: x (Number) -> Number = x * 2;\nitems = [1, 2, 3];\nresult = collect: items, with: {x | double: x};';
 let saved=initial;try{saved=localStorage.getItem('mira-ide:source:v1')??initial}catch{}
 const worker=new Worker('./ide-analysis-worker.js');
@@ -24,7 +25,7 @@ function renderTooltip(item){
  const p=document.createElement('div');p.textContent=info.description;el.append(p);
  const source=document.createElement('small');source.textContent=info.provenance;el.append(source);return el;
 }
-function inspect(items){$('inspect').replaceChildren(...items.map(renderTooltip));if(!items.length)$('inspect').textContent='Nessuna informazione semantica disponibile per questa selezione.'}
+function inspect(items){$('inspect').replaceChildren(...items.map(renderTooltip));if(!items.length)$('inspect').textContent='Nessuna informazione semantica disponibile per questa selezione.';if(matchMedia('(max-width:850px)').matches)$('inspect').scrollIntoView({block:'nearest'});}
 function wordAt(state,pos){
  const line=state.doc.lineAt(pos),offset=pos-line.from;
  const left=line.text.slice(0,offset).match(/[A-Za-z_][A-Za-z_0-9]*$/)?.[0]||'';
