@@ -36,6 +36,9 @@ class TypeTemplates {
             case RecordType(fields,tail):
                 RecordType([for (key => field in fields) key => substitute(field,slots)],
                     tail == null ? null : substitute(tail,slots));
+            case OptionalRecordType(required,optional):
+                OptionalRecordType([for (key => field in required) key => substitute(field,slots)],
+                    [for (key => field in optional) key => substitute(field,slots)]);
             case ParametricNamedType(name,base,arguments):
                 ParametricNamedType(name,substitute(base,slots),[for (argument in arguments) substitute(argument,slots)]);
             case SumReference(name,template,arguments):
