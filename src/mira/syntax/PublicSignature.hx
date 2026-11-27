@@ -72,6 +72,7 @@ class PublicSignature {
             case [FunctionType(xs,x),FunctionType(ys,y)]: sameArray(xs,ys) && same(x,y);
             case [RecordType(xs,x),RecordType(ys,y)]:
                 sameFields(xs,ys) && (x == null ? y == null : y != null && same(x,y));
+            case [OptionalRecordType(ar,ao),OptionalRecordType(br,bo)]: sameFields(ar,br) && sameFields(ao,bo);
             case [StructuralType(x,xs),StructuralType(y,ys)]: x == y && sameFields(xs,ys);
             default: false;
         };
