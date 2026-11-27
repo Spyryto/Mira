@@ -1,4 +1,4 @@
-# Guida a Mira 0.94
+# Guida a Mira 0.95
 
 Generata automaticamente da catalog/manifest.json e dai programmi di catalog/examples/.
 Le firme API sono estratte dal sorgente Haxe, non ricopiate manualmente.
@@ -545,11 +545,12 @@ API collegata: [`mira.HostEnvironment`](api.md#api-mira-hostenvironment)
 
 View, componenti e binding verificati staticamente.
 
-Il type checker assegna View (State) ai costruttori della libreria GUI verificata. Layout e componenti condividono il tipo di stato; state isola uno stato figlio. Input e select ricevono Text, checkbox Boolean; gli updater restituiscono lo stesso tipo di stato. GUI checked è opt-in in Studio e usa il checker Haxe. Nessun wrapper a runtime. Dalla 0.93, le liste letterali di stili nel costruttore verificato possono contenere record di forme diverse. Dalla 0.94 il checker verifica anche le proprietà di stile note, i tipi dei campi e i valori letterali o numerici puntuali conosciuti. I valori dinamici non dimostrati restano verificati dall'host.
+Il type checker assegna View (State) ai costruttori della libreria GUI verificata. Layout e componenti condividono il tipo di stato; state isola uno stato figlio. Input e select ricevono Text, checkbox Boolean; gli updater restituiscono lo stesso tipo di stato. GUI checked è opt-in in Studio e usa il checker Haxe. Nessun wrapper a runtime. Dalla 0.93, le liste letterali di stili nel costruttore verificato possono contenere record di forme diverse. Dalla 0.94 il checker verifica anche le proprietà di stile note, i tipi dei campi e i valori letterali o numerici puntuali conosciuti. I valori dinamici non dimostrati restano verificati dall'host. Dalla 0.95, le chiamate dirette verificano inoltre conteggi noti delle colonne, chiavi di identità note e opzioni letterali dei select. La chiave di reset dello stato è Text.
 
 API collegata: [`mira.HostEnvironment`](api.md#api-mira-hostenvironment)
 
 - [Contatore verificato](examples.md#example-gui-checked-counter) — Anteprima interattiva (browser JS; PHP compilato soltanto)
 - [Form verificato](examples.md#example-gui-checked-form) — Anteprima interattiva (browser JS; PHP compilato soltanto)
 - [Stili verificati](examples.md#example-gui-checked-styles) — Anteprima interattiva (browser JS; PHP compilato soltanto)
+- [Widget verificati](examples.md#example-gui-checked-widgets) — Anteprima interattiva (browser JS; PHP compilato soltanto)
 

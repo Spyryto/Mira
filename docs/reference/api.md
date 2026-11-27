@@ -3130,7 +3130,7 @@ public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.
 public function publicSchema(type:Type):Dynamic return describe(visibility.view(type,null,prune)); function describe(type:Type, ?ids:Map<Int,Int>):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L1064)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L1131)
 
 <a id="api-mira-types-typechecker-specialize"></a>
 ### `mira.types.TypeChecker.specialize`
