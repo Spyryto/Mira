@@ -6,3 +6,17 @@ editor lookup: name (Text), from: items ([Suggestion]) -> [Suggestion] =
   select: items, with: {item (Suggestion) | (item ~ label == name) OR (item ~ first == name)};
 editor tooltip: item (Suggestion) -> {title: Text, detail: Text, description: Text, provenance: Text} =
   {title: item ~ label, detail: item ~ signature, description: item ~ summary, provenance: item ~ origin};
+
+# The host normalizes the compiler schema; Mira owns field selection and tooltip semantics.
+Record Field :: {receiver: Text, field: Text, signature: Text, optional: Boolean};
+editor fields: receiver (Text), prefix: prefix (Text), from: fields ([Record Field]) -> [Record Field] =
+  select: fields, with: {field (Record Field) |
+    (field ~ receiver == receiver) AND (NOT (field ~ optional)) AND
+    (starts with: prefix, in: (field ~ field))};
+editor field lookup: receiver (Text), name: name (Text), from: fields ([Record Field]) -> [Record Field] =
+  select: fields, with: {field (Record Field) |
+    (field ~ receiver == receiver) AND (field ~ field == name)};
+editor field tooltip: field (Record Field) -> Suggestion =
+  {label: field ~ field, signature: field ~ signature,
+   summary: (if: (field ~ optional), then: ("Campo opzionale: può essere assente."), else: ("Campo verificato dal compilatore.")),
+   snippet: "", origin: "Tipo del record verificato", first: field ~ field, kind: "property"};
