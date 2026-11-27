@@ -4,7 +4,8 @@ import {EditorView,Decoration,ViewPlugin,hoverTooltip,keymap} from '@codemirror/
 import {autocompletion,snippetCompletion,startCompletion,completionKeymap} from '@codemirror/autocomplete';
 import {setDiagnostics} from '@codemirror/lint';
 import {tokenizeMira} from '../syntax-highlight.js';
-import {editor_complete__from,editor_lookup__from,editor_tooltip,editor_templates} from '../../dist/ide/editor-services.js';
+import {fieldContext,fieldRows,formatSchema} from './field-context.js';
+import {editor_complete__from,editor_lookup__from,editor_tooltip,editor_templates,editor_fields__prefix__from,editor_field_lookup__name__from,editor_field_tooltip} from '../../dist/ide/editor-services.js';
 
 const $=id=>document.getElementById(id);
 if(matchMedia('(max-width:850px)').matches)$('workspace-tree').open=false;
@@ -14,7 +15,7 @@ const worker=new Worker('./ide-analysis-worker.js');
 let revision=0,lastValid=[],validRevision=-1,timer,api=[],inspected=[];
 const first=label=>label.split(':')[0];
 const make=(label,signature,summary,snippet,origin,kind)=>({label,signature,summary,snippet,origin,first:first(label),kind});
-const signature=s=>!s?'':s.kind==='Function'?'('+s.parameters.map(signature).join(', ')+') → '+signature(s.result):s.kind==='List'?'['+signature(s.item)+']':s.name||s.kind||'';
+const signature=formatSchema;
 const snippet=(label,params=[])=>label.endsWith(':')?label.slice(0,-1).split(':').map((part,i)=>part+': \x24{'+(params[i]||'arg'+(i+1))+'}').join(', '):'';
 const candidates=()=>[...lastValid,...editor_templates.filter(t=>!lastValid.some(s=>s.label===t.label))];
 const provenance=()=>validRevision===revision?'Documento verificato':'Ultima analisi valida (non aggiornata)';
@@ -37,7 +38,28 @@ function wordAt(state,pos){
  return {from:pos-left.length,to:pos+right.length,name:left+right};
 }
 function lookup(name){return editor_lookup__from(name,candidates()).map(x=>lastValid.includes(x)?{...x,origin:provenance()}:x)}
-function complete(context){
+let requestId=0,fieldCache=null;
+const pendingFields=new Map();
+function fieldsFor(base){
+ if(fieldCache?.base===base)return fieldCache.promise;
+ const request=++requestId;
+ const promise=new Promise(resolve=>{pendingFields.set(request,resolve);worker.postMessage({kind:'fields',request,source:base});});
+ fieldCache={base,promise};return promise;
+}
+async function lookupAt(state,pos){
+ const w=wordAt(state,pos),site=fieldContext(state.doc.toString(),w.to);
+ if(!site)return lookup(w.name);
+ const rows=await fieldsFor(site.base);
+ return editor_field_lookup__name__from(site.receiver,site.prefix,rows).map(editor_field_tooltip);
+}
+async function complete(context){
+ const field=fieldContext(context.state.doc.toString(),context.pos);
+ if(field){
+   const rows=await fieldsFor(field.base);
+   if(context.aborted||editor.state.doc!==context.state.doc)return null;
+   const options=editor_fields__prefix__from(field.receiver,field.prefix,rows).map(editor_field_tooltip).map(item=>({label:item.label,type:'property',detail:item.signature,info:()=>renderTooltip(item)}));
+   return {from:field.from,options,filter:false};
+ }
  const prefix=context.matchBefore(/[A-Za-z_][A-Za-z_0-9]*/);
  if(!prefix&&!context.explicit)return null;
  const from=prefix?.from??context.pos;
@@ -67,18 +89,23 @@ const syntax=ViewPlugin.fromClass(class{constructor(view){this.decorations=marks
 function analyze(view){
  clearTimeout(timer);revision++;
  const rev=revision,source=view.state.doc.toString();
+ inspected=inspected.filter(item=>item.kind!=='property');
  refreshInspector();
  $('status').textContent='Analisi…';$('status').className='status';
  timer=setTimeout(()=>worker.postMessage({revision:rev,source}),220);
 }
 const editor=new EditorView({parent:$('editor'),state:EditorState.create({doc:saved,extensions:[
  basicSetup,syntax,autocompletion({override:[complete],activateOnTyping:true}),keymap.of(completionKeymap),
- hoverTooltip((view,pos)=>{const w=wordAt(view.state,pos),items=lookup(w.name);return items.length?{pos:w.from,end:w.to,above:true,create:()=>{const dom=document.createElement('div');dom.append(...items.map(renderTooltip));return {dom}}}:null}),
+ hoverTooltip(async(view,pos)=>{const state=view.state,w=wordAt(state,pos),items=await lookupAt(state,pos);return view.state.doc===state.doc&&items.length?{pos:w.from,end:w.to,above:true,create:()=>{const dom=document.createElement('div');dom.append(...items.map(renderTooltip));return {dom}}}:null}),
  EditorView.contentAttributes.of({'aria-label':'Codice sorgente Mira','spellcheck':'false','autocapitalize':'off'}),
  EditorView.updateListener.of(update=>{if(update.docChanged){try{localStorage.setItem('mira-ide:source:v1',update.state.doc.toString())}catch{}analyze(update.view)}})
 ]})});
 function position(line,column){if(!Number.isInteger(line)||line<1||line>editor.state.doc.lines||!Number.isInteger(column))return null;const l=editor.state.doc.line(line);return Math.min(l.to,l.from+Math.max(0,column-1))}
 worker.onmessage=({data})=>{
+ if(data.kind==='fields'){
+   const done=pendingFields.get(data.request);pendingFields.delete(data.request);
+   if(done)done(data.checked.ok?fieldRows(JSON.parse(data.checked.output)):[]);return;
+ }
  if(data.revision!==revision)return;
  $('version').textContent='Mira '+data.version;
  const checked=data.checked;
@@ -100,7 +127,7 @@ worker.onmessage=({data})=>{
  $('status').textContent=checked.ok?'✓ Verificato · '+data.elapsed.toFixed(1)+' ms':checked.message+' · '+provenance();
 };
 $('complete').onclick=()=>{editor.focus();startCompletion(editor)};
-$('signature').onclick=()=>inspect(lookup(wordAt(editor.state,editor.state.selection.main.head).name));
+$('signature').onclick=async()=>{const state=editor.state,items=await lookupAt(state,state.selection.main.head);if(editor.state.doc===state.doc)inspect(items);};
 function renderApi(){
  const prefix=$('api-search').value.trim();
  const items=editor_complete__from(prefix,api).slice(0,40);

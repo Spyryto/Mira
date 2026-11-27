@@ -44,6 +44,8 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Bundle CodeMirror and checked Mira editor services
         run: npm run build:ide
+      - name: Verify checked record completion services on JS and PHP
+        run: node scripts/test-ide-fields.mjs
       - name: Verify CodeMirror editing and diagnostics
         run: node scripts/studio-ide-check.mjs
       - name: Build pinned historical Studio editions
