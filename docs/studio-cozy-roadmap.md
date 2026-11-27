@@ -24,3 +24,7 @@ feature introduction version and canonical call selectors extracted at PWA build
   intentional visual baselines before automatic pixel regression testing.
 - Preserve performance on low-resource phones and TVs; measure bundle size,
   first interaction, and search/render time against the existing Studio.
+
+## First visual review
+
+The Ubuntu 24.04 Chromium job passed and produced 39 screenshots at five viewport sizes (run 46062633163). Review found inconsistent lab chrome, low-contrast projection tokens, collapsed independent source editors, too much mobile header space, and an example screenshot taken before search state settled. The follow-up scopes editor CSS to its workbench, coordinates the lab surfaces, groups type examples, compacts the mobile header, hides the hero in guide mode, and waits for the actual route and filter state in browser tests. Re-review the new screenshots before merging; no pixel baseline has yet been approved.

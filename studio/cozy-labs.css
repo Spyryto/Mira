@@ -31,3 +31,16 @@ body .ledger-page .mira-ui-title {color:#39334e}
 body table {max-width:100%;overflow-wrap:anywhere}
 body :is(a,button,input,select,textarea,summary):focus-visible {outline:2px solid #514688;outline-offset:3px}
 @media(max-width:420px){body :is(.grammar-lab,.type-lab,.explorer,.lab,.projection-shell,.lesson-import,.ledger-page,.notebook){padding-inline:12px}body table{font-size:12px}}
+
+/* Independent editors need their own height; the workbench is the only
+   fixed-height overlay. Keep textarea and mirror on identical metrics. */
+body .lab-code-editor textarea {width:100%;box-sizing:border-box;resize:vertical;overflow:auto;line-height:1.65}
+body .lab-code-editor textarea#source {height:15rem;min-height:12rem;font:14px/1.65 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:12px;border:1px solid #cbbbc9}
+body .lab-code-editor .lab-code-mirror {font-variant-ligatures:none}
+body .type-lab .type-actions{display:flex;flex-wrap:wrap;gap:8px;margin-block:12px}
+body .type-lab .type-actions button{margin:0;padding:8px 12px;font-weight:650}
+body .type-lab .type-examples{border:1px solid var(--line);background:var(--studio-panel);padding:12px;border-radius:12px;margin-block:12px}
+body .type-lab .type-examples summary{cursor:pointer;font-weight:650}
+body .type-lab .type-examples button{margin:4px;padding:8px 10px}
+body .projection-code button[aria-pressed=true]:not([disabled]){background:#e5daf3;color:#39334e;border-color:#7367ad}
+body .projection-code .inline-option:not([disabled]){background:#f8f4f7;color:#39334e}

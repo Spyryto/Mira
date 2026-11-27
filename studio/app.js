@@ -100,6 +100,7 @@ function setView(view) {
 
   state.view = view;
   $('workbench').dataset.activeView = view;
+  document.body.dataset.studioView = view;
   for (const button of ui.viewButtons) {
     const selected = button.dataset.view === view;
     button.classList.toggle('active', selected);
@@ -113,7 +114,7 @@ function setView(view) {
   if (view === 'structure') updateStructure();
   if (view === 'atlas') atlasViewer?.refresh();
   if (view === 'reference') {
-    if (!isReferenceRoute(location.hash)) location.hash = '#/guide';
+    if (!isReferenceRoute(location.hash)) {location.hash = '#/guide';return;}
     referenceViewer?.render();
   }
 }
@@ -593,11 +594,8 @@ async function initializeReference() {
     referenceViewer = mountReference(root, data, example => {
       if (loadExample(example.id)) ui.exampleSelect.value = example.id;
     });
-    referenceViewer.render();
-
-    if (isReferenceRoute(location.hash)) {
-      setView('reference');
-    }
+    if (isReferenceRoute(location.hash)) setView('reference');
+    else referenceViewer.render();
   } catch (error) {
     root.textContent = 'Documentazione non disponibile: ' +
       String(error?.message ?? error);

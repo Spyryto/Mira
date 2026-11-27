@@ -66,7 +66,7 @@ export function mountReference(root, dataset, onOpenExample) {
   }
 
   function overview() {
-    root.append(heading('Guida a Mira', dataset.features.length +
+    root.append(heading(location.hash.includes('/examples')?'Esempi Mira':location.hash.includes('/capabilities')?'Funzionalità di Mira':'Guida a Mira', dataset.features.length +
       ' feature · ' + dataset.examples.length + ' esempi verificati su JS e PHP'));
     const controls = element('div', 'reference-controls');
     controls.append(link('Linguaggio', 'guide', 'reference-active'),
@@ -139,7 +139,12 @@ export function mountReference(root, dataset, onOpenExample) {
     for(const control of [category,version,featureFilter,selector])control.addEventListener('change',reset);
     more.addEventListener('click',()=>{limit+=40;update();});
     root.append(search);
-    if(mode!=='capabilities')root.append(filters);
+    if(mode!=='capabilities'){
+      const filterPanel=element('details','reference-filter-panel');
+      filterPanel.open=matchMedia('(min-width: 621px)').matches||!!selector.value;
+      filterPanel.append(element('summary','','Filtri di ricerca'),filters);
+      root.append(filterPanel);
+    }
     root.append(count,results,more);
     update();
   }
