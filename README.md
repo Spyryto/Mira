@@ -141,6 +141,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Effetti HTTP GET testuali con adapter nativi | `0.88` | [Dettagli](docs/studio.md#mira-088-http-testuale) |
 | ✅ | App checked di importazione e persistenza di una lezione | `0.89` | [Dettagli](docs/studio.md#mira-089-importa-una-lezione) |
 | ✅ | Consolidamento HTTP e importazione lezione con verifica browser | `0.89.1` | [Dettagli](docs/studio.md#mira-0891-consolidamento-dei-servizi) |
+| ✅ | Uguaglianza scalare portabile con specializzazione checked | `0.89.2` | [Dettagli](docs/type-checker.md#mira-0892-uguaglianza-scalare-portabile) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:

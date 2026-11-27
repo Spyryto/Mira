@@ -109,7 +109,7 @@ class Compiler
 public static function check(source:String, ?host:HostEnvironment, ?readModule:String->Null<String>, ?entry:String, ?providers:mira.resolve.ProviderBindings):Array<Dynamic>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L79)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L80)
 
 <a id="api-mira-compiler-inspecttokens"></a>
 ### `mira.Compiler.inspectTokens`
@@ -120,7 +120,7 @@ public static function check(source:String, ?host:HostEnvironment, ?readModule:S
 public static function inspectTokens(source:String):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L115)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L116)
 
 <a id="api-mira-compiler-interfaces"></a>
 ### `mira.Compiler.interfaces`
@@ -131,7 +131,7 @@ public static function inspectTokens(source:String):String
 public static function interfaces(source:String,?host:HostEnvironment,?readModule:String->Null<String>,?entry:String,?providers:mira.resolve.ProviderBindings):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L86)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L87)
 
 <a id="api-mira-compiler-parse"></a>
 ### `mira.Compiler.parse`
@@ -155,7 +155,7 @@ Feature: [Dichiarazioni successive](language.md#feature-forward)
 public static function specialize(source:String,name:String,args:Array<mira.types.Type>,?host:HostEnvironment, ?readModule:String->Null<String>,?entry:String):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L107)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Compiler.hx#L108)
 
 <a id="api-mira-compiler-transpile"></a>
 ### `mira.Compiler.transpile`
@@ -218,7 +218,7 @@ class PhpEmitter
 **method** · Converte tutte le definizioni Mira in un programma PHP.
 
 ```haxe
-public static function emit(definitions:Array<Definition>, symbols:Symbols, ?locations:Array<GeneratedLocation>, ?guards:haxe.ds.ObjectMap<Dynamic,mira.types.NumericGuard>):String
+public static function emit(definitions:Array<Definition>, symbols:Symbols, ?locations:Array<GeneratedLocation>, ?guards:haxe.ds.ObjectMap<Dynamic,mira.types.NumericGuard>, ?comparisons:haxe.ds.ObjectMap<Dynamic,mira.types.ScalarComparison>):String
 ```
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/PhpEmitter.hx#L11)
@@ -232,7 +232,7 @@ public static function emit(definitions:Array<Definition>, symbols:Symbols, ?loc
 class SourceEmitter
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L9)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L10)
 
 <a id="api-mira-emit-sourceemitter-expression"></a>
 ### `mira.emit.SourceEmitter.expression`
@@ -240,10 +240,10 @@ class SourceEmitter
 **method** · Produce un'espressione JS/PHP tenendo conto dello scope e delle collisioni dei nomi.
 
 ```haxe
-public static function expression(expr:Expr, target:Target, scope:Array<String>, reservedHostNames:Array<String>, ?guards:ObjectMap<Dynamic,NumericGuard>):String
+public static function expression(expr:Expr, target:Target, scope:Array<String>, reservedHostNames:Array<String>, ?guards:ObjectMap<Dynamic,NumericGuard>, ?comparisons:ObjectMap<Dynamic,ScalarComparison>):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L12)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L13)
 
 Feature: [Sezioni con più `_`](language.md#feature-multi-sections), [Cattura lessicale](language.md#feature-captures)
 
@@ -256,7 +256,7 @@ Feature: [Sezioni con più `_`](language.md#feature-multi-sections), [Cattura le
 public static function hostAccess(name:String, target:Target):String
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L335)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/emit/SourceEmitter.hx#L337)
 
 <a id="api-mira-emit-sourcelocations"></a>
 ### `mira.emit.SourceLocations`
@@ -2791,6 +2791,39 @@ public function schema():Dynamic return
 
 [Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/NumericRange.hx#L137)
 
+<a id="api-mira-types-scalarcomparison"></a>
+### `mira.types.ScalarComparison`
+
+**enum** · Tipo dichiarato nel compilatore Haxe.
+
+```haxe
+enum ScalarComparison
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarComparison.hx#L4)
+
+<a id="api-mira-types-scalarcomparison-numeric"></a>
+### `mira.types.ScalarComparison.Numeric`
+
+**variant** · Membro pubblico di mira.types.ScalarComparison.
+
+```haxe
+Numeric
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarComparison.hx#L6)
+
+<a id="api-mira-types-scalarcomparison-strict"></a>
+### `mira.types.ScalarComparison.Strict`
+
+**variant** · Membro pubblico di mira.types.ScalarComparison.
+
+```haxe
+Strict
+```
+
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/ScalarComparison.hx#L7)
+
 <a id="api-mira-types-type"></a>
 ### `mira.types.Type`
 
@@ -2987,7 +3020,7 @@ class TypeChecker
 public function check(program:Array<Definition>):Array<Dynamic>
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L60)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L63)
 
 <a id="api-mira-types-typechecker-new"></a>
 ### `mira.types.TypeChecker.new`
@@ -2995,10 +3028,10 @@ public function check(program:Array<Definition>):Array<Dynamic>
 **constructor** · Membro pubblico di mira.types.TypeChecker.
 
 ```haxe
-public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.ds.ObjectMap<Dynamic,NumericGuard>,?visibility:TypeVisibility)
+public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.ds.ObjectMap<Dynamic,NumericGuard>,?visibility:TypeVisibility,?comparisons:haxe.ds.ObjectMap<Dynamic,ScalarComparison>)
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L41)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L43)
 
 <a id="api-mira-types-typechecker-publicschema"></a>
 ### `mira.types.TypeChecker.publicSchema`
@@ -3009,7 +3042,7 @@ public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.
 public function publicSchema(type:Type):Dynamic return describe(visibility.view(type,null,prune)); function describe(type:Type, ?ids:Map<Int,Int>):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L953)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L978)
 
 <a id="api-mira-types-typechecker-specialize"></a>
 ### `mira.types.TypeChecker.specialize`
@@ -3020,7 +3053,7 @@ public function publicSchema(type:Type):Dynamic return describe(visibility.view(
 public function specialize(program:Array<Definition>,name:String,args:Array<Type>):Dynamic
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L83)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/types/TypeChecker.hx#L98)
 
 <a id="api-mira-types-typetemplates"></a>
 ### `mira.types.TypeTemplates`
