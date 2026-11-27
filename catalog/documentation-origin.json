@@ -100,6 +100,10 @@
     "docs/theme.md": {
       "kind": "ai_assisted",
       "note": "Fondazione del tema, scelte architetturali e limiti documentati con assistenza IA."
+    },
+    "docs/projection-editor.md": {
+      "kind": "ai_assisted",
+      "note": "Sintesi editoriale delle discussioni con l'autore su Projection Lab, editing strutturale, UX e dogfooding; distingue direzioni condivise, proposte e scelte aperte."
     }
   },
   "generatedSections": {
