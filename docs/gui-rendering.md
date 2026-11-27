@@ -285,3 +285,8 @@ Il decoratore opt-in riceve ora Style Layers, nominale su [GUI Style] con cardin
 ## 0.108 — Unificazione delle regole statiche
 
 I due selettori continuano a produrre lo stesso descrittore. Il legacy legge i domini dal record GUI Style e il limite dalla lista Style Layers, anziché dal precedente contratto dati. Il file storico resta un esempio ConstantData. Il percorso nominale rimane preferibile per nuove applicazioni. Il renderer e la validazione al confine host restano invariati. Il renderer specializzato può espandere dati globali letterali tramite alias e codifiche native. Vedi [unified style domains](type-representation.md#unified-style-domains-0108).
+
+
+## 0.109 — Unico decoratore standard
+
+La vecchia API styled:with: è rimossa. Importare lib/gui.mira e lib/gui-typed-styles.mira; costruire GUI Style e Style Layers, quindi usare styled:with styles:. I descrittori grezzi rimangono dati ordinari, senza tipo View fidato. Gli esempi a basso livello dichiarano localmente i propri costruttori per testare la validazione host e la specializzazione. Vedi [migrazione](type-representation.md#remove-legacy-styles-0109).
