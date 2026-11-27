@@ -242,3 +242,8 @@ Supporto contestuale delle liste letterali eterogenee passate direttamente a sty
 ### 0.94 — Style safety (candidata)
 
 Controllo del vocabolario, tipi noti e valori letterali delle liste di stile dirette. Nessuna nuova rappresentazione runtime. Restano aperti il contratto degli stili di prima classe, il tipo alternativo Number/Text per le dimensioni, prova dei domini dinamici e una fonte unica delle regole se il vocabolario cresce.
+
+
+### 0.95 — Widget safety (candidata)
+
+Controlli locali su griglia, identità, opzioni letterali dei select e numero di strati. Firma Text per la chiave di reset. Restano aperti vincoli di dominio trasportabili attraverso funzioni, collisioni fra fratelli e liste dinamiche; non rimuovere le guardie host in assenza di prove.
