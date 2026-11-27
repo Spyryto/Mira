@@ -1,4 +1,4 @@
-import {seedSource,matchPrefix,matchSeed,fromAst,getNode,source,history,operators,completions,semanticContext,revealDelta,nextHole} from './projection-core.js';
+import {seedSource,matchPrefix,matchSeed,compositionSeed,compositionPrefix,compositionHost,checkSource,fromAst,getNode,source,history,operators,completions,semanticContext,revealDelta,nextHole} from './projection-core.js';
 import * as mira from './projection-program.js';
 const q=id=>document.getElementById('projection-'+id);
 const compiler=globalThis.MiraStudioCompiler,code=q('code'),message=q('message');
@@ -52,15 +52,16 @@ window.addEventListener('resize',queueReveal);
 if(typeof ResizeObserver!=='undefined')new ResizeObserver(queueReveal).observe(anchor);
 function token(n){
   const b=document.createElement('button');b.type='button';b.dataset.node=String(n.id);
-  b.className={Binary:'operator',Name:'var',Number:'literal',Hole:'hole',Match:'keyword'}[n.kind];
+  b.className={Binary:'operator',Name:'var',Number:'literal',Text:'literal',Hole:'hole',Match:'keyword',Call:'keyword'}[n.kind];
   if(n.kind==='Binary'){b.dataset.op=n.text;b.append(span('symbol',n.text));}
-  else b.textContent=n.kind==='Hole'?'? Number':n.kind==='Match'?'match:':n.text;
-  b.setAttribute('aria-label',n.kind==='Hole'?'Espressione mancante, Number':n.kind==='Binary'?'Operatore '+n.text:n.kind==='Match'?'Match':n.text);
+  else b.textContent=n.kind==='Hole'?'? '+semanticContext({...session.state,selected:n.id},compiler).expected:n.kind==='Match'?'match:':n.text;
+  b.setAttribute('aria-label',n.kind==='Hole'?'Espressione mancante':n.kind==='Binary'?'Operatore '+n.text:n.kind==='Match'?'Match':n.text);
   return b;
 }
 function expression(id){
   const s=session.state,n=getNode(s,id),group=span('expression','');group.dataset.expression=String(id);
   if(n.kind==='Binary')group.append('(',expression(n.left),' ',token(n),' ',expression(n.right),')');
+  else if(n.kind==='Call')group.append('(',token(n),' ',expression(n.left),')');
   else if(n.kind==='Match'){
     group.append(token(n),' ',span('var',n.text),' {');
     for(const c of n.cases){const line=span('match-case','');line.append(span('keyword',c.tag.charAt(0).toLowerCase()+c.tag.slice(1)+':'),' {',span('var',c.param),' | ',expression(c.root),'},');group.append(line);}
@@ -72,18 +73,18 @@ function findExpression(id){return surface.querySelector('[data-expression="'+id
 function draw(){
   const s=session.state,fragment=document.createDocumentFragment();
   if(s.prefix)for(const line of s.prefix.trim().split('\n'))fragment.append(span('definition prefix',line));
-  for(const d of s.defs){const line=span('definition','');const assign=span('assign','');assign.append(span('symbol','='));line.append(span('var',d.name),' ',assign,' ',expression(d.root),span('terminator',';'));fragment.append(line);}
+  for(const d of s.defs){const line=span('definition','');const assign=span('assign','');assign.append(span('symbol','='));line.append(span('var',d.name+(s.expected==='Integer'&&d===s.defs.at(-1)?' (Integer)':'')),' ',assign,' ',expression(d.root),span('terminator',';'));fragment.append(line);}
   surface.replaceChildren(fragment);
 }
 function selection(focus=false){
   const s=session.state,n=getNode(s);
   for(const b of surface.querySelectorAll('[data-node]')){const active=Number(b.dataset.node)===s.selected;b.setAttribute('aria-pressed',String(active));b.tabIndex=active?0:-1;if(active&&focus)b.focus({preventScroll:true});}
-  q('selection').textContent='Selezione · '+(n.kind==='Hole'?'? Number':n.kind==='Match'?'match':n.text);
+  q('selection').textContent='Selezione · '+(n.kind==='Hole'?'? '+semanticContext(s,compiler).expected:n.kind==='Match'?'match':n.text);
   q('undo').disabled=!session.canUndo;q('redo').disabled=!session.canRedo;
 }
 function check(){
   exported='';q('export').textContent='';q('copy').disabled=true;
-  try{const text=source(session.state);q('export').textContent=text;const report=compiler.check(text);if(!report.ok)throw Error(report.message);exported=text;q('check').textContent='✓ Verifica statica superata';q('copy').disabled=false;}
+  try{const text=source(session.state);q('export').textContent=text;const report=checkSource(session.state,compiler,text);if(!report.ok)throw Error(report.message);exported=text;q('check').textContent='✓ Verifica statica superata';q('copy').disabled=false;}
   catch(e){q('check').textContent=e.message;}
 }
 function endEdit(restore=true){
@@ -104,7 +105,7 @@ function apply(action,open=false){
     target.replaceWith(expression(previous));
     editing=null;
     message.textContent='';
-    const advance=wasHole&&['literal','reference'].includes(action.kind)&&getNode(session.state).kind==='Hole';
+    const advance=wasHole&&['literal','reference','compose','adapt'].includes(action.kind)&&getNode(session.state).kind==='Hole';
     if(open||advance){selection(false);beginEdit('');}
     else{anchor.hidden=true;selection(true);}
     check();return true;
@@ -116,7 +117,7 @@ function refresh(){
   error.textContent=context.verified?'':'Contesto precedente incompleto: suggerimenti parziali.';positionEditor();queueReveal();
 }
 function paint(){
-  choices.replaceChildren(...candidates.map((c,i)=>{const b=button(c.label+' · '+c.detail,()=>apply(c.action,c.action.kind==='match'));b.className='inline-option';b.setAttribute('aria-pressed',String(i===active));return b;}));
+  choices.replaceChildren(...candidates.map((c,i)=>{const b=button(c.label+' · '+c.detail,()=>apply(c.action,['match','call'].includes(c.action.kind)));b.className='inline-option';b.setAttribute('aria-pressed',String(i===active));return b;}));
   choices.hidden=!candidates.length;
   const selected=choices.children[active];
   if(selected){const a=choices.getBoundingClientRect(),b=selected.getBoundingClientRect();if(b.right>a.right)choices.scrollLeft+=b.right-a.right;else if(b.left<a.left)choices.scrollLeft-=a.left-b.left;}
@@ -125,8 +126,8 @@ function paint(){
 function commit(){
   const value=input.value.trim(),exact=candidates.find(c=>c.label===value);
   if(!value){error.textContent='Digita un valore o seleziona un suggerimento.';positionEditor();queueReveal();return;}
-  if(exact)return apply(exact.action,exact.action.kind==='match');
-  if(candidates.length&&!/^[0-9]/.test(value)){const c=candidates[active];return apply(c.action,c.action.kind==='match');}
+  if(exact)return apply(exact.action,['match','call'].includes(exact.action.kind));
+  if(candidates.length&&!/^[0-9"]/.test(value)){const c=candidates[active];return apply(c.action,['match','call'].includes(c.action.kind));}
   return apply({kind:'literal',value});
 }
 function beginEdit(initial){
@@ -137,9 +138,9 @@ function beginEdit(initial){
   original.replaceWith(slot);
   editing={slot,original,input,anchor,error};
   anchor.hidden=false;
-  input.value=initial??(n.kind==='Name'||n.kind==='Number'?n.text:'');
+  input.value=initial??(['Name','Number','Text'].includes(n.kind)?n.text:'');
   input.enterKeyHint=nextHole(s,n.id)!==undefined&&s.nodes.some(x=>x.kind==='Hole'&&x.id!==n.id)?'next':'done';
-  context=semanticContext(s,compiler);all=completions(s,compiler);
+  context=semanticContext(s,compiler);all=completions(s,compiler,'',mira);input.placeholder='? '+context.expected;input.setAttribute('aria-label','Modifica espressione, tipo atteso '+context.expected);
   refresh();if(document.activeElement!==input)input.focus({preventScroll:true});
   if(initial===undefined)input.select();
   revealAfterFocus(editing);
@@ -159,15 +160,15 @@ input.addEventListener('keydown',e=>{
 });
 function load(){
   endEdit(false);
-  const match=q('sample').value==='match',parsed=compiler.ast(match?matchSeed:seedSource);
+  const sample=q('sample').value,match=sample==='match',composition=sample==='composition',parsed=compiler.ast(composition?compositionSeed:match?matchSeed:seedSource);
   if(!parsed.ok)throw Error(parsed.message);
-  session=history(fromAst(JSON.parse(parsed.output),match?matchPrefix:''),mira,compiler);
+  session=history(fromAst(JSON.parse(parsed.output),composition?compositionPrefix:match?matchPrefix:'',composition?'Integer':'Number',composition?compositionHost:null),mira,compiler);
   changed(false);
 }
 code.addEventListener('click',e=>{
   const b=e.target.closest('[data-node]');if(!b)return;
   const id=Number(b.dataset.node),kind=getNode(session.state,id).kind;
-  const open=['Name','Number','Hole'].includes(kind);
+  const open=['Name','Number','Text','Hole'].includes(kind);
   if(editing&&open){
     // Move only the placeholder; keep the connected, focused input.
     editing.slot.replaceWith(editing.original);editing=null;
@@ -183,7 +184,7 @@ code.addEventListener('keydown',e=>{
   else if(e.key==='Backspace'||e.key==='Delete'){e.preventDefault();apply({kind:'remove'},true);}
   else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?session.redo():session.undo();changed();}
   else if(e.key==='Enter'){e.preventDefault();beginEdit();}
-  else if(e.key.length===1&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&/[a-zA-Z0-9]/.test(e.key)){e.preventDefault();beginEdit(e.key);}
+  else if(e.key.length===1&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&/[a-zA-Z0-9"]/.test(e.key)){e.preventDefault();beginEdit(e.key);}
 });
 document.querySelectorAll('[data-nav]').forEach(b=>b.addEventListener('click',()=>{cancel(false);session.navigate(b.dataset.nav);selection(true);}));
 document.querySelectorAll('[data-wrap]').forEach(b=>b.addEventListener('click',()=>{cancel(false);apply({kind:'wrap',value:b.dataset.wrap},true);}));

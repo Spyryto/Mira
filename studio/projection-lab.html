@@ -9,7 +9,7 @@
 <label><input type="checkbox" id="projection-semicolon" checked> Mostra ;</label>
 </section>
 <section class="projection-panel">
-<h2>Programma</h2><label for="projection-sample">Esempio</label><select id="projection-sample"><option value="arithmetic">Aritmetica</option><option value="match">Match esaustivo</option></select><div id="projection-code" class="projection-code" aria-label="Programma strutturale"></div>
+<h2>Programma</h2><label for="projection-sample">Esempio</label><select id="projection-sample"><option value="arithmetic">Aritmetica</option><option value="match">Match esaustivo</option><option value="composition">Composizione Integer / Text</option></select><div id="projection-code" class="projection-code" aria-label="Programma strutturale"></div>
 <p class="projection-note">Tocca un numero o un riferimento per modificarlo sul posto. Invio conferma e passa al prossimo buco; Tab e Maiusc+Tab navigano tra i buchi, Esc annulla. Frecce ← → tra nodi, ↑ padre, ↓ figlio. Digita + − * / per avvolgere. Nell’esempio Match digita mat sul risultato.</p>
 <div class="projection-actions" aria-label="Navigazione"><button data-nav="previous">←</button><button data-nav="parent">↑</button><button data-nav="child">↓</button><button data-nav="next">→</button><button id="projection-undo">Annulla</button><button id="projection-redo">Ripeti</button></div>
 </section>
@@ -19,5 +19,5 @@
 <p id="projection-message" role="status" aria-live="polite"></p>
 </section>
 <section class="projection-panel"><h2>Sorgente Mira</h2><p id="projection-check" role="status"></p><pre id="projection-export"></pre><button id="projection-copy" disabled>Copia sorgente verificato</button></section>
-<details><summary>Limiti di questo incremento</summary><p>Sottoinsieme numerico e match generati da tipi somma noti al checker. I buchi si aspettano Number; non è ancora inferenza generale. Nessun salvataggio, import generale o benchmark UX. La tabella dei nodi è in memoria; non è un formato persistente.</p></details>
+<details><summary>Limiti di questo incremento</summary><p>Sottoinsieme numerico e match generati da tipi somma noti al checker. Buchi Number, Integer e Text contestuali nel sottoinsieme; percorsi di massimo due funzioni unarie primitive. L’esempio di composizione usa il contratto host native code points (Text → Number) e validazione esplicita a Integer. Nessun salvataggio, import generale o benchmark UX. La tabella dei nodi è in memoria; non è un formato persistente.</p></details>
 </main><script src="./compiler.js"></script><script type="module" src="./projection-lab.js"></script></body></html>

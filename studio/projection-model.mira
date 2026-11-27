@@ -12,3 +12,9 @@ projection replace: replacement (Node), in: nodes ([Node]) -> [Node] =
 projection wrap: replacement (Node), left: previous (Node), right: hole (Node), in: nodes ([Node]) -> [Node] =
   append: hole, to: (append: previous, to:
     (projection replace: replacement, in: nodes));
+
+projection enclose: replacement (Node), child: child (Node), in: nodes ([Node]) -> [Node] =
+  append: child, to: (projection replace: replacement, in: nodes);
+
+projection rank: actual (Text), expected: expected (Text) -> Number =
+  if: ((actual == expected) OR ((actual == "Integer") AND (expected == "Number"))), then: (0), else: (3);
