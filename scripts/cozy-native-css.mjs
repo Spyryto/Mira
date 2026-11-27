@@ -29,7 +29,29 @@ export function nativeCozyCss(source) {
     ['#cozy select option','.mira-theme select.mira-ui-input option'],
     ['#cozy .check','.mira-theme input.mira-ui-input[type=checkbox]'],
     ['#cozy .check:checked','.mira-theme input.mira-ui-input[type=checkbox]:checked'],
-    ['#cozy .check:checked:after','.mira-theme input.mira-ui-input[type=checkbox]:checked:after']
+    ['#cozy .check:checked:after','.mira-theme input.mira-ui-input[type=checkbox]:checked:after'],
+    ['#cozy .rangebox','.mira-theme .mira-ui-rangebox'],
+    ['#cozy .range','.mira-theme .mira-ui-slider-input'],
+    ['#cozy .range::-webkit-slider-thumb','.mira-theme .mira-ui-slider-input::-webkit-slider-thumb'],
+    ['#cozy .range::-moz-range-thumb','.mira-theme .mira-ui-slider-input::-moz-range-thumb'],
+    ['#cozy output','.mira-theme .mira-ui-slider-value'],
+    ['#cozy .switch','.mira-theme .mira-ui-switch'],
+    ['#cozy .switch input','.mira-theme .mira-ui-switch input'],
+    ['#cozy .switch i','.mira-theme .mira-ui-switch i'],
+    ['#cozy .switch input:checked+i','.mira-theme .mira-ui-switch input:checked+i'],
+    ['#cozy .switch i:before','.mira-theme .mira-ui-switch i:before'],
+    ['#cozy .switch input:checked+i:before','.mira-theme .mira-ui-switch input:checked+i:before'],
+    ['#cozy .switch input:focus-visible+i','.mira-theme .mira-ui-switch input:focus-visible+i'],
+    ['#cozy .tabs','.mira-theme .mira-ui-tabs'],
+    ['#cozy .tabs button','.mira-theme .mira-ui-tabs button'],
+    ['#cozy .tabs button[aria-selected=true]','.mira-theme .mira-ui-tabs button[aria-pressed=true]'],
+    ['#cozy .btn','.mira-theme .mira-ui-step-button'],
+    ['#cozy .btn:active:not(:disabled)','.mira-theme .mira-ui-step-button:active:not(:disabled)'],
+    ['#cozy .stepper','.mira-theme .mira-ui-stepper'],
+    ['#cozy .stepper .btn','.mira-theme .mira-ui-stepper .mira-ui-step-button'],
+    ['#cozy .stepper strong','.mira-theme .mira-ui-stepper strong'],
+    ['#cozy .status','.mira-theme .mira-ui-led'],
+    ['#cozy .led','.mira-theme .mira-ui-led::before']
   ];
   const internal=rule('#cozy .stepper .btn','.unused').match(/box-shadow:[^;}]+/)[0];
   return '/* Generated from mira-theme.css; do not edit. */\n'+pairs.map(([a,b])=>rule(a,b)).join('\n')+
