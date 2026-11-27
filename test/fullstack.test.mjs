@@ -31,8 +31,8 @@ test('Mira RPC declaration generates both registries without evaluating source',
   assert.deepEqual(schemas.methods['ledger.quote'].parameters,{kind:'Record',fields:[{name:'hours',type:{kind:'Number'}}],tail:null});
   assert.deepEqual(schemas.methods['ledger.quote'].result,{kind:'Record',fields:[{name:'hours',type:{kind:'Number'}},{name:'total',type:{kind:'Number'}}],tail:null});
   assert.throws(()=>generateRpcContract(compiler,source.replace('name: "hours"','name: "minutes"'),server),/missing record field hours/);
-  assert.throws(()=>generateRpcContract(compiler,source,server.replace('quote: params = {hours: (params ~ hours), total: (params ~ hours * 30)};','quote: params = {x | x};')),/RPC requires concrete data types/);
-  assert.throws(()=>generateRpcContract(compiler,source,server.replace('quote: params = {hours: (params ~ hours), total: (params ~ hours * 30)};','quote: params = [];')),/RPC requires concrete data types/);
+  assert.throws(()=>generateRpcContract(compiler,source,server.replace('quote: params = {hours: (params ~ hours), total: (params ~ hours * 30)};','quote: params = {x | x};')),/Data schema: Schema requires concrete data types/);
+  assert.throws(()=>generateRpcContract(compiler,source,server.replace('quote: params = {hours: (params ~ hours), total: (params ~ hours * 30)};','quote: params = [];')),/Data schema: Schema requires concrete data types/);
   assert.throws(()=>generateRpcContract(compiler,source.replace('handler: "quote"','handler: "missing"'),server),/unknown unary Mira selector/);
   assert.throws(()=>generateRpcContract(compiler,source.replace('capability: "quote"','capability: "ledger"'),server),/duplicate capability or method/);
   assert.throws(()=>generateRpcContract(compiler,source.replace('method: "ledger.quote"','method: "ledger.command"'),server),/duplicate capability or method/);

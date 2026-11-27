@@ -1,5 +1,5 @@
 {
-  "version": "0.90",
+  "version": "0.91",
   "features": [
     {
       "id": "values",
@@ -2160,6 +2160,12 @@
       "title": "Configurazione multifile e build di progetto condivisa",
       "since": "0.90",
       "doc": "docs/studio.md#mira-090-progetto-multifile-dichiarativo"
+    },
+    {
+      "id": "independent-typed-data-codecs",
+      "title": "Nucleo indipendente di validazione e codec JSON tipizzati",
+      "since": "0.91",
+      "doc": "docs/studio.md#mira-091-nucleo-dati-tipizzati-indipendente"
     }
   ]
 }

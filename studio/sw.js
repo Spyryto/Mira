@@ -39,6 +39,7 @@ const ASSETS = [
   './persistent-ledger.mira',
   './persistent-ledger-program.js',
   './effects.js',
+  './typed-data.js',
   './type-lab.html',
   './design-notes.html',
   './type-lab.js',

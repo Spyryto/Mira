@@ -1880,7 +1880,7 @@ test('0.84 generated JSON decoder uses the real contract and validates JS/PHP in
   assert.equal(changed.ok,false);
   const valid={name:'Ada',hours:2,paid:false,tags:['chitarra']};
   const cases=[JSON.stringify(valid),JSON.stringify({...valid,hours:'2'}),JSON.stringify({...valid,extra:true}),JSON.stringify({...valid,tags:[1]}),JSON.stringify({...valid,tags:{}}),JSON.stringify({...valid,tags:[]}),JSON.stringify({...valid,hours:9007199254740992}),JSON.stringify({...valid,name:'\uD800'}),'not json','null','[]','{}',' '.repeat(16385)];
-  runInNewContext(read('effects.js'),ctx);runInNewContext(read('json-host.js'),ctx);
+  runInNewContext(read('typed-data.js'),ctx);runInNewContext(read('json-host.js'),ctx);
   const decode=ctx.MiraJsonDecoder.host(d.decoder)[d.decoder.capability];
   const js=cases.map(raw=>{try{return {ok:true,value:decode(raw)}}catch(e){return {ok:false,error:e.message}}});
   assert.deepEqual(js.map(x=>x.ok),[true,false,false,false,false,true,false,false,false,false,false,false,false]);
@@ -1905,7 +1905,7 @@ test('0.84 generated JSON decoder uses the real contract and validates JS/PHP in
     }
   }
   const bad=d.source+'\nleak = native decode lesson "x";';assert.equal(bridge.check(bad,d.host,d.modules,d.bindings).ok,false);
-  for(const asset of ['json-module-data.js','json-host.js'])assert.ok(read('sw.js').includes('./'+asset));
+  for(const asset of ['json-module-data.js','json-host.js','typed-data.js'])assert.ok(read('sw.js').includes('./'+asset));
 });
 
 test('0.85 fallible JSON returns typed Result and handles invalid inputs on both targets',()=>{
@@ -2046,7 +2046,7 @@ test('0.89 integrated lesson import composes checked modules and preserves the v
   const {mkdtempSync,rmSync}=await import('node:fs');
   const {tmpdir}=await import('node:os');
   const ctx={TextEncoder,TextDecoder,URL,AbortController,setTimeout,clearTimeout,Intl};
-  for(const asset of ['effects.js','text-host.js','date-host.js','storage-host.js','json-host.js','http-host.js','lesson-import-data.js','lesson-import-program.js'])runInNewContext(read(asset),ctx);
+  for(const asset of ['typed-data.js','text-host.js','date-host.js','storage-host.js','json-host.js','http-host.js','lesson-import-data.js','lesson-import-program.js'])runInNewContext(read(asset),ctx);
   const d=ctx.MiraLessonImportData,raw=read('lesson-import-sample.json');
   const map=new Map(),storage={getItem:k=>map.get(k)??null,setItem:(k,v)=>map.set(k,v),removeItem:k=>map.delete(k)};
   const h={...ctx.MiraTextHost,...ctx.MiraDateHost,...ctx.MiraJsonDecoder.host(d.decoder),...ctx.MiraStorageHost.browser(storage,'test')};

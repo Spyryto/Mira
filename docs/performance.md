@@ -138,3 +138,7 @@ Gli adapter fallibili riusano le operazioni native; introducono un envelope stru
 ## Date Safe 0.89.6
 
 Le operazioni native di calendario sono riusate. Il risultato di successo passa attraverso un envelope e date from: per conservare l'opacità, quindi viene analizzato di nuovo. Costo di parsing, allocazioni e match non misurato; non dichiarare zero-cost. Verificare su carichi reali prima di modificare il confine dei tipi nominali.
+
+## Nucleo dati 0.91
+
+La condivisione del validatore elimina dipendenze architetturali, non il lavoro runtime di controllo. L'encoder JS costruisce una copia guidata dallo schema prima di serializzare, PHP converte record/list in valori wire; il decoder usa parser nativi. Limite 16 KiB del testo UTF-8, profondità 30 dei valori. Nessun benchmark di throughput/copie in questa iterazione; misurare su payload realistici prima di specializzare i codec.

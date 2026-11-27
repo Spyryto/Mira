@@ -75,6 +75,8 @@ for (const filename of assets) {
   copyFileSync(resolve(root, 'studio', filename), resolve(destination, filename));
 }
 
+copyFileSync(resolve(root,'runtime/js/typed-data.js'),resolve(destination,'typed-data.js'));
+
 // Bundle the actual reusable Text library, not a duplicate Studio fixture.
 const textFile = path => readFileSync(resolve(root,'lib/text',path),'utf8');
 const textData = {source:textFile('App.mira'),
