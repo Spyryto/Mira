@@ -3,7 +3,7 @@
 Node :: {id: Number, kind: Text, text: Text, left: Number, right: Number};
 
 projection replace: replacement (Node), in: nodes ([Node]) -> [Node] =
-  collect: nodes, with: {node |
+  collect: nodes, with: {node (Node) |
     if: ((node ~ id) == (replacement ~ id)),
     then: (replacement), else: (node)
   };
