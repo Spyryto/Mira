@@ -81,3 +81,8 @@ Il [registro storico delle questioni aperte](open-questions.md) è il backlog tr
 La numerazione prosegue per incrementi interi del secondo componente: 0.98, 0.99, 0.100, 0.101 e così via. Non avviene alcun passaggio automatico alla 1.0. La 1.0 richiederà una decisione esplicita sulla maturità del linguaggio. Le versioni non sono numeri decimali; ordinarle per componenti numeriche, preservando il terzo componente per le patch.
 
 Roadmap indicativa: 0.96 dati dichiarativi; 0.97 somme con rappresentazione scalare; 0.98 somme con rappresentazioni native disgiunte; 0.99 record e contratti; 0.100 e successive migrazione progressiva della GUI ai meccanismi generici di Mira. Vedi [analisi della rappresentazione dei tipi](type-representation.md). I numeri associati alle funzionalità restano indicativi, mentre la progressione delle versioni è una decisione esplicita.
+
+
+## Grammatiche invece di regex esposte (27 novembre 2026)
+
+Decisione esplicita: in Mira le grammatiche sono valori dichiarativi, componibili e riutilizzabili. Le regex non sono un costrutto della sintassi pubblica né l'astrazione del linguaggio; possono essere un dettaglio di emissione dove conveniente, come automi o parser. I selettori discorsivi sono normali funzioni della libreria, non nuove keyword. Separare AST grammaticale, semantica di riconoscimento e strategia di esecuzione. Iniziare con un nucleo regolare non ricorsivo e con il Grammar Lab in Mira Studio. Vedi [grammatiche 0.104](type-representation.md#composable-grammars-0104). Refinement grammaticali e catture/produzione di AST sono incrementi successivi.
