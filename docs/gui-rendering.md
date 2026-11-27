@@ -280,3 +280,8 @@ GUI Style comprende tutte le 20 proprietà nel percorso opt-in. background, colo
 ## 0.107 — Lista di strati limitata
 
 Il decoratore opt-in riceve ora Style Layers, nominale su [GUI Style] con cardinalità massima 32. Il programma costruisce esplicitamente layers (Style Layers) = [panel]; poi styled: (text: "Mira"), with styles: layers. Il checker prova la cardinalità; per una lista sconosciuta usare validate:as:. Nessun nuovo guard implicito. Il decoratore legacy e il confine host conservano i controlli esistenti.
+
+
+## 0.108 — Unificazione delle regole statiche
+
+I due selettori continuano a produrre lo stesso descrittore. Il legacy legge i domini dal record GUI Style e il limite dalla lista Style Layers, anziché dal precedente contratto dati. Il file storico resta un esempio ConstantData. Il percorso nominale rimane preferibile per nuove applicazioni. Il renderer e la validazione al confine host restano invariati. Il renderer specializzato può espandere dati globali letterali tramite alias e codifiche native. Vedi [unified style domains](type-representation.md#unified-style-domains-0108).
