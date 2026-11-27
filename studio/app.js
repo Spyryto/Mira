@@ -5,6 +5,7 @@ import { mountAtlas } from './atlas-ui.js';
 import { mountBenchmark } from './benchmark-ui.js';
 import { mountWorkbenchFullscreen } from './workbench-fullscreen.js';
 import { mountMiraHighlight } from './syntax-highlight.js';
+import { mountSyntaxSettings } from './syntax-theme.js';
 
 // Mira Studio's controller concerns browser UX only.
 // All language semantics are delegated to the Haxe compiler bridge.
@@ -15,7 +16,7 @@ let atlasViewer = null;
 const $ = id => document.getElementById(id);
 $('languageVersion').textContent = 'V ' + compiler.version;
 const astInspector = createAstInspector(compiler);
-const highlighter = mountMiraHighlight($('source'), $('sourceHighlight'));
+mountSyntaxSettings();
 
 const ui = {
   source: $('source'),
@@ -59,6 +60,8 @@ const state = {
   registration: null,
   updateRequested: false
 };
+
+const highlighter = mountMiraHighlight($('source'), $('sourceHighlight'), document, () => ({compiler,hostJson:state.hostJson}));
 
 function getSaved(key, fallback) {
   try {
@@ -609,6 +612,7 @@ async function initializeHost() {
     const response = await fetch('./host.json');
     if (!response.ok) throw new Error('Host manifest unavailable');
     state.hostJson = await response.text();
+    highlighter.update();
     compile(false);
   } catch {
     // The compiler still works without host functions.

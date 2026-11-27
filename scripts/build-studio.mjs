@@ -1,3 +1,4 @@
+import {highlightHtml} from '../studio/syntax-highlight.js';
 import {nativeCozyCss} from './cozy-native-css.mjs';
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
@@ -17,6 +18,8 @@ const assets = [
   'app.js',
   'workbench-fullscreen.js',
   'syntax-highlight.js',
+  'syntax-theme.css',
+  'syntax-theme.js',
   'reference-ui.js',
   'atlas-ui.js',
   'benchmark-ui.js',
@@ -79,6 +82,9 @@ copyFileSync(resolve(root, 'studio/dogfood/inspector.mira'),
 copyFileSync(resolve(root, 'studio/dogfood/host.json'),
   resolve(destination, 'inspector-host.json'));
 
+mkdirSync(resolve(destination,'fonts'),{recursive:true});
+for(const filename of ["jetbrains-regular.ttf","jetbrains-italic.ttf","jetbrains-LICENSE.txt","fira-regular.ttf","fira-LICENSE.txt","dejavu-regular.ttf","dejavu-italic.ttf","dejavu-LICENSE.txt","cascadia-regular.ttf","cascadia-italic.ttf","cascadia-LICENSE.txt","SOURCES.txt"]) copyFileSync(resolve(root,'studio/fonts',filename),resolve(destination,'fonts',filename));
+
 for (const filename of assets) {
   copyFileSync(resolve(root, 'studio', filename), resolve(destination, filename));
 }
@@ -100,34 +106,6 @@ const dateFile=path=>readFileSync(resolve(root,'lib/date',path),'utf8');
 const dateData={source:dateFile('App.mira'),modules:JSON.stringify({'Services / Date':dateFile('Services/Date.mira'),'Providers / Date Native':dateFile('Providers/Date Native.mira')}),host:dateFile('host.json'),bindings:dateFile('bindings.json')};
 writeFileSync(resolve(destination,'date-module-data.js'),'globalThis.MiraDateModuleData = '+JSON.stringify(dateData)+';\n');
 copyFileSync(resolve(root,'lib/date/date-host.js'),resolve(destination,'date-host.js'));
-
-// Publish the design notebook from the canonical Markdown documents. It uses a
-// deliberately small, escaped subset: headings, paragraphs and fenced code.
-const notebook = ['docs/design-notes.md', 'docs/module-design.md', 'docs/consolidation-089.md', 'docs/open-questions.md', 'docs/theme.md']
-  .map(path => readFileSync(resolve(root, path), 'utf8')).join('\n\n');
-const escape = text => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
-const sections = [];
-let paragraph = [];
-let code = null;
-function flushParagraph() {
-  if (paragraph.length) sections.push('<p>' + escape(paragraph.join(' ')) + '</p>');
-  paragraph = [];
-}
-for (const line of notebook.split('\n')) {
-  if (line.startsWith('```')) {
-    if (code === null) { flushParagraph(); code = []; }
-    else { sections.push('<pre><code>' + escape(code.join('\n')) + '</code></pre>'); code = null; }
-  } else if (code !== null) code.push(line);
-  else if (line.startsWith('# ') || line.startsWith('## ')) {
-    flushParagraph();
-    const tag = line.startsWith('## ') ? 'h2' : 'h1';
-    sections.push('<' + tag + '>' + escape(line.replace(/^#+ /, '')) + '</' + tag + '>');
-  } else if (!line.trim()) flushParagraph();
-  else paragraph.push(line);
-}
-if (code !== null) throw Error('Unclosed code fence in design notebook');
-flushParagraph();
-writeFileSync(resolve(destination, 'design-notes.html'), '<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mira · Quaderno di progettazione</title><link rel="stylesheet" href="styles.css"><style>.notebook{max-width:800px;margin:auto;padding:1rem;line-height:1.65}.notebook h2{margin-top:2rem;border-top:1px solid #718096;padding-top:1rem}.notebook pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:1rem;border:1px solid #718096;border-radius:.6rem}</style></head><body><main class="notebook"><a href="./index.html">← Mira Studio</a>' + sections.join('\n') + '</main></body></html>');
 
 // Bundle the canonical GUI library in the benchmark source generator.
 // No separate fetch: the lab works offline and from a local file URL.
@@ -163,6 +141,35 @@ console.log(`Mira Studio Haxe browser bundle built in ${(performance.now() - sta
 // Compile the fixed, repository-owned pilot; no evaluation of editor code here.
 const context={};
 runInNewContext(readFileSync(resolve(destination,'compiler.js'),'utf8'),context);
+// Publish the design notebook from the canonical Markdown documents. It uses a
+// deliberately small, escaped subset: headings, paragraphs and fenced code.
+const notebook = ['docs/design-notes.md', 'docs/module-design.md', 'docs/consolidation-089.md', 'docs/open-questions.md', 'docs/theme.md']
+  .map(path => readFileSync(resolve(root, path), 'utf8')).join('\n\n');
+const escape = text => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+const sections = [];
+let paragraph = [];
+let code = null, language = '';
+function flushParagraph() {
+  if (paragraph.length) sections.push('<p>' + escape(paragraph.join(' ')) + '</p>');
+  paragraph = [];
+}
+for (const line of notebook.split('\n')) {
+  if (line.startsWith('```')) {
+    if (code === null) { flushParagraph(); code = [];language=line.slice(3).trim(); }
+    else { const text=code.join('\n');sections.push(language==='mira'?'<pre class="mira-code"><code>'+highlightHtml(text,context.MiraStudioCompiler)+'</code></pre>':'<pre><code>'+escape(text)+'</code></pre>'); code = null; }
+  } else if (code !== null) code.push(line);
+  else if (line.startsWith('# ') || line.startsWith('## ')) {
+    flushParagraph();
+    const tag = line.startsWith('## ') ? 'h2' : 'h1';
+    sections.push('<' + tag + '>' + escape(line.replace(/^#+ /, '')) + '</' + tag + '>');
+  } else if (!line.trim()) flushParagraph();
+  else paragraph.push(line);
+}
+if (code !== null) throw Error('Unclosed code fence in design notebook');
+flushParagraph();
+writeFileSync(resolve(destination, 'design-notes.html'), '<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mira · Quaderno di progettazione</title><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="syntax-theme.css"><style>.notebook{max-width:800px;margin:auto;padding:1rem;line-height:1.65}.notebook h2{margin-top:2rem;border-top:1px solid #718096;padding-top:1rem}.notebook pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:1rem;border:1px solid #718096;border-radius:.6rem}</style></head><body><main class="notebook"><a href="./index.html">← Mira Studio</a>' + sections.join('\n') + '</main><script type="module">import {mountSyntaxSettings} from "./syntax-theme.js";mountSyntaxSettings();</script></body></html>');
+
+
 // Generate the decoder schema and host signature from the unbound Mira contract.
 const jsonFile=path=>readFileSync(resolve(root,'lib/json',path),'utf8');
 const commonFile=path=>readFileSync(resolve(root,'lib/common',path),'utf8');

@@ -1,3 +1,4 @@
+import {highlightFragment} from './syntax-highlight.js';
 // Searchable, offline documentation viewer. All content comes from the
 // generated reference.json catalog; nothing here parses Mira source.
 export function mountReference(root, dataset, onOpenExample) {
@@ -142,7 +143,8 @@ export function mountReference(root, dataset, onOpenExample) {
     if (feature) line.append(link(feature.title, 'feature/' + feature.id));
     root.append(line);
 
-    const code = element('pre', 'reference-code', example.source);
+    const code = element('pre', 'reference-code mira-code');
+    code.append(highlightFragment(example.source,document,globalThis.MiraStudioCompiler,example.host ? JSON.stringify(example.host) : undefined));
     code.setAttribute('tabindex', '0');
     const result = element('p', 'reference-expected', expected(example.expect ?
       example : { expect: { kind: 'error', contains: 'Nessun risultato' } }));

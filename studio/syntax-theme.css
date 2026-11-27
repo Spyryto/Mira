@@ -1,0 +1,42 @@
+/* Professional Cozy: shared semantic code colors and typography. */
+@font-face{font-family:"Mira JetBrains Mono";src:url("./fonts/jetbrains-regular.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Mira JetBrains Mono";src:url("./fonts/jetbrains-italic.ttf") format("truetype");font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:"Mira Fira Mono";src:url("./fonts/fira-regular.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Mira DejaVu Sans Mono";src:url("./fonts/dejavu-regular.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Mira DejaVu Sans Mono";src:url("./fonts/dejavu-italic.ttf") format("truetype");font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:"Mira Cascadia Code";src:url("./fonts/cascadia-regular.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Mira Cascadia Code";src:url("./fonts/cascadia-italic.ttf") format("truetype");font-weight:400;font-style:italic;font-display:swap}
+:root,:root[data-mira-syntax="notturno"]{--syntax-bg:#1b293b;--syntax-plain:#e2edf6;--syntax-comment:#8496ac;--syntax-string:#a9dba8;--syntax-number:#9ecbfa;--syntax-selector:#dcc0ed;--syntax-operator:#dcc29a;--syntax-punctuation:#a6b6c9;--syntax-keyword:#c5b3ff;--syntax-placeholder:#f4a9c3;--syntax-parameter:#adc8d9;--syntax-field:#a8c9d8;--syntax-gutter:#233548;--syntax-edge:#526e83}
+:root[data-mira-syntax="prisma"]{--syntax-bg:#f9edf1;--syntax-plain:#39334e;--syntax-comment:#65508c;--syntax-string:#286747;--syntax-number:#245f94;--syntax-selector:#923c70;--syntax-operator:#9a4b25;--syntax-punctuation:#59617b;--syntax-keyword:#794397;--syntax-placeholder:#a04478;--syntax-parameter:#5d526e;--syntax-field:#35667b;--syntax-gutter:#eee2ec;--syntax-edge:#bca8c4}
+:root[data-mira-syntax="grafite"]{--syntax-bg:#292f3a;--syntax-plain:#e6ebf2;--syntax-comment:#a5afbd;--syntax-string:#b9d6ac;--syntax-number:#a6c9f4;--syntax-selector:#f0be85;--syntax-operator:#f1b7a6;--syntax-punctuation:#b8c2d1;--syntax-keyword:#d6baf7;--syntax-placeholder:#f1d08b;--syntax-parameter:#bac8d7;--syntax-field:#9fcad0;--syntax-gutter:#343b47;--syntax-edge:#626e7d}
+:root[data-mira-syntax="ambra"]{--syntax-bg:#fff4df;--syntax-plain:#463322;--syntax-comment:#78644b;--syntax-string:#36643b;--syntax-number:#285b8e;--syntax-selector:#8d3e53;--syntax-operator:#99491d;--syntax-punctuation:#695a47;--syntax-keyword:#744780;--syntax-placeholder:#8c4567;--syntax-parameter:#645444;--syntax-field:#35636b;--syntax-gutter:#f2e3c8;--syntax-edge:#bba384}
+:root[data-mira-syntax="bosco"]{--syntax-bg:#233c34;--syntax-plain:#e6f2e8;--syntax-comment:#a4bcb0;--syntax-string:#c4e2a6;--syntax-number:#9bd8e5;--syntax-selector:#e6b7db;--syntax-operator:#efc18c;--syntax-punctuation:#afc5b9;--syntax-keyword:#c9bcf2;--syntax-placeholder:#f4b6a6;--syntax-parameter:#b8d0c4;--syntax-field:#9ed5d4;--syntax-gutter:#304b40;--syntax-edge:#607c6d}
+:root{--syntax-font:"Mira JetBrains Mono",ui-monospace,monospace;--syntax-size:16px}
+:root[data-mira-code-font="jetbrains"]{--syntax-font:"Mira JetBrains Mono",ui-monospace,monospace}
+:root[data-mira-code-font="fira"]{--syntax-font:"Mira Fira Mono",ui-monospace,monospace}
+:root[data-mira-code-font="dejavu"]{--syntax-font:"Mira DejaVu Sans Mono",ui-monospace,monospace}
+:root[data-mira-code-font="cascadia"]{--syntax-font:"Mira Cascadia Code",ui-monospace,monospace}
+#source,.source-highlight,.line-numbers,.mira-code,.mira-code code{
+ font:400 var(--syntax-size)/1.6 var(--syntax-font);font-variant-ligatures:none;font-feature-settings:"liga" 0,"calt" 0;
+ letter-spacing:0;tab-size:2;
+}
+.editor-frame,.mira-code{background:var(--syntax-bg);color:var(--syntax-plain)}
+.source-highlight,#source{color:var(--syntax-plain)}
+.line-numbers{background:var(--syntax-gutter);color:var(--syntax-comment);border-color:var(--syntax-edge)}
+body.mira-highlight-ready #source{caret-color:var(--syntax-plain)}
+body.mira-highlight-ready #source::selection{background:#8a92b36b}
+.mira-code{border:1px solid var(--syntax-edge);border-radius:7px;padding:12px;white-space:pre;overflow:auto}
+.mira-code code{color:inherit;background:none}
+.mira-code [class^="mira-syntax-"],.source-highlight [class^="mira-syntax-"]{font-weight:400;font-style:normal}
+.mira-code .mira-syntax-parameter,.source-highlight .mira-syntax-parameter{font-style:italic}
+.mira-syntax-comment{color:var(--syntax-comment)}
+.mira-syntax-string{color:var(--syntax-string)}
+.mira-syntax-number{color:var(--syntax-number)}
+.mira-syntax-selector{color:var(--syntax-selector)}
+.mira-syntax-operator{color:var(--syntax-operator)}
+.mira-syntax-punctuation{color:var(--syntax-punctuation)}
+.mira-syntax-keyword{color:var(--syntax-keyword)}
+.mira-syntax-placeholder{color:var(--syntax-placeholder)}
+.mira-syntax-parameter{color:var(--syntax-parameter)}
+.mira-syntax-field{color:var(--syntax-field)}
+.mira-syntax-boolean{color:var(--syntax-keyword)}
