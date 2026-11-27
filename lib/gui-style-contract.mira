@@ -1,0 +1,37 @@
+# Compile-time data. Ordinary Mira syntax; not imported into applications.
+Scalar Rule ::
+    Range ({min: Number, max: Number})
+  | Whole ({min: Number, max: Number})
+  | Choices ([Text])
+  | Pattern (Text)
+  | Either ([Scalar Rule]);
+
+length = Range: {min: 0, max: 4096};
+size = Either: [length, (Choices: ["fill", "auto"])];
+color rule = Either: [
+  (Choices: ["transparent", "currentColor"]),
+  (Pattern: "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
+];
+
+style rules = {
+  padding: length,
+  margin: length,
+  gap: length,
+  radius: length,
+  borderWidth: length,
+  fontSize: length,
+  fontWeight: (Whole: {min: 100, max: 900}),
+  flex: (Range: {min: 0, max: 100}),
+  width: size,
+  minWidth: size,
+  maxWidth: size,
+  background: color rule,
+  color: color rule,
+  borderColor: color rule,
+  borderStyle: (Choices: ["solid", "none", "dashed"]),
+  align: (Choices: ["start", "center", "end", "stretch", "baseline"]),
+  justify: (Choices: ["start", "center", "end", "space-between", "space-around"]),
+  wrap: (Choices: ["wrap", "nowrap"]),
+  textAlign: (Choices: ["left", "center", "right"]),
+  shadow: (Choices: ["none", "hard", "soft"])
+};

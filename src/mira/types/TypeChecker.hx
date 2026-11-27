@@ -915,11 +915,11 @@ class TypeChecker {
             };
             final anchor = origins.get(value == null ? layer : value);
             if (anchor != null) origin = anchor;
-            final kind = GuiStyleRules.kind(key);
-            if (kind == null) fail("Unsupported style property: " + key);
+            final rule = GuiStyleRules.get(key);
+            if (rule == null) fail("Unsupported style property: " + key);
             final field = fields.get(key);
-            final numeric = GuiStyleRules.allowsNumber(kind);
-            final textual = GuiStyleRules.allowsText(kind);
+            final numeric = ScalarRules.allowsNumber(rule);
+            final textual = ScalarRules.allowsText(rule);
             if (numeric && textual) {
                 // Size has two native representations. Do not invent a union
                 // or constrain an unresolved variable to just one of them.
@@ -932,11 +932,11 @@ class TypeChecker {
             }
             if (value != null) {
                 final valid = switch (value) {
-                    case Text(text): GuiStyleRules.textAllowed(key,kind,text);
-                    case Numeric(number): GuiStyleRules.numberAllowed(kind,Std.parseFloat(number));
+                    case Text(text): ScalarRules.textAllowed(rule,text);
+                    case Numeric(number): ScalarRules.numberAllowed(rule,Std.parseFloat(number));
                     default:
                         final fact = ranges.get(value);
-                        fact == null || fact.low != fact.high || GuiStyleRules.numberAllowed(kind,fact.low);
+                        fact == null || fact.low != fact.high || ScalarRules.numberAllowed(rule,fact.low);
                 };
                 if (!valid) fail("Invalid style value for " + key);
             }

@@ -88,6 +88,14 @@
     "docs/open-questions.md": {
       "kind": "ai_assisted",
       "note": "Sintesi editoriale assistita delle decisioni, della documentazione storica e delle discussioni di progetto; distingue stato verificato, limiti e proposte."
+    },
+    "docs/declarative-contracts.md": {
+      "kind": "ai_assisted",
+      "note": "Progettazione e documentazione della candidata 0.96 con assistenza IA."
+    },
+    "docs/type-representation.md": {
+      "kind": "ai_assisted",
+      "note": "Analisi comparativa e roadmap redatte con assistenza IA."
     }
   },
   "generatedSections": {

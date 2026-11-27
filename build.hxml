@@ -2,3 +2,5 @@
 -main mira.Main
 -js dist/mira.cjs
 -D js-es=6
+
+-resource lib/gui-style-contract.mira@lib/gui-style-contract.mira

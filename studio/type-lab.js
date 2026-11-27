@@ -21,6 +21,17 @@
     }
   }
   document.getElementById('check').addEventListener('click',()=>check(true));
+  document.getElementById('style-contract-example').addEventListener('click',()=>{
+    host.value='';
+    modules.value='';
+    source.value=MiraStudioCompiler.styleContractSource();
+    document.getElementById('constant-root').value='style rules';
+    check();
+  });
+  document.getElementById('constant-data').addEventListener('click',()=>{
+    const response=MiraStudioCompiler.constantData(source.value,document.getElementById('constant-root').value.trim());
+    result.textContent=response.ok?JSON.stringify(JSON.parse(response.output),null,2):response.message;
+  });
   document.getElementById('example').addEventListener('click',()=>{host.value='';source.value=valid;check();});
   document.getElementById('invalid').addEventListener('click',()=>{host.value='';source.value='same: a, as: b = a == b;\na = same: [1], as: [2];';check(true);});
   document.getElementById('overflow').addEventListener('click',()=>{host.value='';source.value='x (Integer) = 9007199254740991 + 1;';check(true);});
