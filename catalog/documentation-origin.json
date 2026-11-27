@@ -104,6 +104,10 @@
     "docs/projection-editor.md": {
       "kind": "ai_assisted",
       "note": "Sintesi editoriale delle discussioni con l'autore su Projection Lab, editing strutturale, UX e dogfooding; distingue direzioni condivise, proposte e scelte aperte."
+    },
+    "docs/studio-cozy-roadmap.md": {
+      "kind": "ai_assisted",
+      "note": "Piano di redesign Cozy Functional e limiti del primo incremento, redatti con assistenza IA."
     }
   },
   "generatedSections": {

@@ -1,5 +1,7 @@
+import {analyzeExampleCalls} from './reference-calls.mjs';
+import {decorateStudioHtml} from './studio-presentation.mjs';
 import {nativeCozyCss} from './cozy-native-css.mjs';
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { runInNewContext } from 'node:vm';
 import { resolve } from 'node:path';
@@ -22,6 +24,9 @@ const assets = [
   'app.js',
   'workbench-fullscreen.js',
   'syntax-highlight.js',
+  'lab-highlight.js',
+  'lab-highlight.css',
+  'cozy-labs.css',
   'reference-ui.js',
   'atlas-ui.js',
   'benchmark-ui.js',
@@ -114,14 +119,15 @@ const escape = text => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').rep
 const sections = [];
 let paragraph = [];
 let code = null;
+let codeLanguage='text';
 function flushParagraph() {
   if (paragraph.length) sections.push('<p>' + escape(paragraph.join(' ')) + '</p>');
   paragraph = [];
 }
 for (const line of notebook.split('\n')) {
   if (line.startsWith('```')) {
-    if (code === null) { flushParagraph(); code = []; }
-    else { sections.push('<pre><code>' + escape(code.join('\n')) + '</code></pre>'); code = null; }
+    if (code === null) { flushParagraph(); code = []; codeLanguage=line.slice(3).trim().toLowerCase(); }
+    else { const lang=/^(mira|js|javascript|php|haxe|json|html|css)$/.test(codeLanguage)?codeLanguage:'text'; sections.push('<pre><code data-code-language="'+lang+'">' + escape(code.join('\n')) + '</code></pre>'); code = null; }
   } else if (code !== null) code.push(line);
   else if (line.startsWith('# ') || line.startsWith('## ')) {
     flushParagraph();
@@ -239,9 +245,25 @@ if (documentation.error || documentation.status !== 0) {
   console.error(documentation.error?.message ?? 'Documentation provenance/reference generation failed');
   process.exit(documentation.status ?? 1);
 }
+// Enrich the PWA catalog at build time using the already compiled browser bridge.
+const referencePath=resolve(destination,'reference.json');
+const reference=JSON.parse(readFileSync(referencePath,'utf8'));
+for(const example of reference.examples){
+  const host=example.host?readFileSync(resolve(root,example.host),'utf8'):undefined;
+  const libraryLines=example.library?(readFileSync(resolve(root,example.library),'utf8')+'\n').split('\n').length-1:0;
+  example.index.ast=analyzeExampleCalls(context.MiraStudioCompiler,example,host,libraryLines);
+}
+reference.callIndex={compilerVersion:reference.version,parsed:reference.examples.filter(e=>e.index.ast.status==='parsed').length,unavailable:reference.examples.filter(e=>e.index.ast.status==='unavailable').map(e=>e.id)};
+console.log('Example call index: '+JSON.stringify(reference.callIndex));
+writeFileSync(referencePath,JSON.stringify(reference,null,2)+'\n');
+
 const lab = spawnSync('node', ['scripts/generate-laboratory.mjs'], { cwd: root, stdio: 'inherit' });
 if (lab.error || lab.status !== 0) {
   console.error(lab.error?.message ?? 'Laboratory generation failed');
   process.exit(lab.status ?? 1);
+}
+for(const filename of readdirSync(destination).filter(name=>name.endsWith('.html'))){
+  const path=resolve(destination,filename);
+  writeFileSync(path,decorateStudioHtml(filename,readFileSync(path,'utf8')));
 }
 console.log('Mira Studio static assets ready in dist/studio (cache ' + buildId + ')');

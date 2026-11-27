@@ -4,7 +4,7 @@ import { createAstInspector } from './ast-inspector.js';
 import { mountAtlas } from './atlas-ui.js';
 import { mountBenchmark } from './benchmark-ui.js';
 import { mountWorkbenchFullscreen } from './workbench-fullscreen.js';
-import { mountMiraHighlight } from './syntax-highlight.js';
+import { mountMiraHighlight, highlightCode } from './syntax-highlight.js';
 
 // Mira Studio's controller concerns browser UX only.
 // All language semantics are delegated to the Haxe compiler bridge.
@@ -99,6 +99,8 @@ function setView(view) {
   if (!['code', 'output', 'structure', 'reference', 'atlas', 'benchmark'].includes(view)) return;
 
   state.view = view;
+  $('workbench').dataset.activeView = view;
+  document.body.dataset.studioView = view;
   for (const button of ui.viewButtons) {
     const selected = button.dataset.view === view;
     button.classList.toggle('active', selected);
@@ -112,7 +114,7 @@ function setView(view) {
   if (view === 'structure') updateStructure();
   if (view === 'atlas') atlasViewer?.refresh();
   if (view === 'reference') {
-    if (!isReferenceRoute(location.hash)) location.hash = '#/guide';
+    if (!isReferenceRoute(location.hash)) {location.hash = '#/guide';return;}
     referenceViewer?.render();
   }
 }
@@ -165,7 +167,7 @@ function compile(revealOutput = false, withLocations = false) {
 
   state.valid = true;
   state.output = result.output;
-  ui.output.textContent = state.output;
+  highlightCode(ui.output, state.output, state.target);
   setStatus('ready', checked ? 'Compilazione verificata' : 'Compilazione riuscita', `${elapsed.toFixed(2)} ms`);
   if (state.view === 'structure') updateStructure();
   if (revealOutput) setView('output');
@@ -492,7 +494,6 @@ function wireEvents() {
     if (location.hash === '#/benchmark') setView('benchmark');
     if (isReferenceRoute(location.hash) && referenceViewer) {
       setView('reference');
-      referenceViewer.render();
     }
   });
   $('updateNow').addEventListener('click', () => {
@@ -593,11 +594,8 @@ async function initializeReference() {
     referenceViewer = mountReference(root, data, example => {
       if (loadExample(example.id)) ui.exampleSelect.value = example.id;
     });
-    referenceViewer.render();
-
-    if (isReferenceRoute(location.hash)) {
-      setView('reference');
-    }
+    if (isReferenceRoute(location.hash)) setView('reference');
+    else referenceViewer.render();
   } catch (error) {
     root.textContent = 'Documentazione non disponibile: ' +
       String(error?.message ?? error);

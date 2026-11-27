@@ -1,0 +1,12 @@
+
+.lab-code-editor{position:relative;min-width:0;width:100%}
+.lab-code-editor textarea.lab-source-highlighted{position:relative;z-index:1;display:block;color:transparent!important;-webkit-text-fill-color:transparent;caret-color:#39334e;background:transparent!important;white-space:pre;overflow:auto}
+.lab-code-mirror{position:absolute;inset:0 auto auto 0;box-sizing:border-box;margin:0!important;pointer-events:none;user-select:none;overflow:hidden;white-space:pre;border-style:solid;border-color:transparent;color:#39334e;background:#f8f4f7;max-width:100%}
+.lab-code-editor textarea::selection{background:#c7bfe988;color:transparent}
+.mira-syntax-comment{color:#4e7058}
+.mira-syntax-string{color:#963e36}
+.mira-syntax-number{color:#285e91}
+.mira-syntax-selector,.mira-syntax-keyword,.mira-syntax-boolean{color:#624098}
+.mira-syntax-operator{color:#8b4b0c}
+.mira-syntax-punctuation{color:#655d74}
+.mira-syntax-placeholder{color:#a64d82}

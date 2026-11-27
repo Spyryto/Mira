@@ -303,11 +303,27 @@ function updateReadmeFeatureMatrix() {
 
 const api = extractApi();
 const examples = validateCatalog(api);
+const categoryByFeature = {
+  'browser-ui':'GUI','gui-library':'GUI','incremental-gui':'GUI','styled-gui':'GUI','gui-keyed':'GUI','gui-checked':'GUI',
+  'sequences':'Collezioni','filtering':'Collezioni','native-sequences':'Collezioni',
+  'records':'Record','accessors':'Record','field-get':'Record','field-precedence':'Record','record-update':'Record',
+  'functions':'Funzioni','selectors':'Funzioni','shorthand':'Funzioni','sections':'Funzioni','multi-sections':'Funzioni','pipelines':'Funzioni','captures':'Funzioni','operator-sections':'Funzioni','blocks':'Funzioni','block-parameters':'Funzioni','bare-block-arguments':'Funzioni','block-steps':'Funzioni','nullary-blocks':'Funzioni',
+  'arithmetic':'Operatori','comparisons':'Operatori','conditionals':'Controllo','diagnostics':'Diagnostica'
+};
+for(const example of examples){
+  const feature=manifest.features.find(f=>f.id===example.feature);
+  // Index source mentions, not resolved calls; exclude imported/prepended libraries.
+  const ownSource=readFileSync(join(root,example.path),'utf8');
+  const stripped=ownSource.replace(/"(?:\\.|[^"\\])*"|#[^\n]*/g,' ');
+  const selectors=[...new Set([...stripped.matchAll(/\b([\p{L}_][\p{L}\p{N}_]*(?:[ \t]+[\p{L}_][\p{L}\p{N}_]*)*)\s*:(?!:)/gu)].map(m=>m[1]+':'))].sort();
+  example.index={category:categoryByFeature[feature.id]||'Fondamenti',since:feature.since,selectors};
+}
 updateReadmeFeatureMatrix();
 const dataset = {
   version: manifest.version,
   generatedFrom: ['catalog/manifest.json', 'catalog/api-notes.json', 'src/**/*.hx'],
   features: manifest.features,
+  capabilities: manifest.additionalCapabilities ?? [],
   examples,
   api
 };

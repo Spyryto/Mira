@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f4f0e6">
+  <meta name="theme-color" content="#f5dee7">
   <meta name="description" content="Mira Studio: sperimenta la sintassi discorsiva, traspila in JavaScript e PHP, esplora token e AST. Anche offline.">
   <title>Mira Studio · Sintassi discorsiva</title>
   <link rel="icon" href="./icon.svg" type="image/svg+xml">
@@ -25,23 +25,12 @@
     </header>
 
     <div class="intro">
-      <p class="eyebrow">IL LABORATORIO DELLA SINTASSI DISCORSIVA <span id="languageVersion">V …</span></p>
+      <p class="eyebrow">IL LABORATORIO DI MIRA <span id="languageVersion">V …</span></p>
       <h1>Scrivi come <em>pensi.</em></h1>
-      <p>Un piccolo linguaggio, due target, tante idee. Provalo direttamente nel browser.</p>
+      <p>Impara, scrivi e sperimenta Mira nel browser.</p>
     </div>
 
     <main id="main">
-      <a class="lab-entry" href="./laboratory.html"><span><strong>Laboratory</strong><small>Esperimenti, grafici e scoperte di Mira</small></span><span aria-hidden="true">↗</span></a>
-      <a class="lab-entry" href="./design-notes.html"><span><strong>Quaderno di progettazione</strong><small>Decisioni, motivazioni e proposte</small></span><span aria-hidden="true">↗</span></a>
-      <a class="lab-entry" href="./host-module-lab.html"><span><strong>Host Module Lab</strong><small>Contratti, provider e librerie native</small></span><span aria-hidden="true">↗</span></a>
-      <a class="lab-entry" href="./module-explorer.html"><span><strong>Module Explorer</strong><small>Grafo delle dipendenze e interfacce dei moduli</small></span><span aria-hidden="true">↗</span></a>
-      <a class="lab-entry" href="./theme-lab.html"><span><strong>Theme Lab</strong><small>Palette, superfici e widget Mira</small></span><span aria-hidden="true">↗</span></a>
-      <a class="lab-entry" href="./projection-lab.html"><span><strong>Projection Lab</strong><small>Editor strutturale · HTML, AST e azioni semantiche</small></span><span aria-hidden="true">↗</span></a>
-      <a class="lab-entry" href="./grammar-lab.html"><span><strong>Grammar Lab</strong><small>Grammatiche componibili e automi deterministici</small></span><span aria-hidden="true">↗</span></a>
-      <a class="lab-entry" href="./type-lab.html"><span><strong>Laboratorio tipi</strong><small>Inferenza statica e record strutturali</small></span><span aria-hidden="true">↗</span></a>
-      <a class="lab-entry" href="./effects-demo.html"><span><strong>Laboratorio effetti</strong><small>Richieste asincrone e modello immutabile</small></span><span aria-hidden="true">↗</span></a>
-      <a class="lab-entry" href="./lesson-import.html"><span><strong>Importa una lezione</strong><small>App checked · HTTP, JSON, Date e Storage</small></span><span aria-hidden="true">↗</span></a>
-      <a class="lab-entry" href="./persistent-ledger.html"><span><strong>Registro lezioni</strong><small>App pilota con salvataggio locale</small></span><span aria-hidden="true">↗</span></a>
       <section class="workspace" id="workbench" aria-label="Mira Studio">
         <div class="workspace-heading">
           <div class="workspace-title">
@@ -172,6 +161,22 @@
         </div>
       </section>
 
+      <section class="lab-directory" aria-labelledby="lab-directory-title">
+        <div class="directory-heading"><div><p class="eyebrow">ESPLORA</p><h2 id="lab-directory-title">Laboratori e progetti</h2></div><a href="#/guide">Guida completa ↗</a></div>
+        <div class="lab-directory-grid">
+      <a class="lab-entry" href="./laboratory.html"><span><strong>Laboratory</strong><small>Esperimenti, grafici e scoperte di Mira</small></span><span aria-hidden="true">↗</span></a>
+      <a class="lab-entry" href="./design-notes.html"><span><strong>Quaderno di progettazione</strong><small>Decisioni, motivazioni e proposte</small></span><span aria-hidden="true">↗</span></a>
+      <a class="lab-entry" href="./host-module-lab.html"><span><strong>Host Module Lab</strong><small>Contratti, provider e librerie native</small></span><span aria-hidden="true">↗</span></a>
+      <a class="lab-entry" href="./module-explorer.html"><span><strong>Module Explorer</strong><small>Grafo delle dipendenze e interfacce dei moduli</small></span><span aria-hidden="true">↗</span></a>
+      <a class="lab-entry" href="./theme-lab.html"><span><strong>Theme Lab</strong><small>Palette, superfici e widget Mira</small></span><span aria-hidden="true">↗</span></a>
+      <a class="lab-entry" href="./projection-lab.html"><span><strong>Projection Lab</strong><small>Editor strutturale · HTML, AST e azioni semantiche</small></span><span aria-hidden="true">↗</span></a>
+      <a class="lab-entry" href="./grammar-lab.html"><span><strong>Grammar Lab</strong><small>Grammatiche componibili e automi deterministici</small></span><span aria-hidden="true">↗</span></a>
+      <a class="lab-entry" href="./type-lab.html"><span><strong>Laboratorio tipi</strong><small>Inferenza statica e record strutturali</small></span><span aria-hidden="true">↗</span></a>
+      <a class="lab-entry" href="./effects-demo.html"><span><strong>Laboratorio effetti</strong><small>Richieste asincrone e modello immutabile</small></span><span aria-hidden="true">↗</span></a>
+      <a class="lab-entry" href="./lesson-import.html"><span><strong>Importa una lezione</strong><small>App checked · HTTP, JSON, Date e Storage</small></span><span aria-hidden="true">↗</span></a>
+      <a class="lab-entry" href="./persistent-ledger.html"><span><strong>Registro lezioni</strong><small>App pilota con salvataggio locale</small></span><span aria-hidden="true">↗</span></a>
+        </div>
+      </section>
       <section class="guide" aria-label="Una guida rapida">
         <div class="guide-heading">
           <span>01 — IL CONCETTO</span>
@@ -186,7 +191,7 @@
           <span>Discorsivo</span>
           <code>add 2 and 3</code>
         </div>
-        <p class="guide-foot">Mira offre campi di record, funzioni e pipeline, confronti e condizioni. Record tipizzati e closure generiche restano in progetto.</p>
+        <p class="guide-foot">Consulta la guida per le funzionalità disponibili, la loro prima versione e gli esempi verificati.</p>
       </section>
     </main>
 
