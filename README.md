@@ -158,6 +158,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Accesso sicuro ai campi opzionali con Option | `0.100` | [Dettagli](docs/type-representation.md#safe-optional-access-0100) |
 | ✅ | Inferenza statica della presenza dei campi | `0.101` | [Dettagli](docs/type-representation.md#static-presence-inference-0101) |
 | ✅ | Refinement testuali a insieme finito | `0.102` | [Dettagli](docs/type-representation.md#text-refinements-0102) |
+| ✅ | Stili GUI dichiarati mediante tipi Mira | `0.103` | [Dettagli](docs/type-representation.md#typed-gui-styles-0103) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
