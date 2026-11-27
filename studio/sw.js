@@ -15,6 +15,7 @@ const ASSETS = [
   './syntax-highlight.js',
   './lab-highlight.js',
   './lab-highlight.css',
+  './cozy-labs.css',
   './reference-ui.js',
   './atlas-ui.js',
   './benchmark-ui.js',

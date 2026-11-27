@@ -3,6 +3,8 @@
 (function () {
   'use strict';
   const root = document.getElementById('mira-root');
+  const theme=globalThis.MiraCozyTheme;
+  if(theme){theme.apply(document.body,theme.presets[0].slice(1));theme.typography(document.body,'cozy',16,2);}
   const errors = document.getElementById('errors');
   const heading = document.getElementById('renderer-status');
   const inspector = document.getElementById('renderer-plan');

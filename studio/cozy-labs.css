@@ -1,0 +1,33 @@
+
+/* Shared Studio tokens, loaded after lab-local geometry. Theme Lab's specimen
+   remains untouched: it is a configurable design experiment. */
+html,body {background:var(--paper,#f5e9ed);color:var(--ink,#39334e)}
+body {font-family:ui-rounded,"Nunito","Ubuntu Sans","Avenir Next",system-ui,sans-serif;line-height:1.55;overflow-wrap:break-word}
+body :is(.grammar-lab,.type-lab,.explorer,.lab,.projection-shell,.lesson-import,.ledger-page,.notebook,.lab-page) {max-width:920px;min-width:0}
+body :is(.explorer .panel,.lab section,.projection-panel,.lesson-import section,.lesson-import header,section.result,.lab-card) {
+ background:var(--studio-panel,#fff8f4);color:var(--ink,#39334e);border:1px solid var(--line,#cbbbc9);border-radius:16px;box-shadow:var(--shadow,0 3px 12px #71556c18);min-width:0
+}
+body .lesson-import header {background:#f1e5f3}
+body :is(button,select,input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),textarea) {border:1px solid var(--line,#cbbbc9);border-radius:10px;max-width:100%;color:inherit}
+body :is(button,select) {min-height:44px;white-space:normal;overflow-wrap:anywhere}
+body button:not(.tab):not([disabled]) {background:var(--studio-button,linear-gradient(#fff9f6,#f0e2e9));box-shadow:inset 0 1px #fff9,0 2px 4px #71556c20}
+body button:is(.primary,[aria-pressed=true],#save):not([disabled]) {background:var(--studio-primary,linear-gradient(#dedafa,#b9b8e8));color:#39334e}
+body :is(pre,textarea) {background:var(--studio-well,#f8f4f7);border-color:var(--line,#cbbbc9);max-width:100%}
+body textarea.lab-source-highlighted {background:transparent!important}
+body .lab-code-mirror {white-space:pre;overflow:hidden;border-color:transparent;overflow-wrap:normal}
+body .projection-code {background:#f4eff7;color:#39334e;border:1px solid #cbbbc9}
+body .projection-code :is(.var,.prefix) {color:#285e91}
+body .projection-code .literal {color:#963e36}
+body .projection-code :is(.operator,.hole) {color:#8b4b0c}
+body .projection-code .keyword {color:#624098}
+body .projection-code button:not([disabled]) {background:transparent;color:inherit;box-shadow:none;border-color:transparent}
+body .projection-code button[aria-pressed=true] {background:#e5daf3;border-color:#7367ad}
+body .projection-code .inline-editor {background:#eee7f4;border-color:#a69ac1}
+body .projection-code .inline-editor input {background:#fff8f4;color:#39334e;border-color:#a69ac1}
+body .projection-code .inline-option {background:#f8f4f7;color:#39334e}
+body .projection-code .inline-error {color:#963e36}
+body .lesson-import .lesson-stats>div,body .ledger-page #storage-status {background:#e5eee8;color:#365b48}
+body .ledger-page .mira-ui-title {color:#39334e}
+body table {max-width:100%;overflow-wrap:anywhere}
+body :is(a,button,input,select,textarea,summary):focus-visible {outline:2px solid #514688;outline-offset:3px}
+@media(max-width:420px){body :is(.grammar-lab,.type-lab,.explorer,.lab,.projection-shell,.lesson-import,.ledger-page,.notebook){padding-inline:12px}body table{font-size:12px}}

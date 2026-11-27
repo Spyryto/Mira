@@ -99,6 +99,7 @@ function setView(view) {
   if (!['code', 'output', 'structure', 'reference', 'atlas', 'benchmark'].includes(view)) return;
 
   state.view = view;
+  $('workbench').dataset.activeView = view;
   for (const button of ui.viewButtons) {
     const selected = button.dataset.view === view;
     button.classList.toggle('active', selected);
@@ -492,7 +493,6 @@ function wireEvents() {
     if (location.hash === '#/benchmark') setView('benchmark');
     if (isReferenceRoute(location.hash) && referenceViewer) {
       setView('reference');
-      referenceViewer.render();
     }
   });
   $('updateNow').addEventListener('click', () => {

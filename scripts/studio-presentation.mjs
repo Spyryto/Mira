@@ -2,7 +2,7 @@
 // keep diagnostic prose and benchmark result tables out of syntax highlighting.
 const sources={
   'index.html':{code:{},edit:{inspectorProgram:'mira'}},
-  'grammar-lab.html':{code:{library:'mira',output:'js',tree:'json'},edit:{source:'mira'}},
+  'grammar-lab.html':{code:{library:'mira',output:'js'},edit:{source:'mira'}},
   'type-lab.html':{edit:{source:'mira',host:'json',modules:'json'}},
   'host-module-lab.html':{code:{bindings:'json'},edit:{source:'mira',contract:'mira',native:'mira',pure:'mira',host:'json','text-source':'mira','json-source':'mira','date-source':'mira','storage-source':'mira','http-source':'mira'}},
   'module-explorer.html':{code:{'interface-json':'json'},edit:{source:'mira',modules:'json',host:'json',bindings:'json',contract:'mira'}},
@@ -23,6 +23,12 @@ export function decorateStudioHtml(filename,html){
   }
   if(filename==='index.html'){
     html=html.replace(/<code>(add(?::| )[^<]+)<\/code>/g,'<code data-code-language="mira">$1</code>');
+  }
+  // Append the common surface styles after each lab's own layout rules.
+  if(!['index.html','theme-lab.html','theme-native-lab.html','ui-preview.html'].includes(filename)){
+    if(!/href=["'](?:\.\/)?styles\.css["']/.test(html))
+      html=html.replace('</head>','<link rel="stylesheet" href="./styles.css"></head>');
+    html=html.replace('</head>','<link rel="stylesheet" href="./cozy-labs.css"></head>');
   }
   if(!html.includes('data-code-language='))return html;
   // Theme demo pages without the Studio CSS need only its syntax rules.

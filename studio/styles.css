@@ -553,3 +553,13 @@ pre {max-width:100%;overflow:auto}
 .mira-syntax-operator{color:#8b4b0c}
 .mira-syntax-punctuation{color:#655d74}
 .mira-syntax-placeholder{color:#a64d82}
+
+/* Navigation and code reading are not compile actions. */
+.workspace:is([data-active-view="reference"],[data-active-view="atlas"],[data-active-view="benchmark"]) > .action-bar,
+.workspace:is([data-active-view="reference"],[data-active-view="atlas"],[data-active-view="benchmark"]) > .status {display:none}
+.reference-meta a {color:var(--studio-accent);background:#eee7f4;padding:4px 8px;border-radius:8px}
+.reference-meta a:hover {background:#e5daf3}
+.reference-heading p,.reference-description,.reference-list-item p,.reference-example-card p {font-size:14px;line-height:1.6}
+.reference-item-link {font-size:15px}
+.reference-try {min-height:44px}
+@media(min-width:900px){.reference-list {grid-template-columns:repeat(2,minmax(0,1fr))}}

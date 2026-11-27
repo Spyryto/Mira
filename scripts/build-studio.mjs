@@ -1,3 +1,4 @@
+import {analyzeExampleCalls} from './reference-calls.mjs';
 import {decorateStudioHtml} from './studio-presentation.mjs';
 import {nativeCozyCss} from './cozy-native-css.mjs';
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from 'node:fs';
@@ -25,6 +26,7 @@ const assets = [
   'syntax-highlight.js',
   'lab-highlight.js',
   'lab-highlight.css',
+  'cozy-labs.css',
   'reference-ui.js',
   'atlas-ui.js',
   'benchmark-ui.js',
@@ -243,6 +245,18 @@ if (documentation.error || documentation.status !== 0) {
   console.error(documentation.error?.message ?? 'Documentation provenance/reference generation failed');
   process.exit(documentation.status ?? 1);
 }
+// Enrich the PWA catalog at build time using the already compiled browser bridge.
+const referencePath=resolve(destination,'reference.json');
+const reference=JSON.parse(readFileSync(referencePath,'utf8'));
+for(const example of reference.examples){
+  const host=example.host?readFileSync(resolve(root,example.host),'utf8'):undefined;
+  const libraryLines=example.library?(readFileSync(resolve(root,example.library),'utf8')+'\n').split('\n').length-1:0;
+  example.index.ast=analyzeExampleCalls(context.MiraStudioCompiler,example,host,libraryLines);
+}
+reference.callIndex={compilerVersion:reference.version,parsed:reference.examples.filter(e=>e.index.ast.status==='parsed').length,unavailable:reference.examples.filter(e=>e.index.ast.status==='unavailable').map(e=>e.id)};
+console.log('Example call index: '+JSON.stringify(reference.callIndex));
+writeFileSync(referencePath,JSON.stringify(reference,null,2)+'\n');
+
 const lab = spawnSync('node', ['scripts/generate-laboratory.mjs'], { cwd: root, stdio: 'inherit' });
 if (lab.error || lab.status !== 0) {
   console.error(lab.error?.message ?? 'Laboratory generation failed');

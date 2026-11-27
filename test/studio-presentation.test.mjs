@@ -16,3 +16,7 @@ test('syntax scanners preserve the exact source',()=>{
   assert.ok(tokens.some(t=>t.kind!=='plain'));
  }
 });
+
+test('nominal declaration retains the double-colon operator',()=>{
+ assert.ok(tokenizeMira('Lesson :: Number;').some(t=>t.kind==='operator'&&t.text==='::'));
+});

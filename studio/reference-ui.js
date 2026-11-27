@@ -60,7 +60,7 @@ export function mountReference(root, dataset, onOpenExample) {
   function meta(example) {
     const box=element('div','reference-meta');
     const info=example.index || {};
-    for(const value of [info.category, info.since && 'Feature da '+info.since, example.expect.kind, ...(info.selectors || []).slice(0,8)].filter(Boolean))
+    for(const value of [info.category, info.since && 'Feature da '+info.since, example.expect.kind, ...(info.ast?.calls || []).slice(0,5)].filter(Boolean))
       box.append(element('span','',value));
     return box;
   }
@@ -79,7 +79,8 @@ export function mountReference(root, dataset, onOpenExample) {
     search.setAttribute('aria-label', 'Cerca nella documentazione');
     const results = element('div', 'reference-list');
 
-    const mode = location.hash.endsWith('/examples') ? 'examples' : location.hash.endsWith('/capabilities') ? 'capabilities' : 'all';
+    const [route,query=''] = location.hash.split('?');
+    const mode = route.endsWith('/examples') ? 'examples' : route.endsWith('/capabilities') ? 'capabilities' : 'all';
     for(const anchor of controls.children){const active=anchor.getAttribute('href')===(mode==='examples'?'#/guide/examples':mode==='capabilities'?'#/guide/capabilities':'#/guide');anchor.classList.toggle('reference-active',active);if(active)anchor.setAttribute('aria-current','page');}
     const filters=element('div','reference-filters');
     const addFilter=(label,values)=>{
@@ -92,7 +93,8 @@ export function mountReference(root, dataset, onOpenExample) {
     const category=addFilter('Categoria',unique(dataset.examples.map(x=>x.index?.category)));
     const version=addFilter('Feature introdotta in',unique(dataset.examples.map(x=>x.index?.since)));
     const featureFilter=addFilter('Feature',unique(dataset.features.map(x=>x.title)));
-    const selector=addFilter('Selettore esplicito nel codice',unique(dataset.examples.flatMap(x=>x.index?.selectors||[])));
+    const selector=addFilter('Funzione chiamata (AST)',unique(dataset.examples.flatMap(x=>x.index?.ast?.calls||[])));
+    selector.value=new URLSearchParams(query).get('call')||'';
     const count=element('p','reference-count');count.setAttribute('role','status');
     const more=element('button','reference-try','Mostra altri');more.type='button';
     let limit=40;
@@ -111,8 +113,8 @@ export function mountReference(root, dataset, onOpenExample) {
       }
       if(mode!=='capabilities'&&(mode==='examples'||terms.length||narrowed)) for(const example of dataset.examples) {
         const f=features.get(example.feature);const info=example.index||{};
-        if(category.value&&info.category!==category.value||version.value&&info.since!==version.value||featureFilter.value&&f?.title!==featureFilter.value||selector.value&&!info.selectors?.includes(selector.value))continue;
-        if(matches([example.id,example.title,example.description,example.source,f?.title,f?.id,info.category,info.since,...(info.selectors||[])])) entries.push(()=>exampleCard(example));
+        if(category.value&&info.category!==category.value||version.value&&info.since!==version.value||featureFilter.value&&f?.title!==featureFilter.value||selector.value&&!info.ast?.calls?.includes(selector.value))continue;
+        if(matches([example.id,example.title,example.description,example.source,f?.title,f?.id,info.category,info.since,...(info.selectors||[]),...(info.ast?.calls||[]),...(info.ast?.sections||[])])) entries.push(()=>exampleCard(example));
       }
       if(mode==='all'&&terms.length&&!narrowed) for(const item of dataset.api) {
         if(matches([item.id,item.description,item.signature])) entries.push(()=>{
@@ -172,7 +174,15 @@ export function mountReference(root, dataset, onOpenExample) {
     const result = element('p', 'reference-expected', expected(example.expect ?
       example : { expect: { kind: 'error', contains: 'Nessun risultato' } }));
     highlightCode(code, example.source);
-    root.append(meta(example), code, result);
+    root.append(meta(example));
+    const ast=example.index?.ast;
+    if(ast?.status==='parsed'){
+      const functions=element('div','reference-meta');
+      for(const call of ast.calls)functions.append(link(call,'guide/examples?call='+encodeURIComponent(call)));
+      if(ast.calls.length)root.append(element('h3','','Funzioni chiamate'),functions);
+      if(ast.sections.length)root.append(element('p','reference-note','Sezioni funzionali: '+ast.sections.join(', ')));
+    }else if(ast)root.append(element('p','reference-note','Indice AST non disponibile per questo esempio.'));
+    root.append(code, result);
 
     if (example.expect.kind === 'invoke') {
       root.append(element('p', 'reference-note',

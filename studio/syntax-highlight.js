@@ -37,7 +37,7 @@ export function tokenizeMira(source) {
     } else if (wordStart(char)) {
       while (wordPart(source[i])) i++;
       const text = source.slice(start, i);
-      if (source[i] === ':' && text !== '_') {
+      if (source[i] === ':' && source[i+1] !== ':' && text !== '_') {
         i++;
         add('selector', source.slice(start, i));
       } else {
