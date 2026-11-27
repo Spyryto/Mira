@@ -2482,3 +2482,81 @@ test('0.99 optional field presence is public ABI and required/optional signature
     assert.notEqual(bad.status,0);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.100 safe optional access reuses the visible nominal Option and payload type',()=>{
+  const source='Option (T) :: Some (T) | None; Style :: {name: Text, padding?: Number, active?: Boolean}; original (Style) = {name: "base"}; padded (Style) = {name: "padded", padding: 0, active: false}; missing = original ~? padding; present = padded ~? padding; flag = padded ~? active; read: s (Style) -> Number = match: (s ~? padding) {some: {p | p}, none: {| 12}}; result = read: padded;';
+  const types=check(source);
+  assert.equal(types.missing,'Option (Number)');
+  assert.equal(types.present,'Option (Number)');
+  assert.equal(types.flag,'Option (Boolean)');
+  assert.equal(types.result,'Number');
+  for(const extra of [
+    'bad = original ~ padding;',
+    'bad = original ~? typo;',
+    'bad = original ~? name;',
+    'bad = {padding: 12} ~? padding;',
+    'bad = 12 ~? padding;',
+    'bad: r = r ~? padding;',
+    'bad (Option (Text)) = original ~? padding;',
+    'bad = match: (original ~? padding) {some: {p | p}};',
+    'bad = match: (original ~? padding) {some: {| 1}, none: {| 0}};'
+  ])assert.throws(()=>check(source+extra),undefined,extra);
+  for(const bad of [
+    'Style :: {padding?: Number}; s (Style) = {}; x = s ~? padding;',
+    'Option (T) :: Some (Text) | None; Style :: {padding?: Number}; s (Style) = {}; x = s ~? padding;',
+    'Option (T) :: Some (T) | None (T); Style :: {padding?: Number}; s (Style) = {}; x = s ~? padding;'
+  ])assert.throws(()=>check(bad),undefined,bad);
+});
+
+test('0.100 optional access evaluates once, distinguishes false and zero, and fuses immediate matches on JS/PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-safe-optional-'));
+  try{
+    const input=join(dir,'program.mira');
+    const pre='Option (T) :: Some (T) | None; Style :: {padding?: Number, active?: Boolean, text?: Text}; original (Style) = {}; padded (Style) = {padding: 0, active: false, text: ""}; read: s (Style) -> Number = match: (s ~? padding) {some: {p | p}, none: {| 12}}; reversed: s (Style) -> Number = match: (s ~? padding) {none: {| 12}, some: {p | p}}; capture: s (Style) = {| match: (s ~? padding) {some: {p | p}, none: {| 12}}};';
+    const source=pre+'result = {missing: (original ~? padding), zero: (padded ~? padding), flag: (padded ~? active), text: (padded ~? text), values: [(read: original), (read: padded), (reversed: original), (reversed: padded), (() >> (capture: padded))]};';
+    const expected={missing:{tag:'None'},zero:{tag:'Some',value:0},flag:{tag:'Some',value:false},text:{tag:'Some',value:''},values:[12,0,12,0,0]};
+    for(const target of ['js','php']){
+      const run=src=>{writeFileSync(input,src);return spawnSync('node',['dist/mira.cjs',input,target,'--checked','--tree-shake'],{encoding:'utf8'});};
+      const built=run(source);
+      assert.equal(built.status,0,built.stderr);
+      const r=target==='js'?spawnSync('node',['-e',built.stdout+'\nconsole.log(JSON.stringify(result));'],{encoding:'utf8'}):
+        spawnSync('php',['-r',built.stdout.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);
+      assert.deepEqual(JSON.parse(r.stdout),expected);
+      const fused=run(pre+'result = read: padded;');
+      assert.equal(fused.status,0,fused.stderr);
+      const label=target==='js'?'function read(s)':'function read($s)';
+      const body=fused.stdout.slice(fused.stdout.indexOf(label)).split('\n}')[0];
+      assert.ok(body.includes(target==='js'?'Object.hasOwn':'array_key_exists'),body);
+      assert.doesNotMatch(body,/['"]?(?:tag|Some|None)['"]?\s*[:=]|\.tag|\['tag'\]/);
+      assert.equal((body.match(target==='js'?/Object\.hasOwn/g:/array_key_exists/g)||[]).length,1,body);
+      const once=run(pre+'make: n (Number) -> Style = {padding: n}; result = match: ((make: 0) ~? padding) {some: {p | p}, none: {| 12}};');
+      assert.equal(once.status,0,once.stderr);
+      assert.equal((once.stdout.match(/make\(0\)/g)||[]).length,1);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('0.100 safe access imports standard Option by nominal identity',async()=>{
+  const {readFileSync}=await import('node:fs');
+  const dir=mkdtempSync(join(tmpdir(),'mira-optional-import-'));
+  try{
+    mkdirSync(join(dir,'Data'));
+    writeFileSync(join(dir,'Data','Outcome.mira'),readFileSync('lib/common/Data/Outcome.mira','utf8'));
+    const input=join(dir,'App.mira');
+    const source='module App; import Data / Outcome {Option;}; Style :: {padding?: Number}; s (Style) = {padding: 2}; value = s ~? padding; result = match: value {some: {p | p}, none: {| 0}};';
+    writeFileSync(input,source);
+    const checkResult=spawnSync('node',['dist/mira.cjs',input,'--check'],{encoding:'utf8'});
+    assert.equal(checkResult.status,0,checkResult.stderr);
+    assert.equal(JSON.parse(checkResult.stdout).find(x=>x.name==='App / value').schema.name,'Data / Outcome / Option');
+    for(const target of ['js','php']){
+      const built=spawnSync('node',['dist/mira.cjs',input,target,'--checked','--tree-shake'],{encoding:'utf8'});
+      assert.equal(built.status,0,built.stderr);
+      const name='__miraModule_v_417070202F20726573756C74';
+      const r=target==='js'?spawnSync('node',['-e',built.stdout+'\nconsole.log('+name+');'],{encoding:'utf8'}):
+        spawnSync('php',['-r',built.stdout.replace(/^<\?php/,'')+'\necho '+ '$'+name+';'],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);assert.equal(r.stdout.trim(),'2');
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
