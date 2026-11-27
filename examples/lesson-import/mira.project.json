@@ -1,0 +1,85 @@
+{
+  "format": 1,
+  "entry": "App.mira",
+  "moduleRoots": [
+    {
+      "root": ".",
+      "include": [
+        "Services",
+        "Providers"
+      ]
+    },
+    {
+      "root": "../../lib/common",
+      "include": [
+        "Data",
+        "Services"
+      ]
+    },
+    {
+      "root": "../../lib/text",
+      "include": [
+        "Services",
+        "Providers"
+      ]
+    },
+    {
+      "root": "../../lib/date",
+      "include": [
+        "Services",
+        "Providers"
+      ]
+    },
+    {
+      "root": "../../lib/storage",
+      "include": [
+        "Services",
+        "Providers"
+      ]
+    },
+    {
+      "root": "../../lib/http",
+      "include": [
+        "Services"
+      ]
+    }
+  ],
+  "hosts": [
+    "../../lib/text/host.json",
+    "../../lib/date/host.json",
+    "../../lib/storage/host.json"
+  ],
+  "bindings": [
+    "../../lib/text/bindings.json",
+    "../../lib/date/bindings.json",
+    {
+      "Services / Date Safe": {
+        "provider": "Providers / Date Safe Native"
+      }
+    }
+  ],
+  "targets": {
+    "js": {
+      "bindings": [
+        "../../lib/storage/bindings-browser.json",
+        {
+          "Services / Storage Safe": {
+            "provider": "Providers / Storage Safe Browser"
+          }
+        }
+      ]
+    },
+    "php": {
+      "bindings": [
+        "../../lib/storage/bindings-files.json",
+        {
+          "Services / Storage Safe": {
+            "provider": "Providers / Storage Safe Files"
+          }
+        }
+      ]
+    }
+  },
+  "decoder": "decoder.json",
+  "treeShake": true
+}
