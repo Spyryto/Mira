@@ -334,3 +334,29 @@ Misure sorgenti rispetto alla 0.105: copertura opt-in 17/20 (85%) -> 20/20 (100%
 Deduplicazione: un solo tipo GUI Color con un automa compile-time, usato dai tre campi. Le costruzioni provate e la validazione di literal non emettono riconoscitori. Con tree shaking, i valori grammaticali non usati a runtime sono rimossi. Per validazioni dinamiche multiple il codice 0.105 conserva un riconoscitore locale per sito di validazione. La regressione Studio misura e stampa i byte del programma checked/tree-shaken per uno e due siti e verifica la quantità di tabelle; la misura non è un benchmark temporale. Una funzione ordinaria parse color: x (Text) = validate: (x), as: (GUI Color); permette già di riutilizzare un unico sito, senza infrastruttura nuova. Deduplicazione automatica whole-program rinviata: dovrebbe preservare nomi, source mapping, tree shaking e indipendenza delle compilazioni. Non usare una cache globale del compilatore come scorciatoia.
 
 Verifiche candidate: CLI con entrambi gli ordini di import e import esplicito ripetuto della grammatica; descrittori JS/PHP nativi; schema Studio di 20 campi, triplo riutilizzo nominale; confronto con legacy e renderer per campioni validi/invalidi; dipendenza grammaticale manomessa; conteggio delle tabelle generate. L'esempio Stili GUI tipizzati in Studio include i tre colori. Il supporto Unicode, grammatiche modulari e vincoli sulla lunghezza delle collezioni restano aperti.
+
+
+## List cardinality 0.107
+
+Stato: candidata. Sintassi discorsiva nella dichiarazione di refinement, con base diretta [T]:
+
+```mira
+Small :: [Number] where
+  (length of: _) >= 1 AND (length of: _) <= 3;
+raw = [1, 2];
+first (Small) = raw;
+expanded = append: 3, to: first;
+next (Small) = expanded;
+Result (T,E) :: Ok (T) | Err (E);
+parse: xs ([Number]) = validate: (xs), as: (Small);
+```
+
+Il nodo ListRefinedType contiene il tipo lista e un NumericRange normalizzato all'intervallo intero non negativo portabile [0, 4294967295], limite della lunghezza di Array JS. Si riusa readRange e il protocollo Proven / Violated / Unknown; confronti con soglie frazionarie vengono normalizzati a estremi interi, intervalli impossibili rifiutati. Non è ancora un selettore length of: disponibile nelle normali espressioni. Il tipo nominale è separato dai fatti: alias immutabili nello stesso modulo, binding lessicali, literal, join condizionale, append n+1, collect/map n e select/filter intervallo [0,n] per i soli selettori nativi, nessun fatto arbitrario da chiamate host. Le operazioni su liste raffinate restituiscono liste ordinarie; non conservano un'identità nominale che potrebbe non essere più valida. Per recuperarla serve costruzione provata. La costruzione non dimostrata è errore, non guard implicito. Tipi di elementi già compatibili, nessuna conversione implicita di elementi. Nessuna inferenza interprocedurale aggiuntiva.
+
+validate:as: richiede un input lista con tipo di elemento compatibile in checked, non è un codec per dati non tipizzati. La forma Result e quella a handler sono riusate. Il literal è valutato staticamente per cardinalità, preservando la valutazione degli elementi. Per input dinamico il backend usa Array.isArray e length, oppure is_array, array_is_list e count su PHP. Il controllo di forma PHP può avere un costo per array non packed; non promettiamo complessità costante per tutti gli input. Il tipo non aggiunge wrapper runtime; una costruzione provata genera la stessa lista. Le annotazioni e validate in modalità unchecked non garantiscono compatibilità degli elementi. Il contratto di immutabilità/host fidato rimane necessario.
+
+GUI: Style Layers :: [GUI Style] where (length of: _) <= 32. La firma del decoratore opt-in styled:with styles: accetta ora Style Layers, dunque richiede una costruzione nominale esplicita. È un cambiamento della API opt-in pre-1.0; il selettore legacy styled:with: non cambia. I 20 campi dello stile, l'ABI del descrittore, il renderer e i controlli host restano invariati. Non si introduce un controllo Haxe specifico per 32 nel nuovo percorso.
+
+Studio: Cardinalità delle liste, diagnostica, schema ListRefined con base e length, validazione e JS/PHP. Test per estremi, alias, scope, append/map, cardinalità sconosciuta, tipi degli elementi, Result/handler, erasure e 0/1/32/33 strati. Limiti: base diretta [T], niente refinement annidati su liste già nominali, tipi parametrici raffinati, lunghezze di testo, record o collezioni generiche, predicati su elementi, narrowing da confronti e validazione strutturale esterna. Le prove sui literal e sui binding non attraversano confini modulari; la firma pubblica può conservare il refinement e i relativi estremi.
+
+Misure confermate della 0.106 (Studio CI run 46000219655): JS 15599 byte con un sito dinamico, 29019 con due; PHP 18671 e 32272. Il test CLI della 0.106 richiese maxBuffer più grande per i report con tabelle ripetute. Compattazione dei report e riconoscitori è una possibile ottimizzazione separata.
