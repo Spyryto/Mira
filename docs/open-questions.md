@@ -297,3 +297,8 @@ Refinement finiti via where _ == "..." OR _ == "...", con prove statiche, nomina
 ### 0.104 — Composable grammars (candidata)
 
 Cinque costruttori Grammar e combinatori Mira; analisi compile-time di dichiarazioni pure, automi finiti deterministici, export JS/PHP e Grammar Lab offline. Rimangono aperti refinement grammaticali, Unicode, ricorsione grammaticale, catture, diagnostica di parsing, ottimizzazioni delle tabelle e scelta automatica del backend. any of: non è introdotto finché non ne è chiarita la semantica. Vedi [composable grammars](type-representation.md#composable-grammars-0104).
+
+
+### 0.105 — Grammar refinements (candidata)
+
+Nominali Text con where matches: _, grammar: nome precedente; static proof e validate:as: riusano DFA. Prima fase piatta, prefisso chiuso, niente grammatiche da host o moduli logici, niente composizione di vincoli. Riconoscitori solo per validazione dinamica, deduplicazione ancora aperta. Caso colori CSS testato in fixture; integrazione GUI rinviata alla verifica. Vedi [grammar refinements](type-representation.md#grammar-refinements-0105).
