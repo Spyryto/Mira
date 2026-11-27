@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mira · Projection Lab</title><link rel="stylesheet" href="./styles.css"><link rel="stylesheet" href="./projection-lab.css"></head>
+<body><main class="projection-shell">
+<a href="./index.html">← Mira Studio</a>
+<header><p class="eyebrow">ESPERIMENTO · EDITING STRUTTURALE</p><h1>Projection Lab</h1><p>Seleziona un nodo e modifica la struttura, non la punteggiatura. Il programma viene verificato dal compilatore reale.</p></header>
+<section class="projection-panel" aria-label="Preferenze di visualizzazione">
+<label for="projection-style">Proiezione</label><select id="projection-style"><option value="mira">Mira</option><option value="php">PHP-like (solo visuale)</option><option value="math">Matematica</option></select>
+<label><input type="checkbox" id="projection-semicolon" checked> Mostra ;</label>
+</section>
+<section class="projection-panel">
+<h2>Programma</h2><div id="projection-code" class="projection-code" aria-label="Programma strutturale"></div>
+<p class="projection-note">Tocca un numero, un riferimento o un operatore. Frecce ← → tra nodi, ↑ padre, ↓ figlio. Digita + − * / per avvolgere.</p>
+<div class="projection-actions" aria-label="Navigazione"><button data-nav="previous">←</button><button data-nav="parent">↑</button><button data-nav="child">↓</button><button data-nav="next">→</button><button id="projection-undo">Annulla</button><button id="projection-redo">Ripeti</button></div>
+</section>
+<section class="projection-panel" aria-label="Modifica selezione">
+<h2 id="projection-selection">Selezione</h2>
+<div class="projection-actions" aria-label="Composizione"><button data-wrap="+">+ </button><button data-wrap="-">−</button><button data-wrap="*">×</button><button data-wrap="/">÷</button><button id="projection-remove">Svuota</button></div>
+<form id="projection-form"><label for="projection-input">Numero o riferimento</label><div class="projection-input-row"><input id="projection-input" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="es. 12 o hours"><button type="submit">Inserisci</button></div></form>
+<div class="projection-actions" id="projection-suggestions" aria-label="Riferimenti disponibili"></div><p id="projection-message" role="status" aria-live="polite"></p>
+</section>
+<section class="projection-panel"><h2>Sorgente Mira</h2><p id="projection-check" role="status"></p><pre id="projection-export"></pre><button id="projection-copy" disabled>Copia sorgente verificato</button></section>
+<details><summary>Limiti di questo incremento</summary><p>Solo dichiarazioni numeriche, riferimenti, quattro operatori e buchi. Nessun salvataggio, import generale, match, inferenza nei buchi o benchmark UX ancora. La tabella dei nodi è in memoria; non è un formato persistente.</p></details>
+</main><script src="./compiler.js"></script><script type="module" src="./projection-lab.js"></script></body></html>

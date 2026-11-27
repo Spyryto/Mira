@@ -13,6 +13,11 @@ mkdirSync(destination, { recursive: true });
 
 const assets = [
   'index.html',
+  'projection-lab.html',
+  'projection-lab.css',
+  'projection-lab.js',
+  'projection-core.js',
+  'projection-model.mira',
   'styles.css',
   'app.js',
   'workbench-fullscreen.js',
@@ -163,6 +168,13 @@ console.log(`Mira Studio Haxe browser bundle built in ${(performance.now() - sta
 // Compile the fixed, repository-owned pilot; no evaluation of editor code here.
 const context={};
 runInNewContext(readFileSync(resolve(destination,'compiler.js'),'utf8'),context);
+// Compile the real structural editor transitions in Checked mode on both targets.
+const projectionSource=readFileSync(resolve(root,'studio/projection-model.mira'),'utf8');
+const projectionJS=context.MiraStudioCompiler.compile(projectionSource,'js',null,false,null,true);
+const projectionPHP=context.MiraStudioCompiler.compile(projectionSource,'php',null,false,null,true);
+if(!projectionJS.ok||!projectionPHP.ok)throw Error('Projection model: '+(projectionJS.message||projectionPHP.message));
+writeFileSync(resolve(destination,'projection-program.js'),projectionJS.output+'\nexport {projection_replace__in, projection_wrap__left__right__in};\n');
+writeFileSync(resolve(root,'dist/projection-program.php'),projectionPHP.output);
 // Generate the decoder schema and host signature from the unbound Mira contract.
 const jsonFile=path=>readFileSync(resolve(root,'lib/json',path),'utf8');
 const commonFile=path=>readFileSync(resolve(root,'lib/common',path),'utf8');
