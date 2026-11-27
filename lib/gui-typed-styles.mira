@@ -54,7 +54,9 @@ GUI Style :: {
   shadow?: GUI Shadow
 };
 
+Style Layers :: [GUI Style] where (length of: _) <= 32;
+
 # Same descriptor ABI as styled:with:. No new runtime validation.
-styled: content, with styles: layers ([GUI Style]) = {
+styled: content, with styles: layers (Style Layers) = {
   type: "styled", view: content, styles: layers
 };
