@@ -11,7 +11,7 @@ if(matchMedia('(max-width:850px)').matches)$('workspace-tree').open=false;
 const initial='double: x (Number) -> Number = x * 2;\nitems = [1, 2, 3];\nresult = collect: items, with: {x | double: x};';
 let saved=initial;try{saved=localStorage.getItem('mira-ide:source:v1')??initial}catch{}
 const worker=new Worker('./ide-analysis-worker.js');
-let revision=0,lastValid=[],validRevision=-1,timer,api=[];
+let revision=0,lastValid=[],validRevision=-1,timer,api=[],inspected=[];
 const first=label=>label.split(':')[0];
 const make=(label,signature,summary,snippet,origin,kind)=>({label,signature,summary,snippet,origin,first:first(label),kind});
 const signature=s=>!s?'':s.kind==='Function'?'('+s.parameters.map(signature).join(', ')+') → '+signature(s.result):s.kind==='List'?'['+signature(s.item)+']':s.name||s.kind||'';
@@ -25,7 +25,11 @@ function renderTooltip(item){
  const p=document.createElement('div');p.textContent=info.description;el.append(p);
  const source=document.createElement('small');source.textContent=info.provenance;el.append(source);return el;
 }
-function inspect(items){$('inspect').replaceChildren(...items.map(renderTooltip));if(!items.length)$('inspect').textContent='Nessuna informazione semantica disponibile per questa selezione.';if(matchMedia('(max-width:850px)').matches)$('inspect').scrollIntoView({block:'nearest'});}
+function refreshInspector(){
+ const items=inspected.map(item=>item.origin==='Documento verificato'||item.origin==='Ultima analisi valida (non aggiornata)'?{...(lastValid.find(s=>s.label===item.label)||item),origin:lastValid.some(s=>s.label===item.label)?provenance():'Simbolo non presente nell’ultima analisi'}:item);
+ $('inspect').replaceChildren(...items.map(renderTooltip));if(!items.length)$('inspect').textContent='Nessuna informazione semantica disponibile per questa selezione.';
+}
+function inspect(items){inspected=items;refreshInspector();if(matchMedia('(max-width:850px)').matches)$('inspect').scrollIntoView({block:'nearest'});}
 function wordAt(state,pos){
  const line=state.doc.lineAt(pos),offset=pos-line.from;
  const left=line.text.slice(0,offset).match(/[A-Za-z_][A-Za-z_0-9]*$/)?.[0]||'';
@@ -63,6 +67,7 @@ const syntax=ViewPlugin.fromClass(class{constructor(view){this.decorations=marks
 function analyze(view){
  clearTimeout(timer);revision++;
  const rev=revision,source=view.state.doc.toString();
+ refreshInspector();
  $('status').textContent='Analisi…';$('status').className='status';
  timer=setTimeout(()=>worker.postMessage({revision:rev,source}),220);
 }
@@ -88,6 +93,7 @@ worker.onmessage=({data})=>{
    const b=document.createElement('button');b.textContent=item.label;b.onclick=()=>inspect([item]);return b;
   }));
  }
+ refreshInspector();
  const d=checked.diagnostic,from=d&&!d.file?position(d.line,d.column):null,to=d&&!d.file?position(d.endLine,d.endColumn):null;
  editor.dispatch(setDiagnostics(editor.state,from==null?[]:[{from,to:Math.max(from,to??from),severity:'error',message:d.message||checked.message}]));
  $('status').className=checked.ok?'status':'status error';

@@ -32,6 +32,7 @@ try{
   await editor.fill('result = @;');
   await page.locator('#status').filter({hasText:'Unexpected character'}).waitFor();
   await page.locator('.cm-lintRange-error').waitFor();
+  assert.match(await page.locator('#inspect').textContent(),/Ultima analisi valida/);
   await page.screenshot({path:resolve(out,name+'-ide-error.png'),fullPage:true});
   await editor.fill('result = 1 + "a";');
   await page.locator('#status').filter({hasText:'Type check'}).waitFor();
