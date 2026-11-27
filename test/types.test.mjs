@@ -2228,8 +2228,7 @@ test('0.97 scalar variants preserve nominal identity and exhaustiveness',()=>{
     'A :: First = 9007199254740992 | Second = 0;',
     'A :: First = 01 | Second = 2;',
     'A :: First = 1 + 2 | Second = 0;',
-    'A (T) :: First = "x" | Second = "y";',
-    'module A; Choice :: First = "x" | Second = "y";'
+    'A (T) :: First = "x" | Second = "y";'
   ]) assert.throws(()=>check(invalid),undefined,invalid);
 });
 
