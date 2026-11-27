@@ -1,5 +1,5 @@
 {
-  "version": "0.89.5",
+  "version": "0.89.6",
   "features": [
     {
       "id": "values",
@@ -2142,6 +2142,12 @@
       "title": "Storage fallibile con Option, Result ed errori nominali",
       "since": "0.89.5",
       "doc": "docs/studio.md#mira-0895-persistenza-fallibile"
+    },
+    {
+      "id": "fallible-date",
+      "title": "Date fallibili con identità opaca ed errori nominali",
+      "since": "0.89.6",
+      "doc": "docs/studio.md#mira-0896-costruzione-e-aritmetica-date-fallibili"
     }
   ]
 }

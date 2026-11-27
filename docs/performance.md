@@ -134,3 +134,7 @@ La matrice aritmetica è un test di correttezza, non un benchmark. L'uguaglianza
 ## Storage Safe 0.89.5
 
 Gli adapter fallibili riusano le operazioni native; introducono un envelope strutturale, conversione in somma Mira e controllo directory PHP. Il costo non è stato misurato; non è zero-cost dimostrato. I test di assenza, testo vuoto ed errore sono test semantici, non prestazionali.
+
+## Date Safe 0.89.6
+
+Le operazioni native di calendario sono riusate. Il risultato di successo passa attraverso un envelope e date from: per conservare l'opacità, quindi viene analizzato di nuovo. Costo di parsing, allocazioni e match non misurato; non dichiarare zero-cost. Verificare su carichi reali prima di modificare il confine dei tipi nominali.
