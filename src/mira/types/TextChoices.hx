@@ -1,6 +1,6 @@
 package mira.types;
 
-import mira.types.NumericRange.NumericProof;
+import mira.types.NumericProof;
 
 // A finite, canonical set of permitted Text values. Same three-way proof
 // protocol as numeric refinements, without imposing numeric range semantics.
