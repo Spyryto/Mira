@@ -49,7 +49,9 @@ export function buildNativeApi(root,compiler){
   const result=compiler.ast(source);
   if(!result.ok)throw Error('Native library '+path+': '+result.message);
   const defs=JSON.parse(result.output).definitions;
-  const symbols=defs.filter(d=>d.kind==='Function'&&d.selector).map(d=>({name:d.selector,kind:'selector',line:d.line}));
+  const checked=compiler.check(source);
+  const typesByName=new Map(checked.ok?JSON.parse(checked.output).map(x=>[x.name,x.schema]):[]);
+  const symbols=defs.filter(d=>d.kind==='Function'&&d.selector).map(d=>({name:d.selector,kind:'selector',line:d.line,labels:d.labels,parameters:d.parameters,schema:typesByName.get(d.selector)}));
   groups.push({name,path,source,category:name,description,lab,kind:'source',symbols,types:[]});
  }
  return groups.sort((a,b)=>a.category.localeCompare(b.category)||a.name.localeCompare(b.name));

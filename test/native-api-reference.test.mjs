@@ -10,6 +10,9 @@ test('native API indexes actual contracts and legacy libraries',()=>{
  assert.equal(text.kind,'interface');
  assert.ok(text.symbols.some(s=>s.name==='contains:in:'&&s.schema.kind==='Function'));
  assert.ok(groups.find(x=>x.name==='Services / Date').types.some(t=>t.name==='Date'));
- assert.ok(groups.find(x=>x.name==='GUI').symbols.some(s=>s.name==='column:'));
+ const column=groups.find(x=>x.name==='GUI').symbols.find(s=>s.name==='column:');
+ assert.deepEqual(column.parameters,['items']);
+ assert.deepEqual(column.labels,['column']);
+ assert.equal(text.symbols.find(s=>s.name==='contains:in:').parameters,undefined);
  assert.ok(groups.every(g=>!g.path.includes('/Providers/')));
 });

@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {spawnSync} from 'node:child_process';
 import {fieldContext,fieldRows} from '../studio/ide/field-context.js';
-import {editor_fields__prefix__from as fields,editor_field_lookup__name__from as lookup,editor_field_tooltip as tooltip} from '../dist/ide/editor-services.js';
+import {editor_fields__prefix__from as fields,editor_field_lookup__name__from as lookup,editor_field_tooltip as tooltip,editor_signature__returning as namedSignature} from '../dist/ide/editor-services.js';
 const ctx={};runInNewContext(readFileSync('dist/studio/compiler.js','utf8'),ctx);
 const base='Invoice :: {hours: Number, note?: Text, client: {name: Text}};\ninvoice (Invoice) = {hours: 2, client: {name: "A"}};';
 const report=ctx.MiraStudioCompiler.check(base);assert.equal(report.ok,true,report.message);
@@ -23,3 +23,7 @@ const payload=Buffer.from(JSON.stringify(rows)).toString('base64');
 const run=spawnSync('php',['-r',php+'\n$GLOBALS["__miraHost"]=["starts with:in:"=>fn($a,$b)=>str_starts_with($b,$a)];$rows=json_decode(base64_decode("'+payload+'"),true);echo json_encode(editor_fields__prefix__from("invoice","ho",$rows));'],{encoding:'utf8'});
 assert.equal(run.status,0,run.stderr);assert.deepEqual(JSON.parse(run.stdout),fields('invoice','ho',rows));
 console.log('Verified real compiler schemas, nested fields, optional fields, context limits and JS/PHP parity.');
+
+const named=namedSignature([{selector:'add',name:'a number',type:'Number'},{selector:'and',name:'b',type:'Number'}],'Number');
+assert.deepEqual(named.parameters[0],[{text:'add',role:'selector'},{text:': ',role:'selector'},{text:'a number',role:'parameter'},{text:' (',role:'type'},{text:'Number',role:'type'},{text:')',role:'type'}]);
+assert.equal(named.result,'Number');
