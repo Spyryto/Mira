@@ -1,5 +1,5 @@
 {
-  "version": "0.89.6",
+  "version": "0.89.7",
   "features": [
     {
       "id": "values",
@@ -2148,6 +2148,12 @@
       "title": "Date fallibili con identità opaca ed errori nominali",
       "since": "0.89.6",
       "doc": "docs/studio.md#mira-0896-costruzione-e-aritmetica-date-fallibili"
+    },
+    {
+      "id": "shared-json-outcomes",
+      "title": "Decoder JSON condivisi e radici logiche CLI esplicite",
+      "since": "0.89.7",
+      "doc": "docs/studio.md#mira-0897-decoder-json-consolidati"
     }
   ]
 }
