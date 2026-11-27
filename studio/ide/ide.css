@@ -5,3 +5,5 @@ nav summary{cursor:pointer;font-weight:650;color:#554471}nav details:not([open])
 .mira-signature-selector{color:#704c94;font-weight:600;font-style:normal}.mira-signature-parameter{font-style:italic;color:#403746;font-weight:500}.mira-signature-type{color:#32654f;font-style:normal}.mira-completion-signature{font-family:ui-monospace,Consolas,monospace;font-size:.9em;white-space:normal;margin-left:.5em}.cm-completionDetail{font-style:normal!important}
 
 .cm-completionLabel{font-weight:600}.mira-completion-signature{display:inline-block;margin-left:.65em;vertical-align:baseline;max-width:100%;overflow-wrap:anywhere}
+
+.workspace-actions{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:.6rem 0}.workspace-actions button{font-size:11px;margin:0;padding:7px;overflow-wrap:anywhere}#files{max-height:28vh;overflow:auto}#files button.selected{font-weight:650}#persistence{display:block;overflow-wrap:anywhere;color:#655570;margin:6px 0}#active-file{overflow-wrap:anywhere;min-width:0}

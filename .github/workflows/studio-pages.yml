@@ -46,6 +46,10 @@ jobs:
         run: npm run build:ide
       - name: Verify checked record completion services on JS and PHP
         run: node scripts/test-ide-fields.mjs
+      - name: Verify multifile workspace and disk adapter
+        run: |
+          node scripts/test-ide-workspace.mjs
+          node scripts/test-studio-desktop.mjs
       - name: Verify CodeMirror editing and diagnostics
         run: node scripts/studio-ide-check.mjs
       - name: Build pinned historical Studio editions
