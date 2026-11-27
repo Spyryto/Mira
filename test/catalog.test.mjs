@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { execFileSync, spawnSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -17,6 +17,10 @@ function prepareExample(example, callback) {
   try {
     const input = join(dir, example.id + '.mira');
     writeFileSync(input, example.source);
+    if (example.checked) {
+      mkdirSync(join(dir,'lib'));
+      for (const file of ['gui.mira','grammar.mira','gui-typed-styles.mira']) writeFileSync(join(dir,'lib',file),readFileSync(resolve(root,'lib',file),'utf8'));
+    }
     return callback(input, dir);
   } finally {
     rmSync(dir, {recursive: true, force: true});
@@ -27,6 +31,7 @@ function invoke(example, target) {
   return prepareExample(example, (input, dir) => {
     const args = [compiler, input, target];
     if (example.host) args.push('--host', resolve(root, example.host));
+    if (example.checked) args.push('--checked');
     const result = spawnSync('node', args, {encoding: 'utf8'});
 
     if (example.expect.kind === 'error') {
