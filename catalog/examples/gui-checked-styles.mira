@@ -1,5 +1,18 @@
-# Attiva GUI checked in Mira Studio.
+# Stili nominali: i vincoli appartengono ai tipi Mira.
+import "lib/gui.mira";
+import "lib/gui-typed-styles.mira";
+padding amount (GUI Pixels) = 16;
+gap amount (GUI Pixels) = 8;
+corner (GUI Pixels) = 12;
+stroke width (GUI Pixels) = 1;
+paper (GUI Color) = "#e8f4ff";
+stroke (GUI Color) = "#9ac5e8";
+border (GUI Border Style) = "solid";
+layout (GUI Style) = {padding: padding amount, gap: gap amount, width: Style Fill};
+surface (GUI Style) = {background: paper};
+outline (GUI Style) = {radius: corner, borderStyle: border, borderWidth: stroke width, borderColor: stroke};
+layers (Style Layers) = [layout, surface, outline];
 render (styled: (column: [
   title: "Stili verificati",
-  text: "Record diversi, un solo layout."
-]), with: [{padding: 16, gap: 8, width: "fill"}, {background: "#e8f4ff"}, {radius: 12, borderStyle: "solid", borderWidth: 1, borderColor: "#9ac5e8"}]);
+  text: "Record opzionali, un solo tipo."
+]), with styles: layers);
