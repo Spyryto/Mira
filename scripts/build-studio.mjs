@@ -153,7 +153,9 @@ const context={};
 runInNewContext(readFileSync(resolve(destination,'compiler.js'),'utf8'),context);
 // Generate the decoder schema and host signature from the unbound Mira contract.
 const jsonFile=path=>readFileSync(resolve(root,'lib/json',path),'utf8');
-const jsonSource=jsonFile('App.mira'),jsonModules=JSON.stringify({'Services / Json':jsonFile('Services/Json.mira'),'Providers / Json Native':jsonFile('Providers/Json Native.mira')});
+const commonFile=path=>readFileSync(resolve(root,'lib/common',path),'utf8');
+const commonJsonModules={'Data / Outcome':commonFile('Data/Outcome.mira'),'Data / Decoder Outcome':commonFile('Data/Decoder Outcome.mira')};
+const jsonSource=jsonFile('App.mira'),jsonModules=JSON.stringify({...commonJsonModules,'Services / Json':jsonFile('Services/Json.mira'),'Providers / Json Native':jsonFile('Providers/Json Native.mira')});
 const jsonReport=context.MiraStudioCompiler.interfaces(jsonSource,null,jsonModules);
 if(!jsonReport.ok)throw Error(jsonReport.message);
 const jsonGenerated=generateJsonDecoder(JSON.parse(jsonReport.output),JSON.parse(jsonFile('decoder.json')));
@@ -181,10 +183,9 @@ writeFileSync(resolve(destination,'http-module-data.js'),'globalThis.MiraHttpMod
 writeFileSync(resolve(destination,'http-module-program.js'),'globalThis.MiraHttpProgram = function(){\n'+httpJS.output+'\nreturn __miraModule_v_417070202F20726573756C74;\n};\n');
 copyFileSync(resolve(root,'lib/http/http-host.js'),resolve(destination,'http-host.js'));
 const lessonFile=path=>readFileSync(resolve(root,'examples/lesson-import',path),'utf8');
-const commonFile=path=>readFileSync(resolve(root,'lib/common',path),'utf8');
 const lessonData=buildLessonImport(context.MiraStudioCompiler,lessonFile('App.mira'),JSON.parse(lessonFile('decoder.json')),
   {...JSON.parse(textData.modules),...JSON.parse(dateData.modules),...JSON.parse(storageData.modules),...JSON.parse(httpData.modules),
-    'Data / Outcome':commonFile('Data/Outcome.mira'),
+    ...commonJsonModules,
     'Services / Date Safe':commonFile('Services/Date Safe.mira'),
     'Data / Date Outcome':commonFile('Data/Date Outcome.mira'),
     'Providers / Date Safe Native':dateFile('Providers/Date Safe Native.mira'),

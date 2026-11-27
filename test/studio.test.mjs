@@ -1914,6 +1914,7 @@ test('0.85 fallible JSON returns typed Result and handles invalid inputs on both
   assert.equal(checked.ok,true,checked.message);
   const rows=JSON.parse(checked.output),decode=rows.find(x=>x.name.endsWith(' / try decode lesson:'));
   assert.equal(decode.schema.result.kind,'Sum');
+  assert.equal(decode.schema.result.name,'Data / Outcome / Result');
   assert.equal(decode.schema.result.alternatives.find(x=>x.tag==='Err').payload.kind,'Text');
   const expected=[{accepted:true,total:60,error:''},{accepted:false,total:0,error:'invalid_json_data'},{accepted:false,total:0,error:'invalid_json_data'}];
   for(const target of ['js','php']){
@@ -2200,4 +2201,22 @@ test('0.89.6 civil Date operations return shared Result and nominal errors in JS
   const bad=source+' forged (Date) = {iso: "2028-02-29"};';
   assert.equal(bridge.check(bad,d.host,d.modules,d.jsBindings).ok,false);
   assert.equal(bridge.check(source+' leak = native try checked date "2028-02-29";',d.host,d.modules,d.jsBindings).ok,false);
+});
+
+test('0.89.7 both JSON decoders share a generic checked outcome converter',()=>{
+  const ctx={};for(const asset of ['json-module-data.js','lesson-import-data.js'])runInNewContext(read(asset),ctx);
+  const json=ctx.MiraJsonModuleData,lesson=ctx.MiraLessonImportData;
+  const jm=JSON.parse(json.modules),lm=JSON.parse(lesson.modules);
+  assert.equal(jm['Data / Outcome'],lm['Data / Outcome']);
+  assert.equal(jm['Data / Decoder Outcome'],lm['Data / Decoder Outcome']);
+  const source='module App; interface result; import Data / Decoder Outcome {decoded result: ;}; import Data / Outcome {Result;}; implementation summarize: r (Result (Text, Text)) -> Text = match: r {ok: {v | v}, err: {e | e}}; number: r (Result (Number, Text)) -> Number = match: r {ok: {v | v}, err: {e | 0}}; result = {text: (summarize: (decoded result: {values: ["Ada"], error: ""})), failed: (summarize: (decoded result: {values: [], error: "invalid_json_data"})), number: (number: (decoded result: {values: [42], error: ""}))};';
+  const expected={text:'Ada',failed:'invalid_json_data',number:42},name='__miraModule_v_417070202F20726573756C74';
+  for(const target of ['js','php']){
+    const out=bridge.compile(source,target,null,false,json.modules,true,true);assert.equal(out.ok,true,out.message);
+    if(target==='js')assert.deepEqual(JSON.parse(JSON.stringify(runInNewContext(out.output+'\n'+name,{}))),expected);
+    else{
+      const run=spawnSync('php',['-r',out.output.replace(/^<\?php/,'')+'\necho json_encode($'+name+');'],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);assert.deepEqual(JSON.parse(run.stdout),expected);
+    }
+  }
 });

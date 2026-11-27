@@ -1880,7 +1880,7 @@ test('0.83 Text service runs on both CLI targets using the reusable native adapt
 test('0.84 CLI generates the JSON decoder manifest from the independent contract',async()=>{
   const {generateJsonDecoder}=await import('../scripts/json-contract.mjs');
   const {readFileSync}=await import('node:fs');
-  const run=spawnSync('node',['dist/mira.cjs','lib/json/App.mira','--interfaces'],{encoding:'utf8'});assert.equal(run.status,0,run.stderr);
+  const run=spawnSync('node',['dist/mira.cjs','lib/json/App.mira','--interfaces','--module-root','lib/common'],{encoding:'utf8'});assert.equal(run.status,0,run.stderr);
   const config=JSON.parse(readFileSync('lib/json/decoder.json','utf8'));
   const report=JSON.parse(run.stdout),generated=generateJsonDecoder(report,config);
   assert.equal(generated.host.types[config.capability].result.record.hours,'Number');
@@ -1889,7 +1889,7 @@ test('0.84 CLI generates the JSON decoder manifest from the independent contract
     const host=join(dir,'host.json'),bindings=join(dir,'bindings.json');
     writeFileSync(host,JSON.stringify(generated.host));writeFileSync(bindings,JSON.stringify(generated.bindings));
     for(const target of ['js','php']){
-      const out=spawnSync('node',['dist/mira.cjs','lib/json/App.mira',target,'--checked','--tree-shake','--host',host,'--bindings',bindings],{encoding:'utf8'});
+      const out=spawnSync('node',['dist/mira.cjs','lib/json/App.mira',target,'--module-root','lib/common','--checked','--tree-shake','--host',host,'--bindings',bindings],{encoding:'utf8'});
       assert.equal(out.status,0,out.stderr);
       const name='__miraModule_v_417070202F20726573756C74';
       const file=join(dir,target==='js'?'out.mjs':'out.php');
@@ -1907,9 +1907,13 @@ test('0.84 CLI generates the JSON decoder manifest from the independent contract
 test('0.85 fallible JSON schema is consistent with direct decoder and rejects divergence',async()=>{
   const {generateJsonDecoder}=await import('../scripts/json-contract.mjs');
   const {readFileSync}=await import('node:fs');
-  const run=spawnSync('node',['dist/mira.cjs','lib/json/App.mira','--interfaces'],{encoding:'utf8'});assert.equal(run.status,0,run.stderr);
+  const run=spawnSync('node',['dist/mira.cjs','lib/json/App.mira','--interfaces','--module-root','lib/common'],{encoding:'utf8'});assert.equal(run.status,0,run.stderr);
   const config=JSON.parse(readFileSync('lib/json/decoder.json','utf8'));
   const report=JSON.parse(run.stdout),generated=generateJsonDecoder(report,config);
+  assert.equal(report.interfaces.find(m=>m.module===config.service).surface.symbols.find(s=>s.name===config.fallibleSelector).schema.result.name,'Data / Outcome / Result');
+  const wrongIdentity=structuredClone(report);
+  wrongIdentity.interfaces.find(m=>m.module===config.service).surface.symbols.find(s=>s.name===config.fallibleSelector).schema.result.name='Services / Json / Result';
+  assert.throws(()=>generateJsonDecoder(wrongIdentity,config),/Result/);
   assert.equal(generated.decoder.fallibleCapability,config.fallibleCapability);
   assert.deepEqual(generated.host.types[config.fallibleCapability].result.record.values.list,generated.host.types[config.capability].result);
   const altered=structuredClone(report);
@@ -1921,7 +1925,7 @@ test('0.85 fallible JSON schema is consistent with direct decoder and rejects di
     writeFileSync(host,JSON.stringify(generated.host));writeFileSync(bindings,JSON.stringify(generated.bindings));
     const expected=[{accepted:true,total:60,error:''},{accepted:false,total:0,error:'invalid_json_data'},{accepted:false,total:0,error:'invalid_json_data'}];
     for(const target of ['js','php']){
-      const out=spawnSync('node',['dist/mira.cjs','lib/json/Fallible.mira',target,'--checked','--tree-shake','--host',host,'--bindings',bindings],{encoding:'utf8'});
+      const out=spawnSync('node',['dist/mira.cjs','lib/json/Fallible.mira',target,'--module-root','lib/common','--checked','--tree-shake','--host',host,'--bindings',bindings],{encoding:'utf8'});
       assert.equal(out.status,0,out.stderr);
       const name='__miraModule_v_417070202F20726573756C74',file=join(dir,target==='js'?'out.mjs':'out.php');
       const js='await import('+JSON.stringify(pathToFileURL(resolve('studio/effects.js')).href)+');\nawait import('+JSON.stringify(pathToFileURL(resolve('lib/json/json-host.js')).href)+');\nconst __miraHost=globalThis.MiraJsonDecoder.host('+JSON.stringify(generated.decoder)+');\n'+out.stdout+'\nconsole.log(JSON.stringify('+name+'));';
@@ -2116,5 +2120,36 @@ test('0.89.4 independent contracts share nominal types with inherited selective 
         bad=run('--check',...flags);assert.notEqual(bad.status,0,changed);assert.match(bad.stderr,pattern);
       }
     }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('0.89.7 logical module roots are explicit, unique and do not alter legacy imports',async()=>{
+  const {symlinkSync}=await import('node:fs');
+  const dir=mkdtempSync(join(tmpdir(),'mira-library-roots-'));
+  try{
+    const app=join(dir,'app'),lib=join(dir,'lib'),other=join(dir,'other');
+    for(const folder of [app,lib,other])mkdirSync(folder);
+    const input=join(app,'App.mira');
+    writeFileSync(input,'module App; import Library / answer; result = answer;');
+    const module='module Library; interface answer; implementation answer = 42;';
+    writeFileSync(join(lib,'Library.mira'),module);
+    const run=(...flags)=>spawnSync('node',['dist/mira.cjs',input,...flags],{encoding:'utf8'});
+    assert.notEqual(run('--check').status,0);
+    let out=run('--interfaces','--module-root',lib,'--module-root',lib);assert.equal(out.status,0,out.stderr);
+    assert.ok(JSON.parse(out.stdout).interfaces.some(m=>m.module==='Library'));
+    writeFileSync(join(other,'Library.mira'),module);
+    out=run('--check','--module-root',lib,'--module-root',other);assert.notEqual(out.status,0);assert.match(out.stderr,/Ambiguous module Library/);
+    out=run('--check','--module-root',join(dir,'missing'));assert.notEqual(out.status,0);assert.match(out.stderr,/not a directory/);
+    out=run('--check','--module-root');assert.notEqual(out.status,0);assert.match(out.stderr,/requires a directory/);
+    writeFileSync(join(app,'Library.mira'),module);
+    out=run('--check','--module-root',lib);assert.notEqual(out.status,0);assert.match(out.stderr,/Ambiguous module Library/);
+    writeFileSync(input,'import "legacy.mira"; result = answer;');
+    writeFileSync(join(lib,'legacy.mira'),'answer = 42;');
+    assert.notEqual(run('--check','--module-root',lib).status,0);
+    writeFileSync(join(app,'legacy.mira'),'answer = 42;');
+    out=run('--check','--module-root',lib);assert.equal(out.status,0,out.stderr);
+    writeFileSync(input,'module App; import Alias / answer; result = answer;');
+    symlinkSync(join(lib,'Library.mira'),join(other,'Alias.mira'));
+    out=run('--check','--module-root',other);assert.notEqual(out.status,0);assert.match(out.stderr,/symlinks are not supported/);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });

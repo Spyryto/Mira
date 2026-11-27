@@ -26,7 +26,7 @@ export function generateJsonDecoder(report,config){
     const ok=sum?.alternatives?.find(a=>a.tag==='Ok');
     const err=sum?.alternatives?.find(a=>a.tag==='Err');
     if(typeof name!=='string'||name===capability||fallible?.kind!=='Function'||fallible.parameters.length!==1||fallible.parameters[0].kind!=='Text'
-      ||sum?.kind!=='Sum'||sum.name!==(config.resultType??service+' / Result')||sum.alternatives.length!==2||!ok||err?.payload?.kind!=='Text'
+      ||sum?.kind!=='Sum'||sum.name!==(config.resultType??'Data / Outcome / Result')||sum.alternatives.length!==2||!ok||err?.payload?.kind!=='Text'
       ||sum.arguments?.length!==2||JSON.stringify(ok.payload)!==JSON.stringify(signature.result)
       ||JSON.stringify(sum.arguments[0])!==JSON.stringify(ok.payload)||sum.arguments[1].kind!=='Text')
       throw Error('JSON fallible decoder must return the contract Result (decoded data, Text)');
