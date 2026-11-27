@@ -70,7 +70,7 @@ export function mountReference(root, dataset, onOpenExample) {
       ' feature · ' + dataset.examples.length + ' esempi verificati su JS e PHP'));
     const controls = element('div', 'reference-controls');
     controls.append(link('Linguaggio', 'guide', 'reference-active'),
-      link('Esempi', 'guide/examples'), link('API Haxe', 'api'), link('Funzionalità', 'guide/capabilities'));
+      link('Esempi', 'guide/examples'), link('API Mira', 'guide/native'), link('API Haxe', 'api'), link('Funzionalità', 'guide/capabilities'));
     root.append(controls);
 
     const search = element('input', 'reference-search');
@@ -222,12 +222,59 @@ export function mountReference(root, dataset, onOpenExample) {
     root.append(open);
   }
 
+  function nativeApiPage(id) {
+    const groups=dataset.nativeApi||[];
+    const selected=groups.find(group=>group.name===id);
+    root.append(heading(selected?selected.name:'API native Mira',selected?selected.description:
+      groups.length+' librerie e contratti · generati durante la build'));
+    const controls=element('div','reference-controls');
+    controls.append(link('Linguaggio','guide'),link('Esempi','guide/examples'),link('API Mira','guide/native','reference-active'),link('API Haxe','api'));
+    root.append(controls);
+    if(selected){
+      root.append(link('← Tutte le librerie','guide/native','reference-back'));
+      root.append(element('p','reference-note', selected.kind==='interface'?'Interfaccia pubblica verificata dal compilatore.':'Libreria senza interfaccia modulare: dichiarazioni dal sorgente, non firme inferite.'));
+      const source=element('pre','reference-code');highlightCode(source,selected.source);source.tabIndex=0;root.append(source);
+      root.append(element('h3','','Simboli'));
+      for(const item of [...selected.symbols,...selected.types]){
+        const card=element('section','reference-list-item');
+        card.append(element('strong','',item.name),element('p','',item.kind));
+        if(item.schema){
+          const details=element('details');details.append(element('summary','','Schema del tipo'));
+          const code=element('pre','reference-code');highlightCode(code,JSON.stringify(item.schema,null,2),'json');details.append(code);card.append(details);
+        }
+        if(item.kind==='selector'&&dataset.examples.some(e=>e.index?.ast?.calls?.includes(item.name)))
+          card.append(link('Esempi che chiamano questo selettore','guide/examples?call='+encodeURIComponent(item.name)));
+        root.append(card);
+      }
+      const lab=element('a','reference-source','Apri il laboratorio');lab.href=selected.lab;
+      const repo=element('a','reference-source','Sorgente nel repository');repo.href='https://github.com/Spyryto/Mira/blob/main/'+selected.path.split('/').map(encodeURIComponent).join('/');repo.target='_blank';repo.rel='noopener noreferrer';
+      const actions=element('div','reference-controls');actions.append(lab,repo);root.append(actions);
+      return;
+    }
+    root.append(element('p','reference-note','Contratti Services e Data estratti dal compilatore; GUI, Grammar e GUI Styles consultabili dal sorgente. I provider sono implementazioni, non API pubbliche.'));
+    const search=element('input','reference-search');search.type='search';search.placeholder='Cerca libreria, funzione o tipo…';search.setAttribute('aria-label','Cerca API Mira');
+    const list=element('div','reference-list');
+    const update=()=>{
+      list.replaceChildren();
+      const terms=search.value.toLocaleLowerCase('it').trim().split(/\s+/).filter(Boolean);
+      for(const group of groups){
+        const hay=[group.name,group.category,group.description,group.source,...group.symbols.map(x=>x.name),...group.types.map(x=>x.name)].join(' ').toLocaleLowerCase('it');
+        if(!terms.every(t=>hay.includes(t)))continue;
+        const card=element('section','reference-list-item');
+        card.append(link(group.name,'guide/native/'+encodeURIComponent(group.name),'reference-item-link'),element('p','',group.description),element('small','',group.symbols.length+' simboli · '+group.types.length+' tipi di interfaccia'));
+        list.append(card);
+      }
+      if(!list.children.length)list.append(element('p','','Nessuna libreria trovata.'));
+    };
+    search.addEventListener('input',update);root.append(search,list);update();
+  }
+
   function apiIndex() {
-    root.append(heading('API di Mira', dataset.api.length +
+    root.append(heading('API interne Haxe', dataset.api.length +
       ' simboli pubblici estratti dal codice Haxe'));
     const controls = element('div', 'reference-controls');
     controls.append(link('Linguaggio', 'guide'),
-      link('Esempi', 'guide/examples'), link('API Haxe', 'api', 'reference-active'), link('Funzionalità', 'guide/capabilities'));
+      link('Esempi', 'guide/examples'), link('API Mira', 'guide/native'), link('API Haxe', 'api', 'reference-active'), link('Funzionalità', 'guide/capabilities'));
     root.append(controls, element('p', 'reference-note',
       'Firme e coordinate vengono lette automaticamente dai sorgenti Haxe. ' +
       'Le descrizioni sono mantenute nel catalogo, con link al codice reale.'));
@@ -295,7 +342,8 @@ export function mountReference(root, dataset, onOpenExample) {
     const [type, ...parts] = route.split('/');
     const id = parts.join('/');
 
-    if (type === 'feature' && features.has(id)) featurePage(features.get(id));
+    if (type === 'guide' && (id==='native'||id.startsWith('native/'))) nativeApiPage(id.slice(7));
+    else if (type === 'feature' && features.has(id)) featurePage(features.get(id));
     else if (type === 'example' && examples.has(id)) examplePage(examples.get(id));
     else if (type === 'api' && api.has(id)) apiPage(api.get(id));
     else if (type === 'api') apiIndex();

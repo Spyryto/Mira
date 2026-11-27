@@ -1,3 +1,4 @@
+import {buildNativeApi} from './native-api-reference.mjs';
 import {analyzeExampleCalls} from './reference-calls.mjs';
 import {decorateStudioHtml} from './studio-presentation.mjs';
 import {nativeCozyCss} from './cozy-native-css.mjs';
@@ -253,6 +254,8 @@ for(const example of reference.examples){
   const libraryLines=example.library?(readFileSync(resolve(root,example.library),'utf8')+'\n').split('\n').length-1:0;
   example.index.ast=analyzeExampleCalls(context.MiraStudioCompiler,example,host,libraryLines);
 }
+reference.nativeApi=buildNativeApi(root,context.MiraStudioCompiler);
+console.log('Native API groups: '+reference.nativeApi.length);
 reference.callIndex={compilerVersion:reference.version,parsed:reference.examples.filter(e=>e.index.ast.status==='parsed').length,unavailable:reference.examples.filter(e=>e.index.ast.status==='unavailable').map(e=>e.id)};
 console.log('Example call index: '+JSON.stringify(reference.callIndex));
 writeFileSync(referencePath,JSON.stringify(reference,null,2)+'\n');
