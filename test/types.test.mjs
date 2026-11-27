@@ -2727,3 +2727,50 @@ test('0.106 CLI resolves nested grammar imports and checks all GUI color propert
     assert.notEqual(run(forged+'root = column: [result];','--check').status,0,'modified grammar cannot grant trusted View');
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.107 list cardinality uses existing numeric intervals and immutable facts',()=>{
+  const source='Small :: [Number] where (length of: _) >= 1 AND (length of: _) <= 3; raw = [1, 2]; first (Small) = raw; expanded = append: 3, to: first; next (Small) = expanded; mapped = collect: next, with: {x | x + 1}; mapped small (Small) = mapped; local = () >> {| xs = [1, 2]; ys = xs; local small (Small) = ys; local small}; choose: b (Boolean) -> Small = if (b) then [1] else [1, 2];';
+  const types=check(source);
+  for(const name of ['first','next','mapped small','local'])assert.equal(types[name],'Small');
+  for(const extra of [
+    'bad (Small) = [];',
+    'bad (Small) = [1, 2, 3, 4];',
+    'bad (Small) = ["1"];',
+    'bad: xs ([Number]) -> Small = xs;',
+    'bad: b (Boolean) -> Small = if (b) then [1] else [1, 2, 3, 4];',
+    'bad (Small) = append: 4, to: next;',
+    'bad: xs (Small) -> Small = append: 4, to: xs;',
+    'Other :: [Number] where (length of: _) <= 3; other (Other) = [1]; bad (Small) = other;'
+  ])assert.throws(()=>check(source+extra),undefined,extra);
+  for(const bad of [
+    'Impossible :: [Number] where (length of: _) < 0;',
+    'Impossible :: [Number] where (length of: _) == 1.5;',
+    'Impossible :: Number where (length of: _) <= 3;',
+    'Impossible :: [Number] where (length of: _) >= 3 AND (length of: _) <= 2;'
+  ])assert.throws(()=>check(bad),undefined,bad);
+  assert.equal(check('Bounded :: [Number] where (length of: _) <= 2; a (Bounded) = []; b (Bounded) = [1, 2];').b,'Bounded');
+});
+
+test('0.107 cardinality validation preserves item type and executes on both targets',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-list-cardinality-'));
+  try{
+    const input=join(dir,'program.mira');
+    const pre='Result (T,E) :: Ok (T) | Err (E); Small :: [Number] where (length of: _) >= 1 AND (length of: _) <= 3;';
+    const source=pre+'parse: xs ([Number]) = validate: (xs), as: (Small); read: xs (Small) -> [Number] = xs; handle: xs ([Number]) -> [Number] = validate: (xs), as: (Small), then: {v | read: v}, else: {e | []}; result = {ok: (parse: [1, 2]), empty: (parse: []), long: (parse: [1, 2, 3, 4]), literal: (validate: ([3]), as: (Small)), fallback: (handle: [])};';
+    const expected={ok:{tag:'Ok',value:[1,2]},empty:{tag:'Err',value:'Invalid list cardinality'},long:{tag:'Err',value:'Invalid list cardinality'},literal:{tag:'Ok',value:[3]},fallback:[]};
+    for(const target of ['js','php']){
+      const run=(src,...flags)=>{writeFileSync(input,src);return spawnSync('node',['dist/mira.cjs',input,target,...flags],{encoding:'utf8'});};
+      const built=run(source,'--checked','--tree-shake');assert.equal(built.status,0,built.stderr);
+      assert.match(built.stdout,target==='js'?/\.length/:/\\count\(/);
+      const r=target==='js'?spawnSync('node',['-e',built.stdout+'\nconsole.log(JSON.stringify(result));'],{encoding:'utf8'}):spawnSync('php',['-r',built.stdout.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'});
+      assert.equal(r.status,0,r.stderr);assert.deepEqual(JSON.parse(r.stdout),expected);
+      const folded=run(pre+'result = validate: ([1]), as: (Small);','--checked','--tree-shake');
+      assert.equal(folded.status,0,folded.stderr);assert.doesNotMatch(folded.stdout,/\.length|\\count\(|array_is_list|Array.isArray/);
+      const erased=run(pre+'result (Small) = [1, 2];','--checked','--tree-shake');
+      const plain=run('result = [1, 2];','--checked','--tree-shake');
+      assert.equal(erased.status,0,erased.stderr);assert.equal(erased.stdout,plain.stdout);
+      for(const bad of ['bad = validate: (["x"]), as: (Small);','bad = validate: (42), as: (Small);','bad = validate: ({x: 1}), as: (Small);'])assert.notEqual(run(pre+bad,'--checked').status,0,bad);
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
