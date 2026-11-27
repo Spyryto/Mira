@@ -423,8 +423,8 @@ class ExpressionParser {
         if (depth != 0) throw new MiraError("Unclosed validation type",anchor);
         final required = new TypeParser(tokens.slice(start,position),anchor,types).parse();
         consume();
-        if (mira.types.NumericRange.ofType(required) == null)
-            throw new MiraError("Validation currently requires a numeric type",anchor);
+        if (mira.types.NumericRange.ofType(required) == null && mira.types.TextChoices.ofType(required) == null)
+            throw new MiraError("Validation currently requires a numeric type or text refinement",anchor);
         // A comma belongs to the long form only if followed by its then label.
         if (!(current().isSymbol(",") && tokens[position+1].kind == Word
             && tokens[position+1].value == "then" && tokens[position+2].isSymbol(":"))) {
