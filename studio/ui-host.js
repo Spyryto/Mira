@@ -48,9 +48,12 @@
   }
 
   // Both renderers use the same native control lifecycle and IME handling.
+  const isCheck = type => type === 'checkbox' || type === 'switch';
   function controlValue(type, value, options) {
-    if (type === 'checkbox') {
-      if (typeof value !== 'boolean') throw new Error('checkbox.checked must be boolean');
+    if (isCheck(type)) {
+      if (typeof value !== 'boolean') throw new Error(type + '.checked must be boolean');
+    } else if (type === 'slider') {
+      if (!Number.isInteger(value) || value < 0 || value > 100) throw new Error('slider.value must be an integer from 0 to 100');
     } else if (type === 'select') {
       if (typeof value !== 'string' || !options.includes(value)) {
         throw new Error('select requires unique string options and a matching string value');
@@ -61,20 +64,21 @@
 
   function connectControl(control, type, binding, report) {
     let composing = false;
-    const property = type === 'checkbox' ? 'checked' : 'value';
+    const property = isCheck(type) ? 'checked' : 'value';
     function sync(value) {
-      if (!composing && control[property] !== value) control[property] = value;
+      const native = type === 'slider' ? String(value) : value;
+      if (!composing && control[property] !== native) control[property] = native;
     }
     function change(event) {
       if (!binding.active()) return;
       if (event?.isComposing) { composing = true; return; }
       if (composing) return;
-      const value = control[property];
+      const value = type === 'slider' ? Number(control[property]) : control[property];
       if (value === binding.read()) return;
       try { binding.apply(value); }
       catch (error) { sync(binding.read()); report(error); }
     }
-    control.addEventListener(type === 'input' ? 'input' : 'change', change);
+    control.addEventListener(type === 'input' || type === 'slider' ? 'input' : 'change', change);
     if (type === 'input') {
       control.addEventListener('compositionstart', () => { composing = true; });
       control.addEventListener('compositionend', () => { composing = false; change(); });
@@ -208,6 +212,8 @@
           break;
         case 'input':
         case 'checkbox':
+        case 'switch':
+        case 'slider':
         case 'select':
           if (typeof spec.update !== 'function') throw new Error(type + '.update must be a Mira function');
           if (!parentState) throw new Error(type + '.update requires a state parent');
@@ -220,7 +226,7 @@
             budget.nodes += spec.options.length;
             if (budget.nodes > MAX_NODES) throw new Error('The view exceeds its size/depth limit');
           }
-          controlValue(type, type === 'checkbox' ? spec.checked : spec.value, spec.options);
+          controlValue(type, isCheck(type) ? spec.checked : spec.value, spec.options);
           break;
         case 'state':
           if (typeof spec.view !== 'function') throw new Error('state.view must be a Mira function');
@@ -254,19 +260,21 @@
     }
 
     function syncControl(instance) {
-      instance.sync(instance.spec.type === 'checkbox' ? instance.spec.checked : instance.spec.value);
+      instance.sync(isCheck(instance.spec.type) ? instance.spec.checked : instance.spec.value);
     }
 
     function buildControl(instance, type) {
       const wrapper = doc.createElement('label');
-      wrapper.className = 'mira-ui-control' + (type === 'checkbox' ? ' mira-ui-check' : '');
+      wrapper.className = 'mira-ui-control' + (isCheck(type) ? ' mira-ui-check' : '');
       instance.label = addText('span', '', 'mira-ui-label');
       const control = instance.control = doc.createElement(type === 'select' ? 'select' : 'input');
       control.className = 'mira-ui-input';
-      if (type !== 'select') control.type = type === 'checkbox' ? 'checkbox' : 'text';
+      if (type !== 'select') control.type = isCheck(type) ? 'checkbox' : type === 'slider' ? 'range' : 'text';
+      if (type === 'switch') { control.setAttribute('role', 'switch'); control.className += ' mira-ui-switch'; }
+      if (type === 'slider') { control.min = '0'; control.max = '100'; control.step = '1'; control.className += ' mira-ui-slider'; }
       instance.sync = bindControl(control, type, {
         active: () => instance.active,
-        read: () => type === 'checkbox' ? instance.spec.checked : instance.spec.value,
+        read: () => isCheck(type) ? instance.spec.checked : instance.spec.value,
         transition: () => instance.spec.update,
         apply: value => update(instance.parentState, old => instance.spec.update(old, value))
       }, report);
@@ -292,6 +300,8 @@
         }
         case 'input':
         case 'checkbox':
+        case 'switch':
+        case 'slider':
         case 'select':
           return buildControl(instance, type);
         case 'button': {
@@ -329,7 +339,7 @@
       if (type === 'state') instance.state = plan.state;
       if (type === 'title' || type === 'text' || type === 'button') {
         setText(node, plan.text);
-      } else if (type === 'input' || type === 'checkbox' || type === 'select') {
+      } else if (type === 'input' || isCheck(type) || type === 'slider' || type === 'select') {
         setText(instance.label, plan.text);
         const control = instance.control;
         if (control.getAttribute('aria-label') !== plan.text) control.setAttribute('aria-label', plan.text);
@@ -455,7 +465,7 @@
             if (slot.kind === 'text') setText(instance.node, value);
             else if (slot.kind === 'style') patchStyles(instance, {...instance.css, ...value});
             else if (slot.kind === 'control') {
-              const key = slot.type === 'checkbox' ? 'checked' : 'value';
+              const key = isCheck(slot.type) ? 'checked' : 'value';
               instance.spec = {...instance.spec, [key]: value};
               syncControl(instance);
             }

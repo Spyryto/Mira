@@ -44,3 +44,11 @@
 .mira-theme .mira-ui-dialog::backdrop{background:#0008}
 .mira-theme .mira-primary{background:var(--mira-gloss),var(--mira-accent);color:var(--mira-on-accent)}
 @media(forced-colors:active){.mira-theme .mira-ui-button:focus-visible,.mira-theme .mira-ui-input:focus-visible{outline-color:Highlight}}
+
+/* Native range and checkbox semantics are preserved. */
+.mira-theme input.mira-ui-slider{accent-color:var(--mira-accent);box-shadow:none;padding:0;cursor:pointer;background:transparent}
+.mira-theme .mira-ui-check input.mira-ui-switch{appearance:none;width:46px;height:26px;border:1px solid var(--mira-border);border-radius:20px;background:var(--mira-well);box-shadow:var(--mira-inset);position:relative;cursor:pointer}
+.mira-theme .mira-ui-check input.mira-ui-switch::before{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#f3f3f3;box-shadow:var(--mira-raised)}
+.mira-theme .mira-ui-check input.mira-ui-switch:checked{background:var(--mira-accent)}
+.mira-theme .mira-ui-check input.mira-ui-switch:checked::before{left:23px}
+@media(forced-colors:active){.mira-theme .mira-ui-check input.mira-ui-switch{appearance:auto;width:22px;height:22px}.mira-theme .mira-ui-check input.mira-ui-switch::before{display:none}}
