@@ -32,6 +32,8 @@ class TypeChecker {
     final wideObservations = new haxe.ds.ObjectMap<Dynamic,NumericRange>();
     final guards:Null<haxe.ds.ObjectMap<Dynamic,NumericGuard>>;
     final comparisons:Null<haxe.ds.ObjectMap<Dynamic,ScalarComparison>>;
+    final scalarMatches:Null<haxe.ds.ObjectMap<Dynamic,Array<Expr>>>;
+    final scalarEncodings = new Map<String,Map<String,Expr>>();
     final comparisonInputs:Array<{expr:Expr,type:Type,owner:Null<String>}> = [];
     var nextId = 0;
     var origin:Token;
@@ -42,8 +44,9 @@ class TypeChecker {
     final visibility:TypeVisibility;
     var moduleOwner:Null<String> = null;
 
-    public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.ds.ObjectMap<Dynamic,NumericGuard>,?visibility:TypeVisibility,?comparisons:haxe.ds.ObjectMap<Dynamic,ScalarComparison>) {
+    public function new(origins:ExpressionOrigins,host:HostEnvironment,?guards:haxe.ds.ObjectMap<Dynamic,NumericGuard>,?visibility:TypeVisibility,?comparisons:haxe.ds.ObjectMap<Dynamic,ScalarComparison>,?scalarMatches:haxe.ds.ObjectMap<Dynamic,Array<Expr>>) {
         this.comparisons = comparisons;
+        this.scalarMatches = scalarMatches;
         this.guards = guards;
         this.visibility = visibility == null ? new TypeVisibility() : visibility;
         this.origins = origins;
@@ -54,6 +57,12 @@ class TypeChecker {
         for (d in program) if (!d.isStatement) {
             definitions.set(d.isFunction() ? d.selector() : d.name, d);
             if (d.guiPrimitive) hasGui = true;
+            if (d.scalarValue != null) switch (d.body) {
+                case Variant(SumType(name,_,_),tag,null):
+                    if (!scalarEncodings.exists(name)) scalarEncodings.set(name,new Map<String,Expr>());
+                    scalarEncodings.get(name).set(tag,d.scalarValue);
+                default: fail("Invalid scalar constructor metadata");
+            }
         }
         final graph = new Dependencies(program);
         for (group in graph.ordered()) checkGroup(group,graph.recursive(group));
@@ -868,7 +877,7 @@ class TypeChecker {
         };
     }
 
-    function matchResult(input:Type,tags:Array<String>,handlers:Array<Expr>,scope:Map<String,LocalScheme>):Type {
+    function matchResult(expr:Expr,input:Type,tags:Array<String>,handlers:Array<Expr>,scope:Map<String,LocalScheme>):Type {
         return switch (visibility.view(TypeTemplates.unfold(representation(input)),moduleOwner,prune)) {
             case SumType(name,alternatives,arguments):
                 for (tag in tags) if (!alternatives.exists(tag))
@@ -876,6 +885,10 @@ class TypeChecker {
                 final missing = [for (tag in alternatives.keys()) if (tags.indexOf(tag) < 0) tag];
                 missing.sort(Reflect.compare);
                 if (missing.length > 0) fail("Non-exhaustive match for " + name + ": missing " + missing.join(", "));
+                if (scalarMatches != null && scalarEncodings.exists(name)) {
+                    final codes = scalarEncodings.get(name);
+                    scalarMatches.set(expr,[for (tag in tags) codes.get(tag)]);
+                }
                 final result = fresh();
                 for (i in 0...tags.length) {
                     final handler = handlers[i];
@@ -1025,7 +1038,7 @@ class TypeChecker {
             case FieldAccessor(key) | FieldSection(key):
                 final record = fresh();
                 FunctionType([record],projection(record,key));
-            case Match(input,tags,handlers): matchResult(infer(input,scope),tags,handlers,scope);
+            case Match(input,tags,handlers): matchResult(expr,infer(input,scope),tags,handlers,scope);
             case Variant(template,tag,payload):
                 final sum = instantiate(template);
                 switch (sum) {
