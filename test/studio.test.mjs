@@ -2245,3 +2245,27 @@ test('0.90 standalone project and Studio build the same checked application',asy
     assert.deepEqual(JSON.parse(readFileSync(resolve(dir,'decoder.json'),'utf8')),built.decoder);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.96 data-only evaluator uses real Mira AST and checked algebraic constructors',()=>{
+  const actual=readFileSync(resolve(root,'lib/gui-style-contract.mira'),'utf8');
+  assert.equal(bridge.styleContractSource(),actual);
+  const schema=bridge.constantData(actual,'style rules');
+  assert.equal(schema.ok,true,schema.message);
+  const rules=JSON.parse(schema.output);
+  assert.deepEqual(rules.padding,{tag:'Range',value:{min:0,max:4096}});
+  assert.equal(rules.width.tag,'Either');
+  assert.equal(rules.fontWeight.tag,'Whole');
+  assert.equal(Object.keys(rules).length,20);
+  const generic='Rule :: Choices ([Text]) | Either ([Rule]); mode = Choices: ["manual", "auto"]; config = {mode: mode, fallback: (Either: [mode])};';
+  const result=bridge.constantData(generic,'config');
+  assert.equal(result.ok,true,result.message);
+  assert.deepEqual(JSON.parse(result.output),{mode:{tag:'Choices',value:['manual','auto']},fallback:{tag:'Either',value:[{tag:'Choices',value:['manual','auto']}]}});
+  for(const source of [
+    'Rule :: Choices ([Text]) | None; config = Choices: [42];',
+    'twice: x = x + x; config = twice: 2;',
+    'config = 1 + 2;',
+    'config = missing;',
+    'config = 1; config;'
+  ]) assert.equal(bridge.constantData(source,'config').ok,false,source);
+});
