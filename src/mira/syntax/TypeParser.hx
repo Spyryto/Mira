@@ -14,12 +14,14 @@ class TypeParser {
     var position = 0;
     final names:Map<String,Type>;
     final allowProjection:Bool;
+    final grammarResolver:Null<String->mira.grammar.GrammarMachine>;
 
-    public function new(tokens:Array<Token>, fallback:Token, ?names:Map<String,Type>, ?allowProjection:Bool = true) {
+    public function new(tokens:Array<Token>, fallback:Token, ?names:Map<String,Type>, ?allowProjection:Bool = true,?grammarResolver:String->mira.grammar.GrammarMachine) {
         this.tokens = tokens;
         this.fallback = fallback;
         this.names = names == null ? new Map<String,Type>() : names;
         this.allowProjection = allowProjection;
+        this.grammarResolver = grammarResolver;
     }
 
     function current():Null<Token> return position < tokens.length ? tokens[position] : null;
@@ -44,7 +46,24 @@ class TypeParser {
         if (current() != null && current().kind == Word && current().value == "where") {
             if (projected) return fail("Refinement cannot refine a structural projection");
             position++;
-            if (TextChoices.isText(type)) {
+            if (current() != null && current().kind == Word && current().value == "matches") {
+                if (grammarResolver == null) return fail("Grammar refinement requires a flat nominal declaration");
+                if (type != TextType) return fail("Grammar refinement currently requires Text as its direct base");
+                position++;
+                require(":");
+                if (current() == null || current().kind != Word || current().value != "_") return fail("Expected _ in grammar refinement");
+                position++;
+                require(",");
+                if (current() == null || current().kind != Word || current().value != "grammar") return fail("Expected grammar label");
+                position++;
+                require(":");
+                final words:Array<String> = [];
+                while (current() != null && current().kind == Word) words.push(tokens[position++].value);
+                if (words.length == 0 || current() != null) return fail("Expected preceding grammar value name");
+                final name = words.join(" ");
+                type = GrammarRefinedType(name,grammarResolver(name));
+            } else if (TextChoices.isText(type)) {
+                if (mira.grammar.GrammarMachine.ofType(type) != null) return fail("Composed grammar refinements are not yet supported");
                 final choices = readChoices();
                 final inherited = TextChoices.ofType(type);
                 if (inherited != null && inherited.intersect(choices).values.length == 0) return fail("Empty text refinement");
