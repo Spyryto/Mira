@@ -2244,11 +2244,8 @@ test('0.97 checked JS/PHP use native scalar values and strict matches without ta
       const ordinary=spawnSync('node',['dist/mira.cjs',input,target],{encoding:'utf8'});
       assert.notEqual(ordinary.status,0);
       assert.match(ordinary.stderr,/Scalar variants require checked compilation/);
-      for(const flags of [[],['--tree-shake']]){
-        // Tree shaking has no implicit top-level result root; retain the
-        // result by passing it to an observable host in a separate fixture.
-        if(flags.length)continue;
-        const built=spawnSync('node',['dist/mira.cjs',input,target,'--checked',...flags],{encoding:'utf8'});
+      {
+        const built=spawnSync('node',['dist/mira.cjs',input,target,'--checked'],{encoding:'utf8'});
         assert.equal(built.status,0,built.stderr);
         assert.doesNotMatch(built.stdout,/\.tag|\['tag'\]|["']tag["']\s*[:=]/);
         const executed=target==='js'
