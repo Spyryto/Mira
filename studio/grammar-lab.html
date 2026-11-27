@@ -7,10 +7,10 @@
 <label for="source">Dichiarazioni Mira (libreria inclusa dal laboratorio)</label><textarea id="source" spellcheck="false"></textarea>
 <label for="root">Nome del valore Grammar</label><input id="root" value="grammar" spellcheck="false">
 <label for="sample">Testo da riconoscere</label><input id="sample" value="-3.14" spellcheck="false">
-<div><button id="analyze">Analizza</button><button id="js">Genera JS</button><button id="php">Genera PHP</button></div>
+<div><button id="analyze">Analizza</button><button id="js">Genera JS</button><button id="php">Genera PHP</button><button id="refinement">Prova come refinement</button></div>
 <h2>Riconoscimento</h2><p id="status" role="status" aria-live="polite"></p><p id="metrics"></p><div id="path" class="grammar-path"></div>
 <h2>Albero grammaticale</h2><pre id="tree"></pre>
-<details><summary>Codice nativo generato</summary><pre id="output"></pre></details>
+<details id="refinement-details"><summary>Refinement: sorgente e controllo tipi</summary><pre id="refinement-output"></pre></details><details><summary>Codice nativo generato</summary><pre id="output"></pre></details>
 <details><summary>Sorgente della libreria Grammar</summary><pre id="library"></pre></details>
-<p>0.104: ASCII, riconoscimento completo, automi finiti; nessun albero di parsing o cattura. Un limite di risorse non equivale a un testo rifiutato.</p>
+<p>0.105: ASCII, riconoscimento completo, automi finiti; nessun albero di parsing o cattura. Un limite di risorse non equivale a un testo rifiutato.</p>
 </main><script src="compiler.js"></script><script src="grammar-lab.js"></script></body></html>
