@@ -270,7 +270,7 @@ class TypeChecker {
                 if (r.tail != null) fail("Optional record schema requires a known closed record");
                 r.fields;
             case OptionalRecordType(fields,_): fields;
-            default: return fail("Optional record schema requires a known closed record");
+            default: fail("Optional record schema requires a known closed record");
         };
         final maybe = switch (shape) {
             case OptionalRecordType(_,fields): fields;
