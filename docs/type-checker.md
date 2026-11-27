@@ -1224,3 +1224,24 @@ un'annotazione esplicita, ad esempio child (Tree (Number)).
 ## Mira 0.89.2: uguaglianza scalare portabile
 
 Sostituisce la limitazione di rappresentazione documentata nella 0.42. Per Number e Integer nel dominio numerico portabile, 1 == 1.0 è vero e 1 != 1.0 è falso su JS e PHP. Text e Boolean usano uguaglianza stretta. Il checker continua a richiedere ScalarEq e unificare gli operandi; non aggiunge nuove conversioni. Durante l'inferenza registra il tipo dell'operando per espressioni e sezioni di uguaglianza; dopo l'inferenza risolve le rappresentazioni note nel contesto del modulo, senza cambiare AST, schemi o fingerprint. PHP checked emette ==/!= nativo per tipi numerici noti, ===/!== per Text/Boolean, senza helper né guardia. Vale la normale premessa di firme host corrette. Un corpo polimorfico non viene monomorfizzato; PHP usa una piccola funzione che valuta ciascun operando una volta, confronta strettamente e consente confronto numerico soltanto per una coppia int/float. Anche unchecked usa il fallback, senza coercizione di Text/Boolean; non cambia il comportamento storico di valori non scalari unchecked, che rimangono fuori dal contratto checked. JS mantiene ===/!==. Non è una promessa di equivalenza di tutta l'aritmetica Number: overflow oltre interi sicuri, divisione per zero, NaN, modulo e arrotondamento restano da verificare separatamente. Nessuna normalizzazione globale o dizionario runtime. Test differenziali su entrambi i target, checked/unchecked/tree-shake e Studio.
+
+## Mira 0.89.3: resto numerico e matrice differenziale
+
+Il simbolo % indica il resto con quoziente troncato verso zero (come JS %), non il modulo euclideo. Su PHP % converte gli operandi in interi e può perfino sollevare DivisionByZeroError per un divisore non nullo come 0.5. PHP emette ora fmod(a,b) anche per sezioni e programmi unchecked; JS rimane invariato. Nel dominio finito portabile il risultato conserva la frazione e il segno del dividendo. fmod con divisore zero restituisce NaN come JS, non un intero; non si aggiunge una garanzia di finitezza a Number. Il risultato PHP è float anche per operandi interi; l'uguaglianza 0.89.2 lo gestisce. Un adapter host che pretende int nativo non deve confondere quella rappresentazione con Number Mira. Nessun wrapper, ma una chiamata alla funzione nativa PHP anziché un operatore; costo non misurato. Non vengono aggiunte prove per % o modificati NumericRange, Integer e raffinamenti.
+
+Matrice CI: +, -, *, / e % su coppie di numeri positivi/negativi, frazioni binarie, decimali, zero come dividendo e limite degli interi sicuri, escludendo risultati fuori dal dominio; sezioni e funzioni, checked/unchecked/tree-shake, Studio e test preesistenti. Il confronto normalizza il segno dello zero soltanto nel test JSON: non prova l'identità bit per bit, né tutti i casi limite. Il resto per zero è verificato tramite auto-disuguaglianza di NaN.
+
+### Audit nativo (Node 22.16 / PHP 8.4.24)
+
+Misurazione locale degli operatori host prima della modifica (non benchmark di Mira):
+
+| Operazione | JS | PHP prima | PHP fmod |
+| --- | --- | --- | --- |
+| 5.5 % 2 | 1.5 | 1 | 1.5 |
+| -5.5 % 2 | -1.5 | -1 | -1.5 |
+| 5.5 % -2 | 1.5 | 1 | 1.5 |
+| 0.75 % 0.5 | 0.25 | DivisionByZeroError | 0.25 |
+| 1.5 % 0.5 | 0 | DivisionByZeroError | 0 |
+| 5 % 0 | NaN | DivisionByZeroError | NaN |
+
+Altre divergenze osservate, NON corrette in questo incremento: 1 / 0 produce Infinity JS e DivisionByZeroError PHP; fdiv PHP 8 sarebbe una possibilità ma cambierebbe esplicitamente la politica di divisione. 9007199254740991 + 2 produce 9007199254740992 JS e 9007199254740993 PHP (int64). Il risultato è fuori dal dominio degli interi sicuri. Non normalizzare indiscriminatamente tutti i Number né trasformare ogni operazione in un wrapper. Occorre decidere politica dei risultati non finiti e della precisione fuori dominio, distinta dalle prove Integer già disponibili. La matrice non è una dimostrazione formale di equivalenza.

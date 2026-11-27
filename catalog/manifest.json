@@ -1,5 +1,5 @@
 {
-  "version": "0.89.2",
+  "version": "0.89.3",
   "features": [
     {
       "id": "values",
@@ -2124,6 +2124,12 @@
       "title": "Uguaglianza scalare portabile con specializzazione checked",
       "since": "0.89.2",
       "doc": "docs/type-checker.md#mira-0892-uguaglianza-scalare-portabile"
+    },
+    {
+      "id": "portable-number-remainder",
+      "title": "Resto frazionario portabile e matrice aritmetica differenziale",
+      "since": "0.89.3",
+      "doc": "docs/type-checker.md#mira-0893-resto-numerico-e-matrice-differenziale"
     }
   ]
 }

@@ -2024,3 +2024,46 @@ test('0.89.2 scalar equality is portable for numeric representations, sections a
     assert.notEqual(spawnSync('node',['dist/mira.cjs',input,'--check'],{encoding:'utf8'}).status,0);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+test('0.89.3 finite arithmetic differential matrix and fractional remainder',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-arithmetic-matrix-'));
+  try{
+    const input=join(dir,'program.mira');
+    // Keep inputs and intermediate results in the portable numeric domain.
+    // Binary fractions and ordinary decimals; mixed signs and safe boundary.
+    const pairs=[[5.5,2],[-5.5,2],[5.5,-2],[-5.5,-2],[1.5,0.5],[0.75,0.5],[0.1,0.2],[7,3],[0,2],[9007199254740991,2]];
+    const ops=['+','-','*','/','%'];
+    const calculate=(op,a,b)=>({'+':()=>a+b,'-':()=>a-b,'*':()=>a*b,'/':()=>a/b,'%':()=>a%b})[op]();
+    const literal=n=>n<0?'(0 - '+Math.abs(n)+')':String(n);
+    const expressions=[],expected=[];
+    for(const [a,b] of pairs)for(const op of ops){
+      const value=calculate(op,a,b);
+      if(!Number.isFinite(value)||Math.abs(value)>Number.MAX_SAFE_INTEGER)continue;
+      expressions.push('('+literal(a)+' '+op+' '+literal(b)+')');expected.push(value===0?0:value);
+    }
+    const source=[
+      'by two = (_ % 2);',
+      'half divisor = (0.75 % _);',
+      'rest: a, by: b = a % b;',
+      'result = ['+expressions.join(', ')+', (5.5 >> by two), (0.5 >> half divisor), (rest: 1.5, by: 0.5)];',
+      'zero remainder = (5 % 0) != (5 % 0);'
+    ].join('\n');
+    expected.push(1.5,0.25,0);
+    writeFileSync(input,source);
+    for(const target of ['js','php'])for(const flags of [[],['--checked'],['--checked','--tree-shake']]){
+      const out=spawnSync('node',['dist/mira.cjs',input,target,...flags],{encoding:'utf8'});
+      assert.equal(out.status,0,out.stderr);
+      if(target==='php')assert.match(out.stdout,/\\fmod\(/);
+      const file=join(dir,target==='js'?'program.mjs':'program.php');
+      const suffix=target==='js'?'\nconsole.log(JSON.stringify([result,zeroRemainder]));':'\necho json_encode([$result,$zeroRemainder],JSON_THROW_ON_ERROR);';
+      writeFileSync(file,out.stdout+suffix);
+      const run=spawnSync(target==='js'?'node':'php',[file],{encoding:'utf8'});
+      assert.equal(run.status,0,run.stderr);
+      const [actual,zero]=JSON.parse(run.stdout);
+      assert.deepEqual(actual.map(n=>n===0?0:n),expected,target+' '+flags.join(' '));
+      assert.equal(zero,true);
+    }
+    // No new proof rule for remainder or weakened Integer validation.
+    assert.throws(()=>check('bad (Integer) = 5.5 % 2;'),/Integer/);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
