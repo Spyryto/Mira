@@ -503,3 +503,7 @@ Risultati della revisione, da non confondere con garanzie già implementate: Num
 ## Stato dopo la 0.89.3
 
 L'uguaglianza scalare e il resto frazionario sono stati corretti in 0.89.2 e 0.89.3, entrambe integrate con CI verde. La voce precedente conserva l'esito storico della revisione 0.89.1. Il [rapporto di consolidamento](consolidation-089.md) raccoglie risultati e limiti ed è incluso in design-notes.html, consultabile offline con la cache di Studio. Non è un nuovo runtime o una nuova feature del linguaggio.
+
+## Mira 0.89.4: Option e Result comuni nel pilota
+
+La pagina Importa una lezione usa Data / Outcome tramite il contratto del decoder, la facciata Date Safe e Storage Optional. Il JSON non viene duplicato né il suo schema modificato, il dato salvato rimane testo originale. Il modello resta checked su entrambi i target, la UI riconosce Some/None alla lettura. Date invalida è Err; un errore I/O non è assenza, resta eccezione gestita dal controller. Test di identità nominale, fingerprint, compilazione ed esecuzione JS/PHP e regressione dell'app. I contratti lib/json, lib/date e lib/storage originari non vengono rimossi o modificati. Migrazione ulteriore e tooling multifile sono incrementi successivi.

@@ -2056,7 +2056,7 @@ test('0.89 integrated lesson import composes checked modules and preserves the v
   assert.equal(p.accept({status:404,body:raw}).error,'http_status');
   assert.deepEqual(plain(p.save(raw)),expected);
   const cases=[['bad','invalid_json_data'],[raw.replace('2026-11-27','2026-02-29'),'invalid_date'],[raw.replace('1.5','0'),'invalid_hours'],[raw.replace('Ada',''),'invalid_name']];
-  for(const [bad,error] of cases){assert.equal(p.save(bad).error,error);assert.deepEqual(plain(p.restore()),[raw]);}
+  for(const [bad,error] of cases){assert.equal(p.save(bad).error,error);assert.deepEqual(plain(p.restore()),{tag:'Some',value:raw});}
   assert.deepEqual(plain(p.request(3)),{service:'http text',id:3,reply:'http loaded',payload:true});
   const dir=mkdtempSync(resolve(tmpdir(),'mira-import-'));
   try{
@@ -2065,9 +2065,9 @@ test('0.89 integrated lesson import composes checked modules and preserves the v
     const php=spawnSync('php',args,{encoding:'utf8'});
     assert.equal(php.status,0,php.stderr);
     const actual=JSON.parse(php.stdout);
-    assert.deepEqual(actual,[expected,expected,plain(p.inspect('bad')),[raw],plain(p.accept({status:404,body:raw}))]);
+    assert.deepEqual(actual,[expected,expected,plain(p.inspect('bad')),{tag:'Some',value:raw},plain(p.accept({status:404,body:raw}))]);
   }finally{rmSync(dir,{recursive:true,force:true});}
-  assert.equal(p.remove(),true);assert.deepEqual(plain(p.restore()),[]);
+  assert.equal(p.remove(),true);assert.deepEqual(plain(p.restore()),{tag:'None'});
   assert.ok(d.js.includes('browser save text:for:'));assert.ok(!d.js.includes('files save text:for:'));
   assert.ok(d.php.includes('files save text:for:'));assert.ok(!d.php.includes('browser save text:for:'));
   const nodes=new Map();const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',hidden:false,disabled:false,listeners:{},addEventListener(event,fn){this.listeners[event]=fn;}});return nodes.get(id);};
@@ -2116,5 +2116,20 @@ test('0.89.3 Studio uses the same fractional remainder lowering for sections and
     assert.deepEqual(Array.from(runInNewContext(js.output+'\nresult',{})),expected);
     const run=spawnSync('php',['-r',php.output.replace(/^<\?php/,'')+'echo json_encode($result);'],{encoding:'utf8'});
     assert.equal(run.status,0,run.stderr);assert.deepEqual(JSON.parse(run.stdout),expected);
+  }
+});
+
+test('0.89.4 lesson import shares nominal outcomes across services',()=>{
+  const ctx={};runInNewContext(read('lesson-import-data.js'),ctx);
+  const d=ctx.MiraLessonImportData;
+  for(const bindings of [null,d.jsBindings,d.phpBindings]){
+    const report=bridge.interfaces(d.source,bindings?d.host:null,d.modules,bindings);
+    assert.equal(report.ok,true,report.message);
+    const rows=JSON.parse(report.output).interfaces;
+    const schema=(module,name)=>rows.find(m=>m.module===module).surface.symbols.find(s=>s.name===name).schema;
+    assert.equal(schema('Services / Lesson Import','try decode imported lesson:').result.name,'Data / Outcome / Result');
+    assert.equal(schema('Services / Date Safe','try date from:').result.name,'Data / Outcome / Result');
+    assert.equal(schema('Services / Storage Optional','find text:').result.name,'Data / Outcome / Option');
+    assert.equal(schema('App','result').fields.find(x=>x.name==='restore').type.result.name,'Data / Outcome / Option');
   }
 });

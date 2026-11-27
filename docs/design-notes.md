@@ -755,3 +755,7 @@ La revisione complessiva è in [Consolidamento Mira 0.83–0.89.3](consolidation
 ## Registro storico delle questioni aperte
 
 [Registro delle questioni aperte 0.1–0.89.3](open-questions.md): indice permanente con ID, stato, riferimenti e distinzione tra questioni irrisolte, limiti parziali, rinvii, verifiche e risoluzioni. Incluso nel quaderno Studio; aggiornare le voci ad ogni incremento pertinente.
+
+## 0.89.4 — vocabolario comune delle API (primo incremento)
+
+Data / Outcome è un normale modulo Mira, non prelude implicita. Option e Result condividono identità nominale e rappresentazione tag/value già esistente. Necessario supportare import selettivi di tipi nei contratti indipendenti per il decoder applicativo. Si migra il pilota: JSON e data condividono Result, lettura storage espone Option. Date Safe e Storage Optional sono sottili facciate Mira sopra contratti nativi esistenti, senza nuovi adapter host. Le vecchie API restano disponibili; il generatore JSON accetta un'identità Result dichiarata nella configurazione e verifica ancora struttura e payload. Errori I/O Storage non vengono convertiti in None; rimangono eccezioni. Date Safe copre solo costruzione da testo; fallimenti add days e scrittura/rimozione restano aperti. L'envelope JSON privato, doppia validazione data e costo dei tag non sono zero-cost misurati. Non fingere di aver uniformato tutti gli errori in questa iterazione.

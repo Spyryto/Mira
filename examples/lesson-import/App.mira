@@ -3,8 +3,10 @@ interface
 result;
 import Services / Lesson Import { try decode imported lesson: ; };
 import Services / Text { code points: ; };
-import Services / Date { valid date: ; date from: ; iso of: ; weekday of: ; };
-import Services / Storage { read text: ; save text: for: ; remove text: ; };
+import Services / Date { iso of: ; weekday of: ; };
+import Services / Date Safe { try date from: ; };
+import Services / Storage { save text: for: ; remove text: ; };
+import Services / Storage Optional { find text: ; };
 import Services / Http { get text: ; successful: ; };
 implementation
 failure: message = {
@@ -15,21 +17,19 @@ failure: message = {
 inspect lesson: raw =
   match: (try decode imported lesson: raw) {
     ok: {lesson |
-      if (NOT (valid date: (lesson ~ date))) then (failure: "invalid_date")
-      else (if ((lesson ~ hours <= 0) OR (lesson ~ hours > 24))
-        then (failure: "invalid_hours")
-        else (if (((code points: (lesson ~ name)) == 0) OR ((code points: (lesson ~ name)) > 120))
-          then (failure: "invalid_name")
-          else (
-            () >> {|
-              day = date from: (lesson ~ date);
-              {accepted: true, student: (lesson ~ name), day: (iso of: day),
-               hours: (lesson ~ hours), weekday: (weekday of: day),
-               paid: (lesson ~ paid), total: (lesson ~ hours * 30), error: ""}
-            }
-          )
-        )
-      )
+      match: (try date from: (lesson ~ date)) {
+        ok: {day |
+          if ((lesson ~ hours <= 0) OR (lesson ~ hours > 24))
+            then (failure: "invalid_hours")
+            else (if (((code points: (lesson ~ name)) == 0) OR ((code points: (lesson ~ name)) > 120))
+              then (failure: "invalid_name")
+              else ({accepted: true, student: (lesson ~ name), day: (iso of: day),
+                hours: (lesson ~ hours), weekday: (weekday of: day),
+                paid: (lesson ~ paid), total: (lesson ~ hours * 30), error: ""})
+            )
+        },
+        err: {message | failure: message}
+      }
     },
     err: {message | failure: message}
   };
@@ -51,6 +51,6 @@ result = {
   accept: {response | accept response: response},
   inspect: {raw | inspect lesson: raw},
   save: {raw | persist lesson: raw},
-  restore: {| read text: "lesson"},
+  restore: {| find text: "lesson"},
   remove: {| remove text: "lesson"}
 };

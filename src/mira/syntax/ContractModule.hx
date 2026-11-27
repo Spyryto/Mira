@@ -27,8 +27,17 @@ class ContractModule {
     }
 
     public static function validate(sections:ModuleSections,anchor:Token):Void {
-        if (sections.imports.length > 0)
-            throw new MiraError("Interface-only module imports and re-exports are not yet supported",sections.imports[0]);
+        // Only explicitly named types may enter an independent interface.
+        var cursor = 0;
+        while (cursor < sections.imports.length) {
+            final origin = sections.imports[cursor];
+            if (origin.value != "import" || sections.imports[cursor+1].kind != Word)
+                throw new MiraError("Independent contract requires selective logical type imports",origin);
+            final directive = new ModuleImport(sections.imports,cursor);
+            if (directive.wildcard)
+                throw new MiraError("Independent contract requires explicit type names",origin);
+            cursor = directive.next;
+        }
         for (reference in sections.references)
             if (reference.name.indexOf(":") >= 0)
                 throw new MiraError("Independent contract requires explicit selector signature " + reference.name,reference.origin);

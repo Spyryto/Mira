@@ -181,8 +181,12 @@ writeFileSync(resolve(destination,'http-module-data.js'),'globalThis.MiraHttpMod
 writeFileSync(resolve(destination,'http-module-program.js'),'globalThis.MiraHttpProgram = function(){\n'+httpJS.output+'\nreturn __miraModule_v_417070202F20726573756C74;\n};\n');
 copyFileSync(resolve(root,'lib/http/http-host.js'),resolve(destination,'http-host.js'));
 const lessonFile=path=>readFileSync(resolve(root,'examples/lesson-import',path),'utf8');
+const commonFile=path=>readFileSync(resolve(root,'lib/common',path),'utf8');
 const lessonData=buildLessonImport(context.MiraStudioCompiler,lessonFile('App.mira'),JSON.parse(lessonFile('decoder.json')),
   {...JSON.parse(textData.modules),...JSON.parse(dateData.modules),...JSON.parse(storageData.modules),...JSON.parse(httpData.modules),
+    'Data / Outcome':commonFile('Data/Outcome.mira'),
+    'Services / Date Safe':commonFile('Services/Date Safe.mira'),
+    'Services / Storage Optional':commonFile('Services/Storage Optional.mira'),
     'Services / Lesson Import':lessonFile('Services/Lesson Import.mira'),
     'Providers / Lesson Import Native':lessonFile('Providers/Lesson Import Native.mira')},
   [JSON.parse(textData.host),JSON.parse(dateData.host),JSON.parse(storageData.host)],

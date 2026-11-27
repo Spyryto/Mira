@@ -4,5 +4,6 @@
   "provider": "Providers / Lesson Import Native",
   "capability": "native decode imported lesson",
   "fallibleSelector": "try decode imported lesson:",
-  "fallibleCapability": "native try decode imported lesson"
+  "fallibleCapability": "native try decode imported lesson",
+  "resultType": "Data / Outcome / Result"
 }

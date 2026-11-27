@@ -1,0 +1,9 @@
+module Services / Storage Optional;
+interface
+find text: :: (Text) -> Option (Text);
+import Data / Outcome { Option; };
+implementation
+import Data / Outcome { Some: ; None; };
+import Services / Storage { read text: ; };
+find text: key =
+  fold: (read text: key), with: {acc, item | Some: item}, from: None;

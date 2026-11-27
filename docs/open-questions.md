@@ -201,3 +201,7 @@ Successivamente applicazioni realmente deployabili e MiraHost; Grammar Lab, macr
 ## Indice delle fonti e metodo
 
 Documentazione storica consultata: syntax.md, mira04.md, atlas.md, structured-data.md, dogfooding.md, browser-interop.md, gui-rendering.md, performance.md, grammar.md, type-checker.md, module-design.md, design-notes.md, decisions.md, studio.md, README.md; rapporto consolidation-089.md e PR #117–126. Discussioni recuperate su Grammar Lab, moduli, tipo/GUI, MiraHost, IDE, PHX-VM, Go e riuso. Le proposte non presenti come implementazioni nel main restano A o R. Le fonti di progetto dettano principi, non una specifica eseguibile. Non sono stati rieseguiti tutti i test per questa ricognizione documentale; non si certifica che ogni limite storico sia ancora riproducibile. Eventuali lacune o stati incerti vanno corretti con riferimenti alla versione e ai test, non con supposizioni.
+
+## Aggiornamento 0.89.4 (implementazione candidata)
+
+TYPE-10 e MOD-02: primo incremento. Data / Outcome introduce Option e Result comuni e import selettivi di tipi nei contratti indipendenti. Il decoder del pilota usa Result comune, Date Safe espone try date from:, Storage Optional espone find text:. Non sono ancora risolti Result degli errori I/O, fallimenti di aritmetica date, re-export/import di valori nei contratti autonomi, migrazione del servizio JSON storico e semplificazione dell'envelope. HOST-04/06/07 restano parziali. Verificare la CI prima di marcare le voci risolte; nessuna garanzia prestazionale nuova.
