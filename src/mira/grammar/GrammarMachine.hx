@@ -33,15 +33,16 @@ class GrammarMachine {
         final accept = haxe.Json.stringify(accepting);
         return switch (target) {
             case "js":
-                "function miraGrammarMatches(input) {\n"
-                + "  if (typeof input !== 'string') return false;\n"
+                "const miraGrammarMatches = (() => {\n"
                 + "  const transitions = " + table + ";\n"
                 + "  const accepting = " + accept + ";\n"
+                + "  return function(input) {\n"
+                + "  if (typeof input !== 'string') return false;\n"
                 + "  let state = 0;\n"
                 + "  for (let i = 0; i < input.length; i++) {\n"
                 + "    const code = input.charCodeAt(i);\n"
                 + "    if (code >= 128 || (state = transitions[state][code]) < 0) return false;\n"
-                + "  }\n  return accepting[state];\n}\n";
+                + "  }\n  return accepting[state];\n  };\n})();\n";
             case "php":
                 "<?php\nfunction miraGrammarMatches($input) {\n"
                 + "  if (!is_string($input)) return false;\n"
