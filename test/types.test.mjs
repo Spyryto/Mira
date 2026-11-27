@@ -1893,7 +1893,7 @@ test('0.84 CLI generates the JSON decoder manifest from the independent contract
       assert.equal(out.status,0,out.stderr);
       const name='__miraModule_v_417070202F20726573756C74';
       const file=join(dir,target==='js'?'out.mjs':'out.php');
-      const js='await import('+JSON.stringify(pathToFileURL(resolve('studio/effects.js')).href)+');\nawait import('+JSON.stringify(pathToFileURL(resolve('lib/json/json-host.js')).href)+');\nconst __miraHost=globalThis.MiraJsonDecoder.host('+JSON.stringify(generated.decoder)+');\n'+out.stdout+'\nconsole.log(JSON.stringify('+name+'));';
+      const js='await import('+JSON.stringify(pathToFileURL(resolve('runtime/js/typed-data.js')).href)+');\nawait import('+JSON.stringify(pathToFileURL(resolve('lib/json/json-host.js')).href)+');\nconst __miraHost=globalThis.MiraJsonDecoder.host('+JSON.stringify(generated.decoder)+');\n'+out.stdout+'\nconsole.log(JSON.stringify('+name+'));';
       const php=out.stdout.replace('declare(strict_types=1);','declare(strict_types=1);\nrequire $argv[1];$GLOBALS["__miraHost"]=\\Mira\\Json\\host(json_decode($argv[2],true));')+'\necho json_encode($'+name+');';
       writeFileSync(file,target==='js'?js:php);
       const actual=spawnSync(target==='js'?'node':'php',target==='js'?[file]:[file,'lib/json/json-host.php',JSON.stringify(generated.decoder)],{encoding:'utf8'});
@@ -1928,7 +1928,7 @@ test('0.85 fallible JSON schema is consistent with direct decoder and rejects di
       const out=spawnSync('node',['dist/mira.cjs','lib/json/Fallible.mira',target,'--module-root','lib/common','--checked','--tree-shake','--host',host,'--bindings',bindings],{encoding:'utf8'});
       assert.equal(out.status,0,out.stderr);
       const name='__miraModule_v_417070202F20726573756C74',file=join(dir,target==='js'?'out.mjs':'out.php');
-      const js='await import('+JSON.stringify(pathToFileURL(resolve('studio/effects.js')).href)+');\nawait import('+JSON.stringify(pathToFileURL(resolve('lib/json/json-host.js')).href)+');\nconst __miraHost=globalThis.MiraJsonDecoder.host('+JSON.stringify(generated.decoder)+');\n'+out.stdout+'\nconsole.log(JSON.stringify('+name+'));';
+      const js='await import('+JSON.stringify(pathToFileURL(resolve('runtime/js/typed-data.js')).href)+');\nawait import('+JSON.stringify(pathToFileURL(resolve('lib/json/json-host.js')).href)+');\nconst __miraHost=globalThis.MiraJsonDecoder.host('+JSON.stringify(generated.decoder)+');\n'+out.stdout+'\nconsole.log(JSON.stringify('+name+'));';
       const php=out.stdout.replace('declare(strict_types=1);','declare(strict_types=1);\nrequire $argv[1];$GLOBALS["__miraHost"]=\\Mira\\Json\\host(json_decode($argv[2],true));')+'\necho json_encode($'+name+');';
       writeFileSync(file,target==='js'?js:php);
       const actual=spawnSync(target==='js'?'node':'php',target==='js'?[file]:[file,'lib/json/json-host.php',JSON.stringify(generated.decoder)],{encoding:'utf8'});

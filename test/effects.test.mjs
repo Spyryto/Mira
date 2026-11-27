@@ -9,6 +9,7 @@ import {fileURLToPath} from 'node:url';
 
 const read = path => readFileSync(new URL('../' + path, import.meta.url), 'utf8');
 const sandbox = {AbortController, fetch};
+runInNewContext(read('runtime/js/typed-data.js'), sandbox);
 runInNewContext(read('studio/effects.js'), sandbox);
 const {createApp, jsonService} = sandbox.MiraEffects;
 const flush = () => new Promise(resolve => setImmediate(resolve));
@@ -201,6 +202,7 @@ test('real HTTP round trip to a Mira service compiled to PHP', {timeout:15000}, 
 test('RPC capabilities fix the method and enforce the portable wire subset',async()=>{
   const calls=[];
   const context={AbortController,TextEncoder};
+  runInNewContext(read('runtime/js/typed-data.js'),context);
   runInNewContext(read('studio/effects.js'),context);
   const {rpcService}=context.MiraEffects;
   const controller=new AbortController();
@@ -225,6 +227,7 @@ test('RPC capabilities fix the method and enforce the portable wire subset',asyn
 
 test('typed RPC client rejects invalid inputs before fetch and invalid results after fetch',async()=>{
   const context={AbortController,TextEncoder};
+  runInNewContext(read('runtime/js/typed-data.js'),context);
   runInNewContext(read('studio/effects.js'),context);
   const NumberType={kind:'Number'},TextType={kind:'Text'},BooleanType={kind:'Boolean'};
   const record=fields=>({kind:'Record',fields:Object.entries(fields).map(([name,type])=>({name,type})),tail:null});
@@ -248,6 +251,7 @@ test('PHP typed RPC adapter validates nested output and rejects invalid return v
     const schema={parameters:{kind:'Record',fields:[{name:'hours',type:{kind:'Number'}}],tail:null},result:{kind:'Record',fields:[{name:'items',type:{kind:'List',item:{kind:'Text'}}}],tail:null},integerPolicy:[{name:'hours',type:'integer',min:1,max:10000}]};
     writeFileSync(join(dir,'schema.json'),JSON.stringify(schema));
     writeFileSync(join(dir,'Rpc.php'),read('runtime/php/Rpc.php'));
+    writeFileSync(join(dir,'TypedData.php'),read('runtime/php/TypedData.php'));
     writeFileSync(join(dir,'test.php'),`<?php
 require __DIR__.'/Rpc.php';
 $schema=json_decode(file_get_contents(__DIR__.'/schema.json'),true,512,JSON_THROW_ON_ERROR);
@@ -322,4 +326,25 @@ test('0.88 checked Mira HTTP effect and response classification run on CLI JS/PH
       writeFileSync(file,compiled+suffix);assert.deepEqual(JSON.parse(execFileSync(target==='js'?'node':'php',[file],{encoding:'utf8'})),expected);
     }
   }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('0.91 independent typed data codecs round-trip the same schema in JS and PHP',()=>{
+  const context={TextEncoder};runInNewContext(read('runtime/js/typed-data.js'),context);
+  assert.equal(context.MiraEffects,undefined);
+  const codec=context.MiraTypedData;
+  const schema={kind:'Record',tail:null,fields:[
+    {name:'name',type:{kind:'Text'}},{name:'hours',type:{kind:'Number'}},{name:'paid',type:{kind:'Boolean'}},
+    {name:'tags',type:{kind:'List',item:{kind:'Text'}}}
+  ]};
+  const good={name:'Caffè 🎸',hours:1.5,paid:false,tags:['a','']};
+  const cases=[good,{...good,tags:[]},{...good,hours:9007199254740991},{...good,hours:9007199254740992},{...good,hours:'1.5'},{...good,tags:[1]},{...good,extra:true},{...good,name:'x'.repeat(16385)}];
+  const results=cases.map(value=>{try{return {ok:true,value:plain(codec.decodeJson(codec.encodeJson(value,schema),schema))};}catch(e){return {ok:false,error:e.message};}});
+  assert.deepEqual(results.map(x=>x.ok),[true,true,true,false,false,false,false,false]);
+  assert.throws(()=>codec.encodeJson({...good,name:'\uD800'},schema),/invalid_json_data/);
+  assert.throws(()=>codec.encodeJson({...good,tags:new Array(1)},schema),/invalid_json_data/);
+  assert.throws(()=>codec.encodeJson({...good,tags:new Date()},schema),/invalid_json_data/);
+  const path=fileURLToPath(new URL('../runtime/php/TypedData.php',import.meta.url));
+  const code='require $argv[1];$schema=json_decode($argv[2],true,512,JSON_THROW_ON_ERROR);$results=[];foreach(json_decode($argv[3],true,512,JSON_THROW_ON_ERROR) as $value){try{$json=\\Mira\\TypedData\\encodeJson($value,$schema);$results[]=["ok"=>true,"value"=>\\Mira\\TypedData\\decodeJson($json,$schema)];}catch(\\Mira\\TypedData\\DataFault $e){$results[]=["ok"=>false,"error"=>$e->getMessage()];}}echo json_encode($results,JSON_THROW_ON_ERROR);';
+  assert.deepEqual(JSON.parse(execFileSync('php',['-r',code,path,JSON.stringify(schema),JSON.stringify(cases)],{encoding:'utf8'})),results);
+  assert.equal(execFileSync('php',['-r','require $argv[1];echo class_exists("Mira\\\\Rpc\\\\Fault",false)?"rpc":"independent";',path],{encoding:'utf8'}),'independent');
 });

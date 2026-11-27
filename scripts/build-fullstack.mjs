@@ -30,6 +30,8 @@ writeFileSync(resolve(pub,'rpc-bindings.js'),contract.client);
 writeFileSync(resolve(priv,'rpc-methods.php'),contract.server);
 writeFileSync(resolve(priv,'rpc-types.json'),contract.schemas);
 copyFileSync(resolve(root,'runtime/php/Rpc.php'),resolve(priv,'Rpc.php'));
+copyFileSync(resolve(root,'runtime/php/TypedData.php'),resolve(priv,'TypedData.php'));
+copyFileSync(resolve(root,'runtime/js/typed-data.js'),resolve(pub,'typed-data.js'));
 for(const file of ['ui-host.js','effects.js','styles.css','persistent-ledger.css'])copyFileSync(resolve(root,'studio',file),resolve(pub,file));
 for(const file of ['index.html','ledger.php','ledger-client.js'])copyFileSync(resolve(root,'examples/fullstack',file),resolve(pub,file));
 console.log('Full-stack bundle ready in '+target+' (serve public only)');

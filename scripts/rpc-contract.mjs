@@ -1,3 +1,5 @@
+import {requirePortable} from './data-schema.mjs';
+export {requirePortable} from './data-schema.mjs';
 // Read literal declarations using the real Mira AST, never evaluate source.
 const fail=message=>{throw Error('RPC contract: '+message);};
 const has=(obj,key)=>Object.hasOwn(obj,key);
@@ -36,23 +38,6 @@ const phpArray=value=>{
   if(value&&typeof value==='object')return '['+Object.entries(value).map(([k,v])=>phpString(k)+' => '+phpArray(v)).join(', ')+']';
   return typeof value==='string'?phpString(value):String(value);
 };
-// RPC wire subset: closed, first-order data only. The checker, not this
-// generator, specializes and unifies the actual function signature.
-export function requirePortable(schema,depth=0){
-  if(!schema||depth>30)fail('RPC type exceeds wire depth');
-  switch(schema.kind){
-    case 'Number': case 'Text': case 'Boolean': return;
-    case 'List': return requirePortable(schema.item,depth+1);
-    case 'Record':
-      if(schema.tail!==null||!schema.fields.length)fail('RPC requires nonempty closed records');
-      for(const field of schema.fields){
-        if(/^-?\d+$/.test(field.name))fail('nonportable RPC record key '+field.name);
-        requirePortable(field.type,depth+1);
-      }
-      return;
-    default: fail('RPC requires concrete data types, got '+schema.kind);
-  }
-}
 export function generateRpcContract(compiler,source,serverSource){
   const defs=ast(compiler,source);
   if(defs.length!==1||defs[0].kind!=='Value'||defs[0].name!=='services')fail('expected only services = [...]');

@@ -8,7 +8,7 @@ self.onmessage=event=>{
       importScripts('./text-host.js');
       host=globalThis.MiraTextHost;
     }else if(event.data?.service==='json'){
-      importScripts('./effects.js','./json-host.js','./json-module-data.js');
+      importScripts('./typed-data.js','./json-host.js','./json-module-data.js');
       host=globalThis.MiraJsonDecoder.host(globalThis.MiraJsonModuleData.decoder);
     }else if(event.data?.service==='date'){
       importScripts('./date-host.js');

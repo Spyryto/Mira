@@ -1,4 +1,4 @@
-import {requirePortable} from './rpc-contract.mjs';
+import {requirePortable} from './data-schema.mjs';
 
 // Contract is the compiler's canonical interface report, not a hand-written schema.
 function hostType(schema){
