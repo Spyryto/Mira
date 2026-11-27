@@ -27,6 +27,12 @@
     source.value='Alignment :: Start = "start" | Center = "center" | End = "end";\nlabel: x (Alignment) = match: x {start: {| "S"}, center: {| "C"}, end: {| "E"}};\nresult = {value: Center, label: (label: Center)};\n# Prova Compila checked JS o PHP; prova anche bad (Alignment) = "center";';
     check();
   });
+  document.getElementById('safe-optional-example').addEventListener('click',()=>{
+    host.value='';
+    modules.value='';
+    source.value='Option (T) :: Some (T) | None;\nStyle :: {padding?: Number};\na (Style) = {};\nb (Style) = {padding: 0};\nx = a ~? padding;\nresolve: s (Style) -> Number = match: (s ~? padding) {some: {p | p}, none: {| 12}};\nresult = [(resolve: a), (resolve: b)];\n# Compila checked JS/PHP: il match diretto non costruisce Option.';
+    check();
+  });
   document.getElementById('optional-record-example').addEventListener('click',()=>{
     host.value='';
     modules.value='';

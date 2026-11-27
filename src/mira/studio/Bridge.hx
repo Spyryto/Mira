@@ -25,7 +25,7 @@ class Bridge {
             verifyContract: verifyContract,
             constantData: constantData,
             styleContractSource: styleContractSource,
-            version: "0.99"
+            version: "0.100"
         });
     }
 
@@ -299,6 +299,8 @@ class Bridge {
             case FieldAccessor(key): {kind: "FieldAccessor", key: key};
             case FieldGet(record, key):
                 {kind: "FieldGet", record: expression(record), key: key};
+            case OptionalFieldGet(record,key,_):
+                {kind:"OptionalFieldGet",record:expression(record),key:key};
             case FieldSection(key):
                 {kind: "FieldSection", key: key};
             case Match(input,tags,handlers):

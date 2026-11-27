@@ -1103,6 +1103,15 @@ class TypeChecker {
                 final result = call(hostType(name),[for (arg in args) operand(arg,scope,holes)]);
                 FunctionType(holes,result);
             case FieldGet(record,key): projection(infer(record,scope),key);
+            case OptionalFieldGet(record,key,option):
+                final receiver = representation(infer(record,scope));
+                final field = switch (receiver) {
+                    case OptionalRecordType(_,optional) if (optional.exists(key)): optional.get(key);
+                    default: fail("Safe field access requires a declared optional field: " + key);
+                };
+                // Reuse the lexically visible nominal Option template.
+                final result = TypeTemplates.apply(option,[field]);
+                visibility.view(result,moduleOwner,prune);
             case FieldAccessor(key) | FieldSection(key):
                 final record = fresh();
                 FunctionType([record],projection(record,key));

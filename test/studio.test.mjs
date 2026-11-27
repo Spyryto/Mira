@@ -2351,3 +2351,19 @@ test('0.99 Studio optional record schemas retain native output and reject unsafe
     assert.deepEqual(JSON.parse(actual),{original:{name:'base'},changed:{name:'base',padding:12},title:'base'});
   }
 });
+
+
+test('0.100 Studio safe optional access exposes Option and emits fused native match',()=>{
+  const source='Option (T) :: Some (T) | None; Style :: {padding?: Number}; a (Style) = {}; b (Style) = {padding: 0}; x = a ~? padding; resolve: s (Style) -> Number = match: (s ~? padding) {some: {p | p}, none: {| 12}}; result = [(resolve: a), (resolve: b)];';
+  const checked=bridge.check(source);
+  assert.equal(checked.ok,true,checked.message);
+  assert.equal(JSON.parse(checked.output).find(x=>x.name==='x').type,'Option (Number)');
+  assert.equal(JSON.parse(bridge.ast(source).output).definitions.find(x=>x.name==='x').body.kind,'OptionalFieldGet');
+  for(const target of ['js','php']){
+    const built=bridge.compile(source,target,null,false,null,true);
+    assert.equal(built.ok,true,built.message);
+    const actual=target==='js'?JSON.stringify(runInNewContext(built.output+'\nresult',{})):
+      spawnSync('php',['-r',built.output.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'}).stdout;
+    assert.deepEqual(JSON.parse(actual),[12,0]);
+  }
+});

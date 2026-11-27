@@ -144,7 +144,7 @@ class ExpressionParser {
                         + parameters.length + " parameters", token);
                 }
             case Numeric(_) | Text(_) | BooleanLiteral(_) | Binary(_, _, _) | Placeholder
-                | FieldGet(_, _):
+                | FieldGet(_, _) | OptionalFieldGet(_,_,_):
                 throw new MiraError("Pipeline target must be a function", token);
             case FieldSection(_) | FieldAccessor(_):
                 if (arity == 0) throw new MiraError("Pipeline needs a unary argument for a field accessor", token);
@@ -156,10 +156,22 @@ class ExpressionParser {
     // (a ~ b) ~ c, and it binds before all arithmetic operators.
     function fieldAccess():Expr {
         var left = application();
-        while (current().isSymbol("~")) {
-            consume();
+        while (current().isSymbol("~") || current().isSymbol("~?")) {
+            final op = consume();
             final keyToken = current();
-            left = at(FieldGet(left, literalKey("Expected a field name after ~")),keyToken);
+            final key = literalKey("Expected a field name after " + op.value);
+            if (op.value == "~?") {
+                final template = types.get("Option");
+                switch (template) {
+                    case SumType(_,alternatives,[Variable(id)]) if (id < 0 && Lambda.count(alternatives) == 2 && alternatives.exists("None") && alternatives.get("None") == null):
+                        switch (alternatives.get("Some")) {
+                            case Variable(slot) if (slot == id):
+                                left = at(OptionalFieldGet(left,key,template),keyToken);
+                            default: throw new MiraError("Safe field access requires Option (T) :: Some (T) | None",op);
+                        }
+                    default: throw new MiraError("Safe field access requires Option (T) :: Some (T) | None",op);
+                }
+            } else left = at(FieldGet(left,key),keyToken);
         }
         return left;
     }
