@@ -40,7 +40,7 @@ class DefinitionParser {
                             throw new MiraError("Duplicate or reserved type " + name,segment[0]);
                         final rhs = segment.slice(marker+1);
                         if (topLevel(rhs,"|") >= 0) {
-                            declareSum(name,identity,rhs,names,definitions,header.parameters);
+                            declareSum(name,identity,rhs,names,definitions,header.parameters,modulePath == null);
                         } else {
                             if (header.parameters.length == 0) {
                                 final base = new TypeParser(rhs,segment[marker+1],names,false).parse();
@@ -120,7 +120,7 @@ class DefinitionParser {
 
     // Sum declarations synthesize ordinary constructor definitions, with a
     // trusted canonical Variant body rather than user-forgeable records.
-    static function declareSum(name:String,identity:String,tokens:Array<Token>,names:Map<String,Type>,definitions:Array<Definition>,parameters:Array<String>):Void {
+    static function declareSum(name:String,identity:String,tokens:Array<Token>,names:Map<String,Type>,definitions:Array<Definition>,parameters:Array<String>,allowScalar:Bool):Void {
         final local = names.copy();
         // Negative ids are declaration-local template slots, never checker ids.
         final arguments:Array<Type> = [for (i in 0...parameters.length) Variable(-i-1)];
@@ -130,12 +130,38 @@ class DefinitionParser {
         local.set(name,SumReference(identity,alternatives,arguments));
         final tags:Array<String> = [];
         final origins:Array<Token> = [];
+        final encodings = new Map<String,Expr>();
+        final codes = new Map<String,Bool>();
         var rest = tokens[0].isSymbol("|") ? tokens.slice(1) : tokens;
         while (true) {
             final separator = topLevel(rest,"|");
             final part = separator < 0 ? rest : rest.slice(0,separator);
             if (part.length == 0) throw new MiraError("Empty sum alternative",tokens[0]);
-            final variant = annotatedName(part,local);
+            final equals = topLevel(part,"=");
+            final variant = annotatedName(equals < 0 ? part : part.slice(0,equals),local);
+            if (equals >= 0) {
+                if (!allowScalar || parameters.length != 0)
+                    throw new MiraError("Scalar variants currently require a nonparametric type in a flat program",part[0]);
+                if (variant.type != null) throw new MiraError("Scalar variants cannot carry payloads",part[0]);
+                final literal = part.slice(equals+1);
+                var encoded:Expr;
+                var key:String;
+                if (literal.length == 1 && literal[0].kind == TokenKind.Text) {
+                    encoded = Text(literal[0].value);
+                    key = "text:" + literal[0].value;
+                } else {
+                    final signed = literal.length == 2 && literal[0].isSymbol("-") && literal[1].kind == TokenKind.Number;
+                    final raw = signed ? "-" + literal[1].value : literal.length == 1 && literal[0].kind == TokenKind.Number ? literal[0].value : "";
+                    if (!~/^-?(0|[1-9][0-9]*)$/.match(raw) || Math.abs(Std.parseFloat(raw)) > 9007199254740991.0)
+                        throw new MiraError("Scalar variant encoding must be a Text literal or safe integer",part[equals]);
+                    final normalized = raw == "-0" ? "0" : raw;
+                    encoded = Numeric(normalized);
+                    key = "integer:" + normalized;
+                }
+                if (codes.exists(key)) throw new MiraError("Duplicate scalar variant encoding",part[equals]);
+                codes.set(key,true);
+                encodings.set(variant.name,encoded);
+            }
             if (!~/^[A-Z][A-Za-z0-9_]*( [A-Za-z_][A-Za-z0-9_]*)*$/.match(variant.name))
                 throw new MiraError("Sum constructor must start with an uppercase letter",part[0]);
             if (alternatives.exists(variant.name))
@@ -146,6 +172,8 @@ class DefinitionParser {
             if (separator < 0) break;
             rest = rest.slice(separator+1);
         }
+        if (Lambda.count(encodings) != 0 && Lambda.count(encodings) != tags.length)
+            throw new MiraError("Every scalar variant must have an explicit encoding",tokens[0]);
         final sum = SumType(identity,alternatives,arguments);
         names.set(name,sum);
         for (i in 0...tags.length) {
@@ -159,6 +187,7 @@ class DefinitionParser {
             d.resultAnnotation = sum;
             d.resultAnnotationOrigin = anchor;
             d.body = Variant(sum,tag,payload == null ? null : Name("payload"));
+            d.scalarValue = encodings.get(tag);
             definitions.push(d);
         }
     }
