@@ -751,3 +751,7 @@ Scegliere la semantica Number di % già espressa da JS e riusare PHP fmod. Corre
 ## Direzione dopo la 0.89.3
 
 La revisione complessiva è in [Consolidamento Mira 0.83–0.89.3](consolidation-089.md), incluso nel quaderno Studio. La 0.89.1–0.89.3 sono integrate con CI verde. Prossima proposta: 0.89.4, coerenza Option/Result senza nuove keyword; decisione separata per divisione per zero, non finiti e overflow. Poi 0.90 tooling multifile, 0.91 codec, 0.92 GUI checked, 0.93 effetti tipizzati, 0.94 workspace. Numerazione indicativa e priorità rivedibili: la 1.0 deve essere uno strumento di lavoro, non una conta di feature.
+
+## Registro storico delle questioni aperte
+
+[Registro delle questioni aperte 0.1–0.89.3](open-questions.md): indice permanente con ID, stato, riferimenti e distinzione tra questioni irrisolte, limiti parziali, rinvii, verifiche e risoluzioni. Incluso nel quaderno Studio; aggiornare le voci ad ogni incremento pertinente.

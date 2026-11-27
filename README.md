@@ -8,7 +8,7 @@ Mira is an evolving, standalone **discursive programming language** with a compi
 
 ## Quaderno di progettazione
 
-[Decisioni, motivazioni e proposte in evoluzione](docs/design-notes.md) · [Consolidamento 0.83–0.89.3](docs/consolidation-089.md) · [Leggi in Mira Studio](https://spyryto.github.io/Mira/design-notes.html).
+[Decisioni, motivazioni e proposte in evoluzione](docs/design-notes.md) · [Consolidamento 0.83–0.89.3](docs/consolidation-089.md) · [Registro delle questioni aperte](docs/open-questions.md) · [Leggi in Mira Studio](https://spyryto.github.io/Mira/design-notes.html).
 
 ## Funzionalità e versioni
 

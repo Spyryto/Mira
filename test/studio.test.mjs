@@ -1025,6 +1025,10 @@ test('design notebook is generated from project documentation and available offl
   assert.match(notebook,/Consolidamento Mira 0\.83–0\.89\.3/);
   assert.match(notebook,/Questioni numeriche ancora aperte/);
   assert.match(notebook,/Option e Result: direzione proposta, non ancora implementata/);
+  assert.match(notebook,/Registro delle questioni aperte/);
+  assert.match(notebook,/SYN-01/);
+  assert.match(notebook,/QA-06/);
+  assert.match(notebook,/Questioni storiche risolte o superate/);
   assert.match(notebook,/module Music \/ Jazz Harmony;/);
   assert.match(notebook,/import Math \/ Floating Point =&gt; Float Num;/);
   assert.match(notebook,/transpose: by: =&gt; trasponi: di:/);

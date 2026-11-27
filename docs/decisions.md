@@ -72,3 +72,5 @@ Per lo stato corrente e le prossime priorità vedere [Direzione dopo la 0.77](de
 ## Consolidamento dopo la 0.89.3
 
 [Rapporto di consolidamento](consolidation-089.md): stato verificato, decisioni, limiti, alternative e roadmap aggiornata. Le correzioni 0.89.1–0.89.3 sono integrate; Option/Result comuni e politica dei non finiti restano proposte. La direzione applicativa storica non è cancellata ma le priorità attuali sono quelle di questo rapporto.
+
+Il [registro storico delle questioni aperte](open-questions.md) è il backlog trasversale corrente; non confondere le vecchie liste Open questions con lo stato attuale.

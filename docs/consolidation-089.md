@@ -138,3 +138,5 @@ Tutti i merge sopra sono verificati via CI, ma non c'è nuovo benchmark comparat
 ## Dove approfondire
 
 Documentazione specialistica: docs/type-checker.md (prove, ScalarEq, matrice aritmetica); docs/grammar.md (resto e sintassi); docs/studio.md (laboratori e applicazioni); docs/browser-interop.md (effetti e RPC); docs/module-design.md (contratti e identità); docs/design-notes.md e docs/decisions.md (motivazioni storiche); docs/performance.md (misurazioni e limiti). Le directory lib/text, lib/json, lib/date, lib/storage, lib/http ed examples/lesson-import contengono contratti, adapter e README. I test principali sono test/types.test.mjs, test/effects.test.mjs, test/studio.test.mjs e test/fullstack.test.mjs. Il presente documento è una fotografia di consolidamento, non sostituisce i contratti e i test versionati.
+
+Per le questioni precedenti alla 0.83 e il backlog trasversale consultare [Registro delle questioni aperte](open-questions.md).
