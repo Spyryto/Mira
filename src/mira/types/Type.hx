@@ -19,6 +19,7 @@ enum Type {
     BooleanType;
     Variable(id:Int);
     ListType(item:Type);
+    ListRefinedType(base:Type,length:NumericRange);
     FunctionType(parameters:Array<Type>, result:Type);
     RecordType(fields:Map<String, Type>, tail:Null<Type>);
     // Closed structural schema: optional means possibly absent, not nullable.
