@@ -16,6 +16,9 @@ export function buildLessonImport(compiler,source,decoderConfig,modules,hosts,bi
   }
   const data={source,modules:modulesJson,host:JSON.stringify(host),decoder:generated.decoder};
   for(const [target,link] of Object.entries(bindings)){
+    for(const name of Object.keys(generated.bindings)){
+      if(Object.hasOwn(link,name))throw Error('Duplicate lesson import provider binding '+name);
+    }
     const selected=JSON.stringify({...link,...generated.bindings});
     const compiled=compiler.compile(source,target,data.host,false,modulesJson,true,true,selected);
     if(!compiled.ok)throw Error('Lesson import '+target+': '+compiled.message);

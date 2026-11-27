@@ -1,5 +1,5 @@
 {
-  "version": "0.89.0",
+  "version": "0.89.1",
   "features": [
     {
       "id": "values",
@@ -2112,6 +2112,12 @@
       "title": "App checked di importazione e persistenza di una lezione",
       "since": "0.89",
       "doc": "docs/studio.md#mira-089-importa-una-lezione"
+    },
+    {
+      "id": "service-consolidation",
+      "title": "Consolidamento HTTP e importazione lezione con verifica browser",
+      "since": "0.89.1",
+      "doc": "docs/studio.md#mira-0891-consolidamento-dei-servizi"
     }
   ]
 }

@@ -27,3 +27,5 @@ non si promette equivalenza con risposte compresse o server difettosi.
 Il binding host è fidato: non passare URL provenienti da utenti.
 Non è una difesa SSRF per URL arbitrari. Il laboratorio Studio usa
 un file same-origin versionato e disponibile offline.
+
+0.89.1: PHP verifica il Content-Length dichiarato per risposte senza Transfer-Encoding (eccetto 204), e rifiuta EOF prematuro come http_transport. Non garantisce rilevazione di ogni framing malformato.

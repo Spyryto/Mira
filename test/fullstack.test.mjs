@@ -200,6 +200,32 @@ test('full-stack ledger: actual Chromium, compiled Mira JS/PHP and SQLite', {tim
     const metrics={kind:'localhost sequential read latency',samples:30,medianMs:(samples[14]+samples[15])/2,p95Ms:samples[28],samplesMs:samples};
     writeFileSync(join(report,'latency.json'),JSON.stringify(metrics,null,2));
     console.log('FULLSTACK_LEDGER '+JSON.stringify(metrics));
+
+    // Real browser, actual Studio assets and localStorage, not just a DOM stub.
+    await stop(php);php=null;
+    const studioPort=await port(),studioOrigin='http://127.0.0.1:'+studioPort;
+    php=startProcess('php',['-S','127.0.0.1:'+studioPort,'-t',resolve('dist/studio')]);
+    await until(async()=> (await fetch(studioOrigin+'/lesson-import.html',{signal:AbortSignal.timeout(500)})).ok,'Studio ready');
+    await cdp.call('Page.navigate',{url:studioOrigin+'/lesson-import.html'});
+    const status=()=>js('document.querySelector("#status")?.textContent ?? ""');
+    const waitStatus=value=>until(async()=> (await status()).includes(value),value);
+    const clickId=id=>js('(()=>{const b=document.getElementById('+JSON.stringify(id)+');if(!b||b.disabled)return false;b.click();return true})()');
+    await waitStatus('Pronto');
+    await until(()=>js('typeof MiraLessonImportProgram === "function" && typeof MiraHttpHost === "object"'),'Studio scripts');
+    assert.equal(await clickId('load'),true);await waitStatus('Lezione verificata');
+    assert.equal(await js('document.getElementById("student").textContent'),'Ada');
+    assert.match(await js('document.getElementById("total").textContent'),/45,00/);
+    assert.equal(await clickId('save'),true);await waitStatus('Salvata');
+    await cdp.call('Page.reload');await waitStatus('Pronto');
+    await until(()=>js('typeof MiraLessonImportProgram === "function"'),'Studio reloaded');
+    assert.equal(await clickId('restore'),true);await waitStatus('Recuperata');
+    assert.equal(await js('document.getElementById("student").textContent'),'Ada');
+    await js('(()=>{const e=document.getElementById("raw");e.value="bad";e.dispatchEvent(new Event("input",{bubbles:true}));})()');
+    assert.equal(await clickId('inspect'),true);await waitStatus('invalid_json_data');
+    assert.equal(await js('document.getElementById("save").disabled'),true);
+    assert.equal(await clickId('restore'),true);await waitStatus('Recuperata');
+    const lessonScreenshot=await cdp.call('Page.captureScreenshot',{format:'png'});
+    writeFileSync(join(report,'lesson-import.png'),Buffer.from(lessonScreenshot.data,'base64'));
   } finally {
     if(cdp){try{await cdp.call('Browser.close');}catch{} cdp.close();}
     await stop(chrome);await stop(php);

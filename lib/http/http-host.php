@@ -22,8 +22,23 @@ function textService(string $url, int $maxBytes = 65536, int $timeoutMs = 10000)
         try {
             $meta = stream_get_meta_data($stream);
             $status = 0;
+            $length = null;
+            $transferEncoded = false;
             foreach ($meta['wrapper_data'] ?? [] as $line) {
-                if (preg_match('/^HTTP\/\S+ ([0-9]{3})(?: |$)/D', $line, $match)) $status = (int)$match[1];
+                // A subsequent status line starts a new header block.
+                if (preg_match('/^HTTP\/\S+ ([0-9]{3})(?: |$)/D', $line, $match)) {
+                    $status = (int)$match[1];
+                    $length = null;
+                    $transferEncoded = false;
+                } elseif (preg_match('/^Content-Length:\s*(.*?)\s*$/iD', $line, $match)) {
+                    $n = ltrim($match[1], '0');
+                    $n = $n === '' ? '0' : $n;
+                    if (!preg_match('/^[0-9]+$/D', $match[1]) || ($length !== null && $length !== $n))
+                        throw new \RuntimeException('http_transport');
+                    $length = $n;
+                } elseif (stripos($line, 'Transfer-Encoding:') === 0) {
+                    $transferEncoded = true;
+                }
             }
             if ($status >= 300 && $status < 400) throw new \RuntimeException('http_redirect');
             if ($status < 200 || $status > 599) throw new \RuntimeException('http_transport');
@@ -36,6 +51,11 @@ function textService(string $url, int $maxBytes = 65536, int $timeoutMs = 10000)
                 $body .= $chunk;
                 if (strlen($body) > $maxBytes) throw new \RuntimeException('http_too_large');
             }
+            // A clean EOF is not sufficient: PHP streams can return a
+            // truncated body without reporting a transport failure.
+            // 204 and 304 have no body; 304 was rejected above.
+            if ($status !== 204 && !$transferEncoded && $length !== null && (string)strlen($body) !== $length)
+                throw new \RuntimeException('http_transport');
             if (preg_match('//u', $body) !== 1) throw new \RuntimeException('http_invalid_text');
             return ['status'=>$status,'body'=>$body];
         } finally { fclose($stream); }

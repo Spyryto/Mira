@@ -28,11 +28,17 @@
       const effect=program.request(id),response=await http(effect.payload,controller.signal);
       if(id!==seq)return;
       const result=program.accept(response);
-      by('raw').value=response.body;show(result);
+      // Failed imports must never overwrite a user's draft.
+      if(result.accepted){by('raw').value=response.body;show(result);}
+      else {show(result);}
     }catch(error){if(id===seq)status('Errore: '+String(error?.message??error));}
   });
   by('save').addEventListener('click',()=>action(()=>{
-    invalidate();if(show(store().save(by('raw').value)))status('Salvata su questo browser.');
+    // Keep a valid draft and its preview on an I/O failure, so retry is possible.
+    seq++;controller?.abort();
+    const raw=by('raw').value;
+    if(!show(program.inspect(raw)))return;
+    if(show(store().save(raw)))status('Salvata su questo browser.');
   }));
   by('restore').addEventListener('click',()=>action(()=>{
     invalidate();const values=store().restore();
@@ -41,7 +47,7 @@
   }));
   by('remove').addEventListener('click',()=>action(()=>{
     if(!window.confirm('Rimuovere la lezione salvata nel laboratorio?'))return;
-    invalidate();store().remove();status('Archivio locale rimosso.');
+    seq++;controller?.abort();store().remove();status('Archivio locale rimosso.');
   }));
   window.addEventListener('pagehide',()=>{seq++;controller?.abort();});
 })();
