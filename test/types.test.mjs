@@ -2286,8 +2286,8 @@ test('0.97.1 scalar module contracts keep identity and encoding across provider 
       for(const target of ['js','php']){
         const r=run(target,'--checked','--tree-shake',...flags);
         assert.equal(r.status,0,r.stderr);
-        const result=target==='js'?spawnSync('node',['-e',r.stdout+'\nconsole.log(JSON.stringify(App__result));'],{encoding:'utf8'}):
-          spawnSync('php',['-r',r.stdout.replace(/^<\?php/,'')+'\necho json_encode($App__result);'],{encoding:'utf8'});
+        const result=target==='js'?spawnSync('node',['-e',r.stdout+'\nconsole.log(JSON.stringify(__miraModule_v_417070202F20726573756C74));'],{encoding:'utf8'}):
+          spawnSync('php',['-r',r.stdout.replace(/^<\?php/,'')+'\necho json_encode($__miraModule_v_417070202F20726573756C74);'],{encoding:'utf8'});
         assert.equal(result.status,0,result.stderr);
         assert.deepEqual(JSON.parse(result.stdout),{native,label,middle:'center'});
       }
