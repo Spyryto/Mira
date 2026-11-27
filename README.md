@@ -140,6 +140,7 @@ e agli [esempi](docs/reference/examples.md).
 | ✅ | Persistenza testuale con provider Browser e Files | `0.87` | [Dettagli](docs/studio.md#mira-087-persistenza-chiave-valore) |
 | ✅ | Effetti HTTP GET testuali con adapter nativi | `0.88` | [Dettagli](docs/studio.md#mira-088-http-testuale) |
 | ✅ | App checked di importazione e persistenza di una lezione | `0.89` | [Dettagli](docs/studio.md#mira-089-importa-una-lezione) |
+| ✅ | Consolidamento HTTP e importazione lezione con verifica browser | `0.89.1` | [Dettagli](docs/studio.md#mira-0891-consolidamento-dei-servizi) |
 <!-- END GENERATED FEATURE MATRIX -->
 
 Le funzioni **host** non sono primitive incorporate nel linguaggio:
