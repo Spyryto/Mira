@@ -119,3 +119,36 @@ preferred: x = if (x == "wide") then Center else Start;
 Non occorre ripetere le codifiche; ridefinire il tipo pubblico è rifiutato dal controllo di dichiarazioni duplicate già presente. Il report delle interfacce include la proprietà representation con kind Scalar e cases ordinate per nome del caso, contenenti tag e valore nativo. Il fingerprint distingue modifiche delle codifiche ma non il riordino delle alternative. L'identità nominale, gli alias e le riesportazioni riusano il resolver esistente. Per un tipo opaco la rappresentazione privata non entra nello schema pubblico. Il collegamento è a programma intero, non un nuovo meccanismo di linking binario separato.
 
 Il checker continua a raccogliere le codifiche dai costruttori sintetizzati e a risolvere i match prima dell'emissione; nessun nuovo emitter, runtime o tipo. Le firme host che non esprimono ancora queste somme e la validazione al confine esterno restano aperte. Il Laboratory di Studio offre un esempio di import e alias; i test di CLI esercitano contratti senza provider, sostituzione dei provider, fingerprint, opacità e JS/PHP con tree shaking. In questo incremento non sono introdotte alternative con payload nativi, codifiche parametriche o conversioni implicite.
+
+
+## Native variants 0.98
+
+Stato: candidata. La sintassi sperimentale estende la codifica esplicita delle scalar variants: = _ conserva direttamente il payload.
+
+```mira
+Pixels :: Number where _ >= 0 AND _ <= 4096;
+Size :: Fixed (Pixels) = _ | Fill = "fill" | Auto = "auto";
+n (Pixels) = 240;
+sizes = [(Fixed: n), Fill, Auto];
+resolve: s (Size) -> Number = match: s {
+  fixed: {p | p + 0},
+  fill: {| 100},
+  auto: {| 0}
+};
+```
+
+La lista è nominalmente [Size] ma contiene, in entrambi i backend, 240, "fill", "auto". Il costruttore Fixed restituisce direttamente il proprio argomento; il match usa un test sul dominio nativo e consegna lo stesso valore al callback. Il payload conserva il tipo dichiarato, inclusi refinement; non viene introdotta una conversione implicita dal valore nativo al tipo somma.
+
+### Prova di disgiunzione
+
+Il parser separa tre domini primitivi: numero (Number e Integer, inclusi tipi nominali e refinement numerici), testo (Text), booleano (Boolean). È consentito al massimo un payload non incapsulato per dominio. I letterali nullari sono quelli della 0.97: Text e interi sicuri; devono essere distinti e non possono appartenere a un dominio già occupato da un payload. Non sono ammessi = _ su un costruttore nullario, codifiche parziali o payload con codifica costante. Le somme senza codifiche esplicite mantengono il formato tagged.
+
+Il controllo è volutamente conservativo: non usa intervalli disgiunti per distinguere due payload numerici, né record con discriminanti, liste, somme annidate, tipi opachi non ispezionabili o parametri generici. Number e Integer si sovrappongono e non possono essere usati come due domini distinti. Non si introduce un solver generale.
+
+### Implementazione e interoperabilità
+
+Il costruttore sintetizzato mantiene il corpo Variant e la firma nominale, con scalarValue come espressione di rappresentazione. NativeCase distingue un literal da un dominio di payload nella mappa compile-time usata dal match. Le condizioni emesse sono typeof su JS e is_int/is_float, is_string, is_bool su PHP, oltre ai confronti stretti per i literal. Il valore è valutato una volta dal match già esistente; il ramo payload riceve il valore originale. Nessun nuovo involucro o tabella runtime; restano chiamate dei costruttori e closure del match, non si promette assenza di ogni costo di esecuzione.
+
+Le interfacce pubbliche mantengono kind Scalar per sole codifiche letterali e kind Native per somme con payload nativo; i casi ordinati espongono value o domain. Riutilizzo dei moduli e dei fingerprint esistenti. Le rappresentazioni opache rimangono private. Il lettore di dati costanti conserva la stessa rappresentazione emessa per i costruttori nativi. Richiede checked compilation; l'ABI rimane whole-program. Non si attribuisce un tipo nominale a valori arbitrari provenienti da host esterni. Validazione esterna e ScalarEq, migrazione GUI, proof di disgiunzione entro lo stesso dominio e somme a record restano aperte.
+
+Mira Studio: pulsante Varianti native nel Laboratorio tipi, ispezione della rappresentazione nel report checked, compilazione JS/PHP. I test includono esecuzione nativa, frazioni, integer/text/boolean, nominalità, match esaustivi, collisioni, alias di modulo, fingerprint, tree shaking e valutazione dei dati costanti. Nessuna misura prestazionale comparativa è ancora disponibile.

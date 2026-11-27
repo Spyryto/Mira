@@ -2305,3 +2305,27 @@ test('0.97.1 Studio resolves scalar encodings through module aliases',()=>{
     assert.deepEqual(JSON.parse(actual),{value:'0',label:'C'});
   }
 });
+
+
+test('0.98 Studio checks native payloads and executes the same native values on JS/PHP',()=>{
+  const source='Pixels :: Number where _ >= 0 AND _ <= 4096; Size :: Fixed (Pixels) = _ | Fill = "fill" | Auto = "auto"; n (Pixels) = 12.5; resolve: s (Size) -> Number = match: s {fixed: {p | p + 0}, fill: {| 100}, auto: {| 0}}; sizes = [(Fixed: n), Fill, Auto]; result = {sizes: sizes, values: (collect: sizes, with: (resolve: _))};';
+  const checked=bridge.check(source);
+  assert.equal(checked.ok,true,checked.message);
+  const schema=JSON.parse(checked.output).find(x=>x.name==='sizes').schema.item;
+  assert.equal(schema.representation.kind,'Native');
+  assert.deepEqual(schema.representation.cases,[{tag:'Auto',value:'auto'},{tag:'Fill',value:'fill'},{tag:'Fixed',domain:'number'}]);
+  const ast=JSON.parse(bridge.ast(source).output);
+  assert.equal(ast.definitions.find(x=>x.labels?.[0]==='Fixed'||x.name==='Fixed:')?.scalarEncoding?.value,'payload');
+  for(const target of ['js','php']){
+    const compiled=bridge.compile(source,target,null,false,null,true);
+    assert.equal(compiled.ok,true,compiled.message);
+    assert.doesNotMatch(compiled.output,/\.tag|\['tag'\]|\.value|\['value'\]/);
+    const actual=target==='js'?JSON.stringify(runInNewContext(compiled.output+'\nresult',{})):
+      spawnSync('php',['-r',compiled.output.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'}).stdout;
+    assert.deepEqual(JSON.parse(actual),{sizes:[12.5,'fill','auto'],values:[12.5,100,0]});
+  }
+  assert.equal(bridge.check('Bad :: A (Number) = _ | B (Number) = _;').ok,false);
+  const constant=bridge.constantData('Size :: Fixed (Number) = _ | Auto = "auto"; result = Fixed: 12.5;','result');
+  assert.equal(constant.ok,true,constant.message);
+  assert.equal(JSON.parse(constant.output),12.5);
+});

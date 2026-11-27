@@ -2316,3 +2316,84 @@ test('0.97.1 private scalar representations remain opaque in public interface re
     assert.equal(run().fingerprint,before.fingerprint);
   }finally{rmSync(dir,{recursive:true,force:true});}
 });
+
+
+test('0.98 native variants keep payload types, nominality and exhaustive matches',()=>{
+  const source='Pixels :: Number where _ >= 0 AND _ <= 4096; Size :: Fixed (Pixels) = _ | Fill = "fill" | Auto = "auto"; pixels (Pixels) = 240; width (Size) = Fixed: pixels; dimensions = [width, Fill, Auto]; resolve: s (Size) -> Number = match: s {fixed: {p | p + 1}, fill: {| 100}, auto: {| 0}};';
+  const types=check(source);
+  assert.equal(types.width,'Size');
+  assert.equal(types.dimensions,'[Size]');
+  assert.equal(types['Fixed:'],'(Pixels) -> Size');
+  for(const extra of [
+    'bad (Size) = "fill";',
+    'bad (Size) = 240;',
+    'bad = Fixed: "240";',
+    'bad = [width, "auto"];',
+    'bad: s (Size) = match: s {fixed: {p | p}, fill: {| 0}};',
+    'bad: s (Size) = match: s {fixed: {| 0}, fill: {| 1}, auto: {| 2}};'
+  ])assert.throws(()=>check(source+extra),undefined,extra);
+  for(const invalid of [
+    'Size :: Width (Number) = _ | Height (Number) = _;',
+    'Size :: Whole (Integer) = _ | Fraction (Number) = _;',
+    'Size :: Fixed (Number) = _ | Default = 0;',
+    'Size :: Caption (Text) = _ | Auto = "auto";',
+    'Size :: Auto = "auto" | Caption (Text) = _;',
+    'Size :: Fixed (Number) = _ | Auto;',
+    'Size :: Fixed (Number) | Auto = "auto";',
+    'Size :: Fixed (Number) = 1 | Auto = "auto";',
+    'Size :: Fill = _ | Auto = "auto";',
+    'Size :: Fixed ({value: Number}) = _ | Auto = "auto";',
+    'Size :: Fixed ([Number]) = _ | Auto = "auto";',
+    'Size (T) :: Fixed (T) = _ | Auto = "auto";',
+    'Tiny :: Number where _ >= 0 AND _ <= 1; Huge :: Number where _ >= 100 AND _ <= 200; Size :: Small (Tiny) = _ | Large (Huge) = _;'
+  ])assert.throws(()=>check(invalid),undefined,invalid);
+});
+
+test('0.98 native variants execute without value wrappers on JS and PHP',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-native-variants-'));
+  try{
+    const input=join(dir,'program.mira');
+    const source='Pixels :: Number where _ >= 0 AND _ <= 4096; Size :: Fixed (Pixels) = _ | Fill = "fill" | Auto = "auto"; width (Pixels) = 240; fraction (Pixels) = 12.5; sizes = [(Fixed: width), (Fixed: fraction), Fill, Auto]; to pixels: s (Size) -> Number = match: s {fixed: {p | p + 0}, fill: {| 100}, auto: {| 0}}; Message :: Amount (Number) = _ | Caption (Text) = _ | Active (Boolean) = _; messages = [(Amount: 4.5), (Caption: "4.5"), (Active: false)]; describe: x (Message) -> Number = match: x {amount: {n | n + 1}, caption: {t | if (t == "4.5") then 2 else 0}, active: {b | if (b) then 1 else 3}}; result = {sizes: sizes, pixels: (collect: sizes, with: (to pixels: _)), messages: messages, decoded: (collect: messages, with: (describe: _))};';
+    writeFileSync(input,source);
+    const expected={sizes:[240,12.5,'fill','auto'],pixels:[240,12.5,100,0],messages:[4.5,'4.5',false],decoded:[5.5,2,3]};
+    for(const target of ['js','php']){
+      const ordinary=spawnSync('node',['dist/mira.cjs',input,target],{encoding:'utf8'});
+      assert.notEqual(ordinary.status,0);
+      for(const flags of [[],['--tree-shake']]){
+        const built=spawnSync('node',['dist/mira.cjs',input,target,'--checked',...flags],{encoding:'utf8'});
+        assert.equal(built.status,0,built.stderr);
+        assert.doesNotMatch(built.stdout,/\.tag|\['tag'\]|\.value|\['value'\]/);
+        const executed=target==='js'?spawnSync('node',['-e',built.stdout+'\nconsole.log(JSON.stringify(result));'],{encoding:'utf8'}):
+          spawnSync('php',['-r',built.stdout.replace(/^<\?php/,'')+'\necho json_encode($result);'],{encoding:'utf8'});
+        assert.equal(executed.status,0,executed.stderr);
+        assert.deepEqual(JSON.parse(executed.stdout),expected);
+      }
+    }
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});
+
+test('0.98 public native payload encodings survive module aliases and ABI reports',()=>{
+  const dir=mkdtempSync(join(tmpdir(),'mira-native-module-'));
+  try{
+    const input=join(dir,'App.mira'),lib=join(dir,'Layout.mira');
+    const contract='module Layout; interface Pixels :: Number where _ >= 0 AND _ <= 4096; Size :: Fixed (Pixels) = _ | Fill = "fill" | Auto = "auto"; implementation';
+    writeFileSync(lib,contract);
+    const source='module App; import Layout {Pixels; Size => Dimension; Fixed: => Px: ; Fill; Auto;}; n (Pixels) = 12.5; label: s (Dimension) -> Number = match: s {fixed: {p | p + 0}, fill: {| 100}, auto: {| 0}}; result = {width: (Px: n), label: (label: (Px: n)), other: Fill};';
+    writeFileSync(input,source);
+    const run=(...args)=>spawnSync('node',['dist/mira.cjs',input,...args],{encoding:'utf8'});
+    const report=()=>{const r=run('--interfaces');assert.equal(r.status,0,r.stderr);return JSON.parse(r.stdout).interfaces.find(m=>m.module==='Layout');};
+    const before=report();
+    assert.deepEqual(before.surface.types.find(x=>x.name==='Size').schema.representation,{kind:'Native',cases:[{tag:'Auto',value:'auto'},{tag:'Fill',value:'fill'},{tag:'Fixed',domain:'number'}]});
+    for(const target of ['js','php']){
+      const built=run(target,'--checked','--tree-shake');
+      assert.equal(built.status,0,built.stderr);
+      const name='__miraModule_v_417070202F20726573756C74';
+      const actual=target==='js'?spawnSync('node',['-e',built.stdout+'\nconsole.log(JSON.stringify('+name+'));'],{encoding:'utf8'}):
+        spawnSync('php',['-r',built.stdout.replace(/^<\?php/,'')+'\necho json_encode($'+name+');'],{encoding:'utf8'});
+      assert.equal(actual.status,0,actual.stderr);
+      assert.deepEqual(JSON.parse(actual.stdout),{width:12.5,label:12.5,other:'fill'});
+    }
+    writeFileSync(lib,contract.replace('Fill = "fill"','Fill = "stretch"'));
+    assert.notEqual(report().fingerprint,before.fingerprint);
+  }finally{rmSync(dir,{recursive:true,force:true});}
+});

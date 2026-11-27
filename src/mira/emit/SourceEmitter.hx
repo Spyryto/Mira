@@ -7,6 +7,7 @@ import mira.resolve.Mangle;
 import mira.resolve.Symbols;
 import mira.types.NumericGuard;
 import mira.types.ScalarComparison;
+import mira.types.NativeVariants.NativeCase;
 import haxe.ds.ObjectMap;
 
 class SourceEmitter {
@@ -17,7 +18,7 @@ class SourceEmitter {
         reservedHostNames:Array<String>,
         ?guards:ObjectMap<Dynamic,NumericGuard>,
         ?comparisons:ObjectMap<Dynamic,ScalarComparison>,
-        ?scalarMatches:ObjectMap<Dynamic,Array<Expr>>
+        ?scalarMatches:ObjectMap<Dynamic,Array<NativeCase>>
     ):String {
         final emitted = switch (expr) {
             case Name(name):
@@ -80,9 +81,15 @@ class SourceEmitter {
                     formals.push(handler);
                     args.push(expression(handlers[i],target,scope,reservedHostNames,guards, comparisons, scalarMatches));
                     final arity = switch (handlers[i]) { case Block(parameters,_): parameters.length; default: 0; };
-                    final label = codes != null ? expression(codes[i],target,scope,reservedHostNames) : target == Php ? phpString(tags[i]) : haxe.Json.stringify(tags[i]);
-                    // Strict comparison on both targets. PHP switch uses loose equality.
-                    branches.push("if (" + tag + " === " + label + ") return " + handler + "(" + (arity == 0 ? "" : payload) + ");");
+                    final predicate = codes == null
+                        ? tag + " === " + (target == Php ? phpString(tags[i]) : haxe.Json.stringify(tags[i]))
+                        : switch (codes[i]) {
+                            case Literal(value): v + " === " + expression(value,target,scope,reservedHostNames);
+                            case Payload(domain): nativeDomainTest(target,domain,v);
+                        };
+                    // Native payloads already are the original match value.
+                    final argument = arity == 0 ? "" : codes == null ? payload : v;
+                    branches.push("if (" + predicate + ") return " + handler + "(" + argument + ");");
                 }
                 branches.push("throw new " + (target == Php ? "\\RuntimeException" : "Error") + "('Mira unmatched sum alternative');");
                 final body = branches.join(" ");
@@ -256,6 +263,16 @@ class SourceEmitter {
     }
 
     // The generated parameter has its own scope; the operand is evaluated once.
+    static function nativeDomainTest(target:Target,domain:String,value:String):String {
+        if (target == JavaScript) return "typeof " + value + " === " + haxe.Json.stringify(domain);
+        return switch (domain) {
+            case "number": "(is_int(" + value + ") || is_float(" + value + "))";
+            case "string": "is_string(" + value + ")";
+            case "boolean": "is_bool(" + value + ")";
+            default: throw new MiraError("Unknown native payload domain " + domain);
+        };
+    }
+
     static function numericTests(target:Target,guard:NumericGuard,v:String):Array<String> {
         final tests:Array<String> = target == Php
             ? ["(\\is_int(" + v + ") || \\is_float(" + v + "))", "\\is_finite(" + v + ")"]
@@ -377,7 +394,7 @@ class SourceEmitter {
         reservedHostNames:Array<String>,
         ?guards:ObjectMap<Dynamic,NumericGuard>,
         ?comparisons:ObjectMap<Dynamic,ScalarComparison>,
-        ?scalarMatches:ObjectMap<Dynamic,Array<Expr>>,
+        ?scalarMatches:ObjectMap<Dynamic,Array<NativeCase>>,
         ?comparison:ScalarComparison
     ):String {
         if (["+", "-", "*", "/", "%", "==", "!=", "<", ">", "<=", ">=", "AND", "OR"].indexOf(symbol) < 0) {
@@ -414,7 +431,7 @@ class SourceEmitter {
         fromHost:Bool,
         ?guards:ObjectMap<Dynamic,NumericGuard>,
         ?comparisons:ObjectMap<Dynamic,ScalarComparison>,
-        ?scalarMatches:ObjectMap<Dynamic,Array<Expr>>
+        ?scalarMatches:ObjectMap<Dynamic,Array<NativeCase>>
     ):String {
         final params:Array<String> = [];
         final emittedArgs:Array<String> = [];

@@ -27,6 +27,12 @@
     source.value='Alignment :: Start = "start" | Center = "center" | End = "end";\nlabel: x (Alignment) = match: x {start: {| "S"}, center: {| "C"}, end: {| "E"}};\nresult = {value: Center, label: (label: Center)};\n# Prova Compila checked JS o PHP; prova anche bad (Alignment) = "center";';
     check();
   });
+  document.getElementById('native-variant-example').addEventListener('click',()=>{
+    host.value='';
+    modules.value='';
+    source.value='Pixels :: Number where _ >= 0 AND _ <= 4096;\nSize :: Fixed (Pixels) = _ | Fill = "fill" | Auto = "auto";\nn (Pixels) = 12.5;\nresolve: s (Size) -> Number = match: s {fixed: {p | p + 0}, fill: {| 100}, auto: {| 0}};\nsizes = [(Fixed: n), Fill, Auto];\nresult = {sizes: sizes, values: (collect: sizes, with: (resolve: _))};\n# Prova Compila checked JS o PHP. Cambia Fixed (Pixels) in Fixed (Text) per vedere il conflitto.';
+    check();
+  });
   document.getElementById('modular-scalar-example').addEventListener('click',()=>{
     host.value='';
     modules.value=JSON.stringify({Layout:'module Layout; interface Alignment :: Start = 0 | Center = "0" | End = 2; implementation'},null,2);

@@ -23,7 +23,8 @@ class Definition {
     public var resultAnnotation:Null<Type> = null;
     public var resultAnnotationOrigin:Null<Token> = null;
     public var body:Null<Expr> = null;
-    // Encoding of a nullary sum constructor; the logical body remains Variant.
+    // Native constructor expression (literal or payload identity).
+    // The logical body remains Variant, preserving nominal typing.
     public var scalarValue:Null<Expr> = null;
 
     public function new(
