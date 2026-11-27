@@ -127,6 +127,8 @@ test('browser: native widget styles agree with Cozy and palette changes keep rea
         equal(q('.mira-ui-toggle-input'),toggle,'toggle identity');
         equal(q('.mira-ui-tabs'),tabs,'tabs identity');
         equal(q('.mira-ui-stepper'),stepper,'stepper identity');
+        equal(toggle.checked,false,'toggle state');
+        equal(slider.value,'38','slider state');
         equal(led.textContent,'Dati','LED state');
       }
       const size=q('#native-size');size.value='18';size.dispatchEvent(new native.contentWindow.Event('input',{bubbles:true}));
