@@ -59,11 +59,16 @@ try{
      await page.locator('[data-target="js"]').click();
      await page.locator('#run').click();
      await page.waitForFunction(()=>document.querySelector('#runOutput')?.textContent.includes('150'));
-     await page.goto(url+'#/guide/quickstart');
+     await page.locator('#tab-reference').click();
      await page.getByRole('heading',{name:'Quickstart · Dal codice all’app'}).waitFor();
      page.once('dialog',d=>d.accept());
      await page.getByRole('button',{name:'Prova nell’editor'}).last().click();
      assert.match(await page.locator('#source').inputValue(),/import "lib\/gui.mira"/);
+     await page.locator('#previewUI').click();
+     const preview=page.frameLocator('iframe.mira-ui-frame');
+     await preview.getByText('Mira counter',{exact:true}).waitFor();
+     await preview.getByRole('button',{name:'+1',exact:true}).click();
+     await preview.getByText('1',{exact:true}).waitFor();
    }
    await page.goto(url+'theme-native-lab.html');
    await page.locator('#theme-preview .mira-ui-button').first().waitFor();
