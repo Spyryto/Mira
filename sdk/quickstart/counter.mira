@@ -1,0 +1,7 @@
+import "lib/gui.mira";
+counter: n = column: [
+  title: "Mira counter",
+  text: n,
+  button: "+1", update: {old | old + 1}
+];
+render (state: 0, view: (counter: _));

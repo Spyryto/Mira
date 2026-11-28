@@ -581,6 +581,10 @@ async function initializeReference() {
       id: item.id, name: item.title, source: item.source, expect: item.expect
     })));
 
+    if(data.quickstart) catalogExamples.push(
+      {id:'sdk-hello',name:'Quickstart · Compenso',source:data.quickstart.hello,expect:{kind:'value',value:150}},
+      {id:'sdk-counter',name:'Quickstart · Contatore',source:data.quickstart.counter,expect:{kind:'ui'}}
+    );
     const group = document.createElement('optgroup');
     group.label = 'Catalogo delle feature — ' + data.examples.length + ' esempi';
     for (const example of catalogExamples) {

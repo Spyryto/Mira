@@ -1,26 +1,32 @@
 package mira;
 
+#if js
 import js.Syntax;
+#end
+import haxe.io.Path;
 import mira.emit.SourceLocations.GeneratedLocation;
 
 class Main {
     static function main():Void {
-        final nodeProcess:Dynamic = Syntax.code("process");
-        final fs:Dynamic = Syntax.code("require('node:fs')");
-        final args:Array<String> = cast nodeProcess.argv.slice(2);
+        #if js
+        final args:Array<String> = cast Syntax.code("process.argv.slice(2)");
+        #else
+        final args = Sys.args();
+        #end
+        var exitCode = 0;
 
         try {
             if (args.length > 0 && args[0] == "--benchmark") {
                 if (args.length != 4) {
                     throw new MiraError(
-                        "Usage: node dist/mira.cjs --benchmark <source.mira> <js|php> <iterations>"
+                        "Usage: mira compiler --benchmark <source.mira> <js|php> <iterations>"
                     );
                 }
-                final source:String = fs.readFileSync(args[1], "utf8");
+                final source:String = readText(args[1]);
                 final target = parseTarget(args[2]);
                 final iterations = Std.parseInt(args[3]);
                 if (iterations == null) throw new MiraError("Benchmark iterations must be an integer");
-                nodeProcess.stdout.write(
+                writeOut(
                     haxe.Json.stringify(Benchmark.run(source, target, iterations)) + "\n"
                 );
                 return;
@@ -32,7 +38,7 @@ class Main {
                 if (flag + 1 >= args.length) {
                     throw new MiraError("--host requires a JSON manifest path");
                 }
-                host = HostEnvironment.fromJson(fs.readFileSync(args[flag + 1], "utf8"));
+                host = HostEnvironment.fromJson(readText(args[flag + 1]));
                 args.splice(flag, 2);
             }
 
@@ -40,7 +46,7 @@ class Main {
             final bindingFlag = args.indexOf("--bindings");
             if (bindingFlag >= 0) {
                 if (bindingFlag + 1 >= args.length) throw new MiraError("--bindings requires a JSON manifest path");
-                providers = mira.resolve.ProviderBindings.fromJson(fs.readFileSync(args[bindingFlag+1],"utf8"));
+                providers = mira.resolve.ProviderBindings.fromJson(readText(args[bindingFlag+1]));
                 args.splice(bindingFlag,2);
             }
             // Explicit additional logical module roots, relative to cwd.
@@ -69,37 +75,37 @@ class Main {
             if (locationFlag >= 0) args.splice(locationFlag, 1);
 
             if (args.length < 2 || args.length > 3) {
-                usage(nodeProcess);
+                usage();
+                finish(2);
                 return;
             }
 
-            final source:String = fs.readFileSync(args[0], "utf8");
+            final source:String = readText(args[0]);
             // Imports are relative to the entry directory, not to the process cwd.
-            final path:Dynamic = Syntax.code("require('node:path')");
-            final root:String = fs.realpathSync(path.dirname(path.resolve(args[0])));
+            final root:String = realPath(directoryOf(absolutePath(args[0])));
             final roots:Array<String> = [root];
             for (directory in extraRoots) {
-                if (!fs.existsSync(directory) || !fs.statSync(directory).isDirectory())
+                if (!exists(directory) || !isDirectory(directory))
                     throw new MiraError("Module root is not a directory: " + directory);
-                final resolved:String = fs.realpathSync(directory);
+                final resolved:String = realPath(directory);
                 if (roots.indexOf(resolved) < 0) roots.push(resolved);
             }
-            final entry:String = path.basename(args[0]);
+            final entry:String = Path.withoutDirectory(args[0]);
             final readModule = function(name:String):Null<String> {
                 // Logical paths are resolved by this host convention, not by the core.
                 final legacy = StringTools.endsWith(name,".mira");
                 final relative = legacy ? name : name.split(" / ").join("/") + ".mira";
                 var found:Null<String> = null;
                 for (directory in (legacy ? [root] : roots)) {
-                    final requested:String = path.resolve(directory,relative);
-                    if (!fs.existsSync(requested)) continue;
-                    final actual:String = fs.realpathSync(requested);
+                    final requested:String = absolutePath(relative, directory);
+                    if (!exists(requested)) continue;
+                    final actual:String = realPath(requested);
                     if (actual != requested) throw new MiraError("Module symlinks are not supported");
-                    if (!fs.statSync(actual).isFile()) continue;
+                    if (!isFile(actual)) continue;
                     if (found != null) throw new MiraError("Ambiguous module " + name + ": " + found + " and " + actual);
                     found = actual;
                 }
-                return found == null ? null : fs.readFileSync(found,"utf8");
+                return found == null ? null : readText(found);
             };
             if (checkedFlag >= 0 && args[1] != "js" && args[1] != "php")
                 throw new MiraError("--checked requires a js or php target");
@@ -122,7 +128,7 @@ class Main {
                     output = haxe.Json.stringify({ok:true, types:Compiler.check(source,host,readModule,entry,providers), diagnostics:[]}, null, "  ") + "\n";
                 } catch (error:MiraError) {
                     output = haxe.Json.stringify({ok:false, types:[], diagnostics:[error.diagnostic]}, null, "  ") + "\n";
-                    nodeProcess.exitCode = 1;
+                    exitCode = 1;
                 }
             } else if (locationFlag >= 0) {
                 final locations:Array<GeneratedLocation> = [];
@@ -137,14 +143,15 @@ class Main {
             }
 
             if (args.length == 3) {
-                fs.writeFileSync(args[2], output);
+                writeText(args[2], output);
             } else {
-                nodeProcess.stdout.write(output);
+                writeOut(output);
             }
         } catch (error:Dynamic) {
-            nodeProcess.stderr.write(Std.string(error) + "\n");
-            nodeProcess.exitCode = 1;
+            writeError(Std.string(error) + "\n");
+            exitCode = 1;
         }
+        finish(exitCode);
     }
 
     static function parseTarget(value:String):Target {
@@ -155,10 +162,89 @@ class Main {
         };
     }
 
-    static function usage(nodeProcess:Dynamic):Void {
-        nodeProcess.stderr.write(
+    static function usage():Void {
+        writeError(
             "Usage: node dist/mira.cjs <source.mira> <js|php|--tokens|--check|--check-json|--interfaces> [output] [--host manifest.json] [--locations] [--checked] [--tree-shake] [--profile] [--bindings bindings.json] [--module-root directory]...\n"
         );
-        nodeProcess.exitCode = 2;
+    }
+    static function readText(path:String):String {
+        #if js
+        return Syntax.code("require('node:fs').readFileSync({0}, 'utf8')", path);
+        #else
+        return sys.io.File.getContent(path);
+        #end
+    }
+    static function writeText(path:String, value:String):Void {
+        #if js
+        Syntax.code("require('node:fs').writeFileSync({0}, {1})", path, value);
+        #else
+        sys.io.File.saveContent(path, value);
+        #end
+    }
+    static function writeOut(value:String):Void {
+        #if js
+        Syntax.code("process.stdout.write({0})", value);
+        #else
+        Sys.stdout().writeString(value);
+        #end
+    }
+    static function writeError(value:String):Void {
+        #if js
+        Syntax.code("process.stderr.write({0})", value);
+        #else
+        Sys.stderr().writeString(value);
+        #end
+    }
+    static function finish(code:Int):Void {
+        #if js
+        Syntax.code("process.exitCode = {0}", code);
+        #else
+        if (code != 0) Sys.exit(code);
+        #end
+    }
+    static function exists(path:String):Bool {
+        #if js
+        return Syntax.code("require('node:fs').existsSync({0})", path);
+        #else
+        return sys.FileSystem.exists(path);
+        #end
+    }
+    static function isDirectory(path:String):Bool {
+        #if js
+        return Syntax.code("require('node:fs').statSync({0}).isDirectory()", path);
+        #else
+        return sys.FileSystem.isDirectory(path);
+        #end
+    }
+    static function isFile(path:String):Bool {
+        #if js
+        return Syntax.code("require('node:fs').statSync({0}).isFile()", path);
+        #elseif php
+        return php.Syntax.code("is_file({0})", path);
+        #else
+        return exists(path) && !isDirectory(path);
+        #end
+    }
+    static function realPath(path:String):String {
+        #if js
+        return Syntax.code("require('node:fs').realpathSync({0})", path);
+        #else
+        return Path.normalize(sys.FileSystem.fullPath(path));
+        #end
+    }
+    static function directoryOf(path:String):String {
+        #if js
+        return Syntax.code("require('node:path').dirname({0})", path);
+        #else
+        return Path.directory(path);
+        #end
+    }
+    static function absolutePath(path:String, ?base:String):String {
+        #if js
+        return base == null ? Syntax.code("require('node:path').resolve({0})", path)
+            : Syntax.code("require('node:path').resolve({0}, {1})", base, path);
+        #else
+        return Path.normalize(Path.isAbsolute(path) ? path : Path.join([base == null ? Sys.getCwd() : base, path]));
+        #end
     }
 }

@@ -1,0 +1,9 @@
+{
+  "values": [],
+  "callables": [
+    "log",
+    "render",
+    "alert"
+  ],
+  "selectors": []
+}

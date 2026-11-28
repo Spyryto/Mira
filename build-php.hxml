@@ -1,0 +1,5 @@
+-cp src
+-main mira.Main
+-php dist/compiler-php
+-resource lib/gui-typed-styles.mira@lib/gui-typed-styles.mira
+-resource lib/grammar.mira@lib/grammar.mira

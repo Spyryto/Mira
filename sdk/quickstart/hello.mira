@@ -1,0 +1,4 @@
+hours = 3;
+rate = 50;
+result = hours * rate;
+log result;

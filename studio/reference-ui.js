@@ -71,6 +71,7 @@ export function mountReference(root, dataset, onOpenExample) {
     const controls = element('div', 'reference-controls');
     controls.append(link('Linguaggio', 'guide', 'reference-active'),
       link('Esempi', 'guide/examples'), link('API Mira', 'guide/native'), link('API Haxe', 'api'), link('Funzionalità', 'guide/capabilities'));
+    if(dataset.quickstart) controls.append(link('Quickstart','guide/quickstart'));
     root.append(controls);
 
     const search = element('input', 'reference-search');
@@ -336,13 +337,74 @@ export function mountReference(root, dataset, onOpenExample) {
     }
   }
 
+  function quickstart(){
+    const q=dataset.quickstart;
+    root.append(back(),heading('Quickstart · Dal codice all’app','Giro 0 · Impara, esegui, esporta e pubblica con Mira '+q.version));
+    const section=(title,paragraphs)=>{
+      const s=element('section','reference-list-item');
+      s.append(element('h3','',title));
+      for(const p of paragraphs)s.append(element('p','',p));
+      root.append(s);return s;
+    };
+    const code=(s,source,language='mira')=>{
+      const p=element('pre','reference-code');
+      if(language==='mira')highlightCode(p,source);else p.textContent=source;
+      s.append(p);
+      const copy=element('button','reference-try','Copia');copy.type='button';
+      copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(source);copy.textContent='Copiato';}catch{copy.textContent='Seleziona il testo e copialo';}});s.append(copy);
+    };
+    const open=(s,id)=>{
+      const b=element('button','reference-try','Prova nell’editor');b.type='button';b.addEventListener('click',()=>onOpenExample({id}));s.append(b);
+    };
+    let s=section('1. Il tuo primo script',[
+      'hours e rate sono nomi di valori. Il segno = li associa a un’espressione; il punto e virgola termina la dichiarazione.',
+      'result moltiplica ore e tariffa. log invia il risultato all’host. Premi Prova, poi Esegui: il risultato atteso è 150. Modifica rate a 60: otterrai 180. Usa Salva file nell’editor per scaricare il sorgente e rinominalo hello.mira.'
+    ]);
+    code(s,q.hello);open(s,'sdk-hello');
+    s.append(link('Valori','feature/values'),element('span','',' · '),link('Operatori aritmetici','feature/arithmetic'));
+    s=section('2. Installa il bootstrap sul PC',[
+      'Scegli Node 22+ oppure PHP CLI 8.3+ con OpenSSL e HTTPS streams. Non servono Haxe, npm o Composer. Il download usa una release versionata e verifica SHA-256. Dopo l’installazione puoi lavorare offline.',
+      'Scarica uno dei due script e conservalo in una cartella. Apri il terminale in quella cartella.'
+    ]);
+    const release='https://github.com/Spyryto/Mira/releases/tag/sdk-v'+q.version;
+    const a=element('a','reference-source','Release SDK '+q.version);a.href=release;s.append(a);
+    code(s,'node mira.js install\nphp mira.php install','shell');
+    s.append(element('p','','Esegui uno solo dei due comandi. Copia la cartella quickstart dalla cache indicata da info in una cartella scrivibile. Contiene hello.mira, counter.mira e lib/gui.mira. Porta con te anche il bootstrap o usa il suo percorso assoluto. Sostituisci hello.mira con il file salvato da Cozy se hai modificato l’esempio.'));
+    code(s,'node mira.js info\nphp mira.php info','shell');
+    s=section('3. Esegui e compila fuori da Cozy',[
+      'Apri il terminale nella cartella quickstart. Negli esempi il bootstrap è nella stessa cartella. run compila e avvia il risultato; build salva il programma generato. Il target di default è quello dell’host.',
+      'Per eseguire il codice PHP serve PHP; per eseguire il JavaScript console serve Node. Entrambi i compilatori possono generare entrambi i target.'
+    ]);
+    code(s,'node mira.js run hello.mira\nnode mira.js build hello.mira php\nphp hello.php','shell');
+    code(s,'php mira.php run hello.mira\nphp mira.php build hello.mira js\nnode hello.mjs','shell');
+    s=section('4. Una GUI reattiva',[
+      'counter è una funzione che riceve n e costruisce una colonna con titolo, testo e pulsante. update riceve il vecchio stato e ne restituisce uno nuovo. state inizializza il contatore a zero; render lo mostra.',
+      'Prova nell’editor e usa Anteprima UI: premi +1 più volte. Poi modifica il blocco in old + 2.'
+    ]);
+    code(s,q.counter);open(s,'sdk-counter');
+    s.append(link('API GUI','guide/native/GUI'));
+    s=section('5. Da dove arriva lib/gui.mira?',[
+      'È un file di normali funzioni Mira, non una parola magica. Cozy incorpora una copia nel compilatore; nella CLI l’import fisico è relativo al file di ingresso. Il quickstart installato contiene il vero file nella directory lib. Ecco il suo contenuto, generato dal sorgente della stessa build.'
+    ]);
+    const details=element('details','');details.append(element('summary','','Apri lib/gui.mira'));code(details,q.gui);s.append(details);
+    s=section('6. Avvia e pubblica la GUI',[
+      'Usa uno dei due server locali e apri nel browser http://127.0.0.1:8765/. Non serve Cozy. Premi Ctrl+C nel terminale per terminare. Per ritrovare la tua GUI fuori da Cozy, salva il sorgente come counter.mira nella cartella quickstart, accanto a lib.',
+      'web genera una cartella con index.html, app.js e ui-host.js. Pubblica questi tre file insieme su un hosting statico. Non è necessario un backend per questo contatore.'
+    ]);
+    code(s,'node mira.js serve counter.mira\nphp mira.php serve counter.mira','shell');
+    code(s,'node mira.js web counter.mira site\n# oppure: php mira.php web counter.mira site','shell');
+    s.append(element('p','','Esercizio: modifica il titolo, aggiungi un secondo pulsante e ripubblica in una nuova cartella. Hai chiuso il primo giro della spirale.'));
+    root.append(element('p','reference-note','Limiti: questo SDK iniziale supporta log e GUI base. Filesystem, HTTP, progetti checked e packaging desktop generico non sono ancora integrati nel bootstrap.'));
+  }
+
   function render() {
     root.replaceChildren();
     const route = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
     const [type, ...parts] = route.split('/');
     const id = parts.join('/');
 
-    if (type === 'guide' && (id==='native'||id.startsWith('native/'))) nativeApiPage(id.slice(7));
+    if(type==='guide' && id==='quickstart' && dataset.quickstart) quickstart();
+    else if (type === 'guide' && (id==='native'||id.startsWith('native/'))) nativeApiPage(id.slice(7));
     else if (type === 'feature' && features.has(id)) featurePage(features.get(id));
     else if (type === 'example' && examples.has(id)) examplePage(examples.get(id));
     else if (type === 'api' && api.has(id)) apiPage(api.get(id));

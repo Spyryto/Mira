@@ -1,0 +1,63 @@
+name: Mira SDK bootstrap
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ['sdk-v*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, windows-2022]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: '4.3.7'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+      - run: npm run build
+      - run: haxe build-php.hxml
+      - run: node scripts/build-sdk.mjs
+      - run: node scripts/test-sdk.mjs
+      - run: npm install --no-save --package-lock=false playwright@1.56.1
+      - if: runner.os == 'Linux'
+        run: npx playwright install --with-deps chromium
+      - if: runner.os == 'Windows'
+        run: npx playwright install chromium
+      - run: node scripts/test-sdk-browser.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mira-sdk-${{ matrix.os }}
+          path: dist/sdk/
+          if-no-files-found: error
+  release:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: mira-sdk-ubuntu-24.04
+          path: sdk
+      - name: Verify tag matches bundle and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          TAG="sdk-v$(node -p "JSON.parse(require('fs').readFileSync('sdk/mira-sdk.json')).version")"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release already exists; immutable version retained."
+            exit 0
+          fi
+          gh release create "$TAG" sdk/* --target "$GITHUB_SHA" --title "Mira SDK $TAG" --notes "Verified Node/PHP console and browser GUI bootstrap SDK."

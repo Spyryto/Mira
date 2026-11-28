@@ -46,6 +46,30 @@ try{
      await page.getByLabel('Funzione chiamata (AST)').selectOption('fold:with:from:');
      assert.equal(await page.locator('.reference-example-card').count(),10,'fold call facet');
    }
+   if(name==='phone'){
+     await page.goto(url+'#/guide/quickstart');
+     await page.getByRole('heading',{name:'Quickstart · Dal codice all’app'}).waitFor();
+     await page.getByText('Apri lib/gui.mira',{exact:true}).click();
+     assert.ok(await page.locator('#reference details').filter({has:page.getByText('Apri lib/gui.mira',{exact:true})}).locator('pre').textContent().then(t=>t.includes('column: items')));
+     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'quickstart horizontal overflow');
+     await page.screenshot({path:resolve(out,name+'-quickstart.png'),fullPage:false});
+     page.once('dialog',d=>d.accept());
+     await page.getByRole('button',{name:'Prova nell’editor'}).first().click();
+     assert.match(await page.locator('#source').inputValue(),/hours = 3/);
+     await page.locator('[data-target="js"]').click();
+     await page.locator('#run').click();
+     await page.waitForFunction(()=>document.querySelector('#runOutput')?.textContent.includes('150'));
+     await page.locator('#tab-reference').click();
+     await page.getByRole('heading',{name:'Quickstart · Dal codice all’app'}).waitFor();
+     page.once('dialog',d=>d.accept());
+     await page.getByRole('button',{name:'Prova nell’editor'}).last().click();
+     assert.match(await page.locator('#source').inputValue(),/import "lib\/gui.mira"/);
+     await page.locator('#previewUI').click();
+     const preview=page.frameLocator('iframe.mira-ui-frame');
+     await preview.getByText('Mira counter',{exact:true}).waitFor();
+     await preview.getByRole('button',{name:'+1',exact:true}).click();
+     await preview.getByText('1',{exact:true}).waitFor();
+   }
    await page.goto(url+'theme-native-lab.html');
    await page.locator('#theme-preview .mira-ui-button').first().waitFor();
    await page.screenshot({path:resolve(out,name+'-widgets.png'),fullPage:true});
