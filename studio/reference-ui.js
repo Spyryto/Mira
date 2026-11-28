@@ -358,7 +358,7 @@ export function mountReference(root, dataset, onOpenExample) {
     };
     let s=section('1. Il tuo primo script',[
       'hours e rate sono nomi di valori. Il segno = li associa a un’espressione; il punto e virgola termina la dichiarazione.',
-      'result moltiplica ore e tariffa. log invia il risultato all’host. Premi Prova, poi Esegui: il risultato atteso è 150. Modifica rate a 60: otterrai 180.'
+      'result moltiplica ore e tariffa. log invia il risultato all’host. Premi Prova, poi Esegui: il risultato atteso è 150. Modifica rate a 60: otterrai 180. Usa Salva file nell’editor per scaricare il sorgente e rinominalo hello.mira.'
     ]);
     code(s,q.hello);open(s,'sdk-hello');
     s.append(link('Valori','feature/values'),element('span','',' · '),link('Operatori aritmetici','feature/arithmetic'));
@@ -369,7 +369,7 @@ export function mountReference(root, dataset, onOpenExample) {
     const release='https://github.com/Spyryto/Mira/releases/tag/sdk-v'+q.version;
     const a=element('a','reference-source','Release SDK '+q.version);a.href=release;s.append(a);
     code(s,'node mira.js install\nphp mira.php install','shell');
-    s.append(element('p','','Esegui uno solo dei due comandi. Copia la cartella quickstart dalla cache indicata da info in una cartella scrivibile. Contiene hello.mira, counter.mira e lib/gui.mira. Porta con te anche il bootstrap o usa il suo percorso assoluto.'));
+    s.append(element('p','','Esegui uno solo dei due comandi. Copia la cartella quickstart dalla cache indicata da info in una cartella scrivibile. Contiene hello.mira, counter.mira e lib/gui.mira. Porta con te anche il bootstrap o usa il suo percorso assoluto. Sostituisci hello.mira con il file salvato da Cozy se hai modificato l’esempio.'));
     code(s,'node mira.js info\nphp mira.php info','shell');
     s=section('3. Esegui e compila fuori da Cozy',[
       'Apri il terminale nella cartella quickstart. Negli esempi il bootstrap è nella stessa cartella. run compila e avvia il risultato; build salva il programma generato. Il target di default è quello dell’host.',
@@ -388,7 +388,7 @@ export function mountReference(root, dataset, onOpenExample) {
     ]);
     const details=element('details','');details.append(element('summary','','Apri lib/gui.mira'));code(details,q.gui);s.append(details);
     s=section('6. Avvia e pubblica la GUI',[
-      'Usa uno dei due server locali e apri nel browser http://127.0.0.1:8765/. Non serve Cozy. Premi Ctrl+C nel terminale per terminare.',
+      'Usa uno dei due server locali e apri nel browser http://127.0.0.1:8765/. Non serve Cozy. Premi Ctrl+C nel terminale per terminare. Per ritrovare la tua GUI fuori da Cozy, salva il sorgente come counter.mira nella cartella quickstart, accanto a lib.',
       'web genera una cartella con index.html, app.js e ui-host.js. Pubblica questi tre file insieme su un hosting statico. Non è necessario un backend per questo contatore.'
     ]);
     code(s,'node mira.js serve counter.mira\nphp mira.php serve counter.mira','shell');
