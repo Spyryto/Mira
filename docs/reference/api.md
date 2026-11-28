@@ -777,7 +777,7 @@ public final value:String
 class Main
 ```
 
-[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Main.hx#L4)
+[Sorgente Haxe](https://github.com/Spyryto/Mira/blob/main/src/mira/Main.hx#L7)
 
 <a id="api-mira-miraerror"></a>
 ### `mira.MiraError`
