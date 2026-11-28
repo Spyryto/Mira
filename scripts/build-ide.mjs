@@ -2,9 +2,11 @@ import {readFileSync,writeFileSync,copyFileSync,mkdirSync,statSync,readdirSync} 
 import {resolve} from 'node:path';
 import {runInNewContext} from 'node:vm';
 import {build} from 'esbuild';
+import {buildIdeLibraryCatalog} from './ide-library-catalog.mjs';
 const site=resolve('dist/studio'), source=resolve('studio/ide');
 const read=name=>readFileSync(resolve(source,name),'utf8');
 const context={};runInNewContext(readFileSync(resolve(site,'compiler.js'),'utf8'),context);
+buildIdeLibraryCatalog(process.cwd(),site,context.MiraStudioCompiler);
 const code=read('editor-services.mira')+'\n'+read('snippets.mira')+'\n'+read('workspace.mira');
 const host=read('editor-host.json');
 const js=context.MiraStudioCompiler.compile(code,'js',host,false,null,true);
@@ -12,7 +14,7 @@ const php=context.MiraStudioCompiler.compile(code,'php',host,false,null,true);
 if(!js.ok||!php.ok)throw Error(js.message||php.message);
 mkdirSync('dist/ide',{recursive:true});
 writeFileSync('dist/ide/editor-services.php',php.output);
-writeFileSync('dist/ide/editor-services.js', 'const __miraHost=Object.freeze({"starts with:in:":(a,b)=>b.startsWith(a)});\n'+js.output+'\nexport {editor_complete__from,editor_lookup__from,editor_tooltip,editor_fields__prefix__from,editor_field_lookup__name__from,editor_field_tooltip,editor_signature__returning,editor_visible__globals,workspace_save__in,workspace_find__in,workspace_dependencies__in,editorTemplates as editor_templates};\n');
+writeFileSync('dist/ide/editor-services.js', 'const __miraHost=Object.freeze({"starts with:in:":(a,b)=>b.startsWith(a)});\n'+js.output+'\nexport {editor_complete__from,editor_lookup__from,editor_tooltip,editor_fields__prefix__from,editor_field_lookup__name__from,editor_field_tooltip,editor_signature__returning,editor_visible__globals,workspace_save__in,workspace_find__in,workspace_dependencies__in,editor_catalog__from,editorTemplates as editor_templates};\n');
 const bundled=await build({metafile:true,entryPoints:[resolve(source,'editor-host.js')],outfile:resolve(site,'ide-bundle.js'),bundle:true,minify:true,format:'esm',target:'es2020',legalComments:'linked'});
 // Redistribute the actual license files of every bundled dependency.
 const packages=new Set(Object.keys(bundled.metafile.inputs).map(path=>path.replaceAll('\\','/').match(/(?:^|\/)node_modules\/(@[^/]+\/[^/]+|[^/]+)/)?.[1]).filter(Boolean));
@@ -24,12 +26,12 @@ for(const name of [...packages].sort()){
  licenses.push(name+' '+manifest.version+'\n'+files.map(file=>readFileSync(resolve(dir,file),'utf8')).join('\n'));
 }
 writeFileSync(resolve(site,'ide-third-party-licenses.txt'),licenses.join('\n\n----------------\n\n')+'\n');
-for(const name of ['ide.html','ide.css','ide-analysis-worker.js'])copyFileSync(resolve(source,name),resolve(site,name));
+for(const name of ['ide.html','ide.css','ide-analysis-worker.js','ide-run-worker.js'])copyFileSync(resolve(source,name),resolve(site,name));
 let index=readFileSync(resolve(site,'index.html'),'utf8');
 index=index.replace('<div class="editor-toolbar">', '<div class="editor-toolbar"><a class="icon-button" href="./ide.html">IDE</a>');
 writeFileSync(resolve(site,'index.html'),index);
 let sw=readFileSync(resolve(site,'sw.js'),'utf8');
-sw=sw.replace('const ASSETS = [','const ASSETS = [\n  "./ide.html", "./ide.css", "./ide-bundle.js", "./ide-analysis-worker.js",');
+sw=sw.replace('const ASSETS = [','const ASSETS = [\n  "./ide.html", "./ide.css", "./ide-bundle.js", "./ide-analysis-worker.js", "./ide-run-worker.js", "./ide-libraries.json", "./ide-third-party-licenses.txt",');
 sw=sw.replace("const page = url.pathname.endsWith('/projection-lab.html')", "const page = url.pathname.endsWith('/ide.html') ? './ide.html' : url.pathname.endsWith('/projection-lab.html')");
 writeFileSync(resolve(site,'sw.js'),sw);
 console.log('IDE bundle bytes: '+statSync(resolve(site,'ide-bundle.js')).size);

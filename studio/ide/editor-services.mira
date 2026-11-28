@@ -38,3 +38,7 @@ editor visible: locals ([Suggestion]), globals: globals ([Suggestion]) -> [Sugge
   fold: (select: globals, with: {global (Suggestion) |
     NOT (fold: locals, with: {found (Boolean), binding (Suggestion) | found OR ((binding ~ label) == (global ~ label))}, from: false)}),
     with: {items ([Suggestion]), item (Suggestion) | append: item, to: items}, from: locals;
+
+# One catalog filter works for module names, public symbols and example titles.
+editor catalog: prefix (Text), from: items ([Suggestion]) -> [Suggestion] =
+  select: items, with: {item (Suggestion) | starts with: prefix, in: (item ~ label)};

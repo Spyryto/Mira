@@ -118,6 +118,15 @@ try{
   if(name==='phone')await page.locator('#workspace-tree summary').click();
   await page.locator('#files button',{hasText:'Music/Intervals.mira'}).click();
   assert.match(await page.locator('.cm-content').textContent(),/secret = 99/);
+  await page.locator('#example-tree summary').click();
+  await page.locator('#example-list button',{hasText:'Text · libreria'}).click();
+  await page.locator('#status').filter({hasText:'Verificato'}).waitFor();
+  await page.locator('#run-js').click();
+  await page.locator('#run-output').filter({hasText:'"points"'}).waitFor();
+  assert.match(await page.locator('#run-output').textContent(),/"contains": true/);
+  await page.locator('#emit-php').click();
+  await page.locator('#run-output').filter({hasText:'<?php'}).waitFor();
+  await page.screenshot({path:resolve(out,name+'-ide-offline-library.png'),fullPage:true});
   await page.close();
  }
 }finally{await browser.close();await new Promise(r=>server.close(r))}
