@@ -269,8 +269,7 @@ function renderExamples(){
  const prefix=$('example-search').value.toLowerCase();
  $('example-list').replaceChildren(...library.examples.filter(e=>e.title.toLowerCase().includes(prefix)).map(e=>{
   const b=document.createElement('button');b.textContent=e.title+(e.execute?' · JS':' · laboratorio');b.onclick=()=>{
-   let path='Examples/'+e.id.replace(/[^A-Za-z0-9]+/g,' ').trim().replace(/^[0-9]/,'Example renderFiles();saveLocal();analyze(editor);
-$('new-file')')+'.mira';
+   let path='Examples/'+e.id.replace(/[^A-Za-z0-9]+/g,' ').trim().replace(/^[0-9]/,digit=>'Example '+digit)+'.mira';
    if(workspace.files.some(f=>f.path.toLowerCase()===path.toLowerCase())){switchFile(workspace.files.find(f=>f.path.toLowerCase()===path.toLowerCase()).path);return;}
    workspace=update(workspace,path,e.source);switchFile(path);
    $('output-panel').open=true;$('run-output').textContent=e.description+(e.execute?'\nPremi Esegui JS.':'\nUsa il laboratorio specializzato per gli effetti o il rendering.');
