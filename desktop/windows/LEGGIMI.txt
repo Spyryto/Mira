@@ -1,0 +1,26 @@
+MIRA STUDIO DESKTOP — Windows x64, edizione portabile
+
+1. Estrai tutto lo ZIP in una cartella scrivibile.
+2. Apri "Avvia Mira Studio.cmd". Scegli o crea la cartella dei tuoi sorgenti.
+   Puoi anche trascinare una cartella sul file CMD.
+3. Studio si apre nel browser predefinito. La finestra del server deve restare aperta.
+4. "Nuovo file" crea un documento; "Salva su disco" oppure Ctrl+S scrive il file attivo.
+5. Salva i file modificati prima di chiudere il browser o il server.
+   Riaprendo la stessa cartella ritroverai i file .mira sul disco.
+
+Non occorre installare Node, npm, Haxe o PHP per usare l'editor.
+Il runtime Node incluso e' quello ufficiale Windows x64; licenza in runtime/LICENSE.
+Non e' un'app WebView, un installer o un eseguibile firmato.
+Se Windows mostra un avviso, verifica provenienza e contenuto del pacchetto.
+Non disattivare le protezioni del sistema.
+
+L'host ascolta soltanto su 127.0.0.1, con una porta e un token di sessione.
+Il browser accede alla cartella scelta; il progetto non viene caricato online.
+Non usare il prototipo come sandbox per codice o filesystem ostile.
+Il salvataggio e' esplicito; nessuna sincronizzazione automatica con Git.
+Supporto attuale: file .mira con percorsi logici semplici.
+Il workspace non gestisce ancora tutti i manifest/provid­er del compilatore CLI.
+
+Progetto: https://github.com/Spyryto/Mira
+Licenza dichiarata dal progetto (package.json): MIT.
+Licenze delle dipendenze dell'editor: dist/studio/ide-third-party-licenses.txt

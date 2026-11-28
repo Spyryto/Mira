@@ -16,7 +16,8 @@ let workspace,storageBlocked=false;try{workspace=desktopEnabled?{format:1,active
 const states=new Map();let folder=null,baseline=new Map();
 const saved=get(workspace,workspace.active).source;
 const moduleJson=()=>JSON.stringify(modulesFor(workspace));
-function saveLocal(){if(desktopEnabled){$('persistence').textContent='Workspace desktop · salva esplicitamente su disco';return;}if(storageBlocked)return;try{persist(localStorage,workspace);$('persistence').textContent='Salvato nel browser'+(folder?' · '+folder.name:'');}catch(error){$('persistence').textContent='Salvataggio locale fallito: '+error.message+' · esporta il progetto.'}}
+function hasUnsavedDisk(){return (desktopEnabled||folder)&&workspace.files.some(f=>baseline.get(f.path)!==f.source);}
+function saveLocal(){if(desktopEnabled){$('persistence').textContent=hasUnsavedDisk()?'Modifiche non salvate su disco':'Workspace desktop · tutti i file salvati';return;}if(storageBlocked)return;try{persist(localStorage,workspace);$('persistence').textContent='Salvato nel browser'+(folder?' · '+folder.name:'');}catch(error){$('persistence').textContent='Salvataggio locale fallito: '+error.message+' · esporta il progetto.'}}
 function renderFiles(){
  $('active-file').textContent=workspace.active;
  $('files').replaceChildren(...workspace.files.slice().sort((a,b)=>a.path.localeCompare(b.path)).map(f=>{const b=document.createElement('button');b.type='button';b.textContent=f.path;b.className=f.path===workspace.active?'selected':'';b.setAttribute('aria-pressed',String(f.path===workspace.active));b.onclick=()=>switchFile(f.path);return b}));
@@ -259,6 +260,8 @@ $('save-disk').onclick=async()=>{
  try{const file=get(workspace,workspace.active);if(desktopEnabled){await saveDesktop(file,baseline.get(file.path)??null);baseline.set(file.path,file.source)}else await saveDisk(folder,file,baseline);$('persistence').textContent='Scritto su disco: '+file.path;}
  catch(error){$('persistence').textContent=error.message}
 };
+window.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'&&(desktopEnabled||folder)){event.preventDefault();if(!$('save-disk').disabled)$('save-disk').click();}});
+window.addEventListener('beforeunload',event=>{if(hasUnsavedDisk()){event.preventDefault();event.returnValue='';}});
 $('export-project').onclick=()=>{
  const url=URL.createObjectURL(new Blob([JSON.stringify(workspace,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='mira-workspace.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
