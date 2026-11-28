@@ -267,7 +267,8 @@ function renderLibrary(){
 function renderExamples(){
  if(!library)return;
  const prefix=$('example-search').value.toLowerCase();
- $('example-list').replaceChildren(...library.examples.filter(e=>e.title.toLowerCase().includes(prefix)).map(e=>{
+ const matches=new Set(editor_catalog__from(prefix,library.examples.map(e=>make(e.title.toLowerCase(),'','','',e.id,'text'))).map(item=>item.origin));
+ $('example-list').replaceChildren(...library.examples.filter(e=>matches.has(e.id)).map(e=>{
   const b=document.createElement('button');b.textContent=e.title+(e.execute?' · JS':' · laboratorio');b.onclick=()=>{
    let path='Examples/'+e.id.replace(/[^A-Za-z0-9]+/g,' ').trim().replace(/^[0-9]/,digit=>'Example '+digit)+'.mira';
    if(workspace.files.some(f=>f.path.toLowerCase()===path.toLowerCase())){switchFile(workspace.files.find(f=>f.path.toLowerCase()===path.toLowerCase()).path);return;}

@@ -93,10 +93,11 @@ class Bridge {
         });
     }
 
-    public static function scopeAt(source:String,line:Int,column:Int,?hostJson:String,?modulesJson:String):Dynamic {
+    public static function scopeAt(source:String,line:Int,column:Int,?hostJson:String,?modulesJson:String,?bindingsJson:String):Dynamic {
         return safely(function() {
             final host = hostJson == null ? HostEnvironment.empty() : HostEnvironment.fromJson(hostJson);
-            return haxe.Json.stringify(Compiler.scopeAt(source,line,column,host,resolver(modulesJson)));
+            final providers = bindingsJson == null ? null : mira.resolve.ProviderBindings.fromJson(bindingsJson);
+            return haxe.Json.stringify(Compiler.scopeAt(source,line,column,host,resolver(modulesJson),providers));
         });
     }
 
@@ -141,11 +142,12 @@ class Bridge {
         return safely(function() return Compiler.inspectTokens(source));
     }
 
-    public static function ast(source:String, ?hostJson:String, ?modulesJson:String):Dynamic {
+    public static function ast(source:String, ?hostJson:String, ?modulesJson:String, ?bindingsJson:String):Dynamic {
         return safely(function() {
             final host = hostJson == null ? HostEnvironment.empty()
                 : HostEnvironment.fromJson(hostJson);
-            final definitions = Compiler.parse(source, host, resolver(modulesJson),null,null,null,null,true);
+            final providers = bindingsJson == null ? null : mira.resolve.ProviderBindings.fromJson(bindingsJson);
+            final definitions = Compiler.parse(source, host, resolver(modulesJson),null,null,null,providers,true);
             final tree:Array<Dynamic> = [];
             for (definition in definitions) {
                 final node:Dynamic = {

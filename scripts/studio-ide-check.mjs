@@ -121,6 +121,10 @@ try{
   await page.locator('#example-tree summary').click();
   await page.locator('#example-list button',{hasText:'Text · libreria'}).click();
   await page.locator('#status').filter({hasText:'Verificato'}).waitFor();
+  if(name==='phone'&&!(await page.locator('#workspace-tree').evaluate(e=>e.open)))await page.locator('#workspace-tree summary').click();
+  await page.locator('#symbols button',{hasText:'contains:in:'}).click();
+  assert.match(await page.locator('#inspect').textContent(),/Importato da Services \/ Text/);
+  assert.deepEqual(await page.locator('#inspect .mira-signature em').allTextContents(),['needle','text']);
   await page.locator('#run-js').click();
   await page.locator('#run-output').filter({hasText:'"points"'}).waitFor();
   assert.match(await page.locator('#run-output').textContent(),/"contains": true/);
