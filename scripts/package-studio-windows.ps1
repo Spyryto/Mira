@@ -26,6 +26,8 @@ try {
     Copy-Item "$source\*" -Destination "$package\dist\studio" -Recurse
     Copy-Item (Join-Path $repo 'scripts\studio-desktop.mjs') $package
     Copy-Item (Join-Path $repo 'desktop\windows\*') $package
+    New-Item -ItemType Directory -Path "$package\reference-sources" | Out-Null
+    Copy-Item (Join-Path $repo 'lib'),(Join-Path $repo 'examples'),(Join-Path $repo 'catalog') -Destination "$package\reference-sources" -Recurse
     $metadata = @{ runtime = $version; architecture = 'win-x64'; archiveSHA256 = $expected; revision = $env:GITHUB_SHA }
     $metadata | ConvertTo-Json | Set-Content (Join-Path $package 'build-info.json') -Encoding utf8
     & "$package\runtime\node.exe" --version

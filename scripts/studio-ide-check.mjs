@@ -7,7 +7,7 @@ const base=resolve('dist/studio'),out=resolve('dist/studio-screenshots');
 await mkdir(out,{recursive:true});
 const mime={'.html':'text/html','.css':'text/css','.js':'text/javascript','.json':'application/json'};
 const server=createServer(async(req,res)=>{
- try{const p=resolve(base,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname));if(!p.startsWith(base+sep))throw Error('outside');const bytes=await readFile(p);res.writeHead(200,{'Content-Type':mime[extname(p)]||'text/plain'});res.end(bytes)}catch{res.writeHead(404);res.end()}
+ try{const path=decodeURIComponent(new URL(req.url,'http://localhost').pathname);const p=resolve(base,'.'+(path==='/'?'/index.html':path));if(!p.startsWith(base+sep))throw Error('outside');const bytes=await readFile(p);res.writeHead(200,{'Content-Type':mime[extname(p)]||'text/plain'});res.end(bytes)}catch{res.writeHead(404);res.end()}
 });
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const browser=await chromium.launch();
@@ -118,6 +118,34 @@ try{
   if(name==='phone')await page.locator('#workspace-tree summary').click();
   await page.locator('#files button',{hasText:'Music/Intervals.mira'}).click();
   assert.match(await page.locator('.cm-content').textContent(),/secret = 99/);
+  await page.locator('#example-tree summary').click();
+  await page.locator('#example-list button',{hasText:'Text · libreria'}).click();
+  await page.locator('#status').filter({hasText:'Verificato'}).waitFor();
+  if(name==='phone'&&!(await page.locator('#workspace-tree').evaluate(e=>e.open)))await page.locator('#workspace-tree summary').click();
+  await page.locator('#symbols button',{hasText:'contains:in:'}).click();
+  assert.match(await page.locator('#inspect').textContent(),/Importato da Services \/ Text/);
+  assert.deepEqual(await page.locator('#inspect .mira-signature em').allTextContents(),['needle','text']);
+  await page.locator('#run-js').click();
+  await page.locator('#run-output').filter({hasText:'"points"'}).waitFor();
+  assert.match(await page.locator('#run-output').textContent(),/"contains": true/);
+  await page.locator('#emit-php').click();
+  await page.locator('#run-output').filter({hasText:'<?php'}).waitFor();
+  await page.screenshot({path:resolve(out,name+'-ide-offline-library.png'),fullPage:true});
   await page.close();
  }
+ const context=await browser.newContext({serviceWorkers:'allow'});
+ const page=await context.newPage();
+ await page.goto('http://127.0.0.1:'+server.address().port+'/ide.html');
+ await page.waitForFunction(()=>navigator.serviceWorker.controller!==null,{},{timeout:30000});
+ await page.locator('#status').filter({hasText:'Verificato'}).waitFor();
+ await context.setOffline(true);
+ await page.reload();
+ await page.locator('#status').filter({hasText:'Verificato'}).waitFor();
+ await page.locator('#example-tree summary').click();
+ await page.locator('#example-list button',{hasText:'Date · libreria'}).click();
+ await page.locator('#status').filter({hasText:'Verificato'}).waitFor();
+ await page.locator('#run-js').click();
+ await page.locator('#run-output').filter({hasText:'"invalid": false'}).waitFor();
+ console.log('Offline IDE: service-worker reload, library provider resolution and actual example execution without network verified.');
+ await context.close();
 }finally{await browser.close();await new Promise(r=>server.close(r))}

@@ -7,3 +7,5 @@ nav summary{cursor:pointer;font-weight:650;color:#554471}nav details:not([open])
 .cm-completionLabel{font-weight:600}.mira-completion-signature{display:inline-block;margin-left:.65em;vertical-align:baseline;max-width:100%;overflow-wrap:anywhere}
 
 .workspace-actions{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:.6rem 0}.workspace-actions button{font-size:11px;margin:0;padding:7px;overflow-wrap:anywhere}#files{max-height:28vh;overflow:auto}#files button.selected{font-weight:650}#persistence{display:block;overflow-wrap:anywhere;color:#655570;margin:6px 0}#active-file{overflow-wrap:anywhere;min-width:0}
+
+nav details+details{margin-top:12px;border-top:1px solid #ded5df;padding-top:8px}#library-list,#example-list{max-height:28vh;overflow:auto}#example-search{width:100%;margin:6px 0}#output-panel{padding:8px 10px;border-top:1px solid #ded5df}#run-output{max-height:30vh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 monospace}.mira-tooltip pre.library-source{max-height:40vh;overflow:auto;white-space:pre-wrap}
