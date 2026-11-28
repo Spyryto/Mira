@@ -50,7 +50,7 @@ try{
      await page.goto(url+'#/guide/quickstart');
      await page.getByRole('heading',{name:'Quickstart · Dal codice all’app'}).waitFor();
      await page.getByText('Apri lib/gui.mira',{exact:true}).click();
-     assert.ok(await page.locator('details pre').first().textContent().then(t=>t.includes('column: items')));
+     assert.ok(await page.locator('#reference details').filter({has:page.getByText('Apri lib/gui.mira',{exact:true})}).locator('pre').textContent().then(t=>t.includes('column: items')));
      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'quickstart horizontal overflow');
      await page.screenshot({path:resolve(out,name+'-quickstart.png'),fullPage:false});
      page.once('dialog',d=>d.accept());
