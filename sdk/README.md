@@ -37,5 +37,4 @@ serve listens on loopback only. Use trusted sources; this is not a sandbox.
 
 Current scope: log and basic GUI, not general-purpose project manifests,
 filesystem/HTTP capability packaging, checked GUI compilation or Cozy offline.
-The PHP compiler host is experimental until differential CI passes. The SDK
-does not yet have a published release merely because the scripts exist.
+The PHP compiler host and both local GUI servers are verified by CI. The release workflow publishes an immutable version after Windows and Linux checks.

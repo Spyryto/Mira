@@ -28,13 +28,19 @@ jobs:
       - run: haxe build-php.hxml
       - run: node scripts/build-sdk.mjs
       - run: node scripts/test-sdk.mjs
+      - run: npm install --no-save --package-lock=false playwright@1.56.1
+      - if: runner.os == 'Linux'
+        run: npx playwright install --with-deps chromium
+      - if: runner.os == 'Windows'
+        run: npx playwright install chromium
+      - run: node scripts/test-sdk-browser.mjs
       - uses: actions/upload-artifact@v4
         with:
           name: mira-sdk-${{ matrix.os }}
           path: dist/sdk/
           if-no-files-found: error
   release:
-    if: startsWith(github.ref, 'refs/tags/sdk-v')
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: verify
     runs-on: ubuntu-latest
     permissions:
@@ -48,7 +54,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
-          TAG: ${{ github.ref_name }}
         run: |
-          test "$TAG" = "sdk-v$(node -p "JSON.parse(require('fs').readFileSync('sdk/mira-sdk.json')).version")"
-          gh release create "$TAG" sdk/* --title "Mira SDK $TAG" --notes "Verified Node/PHP bootstrap SDK."
+          TAG="sdk-v$(node -p "JSON.parse(require('fs').readFileSync('sdk/mira-sdk.json')).version")"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release already exists; immutable version retained."
+            exit 0
+          fi
+          gh release create "$TAG" sdk/* --target "$GITHUB_SHA" --title "Mira SDK $TAG" --notes "Verified Node/PHP console and browser GUI bootstrap SDK."

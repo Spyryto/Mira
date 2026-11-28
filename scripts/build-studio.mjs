@@ -255,6 +255,14 @@ for(const example of reference.examples){
   example.index.ast=analyzeExampleCalls(context.MiraStudioCompiler,example,host,libraryLines);
 }
 reference.nativeApi=buildNativeApi(root,context.MiraStudioCompiler);
+ // Read actual SDK fixtures so the tutorial never forks the executable examples.
+ // Historical editions do not contain this code path.
+ reference.quickstart = {
+   version: JSON.parse(readFileSync(resolve(root,'package.json'),'utf8')).version,
+   hello: readFileSync(resolve(root,'sdk/quickstart/hello.mira'),'utf8'),
+   counter: readFileSync(resolve(root,'sdk/quickstart/counter.mira'),'utf8'),
+   gui: readFileSync(resolve(root,'lib/gui.mira'),'utf8')
+ };
 console.log('Native API groups: '+reference.nativeApi.length);
 reference.callIndex={compilerVersion:reference.version,parsed:reference.examples.filter(e=>e.index.ast.status==='parsed').length,unavailable:reference.examples.filter(e=>e.index.ast.status==='unavailable').map(e=>e.id)};
 console.log('Example call index: '+JSON.stringify(reference.callIndex));

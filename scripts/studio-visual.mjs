@@ -46,6 +46,17 @@ try{
      await page.getByLabel('Funzione chiamata (AST)').selectOption('fold:with:from:');
      assert.equal(await page.locator('.reference-example-card').count(),10,'fold call facet');
    }
+   if(name==='phone'){
+     await page.goto(url+'#/guide/quickstart');
+     await page.getByRole('heading',{name:'Quickstart · Dal codice all’app'}).waitFor();
+     await page.getByText('Apri lib/gui.mira',{exact:true}).click();
+     assert.ok(await page.locator('details pre').first().textContent().then(t=>t.includes('column: items')));
+     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false,'quickstart horizontal overflow');
+     await page.screenshot({path:resolve(out,name+'-quickstart.png'),fullPage:false});
+     page.once('dialog',d=>d.accept());
+     await page.getByRole('button',{name:'Prova nell’editor'}).first().click();
+     assert.match(await page.locator('#source').inputValue(),/hours = 3/);
+   }
    await page.goto(url+'theme-native-lab.html');
    await page.locator('#theme-preview .mira-ui-button').first().waitFor();
    await page.screenshot({path:resolve(out,name+'-widgets.png'),fullPage:true});
