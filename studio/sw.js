@@ -132,6 +132,8 @@ self.addEventListener('fetch', event => {
   if (url.origin !== scope.origin || !url.pathname.startsWith(scope.pathname)) return;
   // Historical editions own their service workers and cache namespaces.
   if (url.pathname.startsWith(new URL('archive/', scope).pathname)) return;
+  // Desktop project contents are private session data, never PWA assets.
+  if (url.pathname.startsWith(new URL('_desktop/', scope).pathname)) return;
 
   if (request.mode === 'navigate') {
     // Cache known standalone pages under their own keys, not index.html.

@@ -298,7 +298,7 @@ function execute(target,run){
 $('run-js').onclick=()=>execute('js',true);
 $('emit-js').onclick=()=>execute('js',false);
 $('emit-php').onclick=()=>execute('php',false);
-if(!desktopEnabled&&location.hostname!=='127.0.0.1'&&'serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if(!desktopEnabled&&'serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 renderFiles();saveLocal();analyze(editor);
 $('new-file').onclick=()=>{
  const path=prompt('Percorso del nuovo file .mira (es. Music/Intervals.mira)');

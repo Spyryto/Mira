@@ -48,7 +48,7 @@ export function buildIdeLibraryCatalog(root,site,compiler){
   }
   examples.push({id,title,description,source,lab,execute});
  }
- for(const item of data)add('library-'+item.name.toLowerCase(),item.name+' · libreria','Esempio originale della libreria Mira.',item.source,item.name==='Storage'?'storage-module-lab.html':item.name==='Http'?'host-module-lab.html':'host-module-lab.html',['Text','Date','Json'].includes(item.name));
+ for(const item of data)add('library-'+item.name.toLowerCase(),item.name+' · libreria','Esempio originale della libreria Mira.',item.source,'host-module-lab.html',['Text','Date','Json'].includes(item.name));
  for(const e of reference.examples){
   if(e.host||e.expect?.kind!=='result'||!e.source)continue;
   const r=compiler.check(e.source);
